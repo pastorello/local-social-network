@@ -1,7 +1,8 @@
 from django.conf import settings
 from django.contrib.auth.forms import PasswordChangeForm
-from django.core.mail import send_mail
 from django.http import JsonResponse
+from django.core.mail import EmailMultiAlternatives
+from urllib.parse import urlencode
 
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 
@@ -40,15 +41,20 @@ def signup(request):
         user.is_active = False
         user.save()
 
-        url = f'{settings.WEBSITE_URL}/activateemail/?email={user.email}&id={user.id}'
+        params = {"email": user.email, "id": user.id}
+        query_string = urlencode(params)
+        url = f"{settings.WEBSITE_URL}/activateemail/?{query_string}"
 
-        send_mail(
-            "Please verify your email",
-            f"The url for activating your account is: {url}",
-            "noreply@wey.com",
+        html_content = f'<a href="{url}">Clicca qui per attivare il tuo account</a>'
+        email = EmailMultiAlternatives(
+            "Attiva il tuo account",
+            f"Clicca qui per attivare il tuo account: {url}",
+            settings.EMAIL_HOST_USER,
             [user.email],
-            fail_silently=False,
         )
+        email.attach_alternative(html_content, "text/html")
+        email.send()
+
     else:
         message = form.errors.as_json()
     

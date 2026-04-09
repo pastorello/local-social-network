@@ -28,10 +28,12 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+WEBSITE_URL = 'http://127.0.0.1:8000'
 
 # Application definition
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_HOST_USER = "noreply@pastorello.info"
 
 AUTH_USER_MODEL = 'account.User'
 
