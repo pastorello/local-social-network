@@ -5,17 +5,23 @@ import { useUserStore } from './stores/user'
 import { onBeforeMount } from 'vue'
 
 const userStore = useUserStore()
+const user = userStore.user
 
 const initToken = () => {
   userStore.initStore()
 
-  const token = userStore.user.access
+  const token = user.access
 
   if (token) {
     axios.defaults.headers.common['Authorization'] = 'Bearer ' + token
   } else {
     axios.defaults.headers.common['Authorization'] = ''
   }
+}
+
+const logout = () => {
+  userStore.removeToken()
+  router.push('/login')
 }
 
 onBeforeMount(() => {
@@ -104,8 +110,14 @@ onBeforeMount(() => {
         <div class="menu-right">
           <template v-if="userStore.user.isAuthenticated && userStore.user.id">
             <RouterLink :to="{ name: 'profile', params: { id: userStore.user.id } }">
-              <img :src="userStore.user.avatar" class="w-12 rounded-full" />
+              <img :src="userStore.user.avatar" class="w-12 rounded-full inline-block mr-4" />
             </RouterLink>
+            <button
+              class="inline-block py-4 px-3 bg-red-600 text-xs text-white rounded-lg"
+              @click="logout"
+            >
+              Log out
+            </button>
           </template>
 
           <template v-else>

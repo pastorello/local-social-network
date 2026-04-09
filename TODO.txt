@@ -7,3 +7,4 @@ SIGNUP
 - restituire nel toast message il messaggio d'errore specifico del server
 - se ho già attivato la mail, activateemail deve rispondere che l'utente è già attivo
 - in caso di errore dati, il messaggio toast e il box errori validazione danno un senso di sovrapposizione
+- creare un cron che cancella tutti gli account creati da più di un mese che non hanno mai attivato il proprio account
