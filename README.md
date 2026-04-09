@@ -1,9 +1,17 @@
-I18N
+# Campaign settings
+
+A tool for handling
+
+# TODO
+
+## I18N
+
 - tradurre tutto il sito in italiano, le traduzioni sono tutte lato FE
 - montare sistema I18N
 - gli endpoint devono rispondere codici di errore e non messaggi in lingua
 
-SIGNUP
+## SIGNUP
+
 - restituire nel toast message il messaggio d'errore specifico del server
 - se ho già attivato la mail, activateemail deve rispondere che l'utente è già attivo
 - in caso di errore dati, il messaggio toast e il box errori validazione danno un senso di sovrapposizione
