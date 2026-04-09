@@ -4,6 +4,10 @@ A tool for handling
 
 # TODO
 
+## SETUP
+
+- il db.sqlite3 deve essere rimosso da .gitignore
+
 ## I18N
 
 - tradurre tutto il sito in italiano, le traduzioni sono tutte lato FE
