@@ -3,9 +3,11 @@ import axios from 'axios'
 import Toast from '@/components/modals/Toast.vue'
 import { useUserStore } from './stores/user'
 import { onBeforeMount } from 'vue'
+import { useRouter } from 'vue-router'
 
 const userStore = useUserStore()
 const user = userStore.user
+const router = useRouter()
 
 const initToken = () => {
   userStore.initStore()
@@ -34,11 +36,11 @@ onBeforeMount(() => {
     <div class="max-w-7xl mx-auto">
       <div class="flex items-center justify-between">
         <div class="menu-left">
-          <a href="#" class="text-xl">Wey</a>
+          <a href="/" class="text-xl">City Party</a>
         </div>
 
-        <div class="menu-center flex space-x-12" v-if="userStore.user.isAuthenticated">
-          <RouterLink to="/feed" class="text-purple-700">
+        <div class="menu-center flex space-x-12" v-if="user.isAuthenticated">
+          <RouterLink to="/" class="text-purple-700">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -108,9 +110,9 @@ onBeforeMount(() => {
         </div>
 
         <div class="menu-right">
-          <template v-if="userStore.user.isAuthenticated && userStore.user.id">
-            <RouterLink :to="{ name: 'profile', params: { id: userStore.user.id } }">
-              <img :src="userStore.user.avatar" class="w-12 rounded-full inline-block mr-4" />
+          <template v-if="user.isAuthenticated && user.id">
+            <RouterLink :to="{ name: 'profile', params: { id: user.id } }">
+              <img :src="user.avatar" class="w-12 rounded-full inline-block mr-4" />
             </RouterLink>
             <button
               class="inline-block py-4 px-3 bg-red-600 text-xs text-white rounded-lg"

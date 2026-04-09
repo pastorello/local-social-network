@@ -1,12 +1,11 @@
 # Campaign settings
 
-A tool for handling
+A tool for handling, for frontend/backend setup check the specific readme inside their relative folder.
+
+- [Read backend guide](./backend/README.md)
+- [Read frontend guide](./frontend/README.md)
 
 # TODO
-
-## SETUP
-
-- il db.sqlite3 deve essere rimosso da .gitignore
 
 ## I18N
 
