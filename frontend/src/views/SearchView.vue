@@ -1,7 +1,33 @@
+<script setup>
+import axios from 'axios'
+import { ref } from 'vue'
+
+import PanelBox from '@/components/boxes/PanelBox.vue'
+import ActionButton from '@/components/buttons/ActionButton.vue'
+
+const query = ref('')
+const users = ref([])
+
+const submitForm = () => {
+  axios
+    .post('/api/search/', {
+      query: this.query,
+    })
+    .then((response) => {
+      console.log('response:', response.data)
+
+      users = response.data.users
+    })
+    .catch((error) => {
+      console.log('error:', error)
+    })
+}
+</script>
+
 <template>
   <div class="max-w-7xl mx-auto grid grid-cols-4 gap-4">
     <div class="main-left col-span-3 space-y-4">
-      <div class="bg-white border border-gray-200 rounded-lg">
+      <PanelBox>
         <form v-on:submit.prevent="submitForm" class="p-4 flex space-x-4">
           <input
             v-model="query"
@@ -10,7 +36,7 @@
             placeholder="What are you looking for?"
           />
 
-          <button class="inline-block py-4 px-6 bg-purple-600 text-white rounded-lg">
+          <ActionButton class="inline-block">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -25,9 +51,9 @@
                 d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
               ></path>
             </svg>
-          </button>
+          </ActionButton>
         </form>
-      </div>
+      </PanelBox>
 
       <PanelBox class="grid grid-cols-4 gap-4" v-if="users.length">
         <div
@@ -46,67 +72,17 @@
           </p>
 
           <div class="mt-6 flex space-x-8 justify-around">
-            <p class="text-xs text-gray-500">{{ user.friends_count }} friends</p>
-            <p class="text-xs text-gray-500">{{ user.posts_count }} posts</p>
+            <p class="text-xs text-gray-500">user stat 1</p>
+            <p class="text-xs text-gray-500">user stat 2</p>
           </div>
         </div>
-      </PanelBox>
-
-      <PanelBox v-for="post in posts" v-bind:key="post.id">
-        <FeedItem v-bind:post="post" />
       </PanelBox>
     </div>
 
     <div class="main-right col-span-1 space-y-4">
-      <PeopleYouMayKnow />
-
-      <Trends />
+      <PanelBox class="text-center">
+        <h2 class="mb-4 text-lg">Right column</h2>
+      </PanelBox>
     </div>
   </div>
 </template>
-
-<script>
-import axios from 'axios'
-import PeopleYouMayKnow from '../components/PeopleYouMayKnow.vue'
-import Trends from '../components/Trends.vue'
-import FeedItem from '../components/FeedItem.vue'
-import PanelBox from '@/components/boxes/PanelBox.vue'
-
-export default {
-  name: 'SearchView',
-
-  components: {
-    PeopleYouMayKnow,
-    Trends,
-    FeedItem,
-  },
-
-  data() {
-    return {
-      query: '',
-      users: [],
-      posts: [],
-    }
-  },
-
-  methods: {
-    submitForm() {
-      console.log('submitForm', this.query)
-
-      axios
-        .post('/api/search/', {
-          query: this.query,
-        })
-        .then((response) => {
-          console.log('response:', response.data)
-
-          this.users = response.data.users
-          this.posts = response.data.posts
-        })
-        .catch((error) => {
-          console.log('error:', error)
-        })
-    },
-  },
-}
-</script>

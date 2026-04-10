@@ -58,8 +58,6 @@ def signup(request):
     else:
         message = form.errors.as_json()
     
-    print(message)
-
     return JsonResponse({'message': message}, safe=False)
 
 

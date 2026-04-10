@@ -3,17 +3,9 @@ import axios from 'axios'
 
 import { useToastStore } from '@/stores/toast'
 import { ref } from 'vue'
-import * as z from 'zod'
-import { it } from 'zod/locales'
-
-z.config(it())
-
-const SignupForm = z.object({
-  email: z.email(),
-  name: z.string().min(2).max(200),
-  password1: z.string().min(8),
-  password2: z.string().min(8),
-})
+import { parseZodObject, SignupForm } from '@/forms/user'
+import FormInput from '@/components/forms/FormInput.vue'
+import PanelBox from '@/components/boxes/PanelBox.vue'
 
 const toastStore = useToastStore()
 
@@ -26,24 +18,29 @@ const form = ref({
 
 const formErrors = ref([])
 
-const submitForm = () => {
-  let parsedData = null
+const resetForm = () => {
+  form.value.email = ''
+  form.value.name = ''
+  form.value.password1 = ''
+  form.value.password2 = ''
+  formErrors.value = []
+}
 
-  try {
-    parsedData = SignupForm.parse(form.value)
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      error.issues.forEach((issue) => {
-        formErrors.value.push(`${issue.path.join(', ')} ${issue.message}`)
-      })
-    }
+const submitForm = () => {
+  let parsedData = parseZodObject(SignupForm, form.value)
+
+  formErrors.value = []
+
+  if (parsedData.errors.length > 0) {
+    formErrors.value = [...parsedData.errors, ...formErrors.value]
+    return
   }
 
   if (parsedData !== null) {
     formErrors.value = []
 
     axios
-      .post('/api/signup/', parsedData)
+      .post('/api/signup/', parsedData.data)
       .then((response) => {
         if (response.data.message === 'success') {
           toastStore.showToast(
@@ -52,12 +49,7 @@ const submitForm = () => {
             'bg-emerald-500',
           )
 
-          form.value.email = ''
-          form.value.name = ''
-          form.value.password1 = ''
-          form.value.password2 = ''
-          formErrors.value = []
-
+          resetForm()
           router.push('/login')
         } else {
           const data = JSON.parse(response.data.message)
@@ -78,7 +70,7 @@ const submitForm = () => {
 <template>
   <div class="max-w-7xl mx-auto grid grid-cols-2 gap-4">
     <div class="main-left">
-      <div class="p-12 bg-white border border-gray-200 rounded-lg">
+      <PanelBox size="large">
         <h1 class="mb-6 text-2xl">Sign up</h1>
 
         <p class="mb-6 text-gray-500">Join this City Party and contribute to your community!</p>
@@ -87,49 +79,33 @@ const submitForm = () => {
           Already have an account?
           <RouterLink :to="{ name: 'login' }" class="underline">Click here</RouterLink> to log in!
         </p>
-      </div>
+      </PanelBox>
     </div>
 
     <div class="main-right">
-      <div class="p-12 bg-white border border-gray-200 rounded-lg">
+      <PanelBox size="large">
         <form class="space-y-6" v-on:submit.prevent="submitForm">
           <div>
             <label>Name</label><br />
-            <input
-              type="text"
-              v-model="form.name"
-              placeholder="Your full name"
-              class="w-full mt-2 py-4 px-6 border border-gray-200 rounded-lg"
-            />
+            <FormInput type="text" v-model="form.name" placeholder="Your full name" />
           </div>
 
           <div>
             <label>E-mail</label><br />
-            <input
-              type="email"
-              v-model="form.email"
-              placeholder="Your e-mail address"
-              class="w-full mt-2 py-4 px-6 border border-gray-200 rounded-lg"
-            />
+            <FormInput type="email" v-model="form.email" placeholder="Your e-mail address" />
           </div>
 
           <div>
             <label>Password</label><br />
-            <input
-              type="password"
-              v-model="form.password1"
-              placeholder="Your password"
-              class="w-full mt-2 py-4 px-6 border border-gray-200 rounded-lg"
-            />
+            <FormInput type="password" v-model="form.password1" placeholder="Your password" />
           </div>
 
           <div>
             <label>Repeat password</label><br />
-            <input
+            <FormInput
               type="password"
               v-model="form.password2"
               placeholder="Repeat your password"
-              class="w-full mt-2 py-4 px-6 border border-gray-200 rounded-lg"
             />
           </div>
 
@@ -143,7 +119,7 @@ const submitForm = () => {
             <button class="py-4 px-6 bg-purple-600 text-white rounded-lg">Sign up</button>
           </div>
         </form>
-      </div>
+      </PanelBox>
     </div>
   </div>
 </template>

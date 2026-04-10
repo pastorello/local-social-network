@@ -1,9 +1,12 @@
 <script setup>
 import axios from 'axios'
-import Toast from '@/components/modals/Toast.vue'
-import { useUserStore } from './stores/user'
 import { onBeforeMount } from 'vue'
 import { useRouter } from 'vue-router'
+
+import { useUserStore } from './stores/user'
+
+import Toast from '@/components/modals/Toast.vue'
+import ActionButton from './components/buttons/ActionButton.vue'
 
 const userStore = useUserStore()
 const user = userStore.user
@@ -114,12 +117,9 @@ onBeforeMount(() => {
             <RouterLink :to="{ name: 'profile', params: { id: user.id } }">
               <img :src="user.avatar" class="w-12 rounded-full inline-block mr-4" />
             </RouterLink>
-            <button
-              class="inline-block py-4 px-3 bg-red-600 text-xs text-white rounded-lg"
-              @click="logout"
-            >
+            <ActionButton class="inline-block" size="small" button-type="danger" @click="logout">
               Log out
-            </button>
+            </ActionButton>
           </template>
 
           <template v-else>
