@@ -13,7 +13,7 @@ const { buttonType, size } = defineProps({
 })
 
 const classObject = {
-  'rounded-lg': true,
+  'rounded-lg cursor-pointer': true,
   'bg-purple-600 text-white': buttonType === 'default',
   'bg-red-600 text-white': buttonType === 'danger',
   'bg-green-600 text-white': buttonType === 'success',

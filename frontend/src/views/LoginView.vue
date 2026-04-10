@@ -22,6 +22,8 @@ const formErrors = ref([])
 const submitForm = async () => {
   let parsedData = parseZodObject(LoginForm, form.value)
 
+  const asd = form.value
+
   formErrors.value = []
 
   if (parsedData.errors.length > 0) {
