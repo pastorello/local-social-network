@@ -70,7 +70,7 @@ const submitForm = () => {
 <template>
   <div class="max-w-7xl mx-auto grid grid-cols-2 gap-4">
     <div class="main-left">
-      <PanelBox size="large">
+      <PanelBox>
         <h1 class="mb-6 text-2xl">Sign up</h1>
 
         <p class="mb-6 text-gray-500">Join this City Party and contribute to your community!</p>
@@ -83,7 +83,7 @@ const submitForm = () => {
     </div>
 
     <div class="main-right">
-      <PanelBox size="large">
+      <PanelBox>
         <form class="space-y-6" v-on:submit.prevent="submitForm">
           <div>
             <label>Name</label><br />

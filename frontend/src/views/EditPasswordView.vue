@@ -60,7 +60,7 @@ const submitForm = () => {
 <template>
   <div class="max-w-7xl mx-auto grid grid-cols-2 gap-4">
     <div class="main-left">
-      <PanelBox size="large">
+      <PanelBox>
         <h1 class="mb-6 text-2xl">Edit password</h1>
 
         <p class="mb-6 text-gray-500">Here you can change your password!</p>
@@ -68,7 +68,7 @@ const submitForm = () => {
     </div>
 
     <div class="main-right">
-      <PanelBox size="large">
+      <PanelBox>
         <form class="space-y-6" v-on:submit.prevent="submitForm">
           <div>
             <label>Old password</label><br />
@@ -103,7 +103,7 @@ const submitForm = () => {
             <ActionButton>Save changes</ActionButton>
           </div>
         </form>
-      </div>
+      </PanelBox>
     </div>
   </div>
 </template>

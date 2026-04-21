@@ -67,3 +67,8 @@ export const EditPasswordForm = z
       })
     }
   })
+
+export const editProfileForm = z.object({
+  email: useDataValidator.email,
+  name: useDataValidator.name,
+})

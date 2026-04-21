@@ -1,12 +1,80 @@
+<script setup>
+import axios from 'axios'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+import { useToastStore } from '@/stores/toast'
+import { useUserStore } from '@/stores/user'
+
+import PanelBox from '@/components/boxes/PanelBox.vue'
+import ActionButton from '@/components/buttons/ActionButton.vue'
+import FormInput from '@/components/forms/FormInput.vue'
+
+const router = useRouter()
+const toastStore = useToastStore()
+const userStore = useUserStore()
+
+const formData = ref({
+  email: userStore.user.email,
+  name: userStore.user.name,
+})
+const errors = ref([])
+
+const submitForm = () => {
+  errors.value = []
+
+  if (formData.value.email === '') {
+    errors.value.push('Your e-mail is missing')
+  }
+
+  if (formData.value.name === '') {
+    errors.value.push('Your name is missing')
+  }
+
+  if (errors.value.length === 0) {
+    let formData = new FormData()
+    formData.append('avatar', $refs.file.files[0])
+    formData.append('name', formData.value.name)
+    formData.append('email', formData.value.email)
+
+    axios
+      .post('/api/editprofile/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+      .then((response) => {
+        if (response.data.message === 'information updated') {
+          toastStore.showToast(5000, 'The information was saved', 'bg-emerald-500')
+
+          userStore.setUserInfo({
+            id: userStore.user.id,
+            name: formData.value.name,
+            email: formData.value.email,
+            avatar: response.data.user.get_avatar,
+          })
+
+          router.back()
+        } else {
+          toastStore.showToast(5000, `${response.data.message}. Please try again`, 'bg-red-300')
+        }
+      })
+      .catch((error) => {
+        console.log('error', error)
+      })
+  }
+}
+</script>
+
 <template>
   <div class="max-w-7xl mx-auto grid grid-cols-2 gap-4">
     <div class="main-left">
-      <PanelBox size="large">
+      <PanelBox>
         <h1 class="mb-6 text-2xl">Edit profile</h1>
 
         <p class="mb-6 text-gray-500">
-          Lorem ipsum dolor sit mate. Lorem ipsum dolor sit mate. Lorem ipsum dolor sit mate. Lorem
-          ipsum dolor sit mate. Lorem ipsum dolor sit mate. Lorem ipsum dolor sit mate.
+          Da qui puoi editare il tuo profilo. Puoi cambiare il tuo nome, la tua e-mail e la tua
+          immagine del profilo. Per cambiare la password, clicca sul link qui sotto.
         </p>
 
         <RouterLink to="/profile/edit/password" class="underline">Edit password</RouterLink>
@@ -14,16 +82,16 @@
     </div>
 
     <div class="main-right">
-      <PanelBox size="large">
+      <PanelBox>
         <form class="space-y-6" v-on:submit.prevent="submitForm">
           <div>
             <label>Name</label><br />
-            <FormInput type="text" v-model="form.name" placeholder="Your full name" />
+            <FormInput type="text" v-model="formData.name" placeholder="Your full name" />
           </div>
 
           <div>
             <label>E-mail</label><br />
-            <FormInput type="email" v-model="form.email" placeholder="Your e-mail address" />
+            <FormInput type="email" v-model="formData.email" placeholder="Your e-mail address" />
           </div>
 
           <div>
@@ -45,86 +113,3 @@
     </div>
   </div>
 </template>
-
-<script>
-import axios from 'axios'
-
-import { useToastStore } from '@/stores/toast'
-import { useUserStore } from '@/stores/user'
-import ActionButton from '@/components/buttons/ActionButton.vue'
-import PanelBox from '@/components/boxes/PanelBox.vue'
-import PanelBox from '@/components/boxes/PanelBox.vue'
-
-export default {
-  setup() {
-    const toastStore = useToastStore()
-    const userStore = useUserStore()
-
-    return {
-      toastStore,
-      userStore,
-    }
-  },
-
-  data() {
-    return {
-      form: {
-        email: this.userStore.user.email,
-        name: this.userStore.user.name,
-      },
-      errors: [],
-    }
-  },
-
-  methods: {
-    submitForm() {
-      this.errors = []
-
-      if (this.form.email === '') {
-        this.errors.push('Your e-mail is missing')
-      }
-
-      if (this.form.name === '') {
-        this.errors.push('Your name is missing')
-      }
-
-      if (this.errors.length === 0) {
-        let formData = new FormData()
-        formData.append('avatar', this.$refs.file.files[0])
-        formData.append('name', this.form.name)
-        formData.append('email', this.form.email)
-
-        axios
-          .post('/api/editprofile/', formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          })
-          .then((response) => {
-            if (response.data.message === 'information updated') {
-              this.toastStore.showToast(5000, 'The information was saved', 'bg-emerald-500')
-
-              this.userStore.setUserInfo({
-                id: this.userStore.user.id,
-                name: this.form.name,
-                email: this.form.email,
-                avatar: response.data.user.get_avatar,
-              })
-
-              this.$router.back()
-            } else {
-              this.toastStore.showToast(
-                5000,
-                `${response.data.message}. Please try again`,
-                'bg-red-300',
-              )
-            }
-          })
-          .catch((error) => {
-            console.log('error', error)
-          })
-      }
-    },
-  },
-}
-</script>
