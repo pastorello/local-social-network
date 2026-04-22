@@ -1,9 +1,9 @@
-<script setup>
+<script setup lang="ts">
 const { size } = defineProps({
   size: {
     type: String,
     default: 'medium',
-    validator: (value) => ['small', 'medium', 'large'].includes(value),
+    validator: (value: string) => ['small', 'medium', 'large'].includes(value),
   },
 })
 

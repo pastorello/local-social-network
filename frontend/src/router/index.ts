@@ -29,6 +29,18 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/polls',
+      name: 'polls',
+      component: () => import('../views/PollsView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/posts',
+      name: 'posts',
+      component: () => import('../views/PostsView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/profile/edit',
       name: 'editprofile',
       component: () => import('../views/EditProfileView.vue'),
