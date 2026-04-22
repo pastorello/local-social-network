@@ -6,6 +6,7 @@ import { ref } from 'vue'
 import { parseZodObject, SignupForm } from '@/forms/user'
 import FormInput from '@/components/forms/FormInput.vue'
 import PanelBox from '@/components/boxes/PanelBox.vue'
+import MainTitle from '@/components/typography/MainTitle.vue'
 
 const toastStore = useToastStore()
 
@@ -71,7 +72,7 @@ const submitForm = () => {
   <div class="max-w-7xl mx-auto grid grid-cols-2 gap-4">
     <div class="main-left">
       <PanelBox>
-        <h1 class="mb-6 text-2xl">Sign up</h1>
+        <MainTitle>Sign up</MainTitle>
 
         <p class="mb-6 text-gray-500">Join this City Party and contribute to your community!</p>
 

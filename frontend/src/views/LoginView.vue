@@ -9,6 +9,7 @@ import { LoginForm, parseZodObject } from '@/forms/user'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import FormInput from '@/components/forms/FormInput.vue'
 import PanelBox from '@/components/boxes/PanelBox.vue'
+import MainTitle from '@/components/typography/MainTitle.vue'
 
 const userStore = useUserStore()
 const router = useRouter()
@@ -66,7 +67,7 @@ const submitForm = async () => {
   <div class="max-w-7xl mx-auto grid grid-cols-2 gap-4">
     <div class="main-left">
       <PanelBox>
-        <h1 class="mb-6 text-2xl">Log in</h1>
+        <MainTitle>Log in</MainTitle>
 
         <p class="mb-6 text-gray-500">
           Welcome back! Please enter your details to log in to your account.

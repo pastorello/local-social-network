@@ -1,6 +1,15 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+import { LMap, LTileLayer } from '@vue-leaflet/vue-leaflet'
+import 'leaflet/dist/leaflet.css'
+
+const zoom = ref(13)
+const center = ref([41.2172608, 13.5625165])
+</script>
+
 <template>
-  <div style="height: 400px; width: 100%">
-    <l-map ref="map" v-model:zoom="zoom" :center="[41.2172608, 13.5625165]">
+  <div class="h-100 w-full">
+    <l-map ref="map" v-model:zoom="zoom" :center="center">
       <l-tile-layer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         layer-type="base"
@@ -9,22 +18,3 @@
     </l-map>
   </div>
 </template>
-
-<script>
-import 'leaflet/dist/leaflet.css'
-import { LMap, LTileLayer } from '@vue-leaflet/vue-leaflet'
-
-export default {
-  components: {
-    LMap,
-    LTileLayer,
-  },
-  data() {
-    return {
-      zoom: 14,
-    }
-  },
-}
-</script>
-
-<style></style>

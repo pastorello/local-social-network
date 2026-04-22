@@ -9,6 +9,7 @@ import { useUserStore } from '@/stores/user'
 import PanelBox from '@/components/boxes/PanelBox.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import FormInput from '@/components/forms/FormInput.vue'
+import MainTitle from '@/components/typography/MainTitle.vue'
 
 const router = useRouter()
 const toastStore = useToastStore()
@@ -70,7 +71,7 @@ const submitForm = () => {
   <div class="max-w-7xl mx-auto grid grid-cols-2 gap-4">
     <div class="main-left">
       <PanelBox>
-        <h1 class="mb-6 text-2xl">Edit profile</h1>
+        <MainTitle>Edit profile</MainTitle>
 
         <p class="mb-6 text-gray-500">
           Da qui puoi editare il tuo profilo. Puoi cambiare il tuo nome, la tua e-mail e la tua

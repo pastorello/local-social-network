@@ -1,11 +1,14 @@
 <script setup>
 import axios from 'axios'
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+
 import { useToastStore } from '@/stores/toast'
 import { useUserStore } from '@/stores/user'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import FormInput from '@/components/forms/FormInput.vue'
 import PanelBox from '@/components/boxes/PanelBox.vue'
+import MainTitle from '@/components/typography/MainTitle.vue'
 
 const toastStore = useToastStore()
 const userStore = useUserStore()
@@ -61,9 +64,9 @@ const submitForm = () => {
   <div class="max-w-7xl mx-auto grid grid-cols-2 gap-4">
     <div class="main-left">
       <PanelBox>
-        <h1 class="mb-6 text-2xl">Edit password</h1>
-
+        <MainTitle>Edit password</MainTitle>
         <p class="mb-6 text-gray-500">Here you can change your password!</p>
+        <RouterLink to="/profile/edit" class="underline">Back</RouterLink>
       </PanelBox>
     </div>
 
@@ -93,9 +96,9 @@ const submitForm = () => {
             <FormInput type="password" v-model="form.new_password2" placeholder="Repeat password" />
           </div>
 
-          <template v-if="errors.length > 0">
+          <template v-if="formErrors.length > 0">
             <div class="bg-red-300 text-white rounded-lg p-6">
-              <p v-for="error in errors" v-bind:key="error">{{ error }}</p>
+              <p v-for="error in formErrors" v-bind:key="error">{{ error }}</p>
             </div>
           </template>
 

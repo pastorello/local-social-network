@@ -6,7 +6,7 @@ import PanelBox from '@/components/boxes/PanelBox.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 
 const query = ref('')
-const users = ref([])
+let users = ref([])
 
 const submitForm = () => {
   axios
