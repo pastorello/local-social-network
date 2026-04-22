@@ -1,2 +1,44 @@
 @import 'tailwindcss';
 @import './base.css';
+
+@theme {
+  --color-stackoverflow-orange: #f48024;
+  --color-linkedin-blue: #0077b5;
+
+  @keyframes fade-in-scale {
+    0% {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  --animate-fade-in-scale: fade-in-scale 2s ease-out;
+
+  @keyframes flip {
+    0% {
+      transform: rotateY(0deg);
+    }
+    50% {
+      transform: rotateY(180deg);
+    }
+    100% {
+      transform: rotateY(0deg);
+    }
+  }
+  --animate-flip: flip 0.3s ease-in-out infinite;
+
+  @keyframes fadeInUp {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  --animate-fade-in-up: fadeInUp 0.8s ease-out forwards;
+}

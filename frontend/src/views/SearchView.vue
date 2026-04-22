@@ -33,7 +33,7 @@ const submitForm = () => {
             v-model="query"
             type="search"
             class="p-4 w-full bg-gray-100 rounded-lg"
-            placeholder="What are you looking for?"
+            placeholder="Ricerca utenti..."
           />
 
           <ActionButton class="inline-block">

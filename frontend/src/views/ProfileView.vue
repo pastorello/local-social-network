@@ -44,8 +44,9 @@ watch(
     </div>
 
     <div class="main-center col-span-2 space-y-4">
-      <PanelBox v-if="isMyProfile"> Private Feed content </PanelBox>
-      <PanelBox> Public Feed content </PanelBox>
+      <PanelBox>
+        <div>Public Feed content</div>
+      </PanelBox>
     </div>
 
     <div class="main-right col-span-1 space-y-4">
