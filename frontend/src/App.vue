@@ -30,7 +30,7 @@ onBeforeMount(() => {
 <template>
   <AppHeader />
 
-  <main class="px-8 py-6 bg-gray-100">
+  <main class="px-8 py-6 bg-gray-100 h-screen pt-40">
     <RouterView />
   </main>
 

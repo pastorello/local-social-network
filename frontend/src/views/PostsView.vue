@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import PanelBox from '@/components/boxes/PanelBox.vue'
+import ViewContainer from '@/components/boxes/ViewContainer.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
 </script>
 
 <template>
-  <div class="max-w-7xl mx-auto grid grid-cols-4 gap-4">
+  <ViewContainer class="grid-cols-4">
     <div class="main-left col-span-1">
       <PanelBox class="text-center">LEFT COLUMN</PanelBox>
     </div>
@@ -16,5 +17,5 @@ import MainTitle from '@/components/typography/MainTitle.vue'
     <div class="main-right col-span-1 space-y-4">
       <PanelBox class="text-center">RIGHT COLUMN</PanelBox>
     </div>
-  </div>
+  </ViewContainer>
 </template>

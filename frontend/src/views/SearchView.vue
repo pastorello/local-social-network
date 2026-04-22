@@ -4,6 +4,7 @@ import { ref } from 'vue'
 
 import PanelBox from '@/components/boxes/PanelBox.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
+import ViewContainer from '@/components/boxes/ViewContainer.vue'
 
 const query = ref('')
 let users = ref([])
@@ -25,7 +26,7 @@ const submitForm = () => {
 </script>
 
 <template>
-  <div class="max-w-7xl mx-auto grid grid-cols-4 gap-4">
+  <ViewContainer class="grid-cols-4">
     <div class="main-left col-span-3 space-y-4">
       <PanelBox>
         <form v-on:submit.prevent="submitForm" class="p-4 flex space-x-4">
@@ -84,5 +85,5 @@ const submitForm = () => {
         <h2 class="mb-4 text-lg">Right column</h2>
       </PanelBox>
     </div>
-  </div>
+  </ViewContainer>
 </template>

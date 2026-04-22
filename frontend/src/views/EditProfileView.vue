@@ -10,6 +10,7 @@ import PanelBox from '@/components/boxes/PanelBox.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import FormInput from '@/components/forms/FormInput.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
+import ViewContainer from '@/components/boxes/ViewContainer.vue'
 
 const router = useRouter()
 const toastStore = useToastStore()
@@ -68,7 +69,7 @@ const submitForm = () => {
 </script>
 
 <template>
-  <div class="max-w-7xl mx-auto grid grid-cols-2 gap-4">
+  <ViewContainer class="grid-cols-2">
     <div class="main-left">
       <PanelBox>
         <MainTitle>Edit profile</MainTitle>
@@ -112,5 +113,5 @@ const submitForm = () => {
         </form>
       </PanelBox>
     </div>
-  </div>
+  </ViewContainer>
 </template>

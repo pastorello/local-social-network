@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 
 import { useUserStore } from '@/stores/user'
 import PanelBox from '@/components/boxes/PanelBox.vue'
+import ViewContainer from '@/components/boxes/ViewContainer.vue'
 
 const userStore = useUserStore()
 const route = useRoute()
@@ -20,7 +21,7 @@ watch(
 </script>
 
 <template>
-  <div class="max-w-7xl mx-auto grid grid-cols-4 gap-4">
+  <ViewContainer class="grid-cols-4">
     <div class="main-left col-span-1">
       <PanelBox class="text-center">
         <img :src="user.avatar" class="mt-6 mb-6 rounded-full m-auto w-50 h-50" />
@@ -52,5 +53,5 @@ watch(
     <div class="main-right col-span-1 space-y-4">
       <PanelBox class="text-center">MAIN RIGHT COLUMN</PanelBox>
     </div>
-  </div>
+  </ViewContainer>
 </template>

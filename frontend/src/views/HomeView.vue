@@ -2,10 +2,11 @@
 import CityMap from '@/components/maps/CityMap.vue'
 import PanelBox from '@/components/boxes/PanelBox.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
+import ViewContainer from '@/components/boxes/ViewContainer.vue'
 </script>
 
 <template>
-  <div class="max-w-7xl mx-auto grid grid-cols-6 gap-4">
+  <ViewContainer class="grid-cols-6">
     <div class="col-span-2 main-left">
       <PanelBox>
         <MainTitle>Punti di interesse</MainTitle>
@@ -17,5 +18,5 @@ import MainTitle from '@/components/typography/MainTitle.vue'
         <CityMap></CityMap>
       </PanelBox>
     </div>
-  </div>
+  </ViewContainer>
 </template>
