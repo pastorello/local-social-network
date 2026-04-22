@@ -1,35 +1,38 @@
 <script setup>
 import axios from 'axios'
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
 import PanelBox from '@/components/boxes/PanelBox.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import ViewContainer from '@/components/boxes/ViewContainer.vue'
+import UserCard from '@/components/cards/UserCard.vue'
 
 const query = ref('')
 let users = ref([])
 
-const submitForm = () => {
-  axios
-    .post('/api/search/', {
-      query: this.query,
+const getUsers = async () => {
+  await axios
+    .post('/api/users/', {
+      query: query.value,
     })
     .then((response) => {
-      console.log('response:', response.data)
-
-      users = response.data.users
+      users.value = response.data
     })
     .catch((error) => {
       console.log('error:', error)
     })
 }
+
+onMounted(() => {
+  getUsers()
+})
 </script>
 
 <template>
   <ViewContainer class="grid-cols-4">
-    <div class="main-left col-span-3 space-y-4">
-      <PanelBox>
-        <form v-on:submit.prevent="submitForm" class="p-4 flex space-x-4">
+    <div class="main-left col-span-3 space-y-2">
+      <PanelBox class="flex flex-col">
+        <form v-on:submit.prevent="getUsers" class="pb-6 flex space-x-4">
           <input
             v-model="query"
             type="search"
@@ -54,28 +57,12 @@ const submitForm = () => {
             </svg>
           </ActionButton>
         </form>
-      </PanelBox>
+        <div class="grid grid-cols-3 gap-6" v-if="users.length">
+          <UserCard v-for="user in users" :key="user.id" :user="user" />
+        </div>
 
-      <PanelBox class="grid grid-cols-4 gap-4" v-if="users.length">
-        <div
-          class="p-4 text-center bg-gray-100 rounded-lg"
-          v-for="user in users"
-          v-bind:key="user.id"
-        >
-          <img :src="user.get_avatar" class="mb-6 rounded-full" />
-
-          <p>
-            <strong>
-              <RouterLink :to="{ name: 'profile', params: { id: user.id } }">{{
-                user.name
-              }}</RouterLink>
-            </strong>
-          </p>
-
-          <div class="mt-6 flex space-x-8 justify-around">
-            <p class="text-xs text-gray-500">user stat 1</p>
-            <p class="text-xs text-gray-500">user stat 2</p>
-          </div>
+        <div class="flex-1 flex items-center justify-center" v-else>
+          <p class="text-gray-500">No users found</p>
         </div>
       </PanelBox>
     </div>

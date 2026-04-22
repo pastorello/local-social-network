@@ -67,6 +67,7 @@ def user(request, pk):
 
     return JsonResponse(UserSerializer(user).data, safe=False)
 
+@api_view(['POST'])
 def user_list(request):
     users = User.objects.all()
     serializer = UserSerializer(users, many=True)
