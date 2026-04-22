@@ -8,7 +8,7 @@ const center = ref([41.2172608, 13.5625165])
 </script>
 
 <template>
-  <div class="h-100 w-full">
+  <div class="h-full w-full">
     <l-map ref="map" v-model:zoom="zoom" :center="center">
       <l-tile-layer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

@@ -5,7 +5,7 @@ from django.core.mail import EmailMultiAlternatives
 from urllib.parse import urlencode
 
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
-
+from django.db.models import Q
 
 from .forms import SignupForm, ProfileForm
 from .models import User
@@ -69,7 +69,15 @@ def user(request, pk):
 
 @api_view(['POST'])
 def user_list(request):
-    users = User.objects.all()
+    query = request.data.get('query', '')
+
+    if query:
+        users = User.objects.filter(
+            Q(name__icontains=query) | Q(email__icontains=query)
+        )
+    else:
+        users = User.objects.all()
+
     serializer = UserSerializer(users, many=True)
 
     return JsonResponse(serializer.data, safe=False)

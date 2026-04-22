@@ -49,7 +49,7 @@ const logout = () => {
             Polls
           </MenuButton>
 
-          <MenuButton to="/search">
+          <MenuButton to="/users">
             <template #icon>
               <CommunityIcon class="w-6 h-6" />
             </template>
