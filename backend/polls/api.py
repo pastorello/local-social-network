@@ -16,7 +16,7 @@ def polls_list(request):
 
     if query:
         users = Question.objects.filter(
-            Q(name__icontains=query) | Q(email__icontains=query)
+            Q(question_text__icontains=query)
         )
     else:
         users = Question.objects.all()

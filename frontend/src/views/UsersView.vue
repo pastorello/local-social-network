@@ -6,6 +6,7 @@ import PanelBox from '@/components/boxes/PanelBox.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import ViewContainer from '@/components/boxes/ViewContainer.vue'
 import UserCard from '@/components/cards/UserCard.vue'
+import MainTitle from '@/components/typography/MainTitle.vue'
 
 const query = ref('')
 let users = ref([])
@@ -32,6 +33,7 @@ onMounted(() => {
   <ViewContainer class="grid-cols-4">
     <div class="main-left col-span-3 space-y-2">
       <PanelBox class="flex flex-col">
+        <MainTitle>Utenti del network</MainTitle>
         <form v-on:submit.prevent="getUsers" class="pb-6 flex space-x-4">
           <input
             v-model="query"

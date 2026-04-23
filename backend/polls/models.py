@@ -2,6 +2,8 @@ import datetime
 
 from django.db import models
 from django.utils import timezone
+from django.utils.timesince import timesince
+
 from django.contrib import admin
 
 class Question(models.Model):
@@ -17,6 +19,9 @@ class Question(models.Model):
         ordering="pub_date",
         description="Published recently?",
     )
+
+    def created_at_formatted(self):
+       return timesince(self.pub_date)
 
     def was_published_recently(self):
         now = timezone.now()

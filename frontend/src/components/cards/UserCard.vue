@@ -1,3 +1,11 @@
+<script setup lang="ts">
+import type User from '@/definitions/interfaces/User'
+
+const props = defineProps<{
+  user: User
+}>()
+</script>
+
 <template>
   <div class="w-full max-w-sm mx-auto overflow-hidden bg-white rounded-lg shadow-md">
     <RouterLink :to="{ name: 'profile', params: { id: user.id } }">
@@ -10,11 +18,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import type User from '@/definitions/interfaces/User'
-
-const props = defineProps<{
-  user: User
-}>()
-</script>
