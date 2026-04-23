@@ -76,7 +76,7 @@ INSTALLED_APPS = [
     'rest_framework', # api GET & POST
     'rest_framework_simplejwt', # api authentication
     'account',
-    'polls'
+    'polls',
     'posts',
     'notifications',
 ]

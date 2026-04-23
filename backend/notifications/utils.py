@@ -1,10 +1,6 @@
 from .models import Notification
 
-from post.models import Post
-from account.models import FriendshipRequest
-
-# create_notification(request, 'post_like', 'lskjf-j12l3-jlas-jdfa', 'lskjf-j12l3-jlas-jdfa')
-
+from posts.models import Post
 
 def create_notification(request, type_of_notification, post_id=None, friendrequest_id=None):
     created_for = None
@@ -17,18 +13,6 @@ def create_notification(request, type_of_notification, post_id=None, friendreque
         body = f'{request.user.name} commented on one of your posts!'
         post = Post.objects.get(pk=post_id)
         created_for = post.created_by
-    elif type_of_notification == 'new_friendrequest':
-        friendrequest = FriendshipRequest.objects.get(pk=friendrequest_id)
-        created_for = friendrequest.created_for
-        body = f'{request.user.name} sent you a friend request!'
-    elif type_of_notification == 'accepted_friendrequest':
-        friendrequest = FriendshipRequest.objects.get(pk=friendrequest_id)
-        created_for = friendrequest.created_for
-        body = f'{request.user.name} accepted your friend request!'
-    elif type_of_notification == 'rejected_friendrequest':
-        friendrequest = FriendshipRequest.objects.get(pk=friendrequest_id)
-        created_for = friendrequest.created_for
-        body = f'{request.user.name} rejected your friend request!'
 
     notification = Notification.objects.create(
         body=body,

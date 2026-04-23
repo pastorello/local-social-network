@@ -3,7 +3,7 @@ import uuid
 from django.db import models
 
 from account.models import User
-from post.models import Post
+from posts.models import Post
 
 
 class Notification(models.Model):

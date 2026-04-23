@@ -11,8 +11,6 @@ class QuestionSerializer(serializers.ModelSerializer):
     created_at_formatted = serializers.SerializerMethodField(source='created_at_formatted')
     choices = ChoiceSerializer(many=True, read_only=True, source='choice_set')
 
-    print(choices)
-
     def get_created_at_formatted(self, obj):
         return obj.created_at_formatted()
 
