@@ -28,33 +28,35 @@ const logout = () => {
       <div class="grid grid-cols-4 items-center gap-8 px-6">
         <SiteTitle />
 
-        <div class="flex space-x-6 col-span-2 justify-center" v-if="user.isAuthenticated">
-          <MenuButton to="/">
-            <template #icon>
-              <HomeIcon class="w-6 h-6" />
-            </template>
-            Home
-          </MenuButton>
-          <MenuButton to="/posts">
-            <template #icon>
-              <PostsIcon class="w-6 h-6" />
-            </template>
-            Posts
-          </MenuButton>
+        <div class="flex space-x-6 col-span-2 justify-center">
+          <template v-if="user.isAuthenticated">
+            <MenuButton to="/">
+              <template #icon>
+                <HomeIcon class="w-6 h-6" />
+              </template>
+              Home
+            </MenuButton>
+            <MenuButton to="/posts">
+              <template #icon>
+                <PostsIcon class="w-6 h-6" />
+              </template>
+              Posts
+            </MenuButton>
 
-          <MenuButton to="/polls">
-            <template #icon>
-              <PollsIcon class="w-6 h-6" />
-            </template>
-            Polls
-          </MenuButton>
+            <MenuButton to="/polls">
+              <template #icon>
+                <PollsIcon class="w-6 h-6" />
+              </template>
+              Polls
+            </MenuButton>
 
-          <MenuButton to="/users">
-            <template #icon>
-              <CommunityIcon class="w-6 h-6" />
-            </template>
-            Users
-          </MenuButton>
+            <MenuButton to="/users">
+              <template #icon>
+                <CommunityIcon class="w-6 h-6" />
+              </template>
+              Users
+            </MenuButton>
+          </template>
         </div>
 
         <div class="flex justify-end">
