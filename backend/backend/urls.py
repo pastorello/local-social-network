@@ -9,8 +9,9 @@ from account.views import activateemail
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/users/', include('account.urls')),
-    path('api/posts/', include('post.urls')),
+    path('api/posts/', include('posts.urls')),
     path('api/polls/', include('polls.urls')),
+    path('api/notifications/', include('notifications.urls')),
     path('activateemail/', activateemail, name='activateemail'),
 ]  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

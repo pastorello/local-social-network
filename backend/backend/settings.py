@@ -77,6 +77,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt', # api authentication
     'account',
     'polls'
+    'posts',
+    'notifications',
 ]
 
 MIDDLEWARE = [
