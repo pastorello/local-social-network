@@ -12,16 +12,13 @@ const props = withDefaults(defineProps<Props>(), {
   placeholder: 'Ricerca...',
 })
 
-// Definisco gli event emessi
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void
   (e: 'submit'): void
 }>()
 
-// Gestione del modello locale (two-way binding)
 const localQuery = ref(props.modelValue)
 
-// Aggiorno il valore locale quando la prop cambia
 watch(
   () => props.modelValue,
   (newValue) => {
@@ -29,7 +26,6 @@ watch(
   },
 )
 
-// Gestione del submit
 const handleSubmit = (e: Event) => {
   e.preventDefault()
   emit('update:modelValue', localQuery.value)
