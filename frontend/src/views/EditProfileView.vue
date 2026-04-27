@@ -40,7 +40,7 @@ const submitForm = () => {
     formData.append('email', formData.value.email)
 
     axios
-      .post('/api/editprofile/', formData, {
+      .post('/api/users/editprofile/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

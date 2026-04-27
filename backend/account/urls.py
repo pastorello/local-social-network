@@ -10,6 +10,6 @@ urlpatterns = [
     path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('editprofile/', api.editprofile, name='editprofile'),
     path('editpassword/', api.editpassword, name='editpassword'),
-    path('user/<uuid:pk>/', api.user, name='user'),
-    path('users/', api.user_list, name='user_list'),
+    path('<uuid:pk>/', api.user, name='user'),
+    path('user_list/', api.user_list, name='user_list'),
 ]

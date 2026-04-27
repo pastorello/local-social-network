@@ -41,7 +41,7 @@ const submitForm = () => {
     formErrors.value = []
 
     axios
-      .post('/api/signup/', parsedData.data)
+      .post('/api/users/signup/', parsedData.data)
       .then((response) => {
         if (response.data.message === 'success') {
           toastStore.showToast(

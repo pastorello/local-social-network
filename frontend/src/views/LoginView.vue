@@ -35,7 +35,7 @@ const submitForm = async () => {
 
   if (parsedData !== null) {
     await axios
-      .post('/api/login/', parsedData.data)
+      .post('/api/users/login/', parsedData.data)
       .then((response) => {
         userStore.setToken(response.data)
 
@@ -50,7 +50,7 @@ const submitForm = async () => {
 
   if (formErrors.value.length === 0) {
     await axios
-      .get('/api/me/')
+      .get('/api/users/me/')
       .then((response) => {
         userStore.setUserInfo(response.data)
 

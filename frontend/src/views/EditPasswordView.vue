@@ -36,7 +36,7 @@ const submitForm = () => {
     formData.append('new_password2', form.value.new_password2)
 
     axios
-      .post('/api/editpassword/', formData, {
+      .post('/api/users/editpassword/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
