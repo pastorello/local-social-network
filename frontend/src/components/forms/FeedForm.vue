@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useFileUpload } from '@/composables/useFileUpload'
 import type Post from '@/definitions/interfaces/Post'
 import type User from '@/definitions/interfaces/User'
 import axios from 'axios'
@@ -11,19 +12,7 @@ const props = defineProps<{
 
 const body = ref<string>('')
 const is_private = ref<boolean>(false)
-const url = ref<string | null>(null)
-const fileInput = ref<HTMLInputElement | null>(null)
-
-const onFileChange = (event: Event) => {
-  const input = event.target as HTMLInputElement
-  if (input.files?.[0]) {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      url.value = e.target?.result as string
-    }
-    reader.readAsDataURL(input.files[0])
-  }
-}
+const { url, fileInput, onFileChange, resetFile } = useFileUpload()
 
 const submitForm = async () => {
   try {
@@ -47,10 +36,7 @@ const submitForm = async () => {
 
     body.value = ''
     is_private.value = false
-    url.value = null
-    if (fileInput.value) {
-      fileInput.value.value = ''
-    }
+    resetFile()
   } catch (error) {
     console.error('Errore durante il caricamento:', error)
   }

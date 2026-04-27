@@ -3,4 +3,5 @@ export default interface User {
   name: string
   email: string
   avatarURL: string
+  posts_count: number
 }
