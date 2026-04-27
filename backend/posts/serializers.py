@@ -6,9 +6,14 @@ from .models import Post, PostAttachment, Comment, Trend
 
 
 class PostAttachmentSerializer(serializers.ModelSerializer):
+    attachmentURL = serializers.SerializerMethodField(source='get_image')
+    
+    def get_attachmentURL(self, obj):
+        return obj.get_image()
+    
     class Meta:
         model = PostAttachment
-        fields = ('id', 'get_image',)
+        fields = ('id', 'attachmentURL',)
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -17,7 +22,7 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ('id', 'body', 'is_private', 'likes_count', 'comments_count', 'created_by', 'created_at_formatted', 'attachments')
+        fields = ('id', 'body', 'is_private', 'likes_count', 'comments_count', 'created_by', 'created_at','created_at_formatted', 'attachments')
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -25,7 +30,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ('id', 'body', 'created_by', 'created_at_formatted',)
+        fields = ('id', 'body', 'created_by', 'created_at', 'created_at_formatted',)
 
 
 class PostDetailSerializer(serializers.ModelSerializer):
