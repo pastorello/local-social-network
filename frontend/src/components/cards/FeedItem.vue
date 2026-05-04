@@ -3,7 +3,7 @@ import axios from 'axios'
 import { RouterLink } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useToastStore } from '@/stores/toast'
-import Post from '@/definitions/interfaces/Post'
+import type Post from '@/definitions/interfaces/Post'
 import { ref } from 'vue'
 
 const props = defineProps<{
@@ -22,7 +22,7 @@ const likePost = (id: string) => {
     .post(`/api/posts/${id}/like/`)
     .then((response) => {
       if (response.data.message == 'like created') {
-        props.post.likes_count += 1
+        props.post.likes_count = (props.post.likes_count ?? 0) + 1
       }
     })
     .catch((error) => {
@@ -77,7 +77,7 @@ const toggleExtraModal = () => {
       </p>
     </div>
 
-    <p class="text-gray-600">{{ post.created_at_formatted }} ago</p>
+    <p class="text-gray-600">{{ post.created_at_formatted }} fa</p>
   </div>
 
   <template v-if="post.attachments.length">

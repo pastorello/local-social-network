@@ -7,6 +7,7 @@ import { parseZodObject, SignupForm } from '@/forms/user'
 import FormInput from '@/components/forms/FormInput.vue'
 import PanelBox from '@/components/boxes/PanelBox.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
+import ActionButton from '@/components/buttons/ActionButton.vue'
 
 const toastStore = useToastStore()
 
@@ -117,7 +118,7 @@ const submitForm = () => {
           </template>
 
           <div>
-            <button class="py-4 px-6 bg-purple-600 text-white rounded-lg">Sign up</button>
+            <ActionButton>Sign up</ActionButton>
           </div>
         </form>
       </PanelBox>

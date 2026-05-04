@@ -4,9 +4,10 @@ import type Post from '@/definitions/interfaces/Post'
 import type User from '@/definitions/interfaces/User'
 import axios from 'axios'
 import { ref } from 'vue'
+import ActionButton from '../buttons/ActionButton.vue'
 
 const props = defineProps<{
-  user: User
+  user: User | null
   posts: Post[]
 }>()
 
@@ -52,25 +53,24 @@ const submitForm = async () => {
         placeholder="A cosa stai pensando?"
       ></textarea>
 
-      <label>
-        <input type="checkbox" v-model="is_private" />
-        Private
-      </label>
-
       <div id="preview" v-if="url">
         <img :src="url" class="w-25 mt-3 rounded-xl" />
       </div>
     </div>
 
     <div class="p-4 border-t border-gray-100 flex justify-between">
-      <label class="inline-block py-4 px-6 bg-gray-600 text-white rounded-lg">
-        <input type="file" ref="fileInput" @change="onFileChange" accept="image/*" />
-        Attach image
+      <label class="inline-block py-4 px-6 bg-gray-600 text-white rounded-lg cursor-pointer">
+        <input
+          class="bg-neutral-secondary-medium text-heading text-sm rounded-base block w-full shadow-xs placeholder:text-body"
+          type="file"
+          ref="fileInput"
+          @change="onFileChange"
+          accept="image/*"
+        />
+        Allega un'immagine
       </label>
 
-      <button type="submit" class="inline-block py-4 px-6 bg-purple-600 text-white rounded-lg">
-        Post
-      </button>
+      <ActionButton type="submit"> Post </ActionButton>
     </div>
   </form>
 </template>

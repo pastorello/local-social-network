@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import axios from 'axios'
 import { onMounted, ref } from 'vue'
 
@@ -7,9 +7,10 @@ import ViewContainer from '@/components/boxes/ViewContainer.vue'
 import QuestionCard from '@/components/cards/QuestionCard.vue'
 import SearchBar from '@/components/forms/SearchBar.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
+import type Poll from '@/definitions/interfaces/Poll'
 
 const query = ref('')
-let polls = ref([])
+let polls = ref<Poll[]>([])
 
 const getPolls = async () => {
   await axios
