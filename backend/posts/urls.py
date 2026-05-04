@@ -4,7 +4,7 @@ from . import api
 
 
 urlpatterns = [
-    path('', api.post_list, name='post_list'),
+    path('list/', api.post_list, name='post_list'),
     path('<uuid:pk>/', api.post_detail, name='post_detail'),
     path('<uuid:pk>/like/', api.post_like, name='post_like'),
     path('<uuid:pk>/comment/', api.post_create_comment, name='post_create_comment'),

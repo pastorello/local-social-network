@@ -13,7 +13,7 @@ let users = ref([])
 
 const getUsers = async () => {
   await axios
-    .post('/api/users/', {
+    .post('/api/users/list/', {
       query: query.value,
     })
     .then((response) => {

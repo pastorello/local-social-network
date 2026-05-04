@@ -11,5 +11,5 @@ urlpatterns = [
     path('editprofile/', api.editprofile, name='editprofile'),
     path('editpassword/', api.editpassword, name='editpassword'),
     path('<uuid:pk>/', api.user, name='user'),
-    path('user_list/', api.user_list, name='user_list'),
+    path('list/', api.user_list, name='user_list'),
 ]

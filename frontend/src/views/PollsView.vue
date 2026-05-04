@@ -13,7 +13,7 @@ let polls = ref([])
 
 const getPolls = async () => {
   await axios
-    .post('/api/polls/', {
+    .post('/api/polls/list/', {
       query: query.value,
     })
     .then((response) => {
