@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import axios from 'axios'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -20,7 +20,7 @@ const form = ref({
   new_password1: '',
   new_password2: '',
 })
-const formErrors = ref([])
+const formErrors = ref<string[]>([])
 
 const submitForm = () => {
   formErrors.value = []
@@ -30,7 +30,7 @@ const submitForm = () => {
   }
 
   if (formErrors.value.length === 0) {
-    let formData = new FormData()
+    const formData = new FormData()
     formData.append('old_password', form.value.old_password)
     formData.append('new_password1', form.value.new_password1)
     formData.append('new_password2', form.value.new_password2)
@@ -47,10 +47,12 @@ const submitForm = () => {
 
           router.push(`/profile/${userStore.user.id}`)
         } else {
-          const data = JSON.parse(response.data.message)
+          const data = JSON.parse(response.data.message) as Record<string, { message: string }[]>
 
-          for (const key in data) {
-            formErrors.value.push(data[key][0].message)
+          for (const fieldErrors of Object.values(data)) {
+            if (fieldErrors[0]) {
+              formErrors.value.push(fieldErrors[0].message)
+            }
           }
         }
       })

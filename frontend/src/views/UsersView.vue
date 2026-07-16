@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import axios from 'axios'
 import { onMounted, ref } from 'vue'
 
@@ -7,9 +7,10 @@ import ActionButton from '@/components/buttons/ActionButton.vue'
 import ViewContainer from '@/components/boxes/ViewContainer.vue'
 import UserCard from '@/components/cards/UserCard.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
+import type User from '@/definitions/interfaces/User'
 
 const query = ref('')
-let users = ref([])
+const users = ref<User[]>([])
 
 const getUsers = async () => {
   await axios

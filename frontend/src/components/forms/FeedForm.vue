@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import { useFileUpload } from '@/composables/useFileUpload'
 import type Post from '@/definitions/interfaces/Post'
-import type User from '@/definitions/interfaces/User'
 import axios from 'axios'
 import { ref } from 'vue'
 import ActionButton from '../buttons/ActionButton.vue'
 
-const props = defineProps<{
-  user: User | null
-  posts: Post[]
+const emit = defineEmits<{
+  (e: 'postCreated', post: Post): void
 }>()
 
 const body = ref<string>('')
@@ -30,10 +28,7 @@ const submitForm = async () => {
       },
     })
 
-    props.posts.unshift(response.data)
-    if (props.user) {
-      props.user.posts_count += 1
-    }
+    emit('postCreated', response.data)
 
     body.value = ''
     is_private.value = false

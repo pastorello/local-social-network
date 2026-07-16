@@ -10,7 +10,7 @@ import MainTitle from '@/components/typography/MainTitle.vue'
 import type Poll from '@/definitions/interfaces/Poll'
 
 const query = ref('')
-let polls = ref<Poll[]>([])
+const polls = ref<Poll[]>([])
 
 const getPolls = async () => {
   await axios

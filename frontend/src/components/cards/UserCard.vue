@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type User from '@/definitions/interfaces/User'
 
-const props = defineProps<{
+defineProps<{
   user: User
 }>()
 </script>

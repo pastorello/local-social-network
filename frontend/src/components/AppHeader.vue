@@ -1,5 +1,5 @@
-<script setup>
-import { useRouter, useRoute } from 'vue-router'
+<script setup lang="ts">
+import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 
 import ActionButton from './buttons/ActionButton.vue'
@@ -14,7 +14,6 @@ const userStore = useUserStore()
 const user = userStore.user
 
 const router = useRouter()
-const route = useRoute()
 
 const logout = () => {
   userStore.removeToken()
@@ -62,7 +61,7 @@ const logout = () => {
         <div class="flex justify-end">
           <template v-if="user.isAuthenticated && user.id">
             <RouterLink :to="{ name: 'profile', params: { id: user.id } }">
-              <img :src="user.avatar" class="w-12 rounded-full inline-block mr-4" />
+              <img :src="user.avatar ?? undefined" class="w-12 rounded-full inline-block mr-4" />
             </RouterLink>
             <ActionButton class="inline-block" size="small" button-type="danger" @click="logout">
               Log out

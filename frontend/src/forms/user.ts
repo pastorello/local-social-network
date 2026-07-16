@@ -3,20 +3,19 @@ import { it } from 'zod/locales'
 
 z.config(it())
 
-export const parseZodObject = (object: z.ZodObject, data: any) => {
-  const result = {
-    data: {},
-    errors: [] as string[],
+export const parseZodObject = <Schema extends z.ZodType>(schema: Schema, data: unknown) => {
+  const result: { data: z.output<Schema> | null; errors: string[] } = {
+    data: null,
+    errors: [],
   }
 
   try {
-    result.data = object.parse(data)
+    result.data = schema.parse(data) as z.output<Schema>
   } catch (error) {
     if (error instanceof z.ZodError) {
       error.issues.forEach((issue) => {
         result.errors.push(`${issue.path.join(', ')} ${issue.message}`)
       })
-      return result
     }
   }
 

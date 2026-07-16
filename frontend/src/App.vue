@@ -1,10 +1,10 @@
-<script setup>
+<script setup lang="ts">
 import axios from 'axios'
 import { onBeforeMount } from 'vue'
 
 import { useUserStore } from './stores/user'
 
-import Toast from '@/components/modals/Toast.vue'
+import AppToast from '@/components/modals/AppToast.vue'
 import AppHeader from './components/AppHeader.vue'
 
 const userStore = useUserStore()
@@ -34,5 +34,5 @@ onBeforeMount(() => {
     <RouterView />
   </main>
 
-  <Toast />
+  <AppToast />
 </template>

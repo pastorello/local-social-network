@@ -1,7 +1,14 @@
 import { defineStore } from 'pinia'
 
+interface ToastState {
+  ms: number
+  message: string
+  classes: string
+  isVisible: boolean
+}
+
 export const useToastStore = defineStore('toast', {
-  state: () => ({
+  state: (): ToastState => ({
     ms: 0,
     message: '',
     classes: '',
@@ -9,8 +16,8 @@ export const useToastStore = defineStore('toast', {
   }),
 
   actions: {
-    showToast(ms, message, classes) {
-      this.ms = parseInt(ms)
+    showToast(ms: number, message: string, classes: string) {
+      this.ms = ms
       this.message = message
       this.classes = classes
       this.isVisible = true

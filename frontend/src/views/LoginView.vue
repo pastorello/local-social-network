@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import axios from 'axios'
 
 import { useUserStore } from '@/stores/user'
@@ -19,10 +19,10 @@ const form = ref({
   password: '',
 })
 
-const formErrors = ref([])
+const formErrors = ref<string[]>([])
 
 const submitForm = async () => {
-  let parsedData = parseZodObject(LoginForm, form.value)
+  const parsedData = parseZodObject(LoginForm, form.value)
 
   formErrors.value = []
 
@@ -31,20 +31,18 @@ const submitForm = async () => {
     return
   }
 
-  if (parsedData !== null) {
-    await axios
-      .post('/api/users/login/', parsedData.data)
-      .then((response) => {
-        userStore.setToken(response.data)
+  await axios
+    .post('/api/users/login/', parsedData.data)
+    .then((response) => {
+      userStore.setToken(response.data)
 
-        axios.defaults.headers.common['Authorization'] = 'Bearer ' + response.data.access
-      })
-      .catch((error) => {
-        console.log('error', error)
+      axios.defaults.headers.common['Authorization'] = 'Bearer ' + response.data.access
+    })
+    .catch((error) => {
+      console.log('error', error)
 
-        formErrors.value.push('The email or password is incorrect! Or the user is not activated!')
-      })
-  }
+      formErrors.value.push('The email or password is incorrect!')
+    })
 
   if (formErrors.value.length === 0) {
     await axios

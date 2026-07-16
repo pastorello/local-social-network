@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import axios from 'axios'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -16,28 +16,32 @@ const router = useRouter()
 const toastStore = useToastStore()
 const userStore = useUserStore()
 
-const formData = ref({
-  email: userStore.user.email,
-  name: userStore.user.name,
+const form = ref({
+  email: userStore.user.email ?? '',
+  name: userStore.user.name ?? '',
 })
-const errors = ref([])
+const fileInput = ref<HTMLInputElement | null>(null)
+const errors = ref<string[]>([])
 
 const submitForm = () => {
   errors.value = []
 
-  if (formData.value.email === '') {
+  if (form.value.email === '') {
     errors.value.push('Your e-mail is missing')
   }
 
-  if (formData.value.name === '') {
+  if (form.value.name === '') {
     errors.value.push('Your name is missing')
   }
 
   if (errors.value.length === 0) {
-    let formData = new FormData()
-    formData.append('avatar', $refs.file.files[0])
-    formData.append('name', formData.value.name)
-    formData.append('email', formData.value.email)
+    const formData = new FormData()
+    const avatarFile = fileInput.value?.files?.[0]
+    if (avatarFile) {
+      formData.append('avatar', avatarFile)
+    }
+    formData.append('name', form.value.name)
+    formData.append('email', form.value.email)
 
     axios
       .post('/api/users/editprofile/', formData, {
@@ -50,10 +54,10 @@ const submitForm = () => {
           toastStore.showToast(5000, 'The information was saved', 'bg-emerald-500')
 
           userStore.setUserInfo({
-            id: userStore.user.id,
-            name: formData.value.name,
-            email: formData.value.email,
-            avatar: response.data.user.get_avatar,
+            id: userStore.user.id ?? '',
+            name: form.value.name,
+            email: form.value.email,
+            avatar: response.data.user.avatarURL,
           })
 
           router.back()
@@ -88,17 +92,17 @@ const submitForm = () => {
         <form class="space-y-6" v-on:submit.prevent="submitForm">
           <div>
             <label>Name</label><br />
-            <FormInput type="text" v-model="formData.name" placeholder="Your full name" />
+            <FormInput type="text" v-model="form.name" placeholder="Your full name" />
           </div>
 
           <div>
             <label>E-mail</label><br />
-            <FormInput type="email" v-model="formData.email" placeholder="Your e-mail address" />
+            <FormInput type="email" v-model="form.email" placeholder="Your e-mail address" />
           </div>
 
           <div>
             <label>Avatar</label><br />
-            <input type="file" ref="file" />
+            <input type="file" ref="fileInput" accept="image/*" />
           </div>
 
           <template v-if="errors.length > 0">

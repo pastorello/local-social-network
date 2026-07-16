@@ -2,7 +2,7 @@
 import type Comment from '@/definitions/interfaces/Comment'
 import { RouterLink } from 'vue-router'
 
-const props = defineProps<{
+defineProps<{
   comment: Comment
 }>()
 </script>

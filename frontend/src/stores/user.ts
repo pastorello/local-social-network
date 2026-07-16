@@ -1,8 +1,30 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
 
+interface UserState {
+  isAuthenticated: boolean
+  id: string | null
+  name: string | null
+  email: string | null
+  access: string | null
+  refresh: string | null
+  avatar: string | null
+}
+
+interface TokenPair {
+  access: string
+  refresh: string
+}
+
+interface UserInfo {
+  id: string
+  name: string
+  email: string
+  avatar: string | null
+}
+
 export const useUserStore = defineStore('user', {
-  state: () => ({
+  state: (): { user: UserState } => ({
     user: {
       isAuthenticated: false,
       id: null,
@@ -29,7 +51,7 @@ export const useUserStore = defineStore('user', {
       }
     },
 
-    setToken(data) {
+    setToken(data: TokenPair) {
       this.user.access = data.access
       this.user.refresh = data.refresh
       this.user.isAuthenticated = true
@@ -55,16 +77,16 @@ export const useUserStore = defineStore('user', {
       localStorage.setItem('user.avatar', '')
     },
 
-    setUserInfo(user) {
+    setUserInfo(user: UserInfo) {
       this.user.id = user.id
       this.user.name = user.name
       this.user.email = user.email
       this.user.avatar = user.avatar
 
-      localStorage.setItem('user.id', this.user.id)
-      localStorage.setItem('user.name', this.user.name)
-      localStorage.setItem('user.email', this.user.email)
-      localStorage.setItem('user.avatar', this.user.avatar)
+      localStorage.setItem('user.id', this.user.id ?? '')
+      localStorage.setItem('user.name', this.user.name ?? '')
+      localStorage.setItem('user.email', this.user.email ?? '')
+      localStorage.setItem('user.avatar', this.user.avatar ?? '')
     },
 
     refreshToken() {
@@ -79,7 +101,7 @@ export const useUserStore = defineStore('user', {
 
           axios.defaults.headers.common['Authorization'] = 'Bearer ' + response.data.access
         })
-        .catch((error) => {
+        .catch(() => {
           this.removeToken()
         })
     },
