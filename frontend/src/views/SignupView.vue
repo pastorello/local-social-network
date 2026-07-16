@@ -3,6 +3,7 @@ import axios from 'axios'
 
 import { useToastStore } from '@/stores/toast'
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { parseZodObject, SignupForm } from '@/forms/user'
 import FormInput from '@/components/forms/FormInput.vue'
 import PanelBox from '@/components/boxes/PanelBox.vue'
@@ -10,6 +11,7 @@ import MainTitle from '@/components/typography/MainTitle.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 
 const toastStore = useToastStore()
+const router = useRouter()
 
 const form = ref({
   email: '',
@@ -45,11 +47,7 @@ const submitForm = () => {
       .post('/api/users/signup/', parsedData.data)
       .then((response) => {
         if (response.data.message === 'success') {
-          toastStore.showToast(
-            5000,
-            'The user is registered. Please activate your account by clicking your email link.',
-            'bg-emerald-500',
-          )
+          toastStore.showToast(5000, 'Account created! You can now log in.', 'bg-emerald-500')
 
           resetForm()
           router.push('/login')
