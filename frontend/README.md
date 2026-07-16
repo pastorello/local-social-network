@@ -1,5 +1,9 @@
 # frontend
 
+Vue 3 + TypeScript SPA. With Docker, `docker compose up` from the repo root runs it — nothing else to do. The steps below are for running it bare-metal.
+
+The backend must be reachable for the app to work; the API base URL defaults to `http://127.0.0.1:8000` and can be overridden via `VITE_API_BASE_URL` (see [.env.example](./.env.example)).
+
 ## Project Setup
 
 ```sh
