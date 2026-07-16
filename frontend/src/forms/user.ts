@@ -1,5 +1,5 @@
 import * as z from 'zod'
-import { it, ps } from 'zod/locales'
+import { it } from 'zod/locales'
 
 z.config(it())
 

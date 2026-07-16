@@ -2,24 +2,22 @@ from .models import Notification
 
 from posts.models import Post
 
-def create_notification(request, type_of_notification, post_id=None, friendrequest_id=None):
-    created_for = None
-
-    if type_of_notification == 'post_like':
+def create_notification(request, type_of_notification, post_id=None):
+    if type_of_notification == Notification.POST_LIKE:
         body = f'{request.user.name} liked one of your posts!'
-        post = Post.objects.get(pk=post_id)
-        created_for = post.created_by
-    elif type_of_notification == 'post_comment':
+    elif type_of_notification == Notification.POST_COMMENT:
         body = f'{request.user.name} commented on one of your posts!'
-        post = Post.objects.get(pk=post_id)
-        created_for = post.created_by
+    else:
+        raise ValueError(f'Unknown notification type: {type_of_notification}')
+
+    post = Post.objects.get(pk=post_id)
 
     notification = Notification.objects.create(
         body=body,
         type_of_notification=type_of_notification,
         created_by=request.user,
         post_id=post_id,
-        created_for=created_for
+        created_for=post.created_by,
     )
 
     return notification

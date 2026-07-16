@@ -21,12 +21,10 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.2.2",
     "@vue-leaflet/vue-leaflet": "^0.10.1",
-    "@vuelidate/core": "^2.0.3",
-    "@vuelidate/validators": "^2.0.4",
     "axios": "^1.14.0",
+    "leaflet": "^1.9.4",
     "pinia": "^3.0.4",
     "tailwindcss": "^4.2.2",
-    "vee-validate": "^4.15.1",
     "vue": "^3.5.31",
     "vue-router": "^5.0.4",
     "zod": "^4.3.6"
