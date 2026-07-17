@@ -36,6 +36,10 @@ F2.1 map ✅ (full-width panel; "full-screen" reading deferred to M4 layout poli
 
 `pytest` 45/45 · `ruff` clean · `manage.py check` + `makemigrations --check` clean · `npm run build` / `lint` / `test:unit` (15/15) green · live compose + browser verification recorded below.
 
+## Post-verification fix (author bug report, same day)
+
+Clicking the map in placing mode did nothing (and the existing pin didn't render). Two stacked causes, found by instrumenting the live app: (1) `use-global-leaflet="false"` makes vue-leaflet load its **own second copy** of Leaflet (`leaflet-src.esm`), and layers built from our CJS instance can't attach to a map built from the other — fixed by assigning our (markercluster-augmented) instance to `globalThis.L` and switching to `use-global-leaflet="true"`; (2) the map container could be measured at **width 0** before the grid layout settled, giving degenerate bounds (markercluster renders nothing, click coordinates broken) — fixed with `map.invalidateSize()` on ready plus a `ResizeObserver` on the wrapper (also covers the layout shift when the filter panel toggles). Verified fixed by the author on a real browser.
+
 ## Review notes for the author
 
 - `/api/reports/map/` is a pragmatic spec §8 addition (documented there) — the paginated list would otherwise cap the map at one page.
