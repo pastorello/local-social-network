@@ -57,6 +57,7 @@ const submitForm = () => {
             id: userStore.user.id ?? '',
             name: form.value.name,
             email: form.value.email,
+            role: userStore.user.role ?? 'citizen',
             avatar: response.data.user.avatarURL,
           })
 

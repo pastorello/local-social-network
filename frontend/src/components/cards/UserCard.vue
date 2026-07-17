@@ -14,7 +14,6 @@ defineProps<{
 
     <div class="px-6 py-4">
       <h2 class="text-xl font-bold text-gray-800">{{ user.name }}</h2>
-      <p class="text-gray-600">{{ user.email }}</p>
     </div>
   </div>
 </template>

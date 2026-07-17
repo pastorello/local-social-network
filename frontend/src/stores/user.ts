@@ -1,11 +1,14 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
 
+export type UserRole = 'citizen' | 'admin'
+
 interface UserState {
   isAuthenticated: boolean
   id: string | null
   name: string | null
   email: string | null
+  role: UserRole | null
   access: string | null
   refresh: string | null
   avatar: string | null
@@ -20,6 +23,7 @@ interface UserInfo {
   id: string
   name: string
   email: string
+  role: UserRole
   avatar: string | null
 }
 
@@ -30,6 +34,7 @@ export const useUserStore = defineStore('user', {
       id: null,
       name: null,
       email: null,
+      role: null,
       access: null,
       refresh: null,
       avatar: null,
@@ -44,6 +49,7 @@ export const useUserStore = defineStore('user', {
         this.user.id = localStorage.getItem('user.id')
         this.user.name = localStorage.getItem('user.name')
         this.user.email = localStorage.getItem('user.email')
+        this.user.role = (localStorage.getItem('user.role') as UserRole) || null
         this.user.avatar = localStorage.getItem('user.avatar')
         this.user.isAuthenticated = true
 
@@ -67,6 +73,7 @@ export const useUserStore = defineStore('user', {
       this.user.id = null
       this.user.name = null
       this.user.email = null
+      this.user.role = null
       this.user.avatar = null
 
       localStorage.setItem('user.access', '')
@@ -74,6 +81,7 @@ export const useUserStore = defineStore('user', {
       localStorage.setItem('user.id', '')
       localStorage.setItem('user.name', '')
       localStorage.setItem('user.email', '')
+      localStorage.setItem('user.role', '')
       localStorage.setItem('user.avatar', '')
     },
 
@@ -81,11 +89,13 @@ export const useUserStore = defineStore('user', {
       this.user.id = user.id
       this.user.name = user.name
       this.user.email = user.email
+      this.user.role = user.role
       this.user.avatar = user.avatar
 
       localStorage.setItem('user.id', this.user.id ?? '')
       localStorage.setItem('user.name', this.user.name ?? '')
       localStorage.setItem('user.email', this.user.email ?? '')
+      localStorage.setItem('user.role', this.user.role ?? '')
       localStorage.setItem('user.avatar', this.user.avatar ?? '')
     },
 

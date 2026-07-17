@@ -14,8 +14,8 @@ const users = ref<User[]>([])
 
 const getUsers = async () => {
   await axios
-    .post('/api/users/list/', {
-      query: query.value,
+    .get('/api/users/list/', {
+      params: { q: query.value },
     })
     .then((response) => {
       users.value = response.data
