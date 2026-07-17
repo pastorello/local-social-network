@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.decorators import api_view
 
 from .models import Notification
 from .serializers import NotificationSerializer

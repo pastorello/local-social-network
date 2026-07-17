@@ -42,7 +42,7 @@ A civic engagement platform for small cities (pilot: Gaeta, LT). Citizens report
 - **F1.1** Email + password registration with email uniqueness. Registration creates an **active** account immediately — no email activation in the MVP (decision 2026-07-16; the previous activation flow is removed in M0). *(Existing login flow to be consolidated, not rebuilt.)*
 - **F1.2** Login / logout; session persists across page reloads.
 - **F1.3** Role field on user (`citizen` | `admin`); admins are promoted via Django admin, not self-service.
-- **F1.4** Minimal profile: display name, optional avatar. No public user pages in MVP.
+- **F1.4** Minimal profile: display name, optional avatar. No public user pages in MVP — clarified 2026-07-17: the prototype's user directory and profile pages remain but are **accessible only to authenticated users** (they stay auth-only when M2 opens anonymous read access). E-mail addresses are returned only to their owner via `/api/users/me/`, never serialized elsewhere.
 
 ### F2 — Map and issue reports
 
