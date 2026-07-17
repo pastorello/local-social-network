@@ -13,4 +13,4 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         # No email here on purpose: user e-mail addresses are private and only
         # returned to the owner via /api/users/me/ (spec F1.4).
-        fields = ('id', 'name', 'avatarURL', 'posts_count')
+        fields = ('id', 'name', 'avatarURL')
