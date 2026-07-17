@@ -15,6 +15,7 @@ def me(request):
         'id': request.user.id,
         'name': request.user.name,
         'email': request.user.email,
+        'role': request.user.role,
         'avatar': request.user.get_avatar()
     })
 

@@ -27,10 +27,20 @@ class CustomUserManager(UserManager):
         return self._create_user(name, email, password, **extra_fields)
     
 class User(AbstractBaseUser, PermissionsMixin):
+    CITIZEN = 'citizen'
+    ADMIN = 'admin'
+
+    ROLE_CHOICES = (
+        (CITIZEN, 'Citizen'),
+        (ADMIN, 'Admin'),
+    )
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(unique=True)
     name = models.CharField(max_length=255, null=True, default='')
     avatar = models.ImageField(upload_to='avatars', blank=True, null=True)
+    # Spec F1.3: admins are promoted via the Django admin, not self-service.
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=CITIZEN)
 
     is_active = models.BooleanField(default=True)
     is_superuser = models.BooleanField(default=False)
