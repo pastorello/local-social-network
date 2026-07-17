@@ -42,25 +42,19 @@ const submitForm = () => {
 
   axios
     .post('/api/users/signup/', parsedData.data)
-    .then((response) => {
-      if (response.data.message === 'success') {
-        toastStore.showToast(5000, 'Account created! You can now log in.', 'bg-emerald-500')
+    .then(() => {
+      toastStore.showToast(5000, 'Account creato! Ora puoi accedere.', 'bg-emerald-500')
 
-        resetForm()
-        router.push('/login')
-      } else {
-        const data = JSON.parse(response.data.message) as Record<string, { message: string }[]>
-        for (const fieldErrors of Object.values(data)) {
-          if (fieldErrors[0]) {
-            formErrors.value.push(fieldErrors[0].message)
-          }
-        }
-
-        toastStore.showToast(5000, 'Something went wrong. Please try again', 'bg-red-300')
-      }
+      resetForm()
+      router.push('/login')
     })
     .catch((error) => {
-      console.log('error', error)
+      const fields = error.response?.data?.fields as Record<string, string[]> | undefined
+      formErrors.value = fields
+        ? Object.values(fields).flat()
+        : ['Si è verificato un errore. Riprova.']
+
+      toastStore.showToast(5000, 'Qualcosa è andato storto. Riprova.', 'bg-red-300')
     })
 }
 </script>

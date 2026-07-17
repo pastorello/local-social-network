@@ -43,8 +43,8 @@ def test_signup_creates_active_citizen(api_client):
         },
     )
 
-    assert response.status_code == 200
-    assert response.json()['message'] == 'success'
+    assert response.status_code == 201
+    assert 'detail' in response.json()
 
     user = User.objects.get(email='nuovo@example.com')
     assert user.is_active is True  # no e-mail activation in the MVP
@@ -63,8 +63,8 @@ def test_signup_rejects_duplicate_email(api_client, citizen):
         },
     )
 
-    assert response.status_code == 200
-    assert response.json()['message'] != 'success'
+    assert response.status_code == 400
+    assert 'email' in response.json()['fields']
     assert User.objects.filter(email=citizen.email).count() == 1
 
 
@@ -79,7 +79,8 @@ def test_signup_rejects_password_mismatch(api_client):
         },
     )
 
-    assert response.json()['message'] != 'success'
+    assert response.status_code == 400
+    assert 'password2' in response.json()['fields']
     assert not User.objects.filter(email='mismatch@example.com').exists()
 
 
@@ -138,7 +139,7 @@ def test_editprofile_updates_name_and_email(auth_client, citizen):
     )
 
     assert response.status_code == 200
-    assert response.json()['message'] == 'information updated'
+    assert 'detail' in response.json()
 
     citizen.refresh_from_db()
     assert citizen.name == 'Nome Nuovo'
@@ -155,7 +156,8 @@ def test_editprofile_rejects_taken_email(auth_client):
         {'name': 'Cittadino Uno', 'email': 'occupata@example.com'},
     )
 
-    assert response.json()['message'] == 'email already exists'
+    assert response.status_code == 400
+    assert 'email' in response.json()['fields']
 
 
 def test_editpassword_changes_password(auth_client, api_client, citizen):
@@ -170,7 +172,7 @@ def test_editpassword_changes_password(auth_client, api_client, citizen):
     )
 
     assert response.status_code == 200
-    assert response.json()['message'] == 'success'
+    assert 'detail' in response.json()
 
     relogin = api_client.post(
         '/api/users/login/', {'email': citizen.email, 'password': new_password}
@@ -188,7 +190,8 @@ def test_editpassword_rejects_wrong_old_password(auth_client):
         },
     )
 
-    assert response.json()['message'] != 'success'
+    assert response.status_code == 400
+    assert 'old_password' in response.json()['fields']
 
 
 # --- user list / detail privacy (F1.4: e-mail only via /me) ---

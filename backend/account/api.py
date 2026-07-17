@@ -1,11 +1,22 @@
 from django.contrib.auth.forms import PasswordChangeForm
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 
-from .forms import SignupForm, ProfileForm
+from .forms import ProfileForm, SignupForm
 from .models import User
 from .serializers import UserSerializer
+
+
+def _form_errors(form):
+    """Django form errors → the spec §8 fields dict."""
+    return {
+        ('non_field_errors' if field == '__all__' else field): list(errors)
+        for field, errors in form.errors.items()
+    }
 
 
 @api_view(['GET'])
@@ -24,7 +35,6 @@ def me(request):
 @permission_classes([])
 def signup(request):
     data = request.data
-    message = 'success'
 
     form = SignupForm({
         'email': data.get('email'),
@@ -33,17 +43,16 @@ def signup(request):
         'password2': data.get('password2'),
     })
 
-    if form.is_valid():
-        form.save()
-    else:
-        message = form.errors.as_json()
-    
-    return JsonResponse({'message': message}, safe=False)
+    if not form.is_valid():
+        raise ValidationError(_form_errors(form))
+
+    form.save()
+    return Response({'detail': 'Account creato.'}, status=201)
 
 
 @api_view(['GET'])
 def user(request, pk):
-    user = User.objects.get(pk=pk)
+    user = get_object_or_404(User, pk=pk)
 
     return JsonResponse(UserSerializer(user).data, safe=False)
 
@@ -66,27 +75,22 @@ def editprofile(request):
     email = request.data.get('email')
 
     if User.objects.exclude(id=user.id).filter(email=email).exists():
-        return JsonResponse({'message': 'email already exists'})
-    else:
-        form = ProfileForm(request.POST, request.FILES, instance=user)
+        raise ValidationError({'email': ['Questa e-mail è già in uso.']})
 
-        if form.is_valid():
-            form.save()
-        
-        serializer = UserSerializer(user)
+    form = ProfileForm(request.POST, request.FILES, instance=user)
+    if not form.is_valid():
+        raise ValidationError(_form_errors(form))
 
-        return JsonResponse({'message': 'information updated', 'user': serializer.data})
-    
+    form.save()
+    return Response({'detail': 'Profilo aggiornato.', 'user': UserSerializer(user).data})
+
 
 @api_view(['POST'])
 def editpassword(request):
-    user = request.user
-    
-    form = PasswordChangeForm(data=request.POST, user=user)
+    form = PasswordChangeForm(data=request.POST, user=request.user)
 
-    if form.is_valid():
-        form.save()
+    if not form.is_valid():
+        raise ValidationError(_form_errors(form))
 
-        return JsonResponse({'message': 'success'})
-    else:
-        return JsonResponse({'message': form.errors.as_json()}, safe=False)
+    form.save()
+    return Response({'detail': 'Password aggiornata.'})
