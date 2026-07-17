@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.decorators import api_view
 
 from account.serializers import UserSerializer
 from account.models import User
@@ -90,7 +90,7 @@ def post_like(request, pk):
         post.likes.add(like)
         post.save()
 
-        notification = create_notification(request, 'post_like', post_id=post.id)
+        create_notification(request, 'post_like', post_id=post.id)
 
         return JsonResponse({'message': 'like created'})
     else:
@@ -106,7 +106,7 @@ def post_create_comment(request, pk):
     post.comments_count = post.comments_count + 1
     post.save()
 
-    notification = create_notification(request, 'post_comment', post_id=post.id)
+    create_notification(request, 'post_comment', post_id=post.id)
 
     serializer = CommentSerializer(comment)
 
