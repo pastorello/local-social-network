@@ -50,24 +50,23 @@ const submitForm = () => {
         },
       })
       .then((response) => {
-        if (response.data.message === 'information updated') {
-          toastStore.showToast(5000, 'The information was saved', 'bg-emerald-500')
+        toastStore.showToast(5000, 'Le informazioni sono state salvate', 'bg-emerald-500')
 
-          userStore.setUserInfo({
-            id: userStore.user.id ?? '',
-            name: form.value.name,
-            email: form.value.email,
-            role: userStore.user.role ?? 'citizen',
-            avatar: response.data.user.avatarURL,
-          })
+        userStore.setUserInfo({
+          id: userStore.user.id ?? '',
+          name: form.value.name,
+          email: form.value.email,
+          role: userStore.user.role ?? 'citizen',
+          avatar: response.data.user.avatarURL,
+        })
 
-          router.back()
-        } else {
-          toastStore.showToast(5000, `${response.data.message}. Please try again`, 'bg-red-300')
-        }
+        router.back()
       })
       .catch((error) => {
-        console.log('error', error)
+        const fields = error.response?.data?.fields as Record<string, string[]> | undefined
+        errors.value = fields
+          ? Object.values(fields).flat()
+          : ['Si è verificato un errore. Riprova.']
       })
   }
 }

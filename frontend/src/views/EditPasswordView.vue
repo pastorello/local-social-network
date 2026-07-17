@@ -41,23 +41,16 @@ const submitForm = () => {
           'Content-Type': 'multipart/form-data',
         },
       })
-      .then((response) => {
-        if (response.data.message === 'success') {
-          toastStore.showToast(5000, 'The information was saved', 'bg-emerald-500')
+      .then(() => {
+        toastStore.showToast(5000, 'La password è stata aggiornata', 'bg-emerald-500')
 
-          router.push(`/profile/${userStore.user.id}`)
-        } else {
-          const data = JSON.parse(response.data.message) as Record<string, { message: string }[]>
-
-          for (const fieldErrors of Object.values(data)) {
-            if (fieldErrors[0]) {
-              formErrors.value.push(fieldErrors[0].message)
-            }
-          }
-        }
+        router.push(`/profile/${userStore.user.id}`)
       })
       .catch((error) => {
-        console.log('error', error)
+        const fields = error.response?.data?.fields as Record<string, string[]> | undefined
+        formErrors.value = fields
+          ? Object.values(fields).flat()
+          : ['Si è verificato un errore. Riprova.']
       })
   }
 }
