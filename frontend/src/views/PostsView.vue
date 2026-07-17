@@ -26,6 +26,10 @@ const deletePost = (id: string) => {
   posts.value = posts.value.filter((post: Post) => post.id !== id)
 }
 
+const onPostCreated = (post: Post) => {
+  posts.value.unshift(post)
+}
+
 onMounted(() => {
   getFeed()
 })
@@ -41,7 +45,7 @@ onMounted(() => {
       <PanelBox>
         <MainTitle>Posts list</MainTitle>
         <div class="bg-white border border-gray-200 rounded-lg mb-8">
-          <FeedForm v-bind:user="null" v-bind:posts="posts" />
+          <FeedForm @post-created="onPostCreated" />
         </div>
 
         <div

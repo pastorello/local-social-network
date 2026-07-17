@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type Poll from '@/definitions/interfaces/Poll'
 
-const props = defineProps<{
+defineProps<{
   question: Poll
 }>()
 </script>

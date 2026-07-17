@@ -12,6 +12,7 @@ const props = defineProps<{
 const userStore = useUserStore()
 const toastStore = useToastStore()
 const showExtraModal = ref(false)
+const likesCount = ref(props.post.likes_count ?? 0)
 
 const emit = defineEmits<{
   (e: 'deletePost', id: string): void
@@ -22,7 +23,7 @@ const likePost = (id: string) => {
     .post(`/api/posts/${id}/like/`)
     .then((response) => {
       if (response.data.message == 'like created') {
-        props.post.likes_count = (props.post.likes_count ?? 0) + 1
+        likesCount.value += 1
       }
     })
     .catch((error) => {
@@ -109,7 +110,7 @@ const toggleExtraModal = () => {
           ></path>
         </svg>
 
-        <span class="text-gray-500 text-xs">{{ post.likes_count }} likes</span>
+        <span class="text-gray-500 text-xs">{{ likesCount }} likes</span>
       </div>
 
       <div class="flex items-center space-x-2">

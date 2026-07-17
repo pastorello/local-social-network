@@ -9,12 +9,9 @@ import MainTitle from '@/components/typography/MainTitle.vue'
 import FeedItem from '@/components/cards/FeedItem.vue'
 import CommentItem from '@/components/cards/CommentItem.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
+import type Post from '@/definitions/interfaces/Post'
 
-const post = ref({
-  id: null,
-  comments: [] as any[],
-  comments_count: 0,
-})
+const post = ref<Post | null>(null)
 
 const body = ref<string>('')
 const route = useRoute()
@@ -23,8 +20,6 @@ const getPost = () => {
   axios
     .get(`/api/posts/${route.params.id}/`)
     .then((response) => {
-      console.log('data', response.data)
-
       post.value = response.data.post
     })
     .catch((error) => {
@@ -33,15 +28,15 @@ const getPost = () => {
 }
 
 const submitForm = () => {
-  console.log('submitForm', body.value)
-
   axios
     .post(`/api/posts/${route.params.id}/comment/`, {
       body: body.value,
     })
     .then((response) => {
-      post.value.comments.push(response.data)
-      post.value.comments_count += 1
+      if (post.value) {
+        post.value.comments.push(response.data)
+        post.value.comments_count += 1
+      }
       body.value = ''
     })
     .catch((error) => {
@@ -63,17 +58,19 @@ onMounted(() => {
     <div class="main-center col-span-2 space-y-4">
       <PanelBox>
         <MainTitle>Post</MainTitle>
-        <div class="p-4 bg-white border border-gray-200 rounded-lg mb-8" v-if="post.id">
-          <FeedItem v-bind:post="post" />
-        </div>
+        <template v-if="post">
+          <div class="p-4 bg-white border border-gray-200 rounded-lg mb-8">
+            <FeedItem v-bind:post="post" />
+          </div>
 
-        <div
-          class="p-4 ml-6 bg-white border border-gray-200 rounded-lg mb-8"
-          v-for="comment in post.comments"
-          v-bind:key="comment.id"
-        >
-          <CommentItem v-bind:comment="comment" />
-        </div>
+          <div
+            class="p-4 ml-6 bg-white border border-gray-200 rounded-lg mb-8"
+            v-for="comment in post.comments"
+            v-bind:key="comment.id"
+          >
+            <CommentItem v-bind:comment="comment" />
+          </div>
+        </template>
 
         <div class="bg-white border border-gray-200 rounded-lg">
           <form v-on:submit.prevent="submitForm" method="post">

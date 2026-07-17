@@ -1,8 +1,9 @@
-<script setup>
+<script setup lang="ts">
 import axios from 'axios'
 
 import { useToastStore } from '@/stores/toast'
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { parseZodObject, SignupForm } from '@/forms/user'
 import FormInput from '@/components/forms/FormInput.vue'
 import PanelBox from '@/components/boxes/PanelBox.vue'
@@ -10,6 +11,7 @@ import MainTitle from '@/components/typography/MainTitle.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 
 const toastStore = useToastStore()
+const router = useRouter()
 
 const form = ref({
   email: '',
@@ -18,7 +20,7 @@ const form = ref({
   password2: '',
 })
 
-const formErrors = ref([])
+const formErrors = ref<string[]>([])
 
 const resetForm = () => {
   form.value.email = ''
@@ -29,7 +31,7 @@ const resetForm = () => {
 }
 
 const submitForm = () => {
-  let parsedData = parseZodObject(SignupForm, form.value)
+  const parsedData = parseZodObject(SignupForm, form.value)
 
   formErrors.value = []
 
@@ -38,34 +40,28 @@ const submitForm = () => {
     return
   }
 
-  if (parsedData !== null) {
-    formErrors.value = []
+  axios
+    .post('/api/users/signup/', parsedData.data)
+    .then((response) => {
+      if (response.data.message === 'success') {
+        toastStore.showToast(5000, 'Account created! You can now log in.', 'bg-emerald-500')
 
-    axios
-      .post('/api/users/signup/', parsedData.data)
-      .then((response) => {
-        if (response.data.message === 'success') {
-          toastStore.showToast(
-            5000,
-            'The user is registered. Please activate your account by clicking your email link.',
-            'bg-emerald-500',
-          )
-
-          resetForm()
-          router.push('/login')
-        } else {
-          const data = JSON.parse(response.data.message)
-          for (const key in data) {
-            formErrors.value.push(data[key][0].message)
+        resetForm()
+        router.push('/login')
+      } else {
+        const data = JSON.parse(response.data.message) as Record<string, { message: string }[]>
+        for (const fieldErrors of Object.values(data)) {
+          if (fieldErrors[0]) {
+            formErrors.value.push(fieldErrors[0].message)
           }
-
-          toastStore.showToast(5000, 'Something went wrong. Please try again', 'bg-red-300')
         }
-      })
-      .catch((error) => {
-        console.log('error', error)
-      })
-  }
+
+        toastStore.showToast(5000, 'Something went wrong. Please try again', 'bg-red-300')
+      }
+    })
+    .catch((error) => {
+      console.log('error', error)
+    })
 }
 </script>
 
