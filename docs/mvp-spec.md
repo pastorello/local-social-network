@@ -109,9 +109,10 @@ The existing URL prefixes are canonical (decision 2026-07-16 — smallest change
 POST   /api/users/signup/            POST   /api/users/login/        POST /api/users/refresh/
 GET    /api/users/me/
 
-# New in M2
+# Implemented in M2
 GET    /api/categories/
-GET    /api/reports/?category=&status=&q=     POST /api/reports/
+GET    /api/reports/?category=&status=&q=&author=     POST /api/reports/
+GET    /api/reports/map/            (unpaginated slim pins for the map — M2 addition)
 GET    /api/reports/:id/             PATCH  /api/reports/:id/        DELETE /api/reports/:id/
 POST   /api/reports/:id/upvote/     (toggle)
 PATCH  /api/reports/:id/status/     (admin)
@@ -124,7 +125,7 @@ PATCH  /api/polls/:id/close/        (admin)
 
 Conventions: JSON everywhere, pagination on list endpoints, errors as `{ "detail": string, "fields"?: {...} }`.
 
-Migration tasks recorded by the audit: existing list endpoints implemented as `POST .../list/` move to `GET` + query params when their area is touched (users → M1, polls → M3); existing ad-hoc error shapes (`{"message": ...}`, stringified form errors) converge to the `{detail, fields}` convention (M2).
+Migration tasks recorded by the audit: existing list endpoints implemented as `POST .../list/` move to `GET` + query params when their area is touched (users → done in M1, polls → M3); ad-hoc error shapes converged to `{detail, fields}` in M2 (global DRF exception handler + account endpoints on real 4xx codes).
 
 ## 9. Quality plan
 

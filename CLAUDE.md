@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This repo is pivoting from a generic social network into a **civic engagement platform for small cities** (map-based issue reports + polls; pilot city: Gaeta). The authoritative spec is [docs/mvp-spec.md](docs/mvp-spec.md) — read it before making product decisions; scope changes start by editing the spec (§10, spec-first workflow). Every work session gets a log in `docs/ai-log/YYYY-MM-DD-topic.md` and commits reference it.
 
-Milestone state: **M0 (recovery & audit) and M1 (auth & roles) are done** — see `docs/ai-log/` for what happened in each. Next: **M2 (map & issue reports)** — the existing `posts` app (author FK, image attachment, counters, `reported_by_users`) is the decided foundation to evolve into `IssueReport`; `polls` gets rebuilt in M3 on the spec §7 schema (`Poll`/`PollOption`/`Vote` with per-user votes — the current tutorial-style `Question`/`Choice` has no vote attribution).
+Milestone state: **M0 (recovery & audit), M1 (auth & roles) and M2 (map & issue reports) are done** — see `docs/ai-log/` for what happened in each. The old `posts` and `notifications` apps were **removed in M2** (their patterns live on in `reports`). Next: **M3 (polls)** — rebuild `polls` on the spec §7 schema (`Poll`/`PollOption`/`Vote` with per-user votes; the current tutorial-style `Question`/`Choice` has no vote attribution) and open poll reading to visitors.
 
 Standing decisions (recorded in the spec and audit): no chat/DM; no email activation (signup creates active accounts); anonymous visitors get read access to map/reports/polls in M2, but the user directory and profile pages stay login-only; user e-mails are returned only to their owner via `/api/users/me/` and are never serialized elsewhere; UI copy is Italian (currently mixed — full sweep planned in M4), code/docs are English.
 
@@ -21,22 +21,21 @@ Configuration is env-driven with dev-safe defaults — see `.env.example` (root,
 Django 6 + DRF, four apps:
 
 - `account` — custom `User` (UUID pk, email login, no username; `role` = `citizen`|`admin`, default citizen, promoted via Django admin per spec F1.3). `AUTH_USER_MODEL = 'account.User'`. Signup creates an **active** user immediately.
-- `posts` — `Post`, `Like`, `Comment`, `PostAttachment`, `Trend`; the M2 base for `IssueReport`.
-- `polls` — tutorial-style `Question`/`Choice`, integer pks, one `POST /api/polls/list/` endpoint; slated for a full M3 rebuild (its legacy template views were removed — `views.py` is a stub).
-- `notifications` — `Notification` typed `post_like`/`post_comment` only; **no frontend consumer yet** (wire-or-delete decision belongs to M2).
+- `reports` — the core domain: `Category` (admin-managed, seeded with 7 Gaeta defaults in a data migration), `IssueReport` (status workflow `open→acknowledged→resolved`, `rejected`; transitions in `ALLOWED_TRANSITIONS`, admin-only via `role`), `Upvote` (unique user+report, denormalized `upvotes_count`). Photo uploads go through `reports/images.py` (≤5MB, JPEG/PNG/WEBP by content, EXIF stripped). List/detail/map/categories are **public** (`@permission_classes([])`) — JWT still identifies the user for `upvoted_by_me`.
+- `polls` — tutorial-style `Question`/`Choice`, integer pks, one `POST /api/polls/list/` endpoint; slated for a full M3 rebuild (`views.py` is a stub).
 
-Conventions: `models.py` / `serializers.py` / `api.py` (DRF `@api_view` function-based views) / `urls.py` per app; routing mounted under `/api/users|posts|polls|notifications/` in `backend/backend/urls.py`. UUID pks everywhere except `polls`. List endpoints are being migrated from legacy POST to GET+query params as each area is touched (users done; polls in M3); error shapes converge on `{detail, fields}` in M2 (spec §8).
+Conventions: `models.py` / `serializers.py` / `api.py` (DRF `@api_view` function-based views) / `urls.py` per app; routing mounted under `/api/users/`, `/api/polls/` and `/api/` (reports: `/api/categories/`, `/api/reports/...`) in `backend/backend/urls.py`. UUID pks everywhere except `polls`. Errors follow `{detail, fields}` via the global handler in `backend/backend/exceptions.py` — raise DRF exceptions, don't hand-roll error JSON. Reports list is paginated (DRF, 20/page); `GET /api/reports/map/` returns unpaginated slim pins for the map.
 
 Auth is JWT (`rest_framework_simplejwt`): global `IsAuthenticated` default, so new endpoints are locked down unless you add `@authentication_classes([])`/`@permission_classes([])` (see `account.api.signup`). Access tokens 30 days, refresh 180 (hardening deferred to M4). Never put `email` into `UserSerializer` — it's intentionally omitted (spec F1.4); `/api/users/me/` is the only place a user sees their own email/role.
 
 ### Frontend (`frontend/`)
 
-Vue 3 + Composition API, Vite, Pinia, Vue Router, Tailwind v4, zod (with Italian locale) for form validation, Leaflet via `@vue-leaflet/vue-leaflet` (`components/maps/CityMap.vue` on the home view, centered on Gaeta — not yet wired to reports).
+Vue 3 + Composition API, Vite, Pinia, Vue Router, Tailwind v4, zod (with Italian locale) for form validation, Leaflet via `@vue-leaflet/vue-leaflet` + `leaflet.markercluster` (`components/maps/ReportsMap.vue`, centered on Gaeta; status-colored clustered pins; **leaflet is default-imported on purpose** — a namespace import loses the runtime-registered `markerClusterGroup` in production builds).
 
 - Everything under `src/` is TypeScript (`strict` + `noUncheckedIndexedAccess` via `@vue/tsconfig`); `npm run build` type-checks and must stay green. The Pinia stores (`stores/user.ts`, `stores/toast.ts`) are typed — `user` persists auth state (tokens, profile, `role`) to `localStorage` by hand and refreshes the access token on app init.
-- `router/index.ts` gates routes via `meta.requiresAuth` + a global guard; only `/login` and `/signup` are public today (M2 will open read-only views while keeping `/users` and `/profile/*` auth-only).
-- `definitions/interfaces/` mirrors the DRF serializers — update these together with serializer changes (e.g. `User` has no `email`).
-- Components emit instead of mutating props (`FeedForm` emits `postCreated`; `FeedItem` keeps a local like counter) — `vue/no-mutating-props` is lint-enforced.
+- `router/index.ts` gates routes via `meta.requiresAuth` + a global guard; `/` (map) and `/reports/:id` are public, `/users` and `/profile/*` stay auth-only (M1 decision). Write actions check `userStore.user.isAuthenticated` in-component and redirect to login with an Italian toast.
+- `definitions/interfaces/` mirrors the DRF serializers — update these together with serializer changes (e.g. `User` has no `email`; `Report`/`ReportPin`/`Category` in `Report.ts`). Status labels/colors and the admin transition map live in `lib/reportStatus.ts`.
+- Components emit instead of mutating props (`ReportForm` emits `saved`/`cancel`) — `vue/no-mutating-props` is lint-enforced.
 
 ## Commands
 
