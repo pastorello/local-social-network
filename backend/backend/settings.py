@@ -63,7 +63,9 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
-    )
+    ),
+    # Spec §8 error convention: {"detail": str, "fields"?: {...}}
+    'EXCEPTION_HANDLER': 'backend.exceptions.api_exception_handler',
 }
 
 CORS_ALLOWED_ORIGINS = [
