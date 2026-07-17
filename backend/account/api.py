@@ -2,7 +2,6 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.http import JsonResponse
 
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from django.db.models import Q
 
 from .forms import SignupForm, ProfileForm
 from .models import User
@@ -48,14 +47,12 @@ def user(request, pk):
 
     return JsonResponse(UserSerializer(user).data, safe=False)
 
-@api_view(['POST'])
+@api_view(['GET'])
 def user_list(request):
-    query = request.data.get('query', '')
+    query = request.GET.get('q', '')
 
     if query:
-        users = User.objects.filter(
-            Q(name__icontains=query) | Q(email__icontains=query)
-        )
+        users = User.objects.filter(name__icontains=query)
     else:
         users = User.objects.all()
 
