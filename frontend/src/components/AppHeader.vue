@@ -5,7 +5,6 @@ import { useUserStore } from '@/stores/user'
 import ActionButton from './buttons/ActionButton.vue'
 import CommunityIcon from './icons/CommunityIcon.vue'
 import PollsIcon from './icons/PollsIcon.vue'
-import PostsIcon from './icons/PostsIcon.vue'
 import HomeIcon from './icons/HomeIcon.vue'
 import MenuButton from './buttons/MenuButton.vue'
 import SiteTitle from './typography/SiteTitle.vue'
@@ -28,32 +27,26 @@ const logout = () => {
         <SiteTitle />
 
         <div class="flex space-x-6 col-span-2 justify-center">
-          <template v-if="user.isAuthenticated">
-            <MenuButton to="/">
-              <template #icon>
-                <HomeIcon class="w-6 h-6" />
-              </template>
-              Home
-            </MenuButton>
-            <MenuButton to="/posts">
-              <template #icon>
-                <PostsIcon class="w-6 h-6" />
-              </template>
-              Posts
-            </MenuButton>
+          <MenuButton to="/">
+            <template #icon>
+              <HomeIcon class="w-6 h-6" />
+            </template>
+            Mappa
+          </MenuButton>
 
+          <template v-if="user.isAuthenticated">
             <MenuButton to="/polls">
               <template #icon>
                 <PollsIcon class="w-6 h-6" />
               </template>
-              Polls
+              Sondaggi
             </MenuButton>
 
             <MenuButton to="/users">
               <template #icon>
                 <CommunityIcon class="w-6 h-6" />
               </template>
-              Users
+              Utenti
             </MenuButton>
           </template>
         </div>

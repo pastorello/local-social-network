@@ -8,7 +8,13 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: () => import('../views/HomeView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/reports/:id',
+      name: 'reportdetail',
+      component: () => import('../views/ReportDetailView.vue'),
+      meta: { requiresAuth: false },
     },
     {
       path: '/signup',
@@ -32,18 +38,6 @@ const router = createRouter({
       path: '/polls',
       name: 'polls',
       component: () => import('../views/PollsView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/posts',
-      name: 'posts',
-      component: () => import('../views/PostsView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/posts/:id',
-      name: 'postview',
-      component: () => import('../views/PostView.vue'),
       meta: { requiresAuth: true },
     },
     {

@@ -6,44 +6,40 @@ import axios from 'axios'
 import { useUserStore } from '@/stores/user'
 import PanelBox from '@/components/boxes/PanelBox.vue'
 import ViewContainer from '@/components/boxes/ViewContainer.vue'
-import FeedItem from '@/components/cards/FeedItem.vue'
-import type Post from '@/definitions/interfaces/Post'
+import StatusBadge from '@/components/reports/StatusBadge.vue'
+import type Report from '@/definitions/interfaces/Report'
 import type User from '@/definitions/interfaces/User'
-import FeedForm from '@/components/forms/FeedForm.vue'
 
 const userStore = useUserStore()
 const route = useRoute()
 const isMyProfile = computed(() => route.params.id === userStore.user.id)
 const profileUser = ref<User | null>(null)
-const posts = ref<Post[]>([])
+const reports = ref<Report[]>([])
 
-const getFeed = () => {
+const getProfile = () => {
   axios
-    .get(`/api/posts/profile/${route.params.id}/`)
-    .then((response: { data: { posts: Post[]; user: User } }) => {
-      posts.value = response.data.posts
-      profileUser.value = response.data.user
+    .get(`/api/users/${route.params.id}/`)
+    .then((response: { data: User }) => {
+      profileUser.value = response.data
+    })
+    .catch((error) => {
+      console.log('error', error)
+    })
+
+  axios
+    .get('/api/reports/', { params: { author: route.params.id } })
+    .then((response: { data: { results: Report[] } }) => {
+      reports.value = response.data.results
     })
     .catch((error) => {
       console.log('error', error)
     })
 }
 
-const deletePost = (id: string) => {
-  posts.value = posts.value.filter((post: Post) => post.id !== id)
-}
-
-const onPostCreated = (post: Post) => {
-  posts.value.unshift(post)
-  if (profileUser.value) {
-    profileUser.value.posts_count += 1
-  }
-}
-
 watch(
   () => route.params.id,
   () => {
-    getFeed()
+    getProfile()
   },
   { immediate: true },
 )
@@ -63,7 +59,9 @@ watch(
           <strong>{{ profileUser?.name }}</strong>
         </p>
 
-        <div class="mt-6 flex space-x-8 justify-around" v-if="profileUser">User stats</div>
+        <p class="mt-2 text-sm text-gray-500" v-if="profileUser">
+          {{ reports.length }} {{ reports.length === 1 ? 'segnalazione' : 'segnalazioni' }}
+        </p>
 
         <div class="mt-6">
           <RouterLink
@@ -71,30 +69,37 @@ watch(
             to="/profile/edit"
             v-if="isMyProfile"
           >
-            Edit profile
+            Modifica profilo
           </RouterLink>
         </div>
       </PanelBox>
     </div>
 
-    <div class="main-center col-span-2 space-y-4">
+    <div class="main-center col-span-3 space-y-4">
       <PanelBox>
-        <div class="bg-white border border-gray-200 rounded-lg" v-if="isMyProfile">
-          <FeedForm @post-created="onPostCreated" />
+        <h2 class="mb-4 text-lg font-semibold">Segnalazioni</h2>
+
+        <div class="space-y-4" v-if="reports.length">
+          <RouterLink
+            v-for="report in reports"
+            :key="report.id"
+            :to="`/reports/${report.id}`"
+            class="block p-4 bg-white border border-gray-200 rounded-lg hover:border-purple-400"
+          >
+            <div class="flex items-center justify-between gap-4">
+              <strong>{{ report.title }}</strong>
+              <StatusBadge :status="report.status" />
+            </div>
+            <p class="mt-1 text-sm text-gray-500">
+              {{ report.category.name }} ·
+              {{ report.upvotes_count }}
+              {{ report.upvotes_count === 1 ? 'sostegno' : 'sostegni' }}
+            </p>
+          </RouterLink>
         </div>
 
-        <div
-          class="p-4 bg-white border border-gray-200 rounded-lg"
-          v-for="post in posts"
-          v-bind:key="post.id"
-        >
-          <FeedItem v-bind:post="post" v-on:deletePost="deletePost" />
-        </div>
+        <p class="text-gray-500" v-else>Nessuna segnalazione.</p>
       </PanelBox>
-    </div>
-
-    <div class="main-right col-span-1 space-y-4">
-      <PanelBox class="text-center">MAIN RIGHT COLUMN</PanelBox>
     </div>
   </ViewContainer>
 </template>
