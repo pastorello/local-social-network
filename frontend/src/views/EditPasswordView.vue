@@ -26,7 +26,7 @@ const submitForm = () => {
   formErrors.value = []
 
   if (form.value.new_password1 !== form.value.new_password2) {
-    formErrors.value.push('The password does not match')
+    formErrors.value.push('Le due password non corrispondono.')
   }
 
   if (formErrors.value.length === 0) {
@@ -60,9 +60,9 @@ const submitForm = () => {
   <ViewContainer class="grid-cols-2">
     <div class="main-left">
       <PanelBox>
-        <MainTitle>Edit password</MainTitle>
-        <p class="mb-6 text-gray-500">Here you can change your password!</p>
-        <RouterLink to="/profile/edit" class="underline">Back</RouterLink>
+        <MainTitle>Cambia password</MainTitle>
+        <p class="mb-6 text-gray-500">Da qui puoi cambiare la tua password.</p>
+        <RouterLink to="/profile/edit" class="underline">← Torna al profilo</RouterLink>
       </PanelBox>
     </div>
 
@@ -70,26 +70,26 @@ const submitForm = () => {
       <PanelBox>
         <form class="space-y-6" v-on:submit.prevent="submitForm">
           <div>
-            <label>Old password</label><br />
+            <label>Password attuale</label><br />
             <FormInput
               type="password"
               v-model="form.old_password"
-              placeholder="Your old password"
+              placeholder="La tua password attuale"
             />
           </div>
 
           <div>
-            <label>New password</label><br />
+            <label>Nuova password</label><br />
             <FormInput
               type="password"
               v-model="form.new_password1"
-              placeholder="Your new password"
+              placeholder="La nuova password"
             />
           </div>
 
           <div>
-            <label>Repeat password</label><br />
-            <FormInput type="password" v-model="form.new_password2" placeholder="Repeat password" />
+            <label>Ripeti password</label><br />
+            <FormInput type="password" v-model="form.new_password2" placeholder="Ripeti la password" />
           </div>
 
           <template v-if="formErrors.length > 0">
@@ -99,7 +99,7 @@ const submitForm = () => {
           </template>
 
           <div>
-            <ActionButton>Save changes</ActionButton>
+            <ActionButton>Salva modifiche</ActionButton>
           </div>
         </form>
       </PanelBox>

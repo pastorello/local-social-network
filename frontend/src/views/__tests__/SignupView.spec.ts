@@ -23,7 +23,7 @@ describe('SignupView', () => {
       global: { plugins: [createPinia(), makeRouter()] },
     })
 
-    expect(wrapper.find('h1').text()).toContain('Sign up')
+    expect(wrapper.find('h1').text()).toContain('Registrati')
     expect(wrapper.find('input[type="text"]').exists()).toBe(true)
     expect(wrapper.find('input[type="email"]').exists()).toBe(true)
     expect(wrapper.findAll('input[type="password"]')).toHaveLength(2)

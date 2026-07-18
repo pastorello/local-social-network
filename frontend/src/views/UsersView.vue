@@ -32,7 +32,7 @@ onMounted(() => {
 
 <template>
   <ViewContainer class="grid-cols-4">
-    <div class="main-left col-span-3 space-y-2">
+    <div class="main-left col-span-4 space-y-2">
       <PanelBox class="flex flex-col">
         <MainTitle>Utenti del network</MainTitle>
         <form v-on:submit.prevent="getUsers" class="pb-6 flex space-x-4">
@@ -60,19 +60,13 @@ onMounted(() => {
             </svg>
           </ActionButton>
         </form>
-        <div class="grid grid-cols-3 gap-6" v-if="users.length">
+        <div class="grid grid-cols-4 gap-6" v-if="users.length">
           <UserCard v-for="user in users" :key="user.id" :user="user" />
         </div>
 
         <div class="flex-1 flex items-center justify-center" v-else>
-          <p class="text-gray-500">No users found</p>
+          <p class="text-gray-500">Nessun utente trovato.</p>
         </div>
-      </PanelBox>
-    </div>
-
-    <div class="main-right col-span-1 space-y-4">
-      <PanelBox class="text-center">
-        <h2 class="mb-4 text-lg">Right column</h2>
       </PanelBox>
     </div>
   </ViewContainer>

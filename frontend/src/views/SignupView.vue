@@ -63,13 +63,15 @@ const submitForm = () => {
   <div class="max-w-7xl mx-auto grid grid-cols-2 gap-4">
     <div class="main-left">
       <PanelBox>
-        <MainTitle>Sign up</MainTitle>
+        <MainTitle>Registrati</MainTitle>
 
-        <p class="mb-6 text-gray-500">Join this City Party and contribute to your community!</p>
+        <p class="mb-6 text-gray-500">
+          Unisciti a Gaeta Partecipa e contribuisci a migliorare la tua città!
+        </p>
 
         <p class="font-bold">
-          Already have an account?
-          <RouterLink :to="{ name: 'login' }" class="underline">Click here</RouterLink> to log in!
+          Hai già un account?
+          <RouterLink :to="{ name: 'login' }" class="underline">Accedi qui</RouterLink>!
         </p>
       </PanelBox>
     </div>
@@ -78,26 +80,26 @@ const submitForm = () => {
       <PanelBox>
         <form class="space-y-6" v-on:submit.prevent="submitForm">
           <div>
-            <label>Name</label><br />
-            <FormInput type="text" v-model="form.name" placeholder="Your full name" />
+            <label>Nome</label><br />
+            <FormInput type="text" v-model="form.name" placeholder="Il tuo nome completo" />
           </div>
 
           <div>
             <label>E-mail</label><br />
-            <FormInput type="email" v-model="form.email" placeholder="Your e-mail address" />
+            <FormInput type="email" v-model="form.email" placeholder="La tua e-mail" />
           </div>
 
           <div>
             <label>Password</label><br />
-            <FormInput type="password" v-model="form.password1" placeholder="Your password" />
+            <FormInput type="password" v-model="form.password1" placeholder="La tua password" />
           </div>
 
           <div>
-            <label>Repeat password</label><br />
+            <label>Ripeti password</label><br />
             <FormInput
               type="password"
               v-model="form.password2"
-              placeholder="Repeat your password"
+              placeholder="Ripeti la password"
             />
           </div>
 
@@ -108,7 +110,7 @@ const submitForm = () => {
           </template>
 
           <div>
-            <ActionButton>Sign up</ActionButton>
+            <ActionButton>Registrati</ActionButton>
           </div>
         </form>
       </PanelBox>

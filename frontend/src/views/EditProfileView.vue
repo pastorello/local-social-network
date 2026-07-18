@@ -27,11 +27,11 @@ const submitForm = () => {
   errors.value = []
 
   if (form.value.email === '') {
-    errors.value.push('Your e-mail is missing')
+    errors.value.push('Inserisci la tua e-mail.')
   }
 
   if (form.value.name === '') {
-    errors.value.push('Your name is missing')
+    errors.value.push('Inserisci il tuo nome.')
   }
 
   if (errors.value.length === 0) {
@@ -76,14 +76,14 @@ const submitForm = () => {
   <ViewContainer class="grid-cols-2">
     <div class="main-left">
       <PanelBox>
-        <MainTitle>Edit profile</MainTitle>
+        <MainTitle>Modifica profilo</MainTitle>
 
         <p class="mb-6 text-gray-500">
           Da qui puoi editare il tuo profilo. Puoi cambiare il tuo nome, la tua e-mail e la tua
           immagine del profilo. Per cambiare la password, clicca sul link qui sotto.
         </p>
 
-        <RouterLink to="/profile/edit/password" class="underline">Edit password</RouterLink>
+        <RouterLink to="/profile/edit/password" class="underline">Cambia password</RouterLink>
       </PanelBox>
     </div>
 
@@ -91,13 +91,13 @@ const submitForm = () => {
       <PanelBox>
         <form class="space-y-6" v-on:submit.prevent="submitForm">
           <div>
-            <label>Name</label><br />
-            <FormInput type="text" v-model="form.name" placeholder="Your full name" />
+            <label>Nome</label><br />
+            <FormInput type="text" v-model="form.name" placeholder="Il tuo nome completo" />
           </div>
 
           <div>
             <label>E-mail</label><br />
-            <FormInput type="email" v-model="form.email" placeholder="Your e-mail address" />
+            <FormInput type="email" v-model="form.email" placeholder="La tua e-mail" />
           </div>
 
           <div>
@@ -112,7 +112,7 @@ const submitForm = () => {
           </template>
 
           <div>
-            <ActionButton>Save changes</ActionButton>
+            <ActionButton>Salva modifiche</ActionButton>
           </div>
         </form>
       </PanelBox>
