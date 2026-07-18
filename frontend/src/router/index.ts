@@ -35,10 +35,11 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      // poll reading is open to visitors (spec §3; M2 decision)
       path: '/polls',
       name: 'polls',
       component: () => import('../views/PollsView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: false },
     },
     {
       path: '/profile/edit',

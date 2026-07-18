@@ -1,20 +1,21 @@
 from django.contrib import admin
 
-# Register your models here.
-from polls.models import Choice, Question
+from polls.models import Poll, PollOption, Vote
 
-class ChoiceInline(admin.TabularInline):
-    model = Choice
-    extra = 3
 
-class QuestionAdmin(admin.ModelAdmin):
-    fieldsets = [
-        (None, {"fields": ["question_text"]}),
-        ("Date information", {"fields": ["pub_date"]}),
-    ]
-    list_display = ["question_text", "pub_date", "was_published_recently"]
-    inlines = [ChoiceInline]
-    list_filter = ["pub_date"]
-    search_fields = ["question_text"]
+class PollOptionInline(admin.TabularInline):
+    model = PollOption
+    extra = 2
 
-admin.site.register(Question, QuestionAdmin)
+
+@admin.register(Poll)
+class PollAdmin(admin.ModelAdmin):
+    list_display = ('question', 'created_by', 'is_closed', 'closes_at', 'created_at')
+    list_filter = ('is_closed',)
+    search_fields = ('question',)
+    inlines = [PollOptionInline]
+
+
+@admin.register(Vote)
+class VoteAdmin(admin.ModelAdmin):
+    list_display = ('poll', 'option', 'user', 'created_at')

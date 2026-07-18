@@ -34,14 +34,14 @@ const logout = () => {
             Mappa
           </MenuButton>
 
-          <template v-if="user.isAuthenticated">
-            <MenuButton to="/polls">
-              <template #icon>
-                <PollsIcon class="w-6 h-6" />
-              </template>
-              Sondaggi
-            </MenuButton>
+          <MenuButton to="/polls">
+            <template #icon>
+              <PollsIcon class="w-6 h-6" />
+            </template>
+            Sondaggi
+          </MenuButton>
 
+          <template v-if="user.isAuthenticated">
             <MenuButton to="/users">
               <template #icon>
                 <CommunityIcon class="w-6 h-6" />

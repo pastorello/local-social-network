@@ -61,7 +61,7 @@ A civic engagement platform for small cities (pilot: Gaeta, LT). Citizens report
 
 - **F3.1** Admin creates a poll: **question** (≤ 200 chars), 2–10 **options**, optional **closing date**.
 - **F3.2** A citizen votes for exactly one option; the vote is final (no changes in MVP).
-- **F3.3** Results (percentages + counts) are visible to a citizen only after voting, and to everyone after the poll closes.
+- **F3.3** Results (percentages + counts) are visible to a citizen only after voting, and to everyone after the poll closes. *(M3 decision: admins always see results — they create and close polls.)*
 - **F3.4** Poll list: open polls first, then closed ones.
 
 ## 5. Non-functional requirements
@@ -117,7 +117,7 @@ GET    /api/reports/:id/             PATCH  /api/reports/:id/        DELETE /api
 POST   /api/reports/:id/upvote/     (toggle)
 PATCH  /api/reports/:id/status/     (admin)
 
-# New in M3 (replaces the tutorial polls endpoints)
+# Implemented in M3 (replaced the tutorial polls endpoints)
 GET    /api/polls/                   POST   /api/polls/              (admin)
 GET    /api/polls/:id/               POST   /api/polls/:id/vote/
 PATCH  /api/polls/:id/close/        (admin)
@@ -125,7 +125,7 @@ PATCH  /api/polls/:id/close/        (admin)
 
 Conventions: JSON everywhere, pagination on list endpoints, errors as `{ "detail": string, "fields"?: {...} }`.
 
-Migration tasks recorded by the audit: existing list endpoints implemented as `POST .../list/` move to `GET` + query params when their area is touched (users → done in M1, polls → M3); ad-hoc error shapes converged to `{detail, fields}` in M2 (global DRF exception handler + account endpoints on real 4xx codes).
+Migration tasks recorded by the audit: existing list endpoints implemented as `POST .../list/` move to `GET` + query params when their area is touched (users → done in M1, polls → done in M3); ad-hoc error shapes converged to `{detail, fields}` in M2 (global DRF exception handler + account endpoints on real 4xx codes).
 
 ## 9. Quality plan
 
