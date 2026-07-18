@@ -99,21 +99,30 @@ export const useUserStore = defineStore('user', {
       localStorage.setItem('user.avatar', this.user.avatar ?? '')
     },
 
-    refreshToken() {
-      axios
-        .post('/api/users/refresh/', {
+    async refreshToken(): Promise<boolean> {
+      if (!this.user.refresh) return false
+
+      try {
+        const response = await axios.post('/api/users/refresh/', {
           refresh: this.user.refresh,
         })
-        .then((response) => {
-          this.user.access = response.data.access
 
-          localStorage.setItem('user.access', response.data.access)
+        this.user.access = response.data.access
+        localStorage.setItem('user.access', response.data.access)
 
-          axios.defaults.headers.common['Authorization'] = 'Bearer ' + response.data.access
-        })
-        .catch(() => {
-          this.removeToken()
-        })
+        // M4 hardening: the backend rotates refresh tokens — keep the new one,
+        // the old one is blacklisted server-side
+        if (response.data.refresh) {
+          this.user.refresh = response.data.refresh
+          localStorage.setItem('user.refresh', response.data.refresh)
+        }
+
+        axios.defaults.headers.common['Authorization'] = 'Bearer ' + response.data.access
+        return true
+      } catch {
+        this.removeToken()
+        return false
+      }
     },
   },
 })

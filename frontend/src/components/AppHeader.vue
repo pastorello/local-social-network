@@ -54,19 +54,23 @@ const logout = () => {
         <div class="flex justify-end">
           <template v-if="user.isAuthenticated && user.id">
             <RouterLink :to="{ name: 'profile', params: { id: user.id } }">
-              <img :src="user.avatar ?? undefined" class="w-12 rounded-full inline-block mr-4" />
+              <img
+                :src="user.avatar ?? undefined"
+                alt="Il tuo profilo"
+                class="w-12 rounded-full inline-block mr-4"
+              />
             </RouterLink>
             <ActionButton class="inline-block" size="small" button-type="danger" @click="logout">
-              Log out
+              Esci
             </ActionButton>
           </template>
 
           <template v-else>
             <RouterLink to="/login" class="mr-4 py-4 px-6 bg-gray-600 text-white rounded-lg"
-              >Log in</RouterLink
+              >Accedi</RouterLink
             >
             <RouterLink to="/signup" class="py-4 px-6 bg-purple-600 text-white rounded-lg"
-              >Sign up</RouterLink
+              >Registrati</RouterLink
             >
           </template>
         </div>

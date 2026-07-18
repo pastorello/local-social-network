@@ -226,3 +226,24 @@ def test_user_detail_hides_email(auth_client, citizen):
     data = response.json()
     assert data['name'] == citizen.name
     assert 'email' not in data
+
+
+# --- token refresh hardening (M4, spec §6/A2) ---
+
+
+def test_refresh_rotates_and_blacklists_the_old_token(api_client, citizen):
+    login = api_client.post(
+        '/api/users/login/', {'email': citizen.email, 'password': PASSWORD}
+    )
+    old_refresh = login.json()['refresh']
+
+    refreshed = api_client.post('/api/users/refresh/', {'refresh': old_refresh})
+
+    assert refreshed.status_code == 200
+    data = refreshed.json()
+    assert data['access']
+    assert data['refresh'] and data['refresh'] != old_refresh  # rotation is on
+
+    # the rotated-out token is blacklisted and cannot be replayed
+    reused = api_client.post('/api/users/refresh/', {'refresh': old_refresh})
+    assert reused.status_code == 401

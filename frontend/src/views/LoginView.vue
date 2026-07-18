@@ -3,7 +3,7 @@ import axios from 'axios'
 
 import { useUserStore } from '@/stores/user'
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import { LoginForm, parseZodObject } from '@/forms/user'
 import ActionButton from '@/components/buttons/ActionButton.vue'
@@ -13,6 +13,7 @@ import MainTitle from '@/components/typography/MainTitle.vue'
 import ViewContainer from '@/components/boxes/ViewContainer.vue'
 
 const userStore = useUserStore()
+const route = useRoute()
 const router = useRouter()
 const form = ref({
   email: '',
@@ -41,7 +42,7 @@ const submitForm = async () => {
     .catch((error) => {
       console.log('error', error)
 
-      formErrors.value.push('The email or password is incorrect!')
+      formErrors.value.push('E-mail o password non corretti.')
     })
 
   if (formErrors.value.length === 0) {
@@ -50,11 +51,13 @@ const submitForm = async () => {
       .then((response) => {
         userStore.setUserInfo(response.data)
 
-        router.push('/')
+        // back to where the router guard intercepted the visitor, if anywhere
+        const redirect = route.query.redirect
+        router.push(typeof redirect === 'string' ? redirect : '/')
       })
       .catch((error) => {
         console.log('error', error)
-        formErrors.value.push('There was an error while fetching user info. Please try again!')
+        formErrors.value.push('Errore nel caricamento del profilo. Riprova.')
       })
   }
 }
@@ -64,16 +67,15 @@ const submitForm = async () => {
   <ViewContainer class="grid-cols-2">
     <div class="main-left">
       <PanelBox>
-        <MainTitle>Log in</MainTitle>
+        <MainTitle>Accedi</MainTitle>
 
         <p class="mb-6 text-gray-500">
-          Welcome back! Please enter your details to log in to your account.
+          Bentornato! Inserisci i tuoi dati per accedere al tuo account.
         </p>
 
         <p class="font-bold">
-          Don't have an account?
-          <RouterLink :to="{ name: 'signup' }" class="underline">Click here</RouterLink> to create
-          one!
+          Non hai un account?
+          <RouterLink :to="{ name: 'signup' }" class="underline">Registrati qui</RouterLink>!
         </p>
       </PanelBox>
     </div>
@@ -83,12 +85,12 @@ const submitForm = async () => {
         <form class="space-y-6" v-on:submit.prevent="submitForm">
           <div>
             <label>E-mail</label><br />
-            <FormInput type="email" v-model="form.email" placeholder="Your e-mail address" />
+            <FormInput type="email" v-model="form.email" placeholder="La tua e-mail" />
           </div>
 
           <div>
             <label>Password</label><br />
-            <FormInput type="password" v-model="form.password" placeholder="Your password" />
+            <FormInput type="password" v-model="form.password" placeholder="La tua password" />
           </div>
 
           <template v-if="formErrors.length > 0">
@@ -98,7 +100,7 @@ const submitForm = async () => {
           </template>
 
           <div>
-            <ActionButton>Log in</ActionButton>
+            <ActionButton>Accedi</ActionButton>
           </div>
         </form>
       </PanelBox>

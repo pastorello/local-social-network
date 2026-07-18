@@ -131,7 +131,8 @@ onMounted(() => {
 
 <template>
   <ViewContainer class="grid-cols-4">
-    <div class="main-center col-span-2 col-start-2 space-y-4">
+    <!-- self-start: PanelBox is h-full; a stacked column must not stretch to row height -->
+    <div class="main-center col-span-2 col-start-2 space-y-4 self-start">
       <PanelBox v-if="report">
         <div class="mb-2 flex items-center justify-between gap-4">
           <MainTitle>{{ report.title }}</MainTitle>

@@ -51,10 +51,13 @@ EMAIL_HOST_USER = "noreply@pastorello.info"
 
 AUTH_USER_MODEL = 'account.User'
 
+# M4 hardening (spec §6/A2): short-lived access tokens, rotating refresh
+# tokens with blacklist — the SPA refreshes transparently on 401 (lib/auth.ts).
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=30),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=180),
-    'ROTATE_REFRESH_TOKENS': False,
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
 }
 
 REST_FRAMEWORK = {
@@ -94,6 +97,7 @@ INSTALLED_APPS = [
     'corsheaders', # allow cross-origin requests
     'rest_framework', # api GET & POST
     'rest_framework_simplejwt', # api authentication
+    'rest_framework_simplejwt.token_blacklist', # rotated refresh tokens die (M4)
     'account',
     'polls',
     'reports',
@@ -101,6 +105,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', # serve collected static files in production
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware', # allow cross-origin requests, place as high as possible
     'django.middleware.common.CommonMiddleware',
@@ -190,13 +195,34 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # collectstatic target (production)
+STATIC_ROOT.mkdir(exist_ok=True)  # whitenoise warns if the directory is absent
 MEDIA_URL = 'media/' # added for separating static and media files
 MEDIA_ROOT = BASE_DIR / 'media'
+
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {
+        # hashed + gzip'd static files in production; plain storage in dev so
+        # runserver works without collectstatic
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+        if not DEBUG
+        else 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    },
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Production hardening — active only when DJANGO_DEBUG=false (M4, spec §6).
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SSL_REDIRECT', 'true').lower() == 'true'
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30
 
 TESTING = "test" in sys.argv or "PYTEST_VERSION" in os.environ
 

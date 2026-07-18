@@ -90,4 +90,31 @@ describe('user store', () => {
     expect(store.user.isAuthenticated).toBe(false)
     expect(axios.post).not.toHaveBeenCalled()
   })
+
+  it('refreshToken persists the rotated refresh token (M4 hardening)', async () => {
+    const store = useUserStore()
+    store.setToken({ access: 'old-access', refresh: 'old-refresh' })
+    vi.mocked(axios.post).mockResolvedValueOnce({
+      data: { access: 'new-access', refresh: 'new-refresh' },
+    })
+
+    const refreshed = await store.refreshToken()
+
+    expect(refreshed).toBe(true)
+    expect(store.user.access).toBe('new-access')
+    expect(store.user.refresh).toBe('new-refresh')
+    expect(localStorage.getItem('user.refresh')).toBe('new-refresh')
+  })
+
+  it('refreshToken clears the session when the refresh token is rejected', async () => {
+    const store = useUserStore()
+    store.setToken({ access: 'old-access', refresh: 'expired-refresh' })
+    vi.mocked(axios.post).mockRejectedValueOnce(new Error('401'))
+
+    const refreshed = await store.refreshToken()
+
+    expect(refreshed).toBe(false)
+    expect(store.user.isAuthenticated).toBe(false)
+    expect(localStorage.getItem('user.access')).toBe('')
+  })
 })
