@@ -2,11 +2,11 @@
 
 > **Status:** v0.2 — validated against the codebase; audit + decisions in [docs/ai-log/2026-07-16-audit.md](./ai-log/2026-07-16-audit.md)
 > **Author:** Luca Pastorello (spec developed with AI assistance, reviewed and approved by the author)
-> **Last update:** 2026-07-17
+> **Last update:** 2026-07-18
 
 ## 1. Vision
 
-A civic engagement platform for small cities (pilot: Gaeta, LT). Citizens report local issues on a shared map, support each other's reports, and vote on public polls. The goal is to give local communities and administrations a single, transparent place to collect problems and opinions.
+A civic engagement platform for small cities (pilot: Gaeta, LT). Citizens report local issues on a shared map, support each other's reports, and vote on public polls. The goal is to give local communities and administrations a single, transparent place to collect problems and opinions. Product name: **Gaeta Partecipa** (decision 2026-07-18, M4); repo and package names keep `local-social-network`.
 
 ## 2. Goals and non-goals
 
@@ -82,10 +82,10 @@ A civic engagement platform for small cities (pilot: Gaeta, LT). Citizens report
 | Map | **Leaflet + OpenStreetMap tiles** | Already integrated (`CityMap.vue` on the home view, centered on Gaeta) |
 | Backend | **Django + Django REST Framework** | Existing |
 | DB | PostgreSQL from M0 (Docker Compose) | SQLite fallback for bare-metal dev; plain lat/lng columns; PostGIS is overkill for MVP |
-| Auth | **JWT via djangorestframework-simplejwt (existing — keep)** | Decided after audit (A2); harden token lifetimes + refresh flow in M4 |
+| Auth | **JWT via djangorestframework-simplejwt (existing — keep)** | Decided after audit (A2); hardened in M4: 60-min access, 30-day rotating refresh + blacklist, transparent 401-refresh in the SPA |
 | Media | Django media storage (local in dev; S3-compatible in prod if needed) | |
 | Dev env | Docker Compose (db + backend + frontend) | |
-| Deploy (demo) | Single VPS or PaaS free tier, one public URL | Decision deferred to M4 |
+| Deploy (demo) | Single VPS or PaaS free tier, one public URL | Prep done in M4 (gunicorn + whitenoise + [deploy guide](./deploy.md)); platform still to be chosen |
 
 ## 7. Data model (draft)
 
