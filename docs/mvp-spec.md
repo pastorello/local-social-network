@@ -1,8 +1,8 @@
 # Local Social Network — MVP Specification
 
-> **Status:** v0.2 — validated against the codebase; audit + decisions in [docs/ai-log/2026-07-16-audit.md](./ai-log/2026-07-16-audit.md)
+> **Status:** v0.3 — **MVP closed** (code-complete, all milestones done); see §13
 > **Author:** Luca Pastorello (spec developed with AI assistance, reviewed and approved by the author)
-> **Last update:** 2026-07-18
+> **Last update:** 2026-07-20
 
 ## 1. Vision
 
@@ -151,7 +151,7 @@ This project doubles as a documented case study of structured AI-assisted develo
 | M1 | **Auth & roles** | Consolidated login, roles, profile; auth tests | F1 complete + tests green |
 | M2 | **Map & reports** | Map, report CRUD, filters, upvotes, moderation | F2 complete + tests green |
 | M3 | **Polls** | Poll creation, voting, results | F3 complete + tests green |
-| M4 | **Showcase** | Public demo, polished README, AI-log index, LinkedIn write-up | Demo URL live; docs complete |
+| M4 | **Showcase** | Public demo, polished README, AI-log index, LinkedIn write-up | Docs complete ✅. Demo URL descoped from the MVP — decision 2026-07-20, §13 |
 
 ## 12. Assumptions — RESOLVED
 
@@ -163,3 +163,19 @@ Validated in the M0 audit ([docs/ai-log/2026-07-16-audit.md](./ai-log/2026-07-16
 - **A4** Polls = Django-tutorial code with no per-user voting and dead template views (removed in M0) → F3 is a rebuild on the §7 schema. Posts = the most complete feature → becomes the **IssueReport foundation** (F2 note).
 - **A5** Dev DB was SQLite with clean, in-sync migrations; **Postgres from M0** via Docker Compose.
 - **A6** Real TS coverage is **≈⅔ of SFCs**, not ~10% (GitHub language stats count `.vue` files as Vue); the remaining 2 stores + 9 script blocks are converted in M0.
+
+## 13. MVP closure (2026-07-20)
+
+All five milestones (§11) are done: F1–F3 implemented and tested, N1–N6 met,
+and M4's documentation deliverables (README, AI-log index, deploy guide,
+LinkedIn draft) are in place. Backend: 76 pytest tests green, ruff clean.
+Frontend: 32 Vitest tests green, eslint clean, `npm run build` green.
+
+**Decision:** M4's original exit criterion "Demo URL live" is **descoped from
+the MVP** — the author's call, made explicitly rather than left ambiguous.
+Choosing a hosting platform and running a real deploy is an infrastructure
+decision with cost/ops implications that shouldn't gate calling the MVP done;
+`docs/deploy.md` already makes the app deployable anywhere without further
+code changes. The MVP is closed as **code-complete**; the live demo and the
+LinkedIn publish move to the post-MVP roadmap ([docs/roadmap.md](./roadmap.md))
+as the first item, not a loose end.

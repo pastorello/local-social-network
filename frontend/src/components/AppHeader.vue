@@ -21,7 +21,7 @@ const logout = () => {
 </script>
 
 <template>
-  <nav class="py-6 px-8 shadow-md border-gray-200 fixed w-full bg-white z-10">
+  <nav class="py-6 px-8 shadow-md border-gray-200 fixed w-full bg-white z-1100">
     <div class="max-w-7xl mx-auto">
       <div class="grid grid-cols-4 items-center gap-8 px-6">
         <SiteTitle />
