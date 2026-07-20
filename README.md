@@ -75,6 +75,9 @@ green, lint clean, session logged.
 
 ## Status
 
-M0 (recovery & audit) → M1 (auth & roles) → M2 (map & reports) → M3 (polls)
-are **done**; M4 (showcase: rebrand, auth hardening, deploy prep, docs) is in
-progress — demo URL coming with the platform decision (spec §6).
+**MVP closed** (2026-07-20) — all five milestones (spec §11) are done:
+M0 (recovery & audit) → M1 (auth & roles) → M2 (map & reports) → M3 (polls) →
+M4 (showcase: rebrand, auth hardening, deploy prep, docs). The public demo URL
+was descoped from the MVP as an infrastructure decision, not a code gap — see
+[spec §13](./docs/mvp-spec.md#13-mvp-closure-2026-07-20) and the
+[post-MVP roadmap](./docs/roadmap.md) for what's next.

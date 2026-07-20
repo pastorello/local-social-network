@@ -9,7 +9,7 @@ From the **repo root** (the venv lives at `<repo>/.venv`):
 ```sh
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r backend/requirements.txt
+pip install -r backend/requirements-dev.txt   # runtime + pytest/ruff
 
 cd backend
 python manage.py migrate
@@ -36,7 +36,10 @@ python manage.py runserver
 
 ## Tests
 
+Tests are pytest-style — `python manage.py test` exits 0 but runs nothing.
+
 ```sh
-python manage.py test            # all apps
-python manage.py test posts      # single app
+python -m pytest                          # all apps
+python -m pytest account/tests.py -k signup   # subset
+python -m ruff check .                    # lint (must be clean)
 ```
