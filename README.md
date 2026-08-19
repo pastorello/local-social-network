@@ -1,83 +1,108 @@
 # Gaeta Partecipa
 
-**A civic engagement platform for small cities** (pilot: Gaeta, LT). Citizens
-report local issues as pins on a shared map, support each other's reports, and
-vote in polls opened by the city administration — one transparent place for
-problems and opinions.
+A civic engagement platform for small cities. Citizens report local problems as
+pins on a shared map, upvote each other's reports, and vote in polls opened by
+the city administration — one place for problems and opinions, instead of a
+comune's Facebook comments. Built around a pilot city, Gaeta (LT).
 
-The repo is also a documented **case study of structured AI-assisted
-development**: a spec-first workflow where every working session is logged,
-reviewed and traceable from commit to decision (see
-[How this project is built](#how-this-project-is-built)).
-
-> Repo name note: the project started life as a generic "local social network"
-> tutorial app and was progressively rebuilt into Gaeta Partecipa — the history
-> of that pivot is part of the case study.
+> The repository is still named `local-social-network`: the project started as a
+> generic social-network tutorial app and was rebuilt into this. The UI is in
+> Italian; code, comments and docs are in English.
 
 ## Features
 
-- 🗺️ **Issue reports on a map** — geolocated reports with category, photo
-  (EXIF-stripped) and a moderated status workflow (`open → acknowledged →
-  resolved`, `rejected`); clustered, status-colored pins; category/status/text
-  filters; one-click upvotes
-- 🗳️ **Polls** — admins open polls (2–10 options, optional closing date);
-  citizens cast one final vote; results stay hidden until you vote or the poll
-  closes
-- 👤 **Roles** — anonymous visitors browse everything public; citizens
-  contribute; admins moderate and manage polls (promoted via Django admin)
-- 🇮🇹 UI in Italian, codebase and docs in English (spec N4)
+- **Issue reports on a map** — geolocated, with category, photo and a moderated
+  status workflow (`open → acknowledged → resolved`, or `rejected`). Pins are
+  clustered and colored by status; filters by category, status and free text;
+  one-click upvotes.
+- **Polls** — admins open a poll with 2–10 options and an optional closing date.
+  Citizens cast one final vote. Results stay hidden until you have voted or the
+  poll closes, so early results cannot steer later ones.
+- **Roles** — anonymous visitors read the map, reports and polls. Citizens
+  contribute. Admins moderate statuses and manage polls, and are promoted
+  through the Django admin.
+- **Privacy by default** — uploaded photos are re-encoded and stripped of EXIF
+  (including GPS) before storage; e-mail addresses are returned only to their
+  owner and are never serialized anywhere else.
 
-## Stack
-
-| Layer | Choice |
-|---|---|
-| Frontend | Vue 3 (Composition API) + TypeScript `strict`, Vite, Pinia, Tailwind v4, Leaflet |
-| Backend | Django 6 + Django REST Framework, JWT auth (rotating refresh tokens) |
-| Database | PostgreSQL 17 (SQLite fallback for bare-metal dev) |
-| Testing | pytest (backend API) · Vitest + Vue Testing Library (frontend) · Cypress (e2e) |
-
-## Quickstart (Docker)
+## Quick start
 
 ```sh
-cp .env.example .env   # optional — the defaults work for local development
+git clone https://github.com/pastorello/local-social-network.git
+cd local-social-network
 docker compose up --build
 ```
 
-- Frontend: http://localhost:5173
+- SPA: http://localhost:5173
 - API: http://127.0.0.1:8000
 - Django admin: http://127.0.0.1:8000/admin/
 
-The compose stack runs PostgreSQL; bare-metal runs fall back to SQLite
-automatically — see the [backend](./backend/README.md) and
-[frontend](./frontend/README.md) guides.
+The compose stack runs PostgreSQL 17. `.env` is optional — the defaults are
+development-safe. For bare-metal runs (SQLite fallback) see
+[backend/README.md](./backend/README.md) and
+[frontend/README.md](./frontend/README.md).
 
-Deploying a public demo: [docs/deploy.md](./docs/deploy.md).
-
-## Quality gates
+Create the first admin:
 
 ```sh
-cd backend && python -m pytest && python -m ruff check .   # 76 API tests
-cd frontend && npm run test:unit && npm run lint && npm run build   # 32 tests + vue-tsc
+docker compose exec backend python manage.py shell -c "from account.models import User; User.objects.create_superuser(email='admin@example.com', password='password123', name='admin')"
 ```
 
-Definition of done for every feature (spec §9): spec section referenced, tests
-green, lint clean, session logged.
+## Commands
 
-## How this project is built
+Backend commands assume the repo-root venv is active and `DJANGO_DEBUG=true` is
+exported — the variable defaults to *off* so that forgetting it in a deployment
+fails safe (see [ADR-0002](./docs/adr/0002-debug-off-secret-key-required.md)).
 
-1. **Spec first** — [docs/mvp-spec.md](./docs/mvp-spec.md) precedes
-   implementation; scope changes start by editing the spec.
-2. **Session cycle** — planning prompt → implementation with Claude Code →
-   human code review with written notes.
-3. **Traceability** — every session is logged in
-   [docs/ai-log/](./docs/ai-log/README.md) (index) and commits reference the log.
-4. **Human ownership** — the AI proposes, the author reviews and decides.
+| Command | What it does |
+|---|---|
+| `docker compose up --build` | Postgres + API :8000 + SPA :5173 |
+| `python -m pytest` | Backend tests — **128**, ~3s (from `backend/`) |
+| `python -m ruff check .` | Backend lint |
+| `npm run dev` | Vite dev server on :5173 (from `frontend/`) |
+| `npm run test:unit -- run` | Frontend unit tests — **32** |
+| `npm run test:e2e` | Cypress against a production build — **3** |
+| `npm run lint` | oxlint then eslint, both with `--fix` |
+| `npm run build` | Type-check (`vue-tsc`) + production build |
+
+All of the above run on every push and pull request — see
+[.github/workflows/ci.yml](./.github/workflows/ci.yml).
+
+## Architecture
+
+Two applications talking over plain HTTP + CORS.
+
+| Layer | Choice |
+|---|---|
+| Frontend | Vue 3 (Composition API), TypeScript `strict`, Vite, Pinia, Vue Router, Tailwind v4, Leaflet + markercluster |
+| Backend | Django 6, Django REST Framework, JWT (`simplejwt`, rotating refresh tokens) |
+| Database | PostgreSQL 17; SQLite fallback for bare-metal development |
+| Tests | pytest (API) · Vitest + Vue Test Utils (SPA) · Cypress (e2e) |
+
+The backend is four Django apps — `account` (custom user, UUID pk, e-mail
+login), `reports` (the core domain), `polls`, and `common` (shared upload
+hardening, not an app). Endpoints live in `api.py` per app and follow a single
+error convention, `{detail, fields}`.
+
+Deeper notes, gotchas and conventions live in [CLAUDE.md](./CLAUDE.md), which is
+also what coding agents read. Decisions that would be expensive to reverse are
+in [docs/adr/](./docs/adr/README.md).
+
+## Project documentation
+
+| Document | What it holds |
+|---|---|
+| [docs/mvp-spec.md](./docs/mvp-spec.md) | Product spec — functional requirements, non-goals, data model |
+| [docs/roadmap.md](./docs/roadmap.md) | What is planned and in what order |
+| [docs/tech-debt.md](./docs/tech-debt.md) | Measured debt register, with what is fixed and what is not |
+| [docs/adr/](./docs/adr/README.md) | Architecture decision records |
+| [docs/deploy.md](./docs/deploy.md) | Deployment notes — not yet exercised, see the roadmap |
+| [CLAUDE.md](./CLAUDE.md) | Architecture, conventions and gotchas for humans and agents |
 
 ## Status
 
-**MVP closed** (2026-07-20) — all five milestones (spec §11) are done:
-M0 (recovery & audit) → M1 (auth & roles) → M2 (map & reports) → M3 (polls) →
-M4 (showcase: rebrand, auth hardening, deploy prep, docs). The public demo URL
-was descoped from the MVP as an infrastructure decision, not a code gap — see
-[spec §13](./docs/mvp-spec.md#13-mvp-closure-2026-07-20) and the
-[post-MVP roadmap](./docs/roadmap.md) for what's next.
+The feature set specified in `docs/mvp-spec.md` is implemented and tested; the
+security and test-infrastructure debt found in the 2026-08-19 audit is largely
+paid down. It has **not** been deployed anywhere, and it is not yet designed as
+a product someone else could adopt — see the roadmap for what stands between
+here and a public instance.
