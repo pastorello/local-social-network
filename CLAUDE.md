@@ -53,6 +53,7 @@ python3 -m venv .venv && source .venv/bin/activate    # first time
 python -m pip install -r backend/requirements-dev.txt # runtime + pytest/ruff
 
 cd backend
+export DJANGO_DEBUG=true                              # once per shell (see below)
 python manage.py migrate
 python manage.py runserver                            # http://127.0.0.1:8000
 
@@ -62,6 +63,15 @@ python -m ruff check .                                # lint (must be clean)
 ```
 
 `python manage.py test` exits 0 but runs nothing (tests are pytest-style) — use pytest.
+
+**`DJANGO_DEBUG` defaults to false (TD-11).** Forgetting the variable fails safe
+instead of serving tracebacks, and outside debug/test the app raises
+`ImproperlyConfigured` unless `DJANGO_SECRET_KEY` is set — it is SimpleJWT's
+signing key, so a committed fallback meant anyone could mint an admin token.
+Development opts in: `docker compose` passes `DJANGO_DEBUG=true`, bare-metal
+shells `export` it, and pytest is exempt via the `TESTING` flag (which is also
+why the HTTPS hardening block carries `and not TESTING` — without it
+`SECURE_SSL_REDIRECT` answers the test client with a 301).
 
 **Gotcha (TD-10):** the local `.venv` was copied from another project, so its
 `bin/pip` shebang points elsewhere and `python` may not resolve after
