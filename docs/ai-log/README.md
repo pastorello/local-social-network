@@ -30,6 +30,7 @@ New entries use [`_template.md`](_template.md).
 | 2026-07-17 | M3 | Polls | [2026-07-17-m3-polls.md](2026-07-17-m3-polls.md) |
 | 2026-07-18 | M4 | Showcase | [2026-07-18-m4-showcase.md](2026-07-18-m4-showcase.md) |
 | 2026-07-20 | M4 | MVP closure & post-MVP roadmap | [2026-07-20-mvp-closure.md](2026-07-20-mvp-closure.md) |
+| 2026-08-19 | Post-MVP | External agent skills evaluation & setup | [2026-08-19-agent-tooling.md](2026-08-19-agent-tooling.md) |
 
 ## Reading suggestions
 
