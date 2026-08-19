@@ -34,6 +34,7 @@ New entries use [`_template.md`](_template.md).
 | 2026-08-19 | Post-MVP | Platform audit & technical debt register | [2026-08-19-tech-debt-audit.md](2026-08-19-tech-debt-audit.md) |
 | 2026-08-19 | Post-MVP | Deep audit: code, security, tests, docs | [2026-08-19-deep-audit.md](2026-08-19-deep-audit.md) |
 | 2026-08-19 | Post-MVP | TD-01: continuous integration | [2026-08-19-ci.md](2026-08-19-ci.md) |
+| 2026-08-19 | Post-MVP | TD-11: fail-closed secret key & debug default | [2026-08-19-td-11-secret-key.md](2026-08-19-td-11-secret-key.md) |
 
 ## Reading suggestions
 

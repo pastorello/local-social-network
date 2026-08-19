@@ -175,7 +175,21 @@ Do this *after* TD-01 — dependency bumps are precisely what CI is for.
 
 ## P0 — security, and all four are cheap
 
-### TD-11 · The committed `SECRET_KEY` fallback is the JWT signing key ✔
+### TD-11 · The committed `SECRET_KEY` fallback is the JWT signing key — **FIXED 2026-08-19** ✔
+
+> Closed. `settings.py` now reads `DJANGO_SECRET_KEY` with **no committed
+> fallback**: outside `DEBUG` and the test suite a missing key raises
+> `ImproperlyConfigured` at import time, with the generation command in the
+> message. `DJANGO_DEBUG` defaults to **false**, so forgetting it fails safe.
+> Nine tests in `backend/backend/tests.py` pin both guards by importing settings
+> in a subprocess, including one that fails if the original committed key ever
+> reappears in the file. Two consequences handled: the HTTPS hardening block
+> gained `and not TESTING` (with DEBUG now false by default,
+> `SECURE_SSL_REDIRECT` answered the test client with a 301 and turned the whole
+> suite red), and bare-metal development opts in with `export DJANGO_DEBUG=true`
+> — `docker compose` already passed it. **DOC-03 closed with it**: compose now
+> actually forwards `DJANGO_SECRET_KEY` and `DJANGO_SSL_REDIRECT` instead of
+> merely commenting about them.
 
 **Evidence:** `backend/backend/settings.py:28-31` falls back to a literal
 `django-insecure-…` key that is in public git history. SimpleJWT's `SIGNING_KEY`
@@ -581,7 +595,8 @@ across five files, every relative link and anchor resolves, the ai-log index
 matches the files on disk, and the whole architecture section of `CLAUDE.md`
 was verified line by line. These are the exceptions.
 
-**Closed 2026-08-19** (same session as this pass): DOC-01, DOC-02, **DOC-04**
+**Closed 2026-08-19:** DOC-03 (with TD-11 — compose now forwards the variables
+its comment promised), DOC-01, DOC-02, **DOC-04**
 (the `.gitignore` rule was added, so the claim is now true on every clone rather
 than on one machine — see TD-15), DOC-08, and the `CLAUDE.md` half of DOC-06.
 The rest of the table is open.
@@ -590,7 +605,7 @@ The rest of the table is open.
 |---|---|---|---|
 | DOC-01 | `CLAUDE.md:9,145` | Still says the demo is roadmap item #1 and points at `shipping-and-launch`. `roadmap.md:12,21` made it item **2, parked**, and the tech-debt work item 1. The skills section landed in `44ebc7d`, the parking in `78c3d97`; CLAUDE.md was never re-synced. | Point at TD-01 / `ci-cd-and-automation` as the active workstream; demo is item 2, parked. |
 | DOC-02 | `CLAUDE.md:157`, `tech-debt.md` TD-09 | Repeats the `PollCard.vue` contrast finding as "real and still open". ✔ It is a false positive (see Corrections). | Restate TD-09 as the `SiteTitle` gradient alone; note the ternary false positive so it is not re-reported. |
-| DOC-03 | `docker-compose.yml:31` | The comment says "set it in .env for anything beyond local development" — but ✔ the `backend` service `environment` block never forwards `DJANGO_SECRET_KEY` (nor `DJANGO_SSL_REDIRECT`). Following the instruction exactly still yields the committed insecure fallback. A comment that lies is worse than none. | Either forward both vars, or say plainly they are deployment-only and not wired into the dev stack. Ties to TD-11. |
+| DOC-03 ✅ | `docker-compose.yml:31` — **fixed 2026-08-19 with TD-11** | The comment says "set it in .env for anything beyond local development" — but ✔ the `backend` service `environment` block never forwards `DJANGO_SECRET_KEY` (nor `DJANGO_SSL_REDIRECT`). Following the instruction exactly still yields the committed insecure fallback. A comment that lies is worse than none. | Either forward both vars, or say plainly they are deployment-only and not wired into the dev stack. Ties to TD-11. |
 | DOC-04 | `CLAUDE.md:120` | Claims `.claude/settings.local.json` "is gitignored, so the marketplace reference never reaches the public repo". ✔ It is ignored **only** by the machine-level `~/.config/git/ignore`; this repo's `.gitignore` has no `.claude/` rule. The guarantee holds on one Mac. | Add the rule to `.gitignore`, then the sentence becomes true. |
 | DOC-05 | `mvp-spec.md:108-110` | §8 lists four account endpoints; `account/urls.py:11-14` routes **four more** that are live and auth-only: `POST /editprofile/`, `POST /editpassword/`, `GET /list/?q=`, `GET /:id/`. Nothing in the doc set tells an agent they exist. | Add them to the "Existing (keep)" block; amend `:128` to note the users list moved to `GET` but kept the `/list/` path. |
 | DOC-06 | `README.md:58-61`, `CLAUDE.md:60-70` | The quality-gate block cannot be run as written — line 2 `cd frontend` executes from inside `backend/`. It also omits the venv activation, and `"test:unit": "vitest"` is watch mode in a TTY, so the `&&` chain never reaches `lint`/`build`. Compounded by TD-10: the documented pytest invocation does not run at all. | Subshells `(cd backend && …)`, add the venv step, and either add a `test:unit:run` script or document `-- run`. |
@@ -645,9 +660,8 @@ clustering in built output *only*), then vote in a poll, then upvote.
 
 1. ~~**TD-01 (CI)**~~ — **done 2026-08-19.** TD-16 was the proof of why: a red
    spec sat unnoticed for a month. Everything below is now watched automatically.
-2. **TD-11** — the secret key and the `DEBUG` default. Must precede any deploy
-   conversation. (TD-15, the `.env` ignore rule, is already done — it was the
-   half that protects against a mistake you only make once.)
+2. ~~**TD-11**~~ — **done 2026-08-19**, along with TD-15 and DOC-03. The
+   deploy-blocking configuration items are now closed.
 3. **TD-16, TD-17, TD-22** — three small tests and two string edits that close the
    three silent-regression holes. Under an hour together.
 4. **TD-12 + TD-13 + TD-26** — the upload hardening, as **one** change. They are

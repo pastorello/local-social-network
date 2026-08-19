@@ -20,7 +20,9 @@ The two apps talk over plain HTTP + CORS: the SPA reads its API base URL from
 
 Environment (see `.env.example`):
 
-- `DJANGO_SECRET_KEY` — fresh random value, never the repo default
+- `DJANGO_SECRET_KEY` — fresh random value. **Required**: with `DJANGO_DEBUG=false`
+  the app raises `ImproperlyConfigured` at startup rather than falling back to a
+  shared key, because this is also what signs JWTs (TD-11)
 - `DJANGO_DEBUG=false` — also enables the HTTPS hardening block in
   `settings.py` (HSTS, secure cookies, SSL redirect behind `X-Forwarded-Proto`)
 - `DJANGO_ALLOWED_HOSTS` — the API hostname

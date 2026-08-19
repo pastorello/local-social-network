@@ -17,10 +17,10 @@ the same as covered behaviour. The register lives in
 [tech-debt.md](./tech-debt.md), audited twice on 2026-08-19 — first by
 measurement (TD-01…TD-10), then by reading the source (TD-11…TD-32, DOC-01…DOC-10).
 CI (TD-01) landed on 2026-08-19 and now runs all five gates on every push and
-pull request. Next are the security items that must land before the demo is
-unparked (the committed `SECRET_KEY`, the unvalidated avatar upload, an anonymous
-500 on a public endpoint) and three small tests that close silent-regression
-holes.
+pull request. The committed `SECRET_KEY` (TD-11) went with it. Still to
+land before the demo is unparked: the unvalidated avatar upload, the uploaded
+filename extension, and an anonymous 500 on a public endpoint — plus three small
+tests that close silent-regression holes.
 
 This became the active workstream when shipping the demo was parked — see below.
 

@@ -12,10 +12,13 @@ source .venv/bin/activate
 pip install -r backend/requirements-dev.txt   # runtime + pytest/ruff
 
 cd backend
+export DJANGO_DEBUG=true      # once per shell — see below
 python manage.py migrate
 ```
 
-Configuration is environment-driven with development defaults; see [.env.example](../.env.example) at the repo root for the available variables (secret key, hosts, CORS, database).
+Configuration is environment-driven; see [.env.example](../.env.example) at the repo root for the available variables (secret key, hosts, CORS, database).
+
+`DJANGO_DEBUG` defaults to **false** so that a forgotten variable fails safe rather than serving tracebacks, and outside debug the app refuses to start without `DJANGO_SECRET_KEY` — it is the JWT signing key (TD-11). Bare-metal development therefore opts in explicitly with `export DJANGO_DEBUG=true`; `docker compose` already passes it for you.
 
 ## Create a superuser
 

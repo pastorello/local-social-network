@@ -15,6 +15,8 @@ import os
 from pathlib import Path
 import sys
 
+from django.core.exceptions import ImproperlyConfigured
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -22,16 +24,30 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-# The default below is for local development only — set DJANGO_SECRET_KEY in
-# any deployed environment.
-SECRET_KEY = os.environ.get(
-    'DJANGO_SECRET_KEY',
-    'django-insecure-kdh@5dsjmu83w1ep61+(m0wtw)qp!b0_vw^_kr%yv@&eh)j$&e',
-)
+# Are we running the test suite? Needed this early because both guards below
+# have to stay out of the way of pytest (TD-11).
+TESTING = 'test' in sys.argv or 'PYTEST_VERSION' in os.environ
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG', 'true').lower() == 'true'
+# Defaults to OFF so that forgetting the variable fails safe rather than serving
+# tracebacks. Development opts in: docker compose passes DJANGO_DEBUG=true, and
+# bare-metal runs need `DJANGO_DEBUG=true python manage.py runserver`.
+DEBUG = os.environ.get('DJANGO_DEBUG', 'false').lower() == 'true'
+
+# SECURITY WARNING: keep the secret key used in production secret!
+# This is also SimpleJWT's signing key, so a shared fallback would let anyone
+# who can read this repository mint a valid admin token (TD-11). There is
+# deliberately no committed default: outside DEBUG and the test suite, a missing
+# key is a hard failure at import time rather than a silently insecure boot.
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '')
+if not SECRET_KEY:
+    if not (DEBUG or TESTING):
+        raise ImproperlyConfigured(
+            'DJANGO_SECRET_KEY must be set when DJANGO_DEBUG is false. Generate one with: '
+            'python -c "from django.core.management.utils import get_random_secret_key; '
+            'print(get_random_secret_key())"'
+        )
+    SECRET_KEY = 'django-insecure-local-development-only-not-for-any-deployment'
 
 ALLOWED_HOSTS = [
     host.strip()
@@ -217,14 +233,14 @@ STORAGES = {
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Production hardening — active only when DJANGO_DEBUG=false (M4, spec §6).
-if not DEBUG:
+# `not TESTING` matters since DEBUG defaults to false: without it SECURE_SSL_REDIRECT
+# answers every request the test client makes with a 301 (TD-11).
+if not DEBUG and not TESTING:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SSL_REDIRECT', 'true').lower() == 'true'
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30
-
-TESTING = "test" in sys.argv or "PYTEST_VERSION" in os.environ
 
 if not TESTING:
     INSTALLED_APPS = [
