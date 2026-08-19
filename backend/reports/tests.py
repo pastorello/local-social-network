@@ -503,3 +503,44 @@ def test_admin_rejects_invalid_status_value(make_client, admin, make_report):
 
     assert response.status_code == 400
     assert 'status' in response.json()['fields']
+
+
+# --- TD-14: malformed UUID query params must not 500 ---
+
+
+@pytest.mark.parametrize('param', ['category', 'author'])
+def test_report_list_rejects_a_malformed_uuid_filter(api_client, param):
+    """Both columns are UUIDField, so the ORM raises Django's ValidationError at
+    query time. The endpoint is public and DEBUG used to default on, so this was
+    an anonymous 500 with a full traceback."""
+    response = api_client.get('/api/reports/', {param: 'non-un-uuid'})
+
+    assert response.status_code == 400
+    assert param in response.json()['fields']
+
+
+def test_report_map_rejects_a_malformed_uuid_filter(api_client):
+    response = api_client.get('/api/reports/map/', {'category': 'non-un-uuid'})
+
+    assert response.status_code == 400
+    assert 'category' in response.json()['fields']
+
+
+def test_a_well_formed_but_unknown_uuid_is_an_empty_result_not_an_error(api_client, make_report):
+    """The guard must reject malformed input, not filter out valid lookups."""
+    make_report()
+    response = api_client.get(
+        '/api/reports/', {'category': '00000000-0000-4000-8000-000000000000'}
+    )
+
+    assert response.status_code == 200
+    assert response.json()['results'] == []
+
+
+def test_an_unknown_status_filter_still_returns_200(api_client, make_report):
+    """status is a CharField — no UUID parsing, so nothing to guard here."""
+    make_report()
+    response = api_client.get('/api/reports/', {'status': 'inventato'})
+
+    assert response.status_code == 200
+    assert response.json()['results'] == []

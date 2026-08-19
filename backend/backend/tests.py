@@ -129,3 +129,45 @@ def test_https_hardening_is_off_while_testing():
 
     assert settings.TESTING is True
     assert getattr(settings, 'SECURE_SSL_REDIRECT', False) is False
+
+
+# --- exception handler (TD-14 net, TD-18 copy) ---
+
+
+def test_handler_translates_djangos_own_validation_error():
+    """DRF's handler knows APIException, Http404 and PermissionDenied only, so a
+    Django ValidationError escaped as a 500. This is the net behind the explicit
+    parameter guards."""
+    from django.core.exceptions import ValidationError as DjangoValidationError
+
+    from backend.exceptions import api_exception_handler
+
+    response = api_exception_handler(DjangoValidationError({'category': ['Non valido.']}), {})
+
+    assert response is not None
+    assert response.status_code == 400
+    assert response.data['fields']['category'] == ['Non valido.']
+
+
+def test_handler_translates_a_bare_django_validation_error():
+    from django.core.exceptions import ValidationError as DjangoValidationError
+
+    from backend.exceptions import api_exception_handler
+
+    response = api_exception_handler(DjangoValidationError('Non valido.'), {})
+
+    assert response.status_code == 400
+    assert 'Non valido.' in str(response.data['fields'])
+
+
+def test_throttle_responses_speak_italian():
+    """UI copy is Italian (N4); DRF's default throttle message is English."""
+    from rest_framework.exceptions import Throttled
+
+    from backend.exceptions import api_exception_handler
+
+    response = api_exception_handler(Throttled(wait=42), {})
+
+    assert response.status_code == 429
+    assert 'Troppi tentativi' in response.data['detail']
+    assert '42' in response.data['detail']
