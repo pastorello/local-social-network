@@ -72,6 +72,107 @@ One agent reported this as a live bug; it is not.
 
 ---
 
+## First pass — TD-01…TD-06
+
+Carried forward verbatim from the 2026-08-19 measurement pass, with the second
+pass's corrections marked inline. (These were briefly dropped when this file was
+restructured; restored the same day.)
+
+### TD-01 · No CI: five green gates that nobody runs automatically — **FIXED 2026-08-19** ✔
+
+> Closed: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs two jobs on
+> every push to `main` and every pull request — backend (ruff, then pytest on
+> Python 3.14, SQLite fallback) and frontend (oxlint, eslint, vitest, build on
+> Node 22). The linters run **check-only**: `npm run lint` applies `--fix`, which
+> in CI would let a run pass by rewriting files. Three omissions are documented in
+> the workflow header — no deploy step, no Cypress job (TD-16 is red), no Postgres
+> service. Node 22 matches `frontend/Dockerfile`; the register's original note said
+> Node 24, which is the dev machine, not the shipped image.
+
+**Evidence:** no `.github/` directory. The definition of done (spec §9) names
+five commands; today they run only when a human remembers.
+
+**Why it matters now:** the MVP is closed and the next phase is maintenance —
+dependency bumps, refactors, and agent-written changes. That is exactly the work
+where a regression slips in silently. It is also the cheapest insurance in this
+register.
+
+**Fix:** one GitHub Actions workflow, two jobs (backend: pytest + ruff on the
+pinned Python; frontend: vitest + eslint + build on Node 24). Nothing else — no
+deploy step, since there is nothing to deploy to.
+
+### TD-02 · Leaflet is bundled twice (~86 kB gzip wasted)
+
+**Evidence:** `npm run build` emits both
+
+```
+dist/assets/leaflet-src.esm-D3NCHgIn.js   148.53 kB │ gzip: 43.19 kB
+dist/assets/leaflet-src-CERmynjB.js       148.79 kB │ gzip: 43.36 kB
+```
+
+**Cause:** `ReportsMap.vue` imports `leaflet` directly (default + named) because
+`leaflet.markercluster` registers `markerClusterGroup` on the CJS/UMD runtime —
+documented on purpose in CLAUDE.md — while `@vue-leaflet/vue-leaflet` resolves
+Leaflet's ESM build. Vite therefore ships both copies of the same library.
+
+**Fix:** a `resolve.alias` in `vite.config.ts` pointing every specifier at one
+build, then **verify in the browser** that clustering still works — that is the
+regression this codebase has already been bitten by, so the fix is not done
+until a real map with clustered pins has been loaded.
+
+**Risk:** medium. Do not land it on the strength of a green build alone.
+
+### TD-03 · Build tooling sits in `dependencies`
+
+**Evidence:** `@tailwindcss/vite` and `tailwindcss` are in `dependencies`, not
+`devDependencies`. Consequence: `npm audit --omit=dev` reports **6
+vulnerabilities (5 high)** — all in `vite` / `launch-editor`, pulled into the
+production tree through `@tailwindcss/vite`.
+
+**Read this correctly:** every one of those advisories is **dev-server surface**
+(path traversal in the dev server, `server.fs.deny` bypasses, a Windows-only NTLM
+disclosure). None of them touches the static bundle a visitor downloads. The
+debt is the *mislabeling*, which makes a real audit unreadable — the day a
+genuine runtime advisory lands, it will be buried in dev-server noise.
+
+**Fix:** move both to `devDependencies`, then `npm audit fix` (patch-level vite).
+
+### TD-04 · End-to-end coverage is one file
+
+`frontend/cypress/e2e/` contains **only `login.cy.ts`**. The three flows that
+*are* the product — filing a report on the map, upvoting, voting in a poll — have
+unit tests but no end-to-end proof that the SPA and the API agree.
+
+**Sharpened by the second pass — see TD-16:** that one file is also *red*, and has
+been since M4. Fix TD-16 before adding specs, and before wiring Cypress into CI.
+
+### TD-05 · The backend suite takes 54s for 76 tests
+
+0.7s per test, and the suite creates users or passwords in 44 places
+(`account/tests.py` alone: 32). No fast `PASSWORD_HASHERS` override is
+configured, so every fixture pays for real PBKDF2 hashing. A test-only MD5
+hasher is the standard Django fix and typically cuts this by an order of
+magnitude. Confirm by measuring before and after — the estimate above is
+inference from the hashing count, not a profile.
+
+**Now measured — see Corrections above:** 0.296s per hash, ≈38% of the runtime,
+and the `if not TESTING:` insertion point already exists. Do it with TD-23.
+
+### TD-06 · Dependencies have drifted
+
+Backend (pinned exactly, which is why this is safe to defer): Django
+6.0.3 → 6.1, DRF 3.17.1 → 3.18.0, django-debug-toolbar 6.3 → 7.1.1,
+gunicorn 26.0 → 26.1, pillow 12.2 → 12.3, PyJWT 2.12 → 2.13, ruff 0.15 → 0.16.
+
+Frontend: axios 1.15 → 1.19, tailwind 4.2.2 → 4.3.3, eslint 10.1 → 10.8,
+cypress 15.13 → 15.21. Majors deliberately left alone for now: **pinia 3 → 4**,
+**typescript 6 → 7**, **oxlint 1.57 → 1.79** (22 minors behind, and it is the
+first linter in the `npm run lint` chain).
+
+Do this *after* TD-01 — dependency bumps are precisely what CI is for.
+
+---
+
 ## P0 — security, and all four are cheap
 
 ### TD-11 · The committed `SECRET_KEY` fallback is the JWT signing key ✔
@@ -542,8 +643,8 @@ clustering in built output *only*), then vote in a poll, then upvote.
 
 ## Suggested order
 
-1. **TD-01 (CI)** — unchanged. TD-16 is the proof of why: a red spec sat unnoticed
-   for a month. Everything below is safer with it in place.
+1. ~~**TD-01 (CI)**~~ — **done 2026-08-19.** TD-16 was the proof of why: a red
+   spec sat unnoticed for a month. Everything below is now watched automatically.
 2. **TD-11** — the secret key and the `DEBUG` default. Must precede any deploy
    conversation. (TD-15, the `.env` ignore rule, is already done — it was the
    half that protects against a mistake you only make once.)
