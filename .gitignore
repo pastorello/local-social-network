@@ -6,3 +6,6 @@ node_modules/
 # macOS
 .DS_Store
 backend/staticfiles/
+
+# Impeccable (live-mode config + detector cache)
+.impeccable/

@@ -85,3 +85,64 @@ npm run build            # type-check (vue-tsc) + vite build
 ```
 
 Definition of done for a feature (spec §9): spec section referenced, pytest + Vitest green, ruff + eslint clean, session log in `docs/ai-log/`, commits reference the log.
+
+## External agent skills (agent-skills + impeccable)
+
+Two third-party skill packs are used with this repo, installed as **Claude Code
+plugins (global, not vendored)** so nothing of theirs is committed here:
+[addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) (engineering
+process: spec → plan → build → test → review → ship) and
+[pbakaus/impeccable](https://github.com/pbakaus/impeccable) (frontend design
+quality; 59 deterministic detector rules, `.vue` supported). They do not conflict
+with each other — one covers process, the other aesthetics — but they do carry
+their own conventions, which this project overrides as follows.
+
+**Precedence.** The project workflow wins. agent-skills injects a routing
+meta-skill at every session start whose behaviours are phrased as
+"non-negotiable"; where it disagrees with [docs/mvp-spec.md](docs/mvp-spec.md) §10
+(spec first, one goal per session, session log, human ownership) or with the
+commands above, this file is authoritative.
+
+**Where artifacts go.** agent-skills defaults to writing `tasks/plan.md` and
+`tasks/todo.md` at the repo root — **don't**. The spec is the only scope
+authority, post-MVP scope goes in [docs/roadmap.md](docs/roadmap.md), and
+per-session planning belongs in that session's `docs/ai-log/` entry.
+
+**Definition of done** stays the project's own (spec §9): pytest + ruff + Vitest
++ eslint + `npm run build`. A skill's generic checklist does not replace it.
+
+**Language.** Both packs write English by default; UI copy in this app is Italian
+(N4). Any copy a skill proposes for the SPA must be translated before it lands.
+
+**Scope guard.** `/impeccable audit` and agent-skills' `frontend-ui-engineering`
+both push for a full WCAG pass. N5 scopes that out of the MVP and the roadmap
+places it before a real public launch — treat those findings as advisory, not as
+work to start.
+
+**Skills not to use here.** A global plugin install loads all 24 skills, so the
+exclusions are rules rather than missing files:
+
+- `spec-driven-development` and `planning-and-task-breakdown` — this project's
+  spec system is `docs/mvp-spec.md` + `docs/roadmap.md` + `docs/ai-log/`. Two
+  overlapping spec systems produce inconsistent behaviour between sessions. If
+  the pack's version ever looks better, replace ours deliberately and record the
+  decision — do not run both. (Same call the author made in the
+  `next-cmp-settings` project, for the same reason.)
+- `browser-testing-with-devtools` — requires the `chrome-devtools` MCP server,
+  which this setup does not have; use the built-in browser preview instead.
+- `performance-optimization` — premature here. Measure after the demo is live
+  and only against a real complaint.
+
+`shipping-and-launch` is the one worth reaching for soon: roadmap item #1 is
+deploying the demo. Do not enable agent-skills' optional `simplify-ignore` or
+`sdd-cache` hooks: the first rewrites files on disk with placeholders while a
+session runs.
+
+**impeccable specifics.** `.impeccable/` is gitignored (live-mode config + cache).
+`/impeccable live` temporarily injects a script into `frontend/index.html` —
+never commit that inject. If `/impeccable init` writes a root `PRODUCT.md`, it
+carries design-facing context only; product scope stays in the spec.
+Detector baseline at setup time (2026-08-19), both real and both still open:
+`SiteTitle.vue` uses a purple gradient (flagged as the classic "AI-generated UI"
+tell — it is the M4 brand, so changing it is a deliberate call), and
+`PollCard.vue` puts `text-gray-600` on `bg-green-100`.
