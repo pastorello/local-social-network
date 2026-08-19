@@ -12,9 +12,14 @@
 ## 1. Codebase audit & technical debt — **active**
 
 The MVP is feature-complete and every quality gate is green, but nothing runs
-those gates automatically and a few structural issues have accumulated. The
-measured register lives in [tech-debt.md](./tech-debt.md) (audited 2026-08-19):
-CI is the first item, then the bundle and dependency work.
+those gates automatically, and a code-reading pass found that green gates are not
+the same as covered behaviour. The register lives in
+[tech-debt.md](./tech-debt.md), audited twice on 2026-08-19 — first by
+measurement (TD-01…TD-10), then by reading the source (TD-11…TD-32, DOC-01…DOC-10).
+CI is still the first item; after it come the security items that must land
+before the demo is unparked (the committed `SECRET_KEY`, the unvalidated avatar
+upload, an anonymous 500 on a public endpoint) and three small tests that close
+silent-regression holes.
 
 This became the active workstream when shipping the demo was parked — see below.
 
