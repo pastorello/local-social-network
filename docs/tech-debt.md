@@ -188,9 +188,15 @@ catching Django's `ValidationError` in `backend/exceptions.py` as a net.
 
 ## P1 — worth a session each
 
-### TD-15 · `.env` is not gitignored, and the README tells you to create it ✔
+### TD-15 · `.env` was not gitignored, and the README tells you to create it — **FIXED 2026-08-19** ✔
 
-`.gitignore` has no `.env` entry (`git check-ignore -v .env` → not ignored), while
+> Closed in the deep-audit session: `.gitignore` now carries `.env`, `.env.*`,
+> `!.env.example` and `.claude/settings.local.json` (the latter also closes
+> DOC-04). Verified with `git check-ignore`: `.env`, `.env.local`,
+> `frontend/.env` ignored; both `.env.example` files and `.claude/launch.json`
+> still tracked.
+
+`.gitignore` had no `.env` entry (`git check-ignore -v .env` → not ignored), while
 `README.md:42` instructs `cp .env.example .env` and `.env.example` carries
 `DJANGO_SECRET_KEY` and `POSTGRES_PASSWORD`. Every other artifact — `backend/media`,
 `db.sqlite3`, `frontend/dist`, `__pycache__` — is covered by a per-directory
@@ -474,10 +480,9 @@ across five files, every relative link and anchor resolves, the ai-log index
 matches the files on disk, and the whole architecture section of `CLAUDE.md`
 was verified line by line. These are the exceptions.
 
-**Closed 2026-08-19** (same session as this pass): DOC-01, DOC-02, DOC-08 and
-the `CLAUDE.md` half of DOC-06 are fixed. DOC-04's *claim* is fixed — it now
-describes the real, machine-level mechanism — but the one-line `.gitignore` rule
-that would make the guarantee travel is **still open**, alongside TD-15.
+**Closed 2026-08-19** (same session as this pass): DOC-01, DOC-02, **DOC-04**
+(the `.gitignore` rule was added, so the claim is now true on every clone rather
+than on one machine — see TD-15), DOC-08, and the `CLAUDE.md` half of DOC-06.
 The rest of the table is open.
 
 | # | Where | The problem | Fix |
@@ -539,8 +544,9 @@ clustering in built output *only*), then vote in a poll, then upvote.
 
 1. **TD-01 (CI)** — unchanged. TD-16 is the proof of why: a red spec sat unnoticed
    for a month. Everything below is safer with it in place.
-2. **TD-11 + TD-15** — one short session. The secret key, the `DEBUG` default and
-   the `.env` ignore rule. Must precede any deploy conversation.
+2. **TD-11** — the secret key and the `DEBUG` default. Must precede any deploy
+   conversation. (TD-15, the `.env` ignore rule, is already done — it was the
+   half that protects against a mistake you only make once.)
 3. **TD-16, TD-17, TD-22** — three small tests and two string edits that close the
    three silent-regression holes. Under an hour together.
 4. **TD-12 + TD-13 + TD-26** — the upload hardening, as **one** change. They are

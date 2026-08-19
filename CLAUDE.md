@@ -106,12 +106,11 @@ with each other — one covers process, the other aesthetics — but they do car
 their own conventions, which this project overrides as follows.
 
 **Install scopes** (2026-08-19). agent-skills is installed at **`local` scope,
-pinned to this repo** — declared in `.claude/settings.local.json`, so the
-marketplace reference stays out of the public repo and the pack loads in no other
-project. **Caveat (DOC-04):** that file is ignored only by the machine-level
-`~/.config/git/ignore` — this repo's own `.gitignore` has no `.claude/` rule, so
-the guarantee does not travel to a fresh clone. Adding the rule here is one line
-and still open.
+pinned to this repo** — declared in `.claude/settings.local.json`, which
+this repo's `.gitignore` excludes, so the marketplace reference stays out of the
+public repo on every clone and the pack loads in no other project. (Until
+2026-08-19 it was covered only by a machine-level `~/.config/git/ignore`, so the
+guarantee did not travel — DOC-04.)
 
 impeccable stays a **`user`-scope** install and is currently *disabled*; enable it per session when you actually want a design
 pass. Manage both with `claude plugin ... --scope local` from the repo root;

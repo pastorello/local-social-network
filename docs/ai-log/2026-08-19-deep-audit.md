@@ -127,6 +127,12 @@ The section that matters. Written by hand, after reading the diff.
       `--experimental-cli` flag on `npm run format`, and the two Definition-of-Done
       items (`npm run build`, self-review notes) that had been dropped from spec §9
 
+- [x] TD-15 / DOC-04 closed in-session (author instruction): `.gitignore` now
+      carries `.env`, `.env.*`, `!.env.example` and `.claude/settings.local.json`.
+      Verified with `git check-ignore` that both `.env.example` files and
+      `.claude/launch.json` stay tracked. This is the one register item that
+      guards a mistake with no undo — committing a real secret.
+
 **Follow-ups / debt introduced:** none introduced. Recommended order is at the
 foot of `tech-debt.md`: TD-01 (CI) first, then TD-11+TD-15 (secret key, `DEBUG`
 default, `.env` ignore) before any deploy conversation resumes, then the three

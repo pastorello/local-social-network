@@ -9,3 +9,13 @@ backend/staticfiles/
 
 # Impeccable (live-mode config + detector cache)
 .impeccable/
+
+# Local env files — never commit a real secret (TD-15).
+# .env.example / frontend/.env.example stay tracked as documentation.
+.env
+.env.*
+!.env.example
+
+# Claude Code local plugin scope — keeps the marketplace reference out of the
+# public repo on every clone, not just the machine that set it up (DOC-04).
+.claude/settings.local.json
