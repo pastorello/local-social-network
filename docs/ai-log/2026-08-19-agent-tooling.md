@@ -121,3 +121,45 @@ The section that matters. Written by hand, after reading the diff.
   first `/impeccable audit` on `PollsView` to gauge noise against the 2 known
   deterministic findings.
 - Open product decision: whether the `SiteTitle.vue` purple gradient stays.
+
+## 6. Addendum (same day) — agent-skills re-scoped to this repo
+
+**Trigger:** author asked whether the packs were actually in use, then asked to
+install agent-skills "solo in questo progetto".
+
+**Findings.** Both packs were installed at `user` scope but **disabled**
+(`enabledPlugins: false` for both in `~/.claude/settings.json`), so none of the
+24 skills were loading in any session — §5's "installed, not yet active"
+follow-up had never been closed. The marketplace clones and the plugin caches
+(agent-skills 0.6.7 @ `df1edb2`, impeccable 4.1.1 @ `f88b283`) were intact on
+disk, so no re-download was needed.
+
+**Change.** agent-skills moved from `user` scope to **`local` scope, pinned to
+this repo**:
+
+```sh
+claude plugin marketplace add addyosmani/agent-skills --scope local
+claude plugin install agent-skills@addy-agent-skills --scope local
+claude plugin uninstall agent-skills@addy-agent-skills --scope user
+claude plugin marketplace remove addy-agent-skills --scope user
+```
+
+The declaration lives in `.claude/settings.local.json`, which is gitignored (via
+the machine-level `~/.config/git/ignore`, not this repo's `.gitignore`), so
+nothing about the pack reaches the public repo — the same "never vendored"
+outcome as before, now also scoped to a single project. `installed_plugins.json`
+records `"scope": "local"` with `projectPath` pinned here. Scope `project`
+(committed to `.claude/settings.json`) was offered and declined: this repo is
+public.
+
+impeccable was left untouched — still `user` scope, still disabled — to be
+enabled per session when a design pass is actually wanted.
+
+**Docs.** CLAUDE.md's "External agent skills" section said "global, not
+vendored", which was no longer true; it now carries an **Install scopes**
+paragraph with the real per-pack state and the `--scope local` management
+commands. The exclusion list is unchanged and still binding.
+
+**Caveat:** plugins load at process start, so the pack is enabled but not yet
+visible in the session that made the change. Verify in the next fresh session
+before assuming — the same trap as §5.

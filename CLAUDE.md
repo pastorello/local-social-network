@@ -89,13 +89,22 @@ Definition of done for a feature (spec §9): spec section referenced, pytest + V
 ## External agent skills (agent-skills + impeccable)
 
 Two third-party skill packs are used with this repo, installed as **Claude Code
-plugins (global, not vendored)** so nothing of theirs is committed here:
+plugins (never vendored)** so nothing of theirs is committed here:
 [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) (engineering
 process: spec → plan → build → test → review → ship) and
 [pbakaus/impeccable](https://github.com/pbakaus/impeccable) (frontend design
 quality; 59 deterministic detector rules, `.vue` supported). They do not conflict
 with each other — one covers process, the other aesthetics — but they do carry
 their own conventions, which this project overrides as follows.
+
+**Install scopes** (2026-08-19). agent-skills is installed at **`local` scope,
+pinned to this repo** — declared in `.claude/settings.local.json`, which is
+gitignored, so the marketplace reference never reaches the public repo and the
+pack loads in no other project. impeccable stays a **`user`-scope** install and
+is currently *disabled*; enable it per session when you actually want a design
+pass. Manage both with `claude plugin ... --scope local` from the repo root;
+`claude plugin list` shows what is active. Plugins load at process start, so a
+scope change only takes effect in the next session.
 
 **Precedence.** The project workflow wins. agent-skills injects a routing
 meta-skill at every session start whose behaviours are phrased as
@@ -119,7 +128,7 @@ both push for a full WCAG pass. N5 scopes that out of the MVP and the roadmap
 places it before a real public launch — treat those findings as advisory, not as
 work to start.
 
-**Skills not to use here.** A global plugin install loads all 24 skills, so the
+**Skills not to use here.** Enabling the pack loads all 24 skills, so the
 exclusions are rules rather than missing files:
 
 - `spec-driven-development` and `planning-and-task-breakdown` — this project's
