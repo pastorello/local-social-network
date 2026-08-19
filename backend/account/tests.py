@@ -390,3 +390,64 @@ def test_editprofile_leaves_an_unchanged_avatar_alone(auth_client, citizen):
     assert citizen.name == 'Nome Nuovo'
     assert citizen.avatar.name == original_name
     assert citizen.avatar.read() == original_bytes
+
+
+# --- TD-18: rate limiting on the credential endpoints ---
+
+
+def signup_payload(n):
+    return {
+        'email': f'nuovo{n}@example.com',
+        'name': f'Nuovo {n}',
+        'password1': PASSWORD,
+        'password2': PASSWORD,
+    }
+
+
+def test_login_is_throttled(api_client, citizen):
+    """An unthrottled credential endpoint is a free password oracle — and every
+    attempt costs a full PBKDF2 hash, so it is a CPU amplifier too."""
+    bad = {'email': citizen.email, 'password': 'sbagliata'}
+    codes = [api_client.post('/api/users/login/', bad).status_code for _ in range(12)]
+
+    assert 429 in codes, codes
+    assert codes.count(401) <= 10
+
+
+def test_a_throttled_login_explains_itself_in_italian(api_client, citizen):
+    bad = {'email': citizen.email, 'password': 'sbagliata'}
+    for _ in range(12):
+        response = api_client.post('/api/users/login/', bad)
+        if response.status_code == 429:
+            break
+
+    assert response.status_code == 429
+    assert 'Troppi tentativi' in response.json()['detail']
+
+
+def test_signup_is_throttled(api_client):
+    codes = [
+        api_client.post('/api/users/signup/', signup_payload(n)).status_code
+        for n in range(12)
+    ]
+
+    assert 429 in codes, codes
+
+
+def test_editpassword_is_throttled(auth_client, citizen):
+    wrong = {'old_password': 'sbagliata', 'new_password1': PASSWORD, 'new_password2': PASSWORD}
+    codes = [
+        auth_client.post('/api/users/editpassword/', wrong).status_code for _ in range(8)
+    ]
+
+    assert 429 in codes, codes
+
+
+def test_throttling_does_not_leak_between_tests(api_client, citizen):
+    """Guards the conftest cache reset: without it, the tests above would
+    poison every later login in the session."""
+    response = api_client.post(
+        '/api/users/login/', {'email': citizen.email, 'password': PASSWORD}
+    )
+
+    assert response.status_code == 200

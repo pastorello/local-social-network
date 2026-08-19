@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from django.db.models import F
 from django.shortcuts import get_object_or_404
 
@@ -23,10 +25,27 @@ class ReportPagination(PageNumberPagination):
     max_page_size = 100
 
 
+def _uuid_param(request, name):
+    """Read a UUID query param, or raise a 400 instead of letting the ORM 500.
+
+    `category` and `author` are UUID columns, so a malformed value makes Django
+    raise its own ValidationError at query-evaluation time — which DRF's handler
+    does not recognise. These endpoints are public, so that was an anonymous
+    500 (TD-14).
+    """
+    raw = request.GET.get(name, '')
+    if not raw:
+        return None
+    try:
+        return UUID(raw)
+    except ValueError:
+        raise ValidationError({name: ['Identificativo non valido.']}) from None
+
+
 def _filtered_reports(request):
     queryset = IssueReport.objects.select_related('category', 'author').all()
 
-    category = request.GET.get('category', '')
+    category = _uuid_param(request, 'category')
     if category:
         queryset = queryset.filter(category_id=category)
 
@@ -38,7 +57,7 @@ def _filtered_reports(request):
     if q:
         queryset = queryset.filter(title__icontains=q)
 
-    author = request.GET.get('author', '')
+    author = _uuid_param(request, 'author')
     if author:
         queryset = queryset.filter(author_id=author)
 

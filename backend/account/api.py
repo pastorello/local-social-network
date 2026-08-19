@@ -2,13 +2,19 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.decorators import (
+    api_view,
+    authentication_classes,
+    permission_classes,
+    throttle_classes,
+)
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from .forms import ProfileForm, SignupForm
 from .models import User
 from .serializers import UserSerializer
+from .throttling import PasswordChangeRateThrottle, SignupRateThrottle
 
 
 def _form_errors(form):
@@ -33,6 +39,7 @@ def me(request):
 @api_view(['POST'])
 @authentication_classes([])
 @permission_classes([])
+@throttle_classes([SignupRateThrottle])
 def signup(request):
     data = request.data
 
@@ -86,6 +93,7 @@ def editprofile(request):
 
 
 @api_view(['POST'])
+@throttle_classes([PasswordChangeRateThrottle])
 def editpassword(request):
     form = PasswordChangeForm(data=request.POST, user=request.user)
 

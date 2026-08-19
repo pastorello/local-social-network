@@ -36,6 +36,7 @@ New entries use [`_template.md`](_template.md).
 | 2026-08-19 | Post-MVP | TD-01: continuous integration | [2026-08-19-ci.md](2026-08-19-ci.md) |
 | 2026-08-19 | Post-MVP | TD-11: fail-closed secret key & debug default | [2026-08-19-td-11-secret-key.md](2026-08-19-td-11-secret-key.md) |
 | 2026-08-19 | Post-MVP | TD-12/13/26: upload hardening | [2026-08-19-td-12-upload-hardening.md](2026-08-19-td-12-upload-hardening.md) |
+| 2026-08-19 | Post-MVP | TD-14/18: input validation & rate limiting | [2026-08-19-td-14-18-input-and-throttling.md](2026-08-19-td-14-18-input-and-throttling.md) |
 
 ## Reading suggestions
 

@@ -30,6 +30,12 @@ Environment (see `.env.example`):
 - `WEBSITE_URL` — public base URL of the API (absolute media URLs)
 - `POSTGRES_HOST/PORT/DB/USER/PASSWORD`
 
+Rate limiting (TD-18) counts through the Django cache. `settings.py` configures
+no `CACHES`, so it is `LocMemCache` — **per process**. Behind several gunicorn
+workers each worker keeps its own tally and the effective limit is multiplied by
+the worker count. Configure a shared cache (Redis or Memcached) before relying
+on the login and signup limits.
+
 Release commands:
 
 ```sh

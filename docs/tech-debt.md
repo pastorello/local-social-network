@@ -301,7 +301,16 @@ tells the operator media is served and to attach a disk for it. Fix the extensio
 normalization **first**; the obvious fix for the 404 is what turns TD-13 into a
 click-through path.
 
-### TD-14 · Anonymous HTTP 500 (with traceback) from a malformed UUID query param ✔
+### TD-14 · Anonymous HTTP 500 from a malformed UUID query param — **FIXED 2026-08-19** ✔
+
+> Closed twice over. `_uuid_param` in `reports/api.py` parses `category` and
+> `author` before they reach the ORM and raises a DRF `ValidationError`, so the
+> response is a `{detail, fields}` 400. Behind it, `backend/exceptions.py` now
+> translates Django's own `ValidationError` — the one DRF's handler does not
+> recognise — into the same 400, so the next place this pattern appears degrades
+> to a bad-request instead of a traceback. Four endpoint tests plus two handler
+> unit tests; one of them pins that a *well-formed* unknown UUID still returns an
+> empty 200, so the guard rejects malformed input rather than valid lookups.
 
 **Evidence:** `reports/api.py:31` and `:43` pass raw query strings into
 `.filter(category_id=…)` / `.filter(author_id=…)` on `UUIDField` columns. Django
@@ -376,7 +385,25 @@ field is ignored. **Fix:** two tests, ~15 lines total — POST `role: 'admin'` t
 signup and to `editprofile`, assert `role` is unchanged after `refresh_from_db()`.
 This is the highest-severity single-token regression available in the codebase.
 
-### TD-18 · No rate limiting anywhere
+### TD-18 · No rate limiting anywhere — **FIXED 2026-08-19** ✔
+
+> Closed for the three credential endpoints: login **10/min** and signup
+> **10/hour** per IP, password change **5/hour** per user
+> (`account/throttling.py`, rates in `REST_FRAMEWORK`). Explicit throttle
+> classes rather than `ScopedRateThrottle`, because `@api_view` function views
+> have no class attribute for the scope to read. 429 bodies are Italian (N4) via
+> the exception handler; DRF's default message is English.
+>
+> **Signup is 10/hour, not the 5/hour sketched above, on purpose:** a small city
+> means shared NAT, and a family or a classroom signing up together must not be
+> locked out. It is still decisive against enumeration at scale.
+>
+> **Two things this leaves open.** (1) DRF counts through the Django cache, and
+> the default `LocMemCache` is per-process — behind N gunicorn workers the
+> effective limit is N× the configured one. A shared cache is a deployment
+> prerequisite, now recorded in `docs/deploy.md`. (2) The tests cost **~12s** of
+> real PBKDF2 hashing, which pushed the suite from 37s to ~60s — see TD-05, now
+> materially more valuable than when it was written.
 
 `REST_FRAMEWORK` (`settings.py:63-72`) declares no throttle classes or rates; a
 repo-wide grep for `throttle|ratelimit` returns nothing. `TokenObtainPairView`
@@ -482,7 +509,10 @@ nothing else uploads today, so there is no pollution now, but the guard belongs
 in conftest rather than in one file by luck.
 
 **Do TD-05 and TD-23 in the same session** — the hasher override needs a single
-home anyway.
+home anyway. `backend/conftest.py` now exists (TD-18 needed an autouse cache
+reset), so the file to put it in is already there; the six duplicated fixtures
+are still duplicated. TD-18's tests added ~12s of hashing, so this is now the
+highest-value item left on runtime alone.
 
 **On splitting the flat `tests.py` files:** not yet. Sizes are 249/460/429 lines
 and each is already sectioned by spec-ID comment banners. The threshold is ~600
@@ -704,7 +734,7 @@ clustering in built output *only*), then vote in a poll, then upvote.
    three silent-regression holes. Under an hour together.
 4. ~~**TD-12 + TD-13 + TD-26**~~ — **done 2026-08-19** as one change, and TD-13's
    severity corrected downward in the process.
-5. **TD-14**, then **TD-18** — the anonymous 500, then throttling.
+5. ~~**TD-14**, then **TD-18**~~ — **done 2026-08-19.**
 6. **TD-03** — 10 minutes, makes `npm audit` readable.
 7. **TD-19**, **TD-20** — the counter, then the logout gaps.
 8. **TD-05 + TD-23** together, then **TD-06** (bumps, now watched by CI).

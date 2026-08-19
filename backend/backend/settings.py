@@ -85,6 +85,14 @@ REST_FRAMEWORK = {
     ),
     # Spec §8 error convention: {"detail": str, "fields"?: {...}}
     'EXCEPTION_HANDLER': 'backend.exceptions.api_exception_handler',
+    # Credential endpoints only — see account/throttling.py (TD-18).
+    # signup is per-IP and generous on purpose: a small city means shared NAT,
+    # and a family or a classroom signing up together must not be locked out.
+    'DEFAULT_THROTTLE_RATES': {
+        'login': '10/min',
+        'signup': '10/hour',
+        'password_change': '5/hour',
+    },
 }
 
 CORS_ALLOWED_ORIGINS = [
