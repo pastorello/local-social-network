@@ -383,3 +383,26 @@ def test_admin_closes_poll(make_client, admin, make_poll):
     again = client.patch(f'/api/polls/{poll.id}/close/')
     assert again.status_code == 200
     assert again.json()['is_closed'] is True
+
+
+# --- F3.1 option ordering (TD-22) ---
+
+
+def test_options_are_ordered_by_position_not_by_insertion(api_client, admin):
+    """The existing ordering assertions cannot fail.
+
+    Every other fixture inserts options in ascending `position`, so with no
+    ORDER BY at all the database returns insertion order — which *is* position
+    order. This one inserts them backwards, so it fails the moment the
+    `.order_by('position')` at polls/api.py:35 is dropped. CLAUDE.md warns that
+    `annotate()` drops `Meta.ordering`, and that warning had no test behind it.
+    """
+    poll = Poll.objects.create(question='In che ordine?', created_by=admin)
+    PollOption.objects.create(poll=poll, text='Seconda', position=1)
+    PollOption.objects.create(poll=poll, text='Prima', position=0)
+
+    listed = api_client.get('/api/polls/').json()['results'][0]
+    detailed = api_client.get(f'/api/polls/{poll.id}/').json()
+
+    assert [o['text'] for o in listed['options']] == ['Prima', 'Seconda']
+    assert [o['text'] for o in detailed['options']] == ['Prima', 'Seconda']

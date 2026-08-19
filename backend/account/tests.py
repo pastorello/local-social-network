@@ -432,3 +432,34 @@ def test_throttling_does_not_leak_between_tests(api_client, citizen):
     )
 
     assert response.status_code == 200
+
+
+# --- F1.3: role is admin-assigned only (TD-17) ---
+
+
+def test_signup_ignores_a_self_assigned_role(api_client):
+    """One token — adding 'role' to SignupForm.Meta.fields — would hand every
+    citizen admin authority over report statuses and poll creation, with the
+    whole suite still green. Nothing pinned that until this test."""
+    response = api_client.post('/api/users/signup/', {
+        'email': 'furbo@example.com',
+        'name': 'Furbo',
+        'password1': PASSWORD,
+        'password2': PASSWORD,
+        'role': User.ADMIN,
+    })
+
+    assert response.status_code == 201
+    assert User.objects.get(email='furbo@example.com').role == User.CITIZEN
+
+
+def test_editprofile_ignores_a_self_assigned_role(auth_client, citizen):
+    response = auth_client.post('/api/users/editprofile/', {
+        'name': citizen.name,
+        'email': citizen.email,
+        'role': User.ADMIN,
+    })
+
+    assert response.status_code == 200
+    citizen.refresh_from_db()
+    assert citizen.role == User.CITIZEN

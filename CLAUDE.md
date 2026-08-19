@@ -110,10 +110,14 @@ npm run build            # type-check (vue-tsc) + vite build
 
 `.github/workflows/ci.yml` runs the gates on every push to `main` and every pull
 request: backend (ruff + pytest, Python 3.14, SQLite fallback) and frontend
-(oxlint + eslint + vitest + build, Node 22). It must stay green. Two things to
-know before editing it: the linters run **check-only** there, because
-`npm run lint` applies `--fix` and would let CI pass by rewriting files; and
-Cypress is deliberately not wired up until TD-16 (a spec red since M4) is fixed.
+(oxlint + eslint + vitest + build, Node 22). A third job runs
+Cypress against a **production build** (`npm run test:e2e`, vite preview on
+:4173) — not the dev server, because TD-02's double Leaflet bundle and the
+default-import gotcha only appear in built output. It must stay green. Two
+things to know before editing it: the linters run **check-only** there, because
+`npm run lint` applies `--fix` and would let CI pass by rewriting files; and the
+e2e job runs no backend, since today's specs exercise the SPA shell only — a
+spec that talks to the API needs a service added.
 
 Definition of done for a feature (spec §9): spec section referenced, pytest + Vitest green, ruff + eslint clean, `npm run build` green, self-review notes in the PR/commit description, session log in `docs/ai-log/`, commits reference the log.
 

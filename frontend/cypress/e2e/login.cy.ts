@@ -14,9 +14,9 @@ describe('anonymous visitor', () => {
 describe('login page', () => {
   it('renders the login form', () => {
     cy.visit('/login')
-    cy.contains('h1', 'Log in')
+    cy.contains('h1', 'Accedi')
     cy.get('input[type="email"]').should('exist')
     cy.get('input[type="password"]').should('exist')
-    cy.contains('button', 'Log in')
+    cy.contains('button', 'Accedi')
   })
 })

@@ -3,9 +3,6 @@
 #
 # Deliberately NOT here (see docs/tech-debt.md):
 #   - no deploy step — there is nothing to deploy to (roadmap item 2, parked)
-#   - no Cypress job — the only e2e spec has been red since M4 (TD-16); adding
-#     it now would mean a permanently failing CI. Add the job in the session
-#     that fixes TD-16.
 #   - no Postgres service — the suite runs on the SQLite fallback, which is what
 #     every developer runs locally. Testing against Postgres too is a deliberate
 #     later step, not an oversight.
@@ -91,3 +88,52 @@ jobs:
       # Also type-checks: `build` is run-p type-check + vite build.
       - name: Build
         run: npm run build
+
+  e2e:
+    name: e2e — cypress
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # `npm ci` downloads the binary through the `prepare` script; without this
+      # that is ~100 MB on every run.
+      - name: Cache the Cypress binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      # `test:e2e` runs against a production build (vite preview on :4173), not
+      # the dev server — that is the point. TD-02's double Leaflet bundle and the
+      # default-import gotcha only appear in built output.
+      - name: Build
+        run: npm run build
+
+      # No backend service: today's specs exercise the SPA shell only — the map
+      # view, the auth redirect and the login form. A spec that talks to the API
+      # will need one added here.
+      - name: Run Cypress
+        run: npm run test:e2e
+
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-failures
+          path: |
+            frontend/cypress/screenshots
+            frontend/cypress/videos
+          if-no-files-found: ignore
+          retention-days: 7
