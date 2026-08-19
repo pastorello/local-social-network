@@ -22,7 +22,8 @@ PROBE = (
     'from django.conf import settings;'
     'print("DEBUG=", settings.DEBUG, sep="");'
     'print("SECRET_KEY=", settings.SECRET_KEY, sep="");'
-    'print("SSL_REDIRECT=", getattr(settings, "SECURE_SSL_REDIRECT", None), sep="")'
+    'print("SSL_REDIRECT=", getattr(settings, "SECURE_SSL_REDIRECT", None), sep="");'
+    'print("PASSWORD_HASHERS=", settings.PASSWORD_HASHERS, sep="")'
 )
 
 
@@ -171,3 +172,21 @@ def test_throttle_responses_speak_italian():
     assert response.status_code == 429
     assert 'Troppi tentativi' in response.data['detail']
     assert '42' in response.data['detail']
+
+
+# --- test-only password hashing (TD-05) ---
+
+
+def test_the_fast_hasher_is_active_under_test():
+    from django.conf import settings
+
+    assert settings.PASSWORD_HASHERS == ['django.contrib.auth.hashers.MD5PasswordHasher']
+
+
+def test_the_fast_hasher_does_not_escape_the_test_branch():
+    """The guard that matters: MD5 must never be what stores a real password."""
+    result = run_django(DJANGO_DEBUG='true')
+
+    assert result.returncode == 0, result.stderr
+    assert 'MD5' not in value_of(result, 'PASSWORD_HASHERS')
+    assert 'PBKDF2PasswordHasher' in value_of(result, 'PASSWORD_HASHERS')

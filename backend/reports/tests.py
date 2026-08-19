@@ -4,61 +4,13 @@ from io import BytesIO
 import pytest
 from PIL import Image
 from django.core.files.uploadedfile import SimpleUploadedFile
-from rest_framework.test import APIClient
 
-from account.models import User
 from reports.models import Category, IssueReport, Upvote
 
 pytestmark = pytest.mark.django_db
 
-PASSWORD = 'GaetaTest2026!'
-
 GAETA_LAT = 41.2172608
 GAETA_LNG = 13.5625165
-
-
-@pytest.fixture(autouse=True)
-def media_root(settings, tmp_path):
-    settings.MEDIA_ROOT = tmp_path
-
-
-@pytest.fixture
-def api_client():
-    return APIClient()
-
-
-@pytest.fixture
-def citizen():
-    return User.objects.create_user(
-        name='Cittadino Uno', email='cittadino@example.com', password=PASSWORD
-    )
-
-
-@pytest.fixture
-def other_citizen():
-    return User.objects.create_user(
-        name='Cittadino Due', email='altro@example.com', password=PASSWORD
-    )
-
-
-@pytest.fixture
-def admin():
-    user = User.objects.create_user(
-        name='Amministratore', email='admin@example.com', password=PASSWORD
-    )
-    user.role = User.ADMIN
-    user.save(update_fields=('role',))
-    return user
-
-
-@pytest.fixture
-def make_client():
-    def _make(user):
-        client = APIClient()
-        client.force_authenticate(user)
-        return client
-
-    return _make
 
 
 @pytest.fixture

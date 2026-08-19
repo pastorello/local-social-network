@@ -18,7 +18,7 @@
 
 | Gate | Command | Result |
 |---|---|---|
-| Backend tests | `python -m pytest` | **76 passed** in 54.4s (34.1s on a second machine) |
+| Backend tests | `python -m pytest` | **125 passed** in 3.3s (was 76 in 54.4s; see TD-05) |
 | Backend lint | `python -m ruff check .` | clean |
 | Frontend tests | `npm run test:unit` | **32 passed** (10 files) in 4.2s |
 | Frontend lint | `npm run lint` | clean (61 files, 116 rules) |
@@ -146,7 +146,23 @@ unit tests but no end-to-end proof that the SPA and the API agree.
 **Sharpened by the second pass — see TD-16:** that one file is also *red*, and has
 been since M4. Fix TD-16 before adding specs, and before wiring Cypress into CI.
 
-### TD-05 · The backend suite takes 54s for 76 tests
+### TD-05 · The backend suite takes 54s for 76 tests — **FIXED 2026-08-19** ✔
+
+> Closed: `PASSWORD_HASHERS = ['…MD5PasswordHasher']` inside the existing
+> `if TESTING:` branch in `settings.py`. **50.53s → 3.31s** on the same test
+> set — measured by toggling the single line and re-running, not inferred, and
+> stable across three runs. Roughly **15×**.
+>
+> **This entry's own estimate was badly low, and that is the interesting part.**
+> It predicted ~38%, from 44 user creations × 0.296s. The real figure is ~93%,
+> because creations were only part of it: every `auth_client` login, every
+> `check_password`, and Django's dummy-hash path for unknown users all pay the
+> same cost — and TD-18's rate-limit tests hammer login eleven times each by
+> design. Counting the fixtures missed the authentication paths entirely.
+>
+> Two tests pin it: one asserts the fast hasher is active under pytest, the
+> other boots settings in a subprocess and asserts MD5 is **not** there — the
+> guard that matters, since MD5 must never be what stores a real password.
 
 0.7s per test, and the suite creates users or passwords in 44 places
 (`account/tests.py` alone: 32). No fast `PASSWORD_HASHERS` override is
@@ -496,7 +512,18 @@ about (`annotate()` drops `Meta.ordering`), and it has **zero real coverage**.
 `position=0` and asserts the API returns `['A', 'B']`. It is the only test that
 can actually fail if that line regresses.
 
-### TD-23 · No `conftest.py` — the fixtures are copy-pasted across three apps
+### TD-23 · No `conftest.py` — the fixtures are copy-pasted across three apps — **FIXED 2026-08-19** ✔
+
+> Closed: `api_client`, `citizen`, `other_citizen`, `admin`, `make_client` and
+> the autouse `media_root` moved into `backend/conftest.py`; `PASSWORD` moved to
+> `common/testing.py` (a module rather than a conftest symbol, so test modules
+> can import it normally). **112 lines removed** from the three `tests.py`.
+> Module-specific fixtures stayed put: `category`/`make_report` in reports,
+> `make_poll` in polls, `auth_client` in account.
+>
+> Note on `media_root`: it is now autouse for **every** test, not just reports.
+> The old arrangement held by luck — nothing else uploaded at the time — and
+> stopped being true when the TD-12 avatar tests arrived.
 
 `PASSWORD`, `api_client`, `citizen`, `other_citizen`, `admin`, `make_client`
 appear verbatim in `account/tests.py:8-29`, `reports/tests.py:14-61` and
@@ -508,11 +535,7 @@ redirecting `MEDIA_ROOT` to `tmp_path` exists only in `reports/tests.py:20-22`;
 nothing else uploads today, so there is no pollution now, but the guard belongs
 in conftest rather than in one file by luck.
 
-**Do TD-05 and TD-23 in the same session** — the hasher override needs a single
-home anyway. `backend/conftest.py` now exists (TD-18 needed an autouse cache
-reset), so the file to put it in is already there; the six duplicated fixtures
-are still duplicated. TD-18's tests added ~12s of hashing, so this is now the
-highest-value item left on runtime alone.
+Done together on 2026-08-19, as recommended.
 
 **On splitting the flat `tests.py` files:** not yet. Sizes are 249/460/429 lines
 and each is already sectioned by spec-ID comment banners. The threshold is ~600
@@ -737,7 +760,8 @@ clustering in built output *only*), then vote in a poll, then upvote.
 5. ~~**TD-14**, then **TD-18**~~ — **done 2026-08-19.**
 6. **TD-03** — 10 minutes, makes `npm audit` readable.
 7. **TD-19**, **TD-20** — the counter, then the logout gaps.
-8. **TD-05 + TD-23** together, then **TD-06** (bumps, now watched by CI).
+8. ~~**TD-05 + TD-23**~~ — **done 2026-08-19.** Then **TD-06** (bumps, now
+   watched by CI and by a 3-second suite).
 9. **TD-02** — needs real browser verification, so give it its own session.
 10. **TD-21**, **TD-25**, **TD-27**, **TD-28**, then the documentation table.
 11. P3 whenever they are in the way.
