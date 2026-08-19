@@ -213,7 +213,16 @@ starting point for a deployment.
 **Deploy-time only** — but it must land *before* the demo conversation restarts,
 not during it.
 
-### TD-12 · Avatar uploads bypass every control the report-photo path enforces ✔
+### TD-12 · Avatar uploads bypass every control the report-photo path enforces — **FIXED 2026-08-19** ✔
+
+> Closed. `reports/images.py` moved to `common/images.py` (so `account` need not
+> import from a sibling domain app) and both upload paths now call the same
+> `validate_image`. `ProfileForm.clean_avatar` applies the byte cap, the format
+> allowlist and the EXIF strip; it skips the work when the field arrives as the
+> stored `FieldFile` rather than a new upload, so a profile save no longer
+> re-encodes an unchanged avatar. Six end-to-end tests in `account/tests.py`
+> pin it, including one that uploads a GPS-tagged image and asserts the stored
+> file has no EXIF at all.
 
 **Evidence:** `ProfileForm` (`backend/account/forms.py:19-22`) declares `avatar`
 in `fields` and `editprofile` (`backend/account/api.py:80`) hands it
@@ -238,7 +247,29 @@ file uploads — any authenticated citizen can fill `MEDIA_ROOT`.
 `MAX_PHOTO_BYTES` + `strip_exif`. Tidier version: lift `reports/images.py` to a
 shared module first, since `account → reports` is an awkward import direction.
 
-### TD-13 · Uploaded filenames keep their extension, and media is served by extension
+### TD-13 · Uploaded filenames keep their extension — **FIXED 2026-08-19, and the original finding was overstated** ✔
+
+> **Correction first.** The audit described this as stored XSS: upload
+> `pwned.html`, get it served as `text/html`, run script on the API origin. That
+> does not work. `django.forms.ImageField` carries
+> `validate_image_file_extension` in `default_validators`, and it runs on **both**
+> paths — via `ModelForm` for avatars and via DRF's `ImageField` for report
+> photos. `.html` is rejected outright. Measured: the upload 400s.
+>
+> **What was actually exploitable.** That validator allows every extension
+> Pillow knows — **70 of them** — and ~43 do not map to `image/*` once
+> `mimetypes` sees them: `.pdf` → `application/pdf`, `.eps`/`.ps` →
+> `application/postscript`, `.mpeg` → `video/mpeg`, and so on. A valid PNG named
+> `payload.pdf` passed validation and was served as `application/pdf`. That is
+> content-type confusion in a format browsers render inline with a scripting
+> engine — real, but **Medium, not High**, and a different mechanism from the one
+> written up.
+>
+> **Closed** by deriving the stored extension from the format Pillow actually
+> decoded (`safe_filename`), which also flattens inner dots so
+> `payload.html.png` cannot keep a second extension, and drops directory
+> components. Verified by mutation: reverting to the client-supplied name fails
+> four tests.
 
 **Evidence:** `reports/images.py:36` returns
 `ContentFile(buffer.getvalue(), name=uploaded_file.name)` — it re-encodes the
@@ -485,7 +516,14 @@ handles `next` correctly).
 **Fix:** hoist `DEFAULT_PAGINATION_CLASS` + `PAGE_SIZE` into `REST_FRAMEWORK` and
 delete both byte-identical pagination classes; render `response.data.count`.
 
-### TD-26 · Decompression-bomb window in `strip_exif`
+### TD-26 · Decompression-bomb window in `strip_exif` — **FIXED 2026-08-19** ✔
+
+> Closed. `validate_image` checks `width * height` against a 40 Mpx budget from
+> the **header**, before `load()` allocates anything, and separately catches
+> `Image.DecompressionBombError` — which is not an `OSError`, so the original
+> handler let it escape as a 500. Two tests: a 7000×7000 1-bit PNG that is a few
+> KB on disk (the 1×–2× band where Pillow only warns), and a hand-built PNG
+> header declaring 30000×30000 (where Pillow raises).
 
 `images.py:18-23` catches `OSError`, which covers `UnidentifiedImageError` but
 **not** `PIL.Image.DecompressionBombError`. Pillow has two bands: above
@@ -664,8 +702,8 @@ clustering in built output *only*), then vote in a poll, then upvote.
    deploy-blocking configuration items are now closed.
 3. **TD-16, TD-17, TD-22** — three small tests and two string edits that close the
    three silent-regression holes. Under an hour together.
-4. **TD-12 + TD-13 + TD-26** — the upload hardening, as **one** change. They are
-   entangled and half-fixing them is worse than leaving them.
+4. ~~**TD-12 + TD-13 + TD-26**~~ — **done 2026-08-19** as one change, and TD-13's
+   severity corrected downward in the process.
 5. **TD-14**, then **TD-18** — the anonymous 500, then throttling.
 6. **TD-03** — 10 minutes, makes `npm audit` readable.
 7. **TD-19**, **TD-20** — the counter, then the logout gaps.
