@@ -248,6 +248,51 @@ def test_create_with_photo_strips_exif(make_client, citizen, category):
     assert len(stored_exif) == 0
 
 
+def test_create_normalises_the_stored_photo_extension(make_client, citizen, category):
+    """TD-13, end to end, on the attack that actually gets through.
+
+    `.html` never reaches us: `django.forms.ImageField` carries
+    `validate_image_file_extension`, so the upload is rejected. But that
+    validator allows all ~70 extensions Pillow knows, and many of them are not
+    `image/*` once `mimetypes` sees them — `.pdf`, `.eps`, `.ps`, `.mpeg`.
+    Django serves media with a Content-Type guessed from the extension, so a
+    valid PNG called `payload.pdf` used to be served as `application/pdf`.
+    Deriving the stored extension from the decoded format is what closes it.
+    """
+    client = make_client(citizen)
+    photo = make_image_upload(fmt='PNG', name='payload.pdf')
+
+    response = client.post(
+        '/api/reports/', {**valid_payload(category), 'photo': photo}, format='multipart'
+    )
+
+    assert response.status_code == 201
+    report = IssueReport.objects.get()
+    assert report.photo.name.endswith('.png')
+    assert '.pdf' not in report.photo.name
+
+
+def test_create_applies_photo_orientation_before_dropping_exif(make_client, citizen, category):
+    """Asserting only that EXIF is empty passes even without exif_transpose,
+    which would land every portrait phone photo sideways."""
+    client = make_client(citizen)
+    buffer = BytesIO()
+    image = Image.new('RGB', (60, 40), 'red')
+    exif = Image.Exif()
+    exif[274] = 6
+    image.save(buffer, format='JPEG', exif=exif.tobytes())
+    photo = SimpleUploadedFile('ruotata.jpg', buffer.getvalue(), content_type='image/jpeg')
+
+    response = client.post(
+        '/api/reports/', {**valid_payload(category), 'photo': photo}, format='multipart'
+    )
+
+    assert response.status_code == 201
+    report = IssueReport.objects.get()
+    with report.photo.open('rb') as stored:
+        assert Image.open(stored).size == (40, 60)
+
+
 def test_create_rejects_oversized_photo(make_client, citizen, category):
     client = make_client(citizen)
     # incompressible noise → a PNG comfortably above the 5 MB cap

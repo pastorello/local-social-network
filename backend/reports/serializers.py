@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from account.serializers import UserSerializer
 
-from .images import MAX_PHOTO_BYTES, strip_exif
+from common.images import ImageRejected, validate_image
 from .models import Category, IssueReport
 
 
@@ -57,14 +57,10 @@ class ReportWriteSerializer(serializers.ModelSerializer):
     def validate_photo(self, photo):
         if photo is None:
             return photo
-        if photo.size > MAX_PHOTO_BYTES:
-            raise serializers.ValidationError('La foto non può superare i 5 MB.')
         try:
-            return strip_exif(photo)
-        except ValueError:
-            raise serializers.ValidationError(
-                'Formato immagine non supportato: usa JPG, PNG o WebP.'
-            )
+            return validate_image(photo)
+        except ImageRejected as exc:
+            raise serializers.ValidationError(str(exc)) from exc
 
     class Meta:
         model = IssueReport

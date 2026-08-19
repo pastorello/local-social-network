@@ -1,4 +1,8 @@
+from io import BytesIO
+
 import pytest
+from PIL import Image
+from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.test import APIClient
 
 from account.models import User
@@ -6,6 +10,11 @@ from account.models import User
 pytestmark = pytest.mark.django_db
 
 PASSWORD = 'GaetaTest2026!'
+
+
+@pytest.fixture(autouse=True)
+def media_root(settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
 
 
 @pytest.fixture
@@ -247,3 +256,137 @@ def test_refresh_rotates_and_blacklists_the_old_token(api_client, citizen):
     # the rotated-out token is blacklisted and cannot be replayed
     reused = api_client.post('/api/users/refresh/', {'refresh': old_refresh})
     assert reused.status_code == 401
+
+
+# --- F1.4 avatar upload hardening (TD-12) ---
+
+
+def make_avatar(fmt='JPEG', name='avatar.jpg', size=(60, 40), with_gps=True):
+    buffer = BytesIO()
+    image = Image.new('RGB', size, 'blue')
+    if with_gps:
+        exif = Image.Exif()
+        exif[274] = 6  # orientation
+        # GPSInfo — the tag that turns a selfie into a home address.
+        exif[34853] = {1: 'N', 2: (41.0, 13.0, 0.0), 3: 'E', 4: (13.0, 33.0, 0.0)}
+        image.save(buffer, format=fmt, exif=exif.tobytes())
+    else:
+        image.save(buffer, format=fmt)
+    return SimpleUploadedFile(name, buffer.getvalue(), content_type='image/jpeg')
+
+
+def stored_avatar(user):
+    user.refresh_from_db()
+    with user.avatar.open('rb') as handle:
+        return Image.open(BytesIO(handle.read()))
+
+
+def test_editprofile_strips_gps_from_the_avatar(auth_client, citizen):
+    """The headline of TD-12: avatars are public via GET /api/reports/."""
+    response = auth_client.post(
+        '/api/users/editprofile/',
+        {'name': citizen.name, 'email': citizen.email, 'avatar': make_avatar()},
+        format='multipart',
+    )
+
+    assert response.status_code == 200
+    assert len(stored_avatar(citizen).getexif()) == 0
+
+
+def test_editprofile_applies_avatar_orientation_before_dropping_exif(auth_client, citizen):
+    auth_client.post(
+        '/api/users/editprofile/',
+        {'name': citizen.name, 'email': citizen.email, 'avatar': make_avatar(size=(60, 40))},
+        format='multipart',
+    )
+
+    assert stored_avatar(citizen).size == (40, 60)
+
+
+def test_editprofile_rejects_a_non_image_extension(auth_client, citizen):
+    """Django's own `validate_image_file_extension` handles the blunt case."""
+    response = auth_client.post(
+        '/api/users/editprofile/',
+        {
+            'name': citizen.name,
+            'email': citizen.email,
+            'avatar': make_avatar(fmt='PNG', name='pwned.html', with_gps=False),
+        },
+        format='multipart',
+    )
+
+    assert response.status_code == 400
+    assert 'avatar' in response.json()['fields']
+    citizen.refresh_from_db()
+    assert not citizen.avatar
+
+
+def test_editprofile_normalises_a_confusable_avatar_extension(auth_client, citizen):
+    """`.pdf` passes Django's validator — Pillow knows the extension — and used
+    to be stored as-is, so the avatar was served as `application/pdf`."""
+    auth_client.post(
+        '/api/users/editprofile/',
+        {
+            'name': citizen.name,
+            'email': citizen.email,
+            'avatar': make_avatar(fmt='PNG', name='payload.pdf', with_gps=False),
+        },
+        format='multipart',
+    )
+
+    citizen.refresh_from_db()
+    assert citizen.avatar.name.endswith('.png')
+    assert '.pdf' not in citizen.avatar.name
+
+
+def test_editprofile_rejects_an_oversized_avatar(auth_client, citizen):
+    huge = SimpleUploadedFile('grande.png', b'x' * (5 * 1024 * 1024 + 1))
+
+    response = auth_client.post(
+        '/api/users/editprofile/',
+        {'name': citizen.name, 'email': citizen.email, 'avatar': huge},
+        format='multipart',
+    )
+
+    assert response.status_code == 400
+    assert 'avatar' in response.json()['fields']
+
+
+def test_editprofile_rejects_an_avatar_outside_the_allowlist(auth_client, citizen):
+    response = auth_client.post(
+        '/api/users/editprofile/',
+        {
+            'name': citizen.name,
+            'email': citizen.email,
+            'avatar': make_avatar(fmt='GIF', name='animata.gif', with_gps=False),
+        },
+        format='multipart',
+    )
+
+    assert response.status_code == 400
+    assert 'avatar' in response.json()['fields']
+
+
+def test_editprofile_leaves_an_unchanged_avatar_alone(auth_client, citizen):
+    """Guards the UploadedFile check: a profile edit must not re-encode the
+    stored avatar on every save."""
+    auth_client.post(
+        '/api/users/editprofile/',
+        {'name': citizen.name, 'email': citizen.email, 'avatar': make_avatar()},
+        format='multipart',
+    )
+    citizen.refresh_from_db()
+    original_name = citizen.avatar.name
+    original_bytes = citizen.avatar.read()
+
+    response = auth_client.post(
+        '/api/users/editprofile/',
+        {'name': 'Nome Nuovo', 'email': citizen.email},
+        format='multipart',
+    )
+
+    assert response.status_code == 200
+    citizen.refresh_from_db()
+    assert citizen.name == 'Nome Nuovo'
+    assert citizen.avatar.name == original_name
+    assert citizen.avatar.read() == original_bytes
