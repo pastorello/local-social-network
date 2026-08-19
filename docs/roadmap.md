@@ -5,19 +5,49 @@
 > where scope now goes instead of back into the spec: candidate next steps,
 > not commitments. When one is picked up, it gets its own spec-first session
 > (§10) like every milestone before it — a short scope note, then a
-> `docs/ai-log/` entry.
+> `docs/ai-log/` entry. Items are ordered by what is **active**, not by what is
+> most exciting: shipping the demo led this list until 2026-08-19, when it was
+> parked for lack of hosting and the technical-debt work took its place.
 
-## 1. Ship the demo (unblocks everything else)
+## 1. Codebase audit & technical debt — **active**
 
-The app is deploy-ready (`docs/deploy.md`); what's missing is a platform
-decision, not code.
+The MVP is feature-complete and every quality gate is green, but nothing runs
+those gates automatically, and a code-reading pass found that green gates are not
+the same as covered behaviour. The register lives in
+[tech-debt.md](./tech-debt.md), audited twice on 2026-08-19 — first by
+measurement (TD-01…TD-10), then by reading the source (TD-11…TD-32, DOC-01…DOC-10).
+CI (TD-01) landed on 2026-08-19 and now runs all five gates on every push and
+pull request. Next are the security items that must land before the demo is
+unparked (the committed `SECRET_KEY`, the unvalidated avatar upload, an anonymous
+500 on a public endpoint) and three small tests that close silent-regression
+holes.
+
+This became the active workstream when shipping the demo was parked — see below.
+
+## 2. Ship the demo — **parked (2026-08-19)**
+
+Deferred by author decision: there is no domain, no host that runs Python, and
+no public database available for this project right now. Nothing about the code
+blocks it — `docs/deploy.md` stays ready — so this is a resource decision, not
+an engineering one, and it resumes when those three things exist.
+
+Two constraints to remember when it does resume, both found during the M4 deploy
+prep and re-confirmed on 2026-08-19:
+
+- Report photos are written to the local filesystem (`MEDIA_ROOT`). Ephemeral
+  disks on free PaaS tiers lose them on every redeploy — a persistent disk or
+  S3-compatible storage is a prerequisite, not a nice-to-have.
+- `VITE_API_BASE_URL` is read **at build time**, so the API hostname has to be
+  decided before the frontend is built.
+
+Original checklist, unchanged:
 
 - [ ] Pick a platform (PaaS free tier vs. VPS — sketches in `docs/deploy.md`)
 - [ ] Deploy, seed real Gaeta categories, create the first admin
 - [ ] Record the platform + URL in spec §6
 - [ ] Publish the LinkedIn write-up (`docs/linkedin-draft.md`) with the live link
 
-## 2. Pilot feedback loop
+## 3. Pilot feedback loop
 
 The MVP was built against assumed requirements, not real usage. Before adding
 features, get it in front of actual Gaeta citizens/admins for a few weeks and
@@ -25,7 +55,7 @@ see what F2/F3 usage looks like — which categories get used, whether
 moderation keeps up, whether poll turnout is meaningful. Candidate features
 below are ordered by what that feedback will most likely validate or kill.
 
-## 3. Candidate features (unordered, unvalidated)
+## 4. Candidate features (unordered, unvalidated)
 
 - **Admin analytics** — reports per category/status over time, poll turnout;
   today an admin only sees a flat list.
@@ -41,7 +71,7 @@ below are ordered by what that feedback will most likely validate or kill.
 - **Full WCAG audit** — N5 explicitly scoped this out of the MVP; worth doing
   before a real public launch, not before.
 
-## 4. Explicit non-goals, revisited
+## 5. Explicit non-goals, revisited
 
 §2's non-goals (chat/DM, election-day vote counting, groups/invitations,
 native app, multi-city) were right for an MVP. None are reopened by this

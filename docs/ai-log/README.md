@@ -31,6 +31,9 @@ New entries use [`_template.md`](_template.md).
 | 2026-07-18 | M4 | Showcase | [2026-07-18-m4-showcase.md](2026-07-18-m4-showcase.md) |
 | 2026-07-20 | M4 | MVP closure & post-MVP roadmap | [2026-07-20-mvp-closure.md](2026-07-20-mvp-closure.md) |
 | 2026-08-19 | Post-MVP | External agent skills evaluation & setup | [2026-08-19-agent-tooling.md](2026-08-19-agent-tooling.md) |
+| 2026-08-19 | Post-MVP | Platform audit & technical debt register | [2026-08-19-tech-debt-audit.md](2026-08-19-tech-debt-audit.md) |
+| 2026-08-19 | Post-MVP | Deep audit: code, security, tests, docs | [2026-08-19-deep-audit.md](2026-08-19-deep-audit.md) |
+| 2026-08-19 | Post-MVP | TD-01: continuous integration | [2026-08-19-ci.md](2026-08-19-ci.md) |
 
 ## Reading suggestions
 
