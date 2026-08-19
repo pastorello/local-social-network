@@ -63,6 +63,10 @@ python -m ruff check .                                # lint (must be clean)
 ```
 
 `python manage.py test` exits 0 but runs nothing (tests are pytest-style) — use pytest.
+Shared fixtures (`api_client`, `citizen`, `other_citizen`, `admin`, `make_client`,
+autouse `media_root` and a throttle-cache reset) live in `backend/conftest.py`;
+`PASSWORD` is in `common/testing.py`. Under pytest, `settings.py` swaps in the MD5
+password hasher (TD-05) — that is why the suite runs in ~3s rather than ~50s.
 
 **`DJANGO_DEBUG` defaults to false (TD-11).** Forgetting the variable fails safe
 instead of serving tracebacks, and outside debug/test the app raises

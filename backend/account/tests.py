@@ -3,30 +3,11 @@ from io import BytesIO
 import pytest
 from PIL import Image
 from django.core.files.uploadedfile import SimpleUploadedFile
-from rest_framework.test import APIClient
 
 from account.models import User
+from common.testing import PASSWORD
 
 pytestmark = pytest.mark.django_db
-
-PASSWORD = 'GaetaTest2026!'
-
-
-@pytest.fixture(autouse=True)
-def media_root(settings, tmp_path):
-    settings.MEDIA_ROOT = tmp_path
-
-
-@pytest.fixture
-def api_client():
-    return APIClient()
-
-
-@pytest.fixture
-def citizen():
-    return User.objects.create_user(
-        name='Cittadino Uno', email='cittadino@example.com', password=PASSWORD
-    )
 
 
 @pytest.fixture

@@ -250,6 +250,14 @@ if not DEBUG and not TESTING:
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30
 
+if TESTING:
+    # The suite creates users in 44 places and every one paid for a real PBKDF2
+    # hash — measured at 0.296s each, roughly a third of the runtime, and the
+    # rate-limit tests made it worse by design (TD-05). MD5 is worthless for
+    # storing passwords and perfect here: nothing under test depends on the
+    # hasher, only on the round trip through it.
+    PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
+
 if not TESTING:
     INSTALLED_APPS = [
         *INSTALLED_APPS,

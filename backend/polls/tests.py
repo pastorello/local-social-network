@@ -2,54 +2,10 @@ from datetime import timedelta
 
 import pytest
 from django.utils import timezone
-from rest_framework.test import APIClient
 
-from account.models import User
 from polls.models import Poll, PollOption, Vote
 
 pytestmark = pytest.mark.django_db
-
-PASSWORD = 'GaetaTest2026!'
-
-
-@pytest.fixture
-def api_client():
-    return APIClient()
-
-
-@pytest.fixture
-def citizen():
-    return User.objects.create_user(
-        name='Cittadino Uno', email='cittadino@example.com', password=PASSWORD
-    )
-
-
-@pytest.fixture
-def other_citizen():
-    return User.objects.create_user(
-        name='Cittadino Due', email='altro@example.com', password=PASSWORD
-    )
-
-
-@pytest.fixture
-def admin():
-    user = User.objects.create_user(
-        name='Amministratore', email='admin@example.com', password=PASSWORD
-    )
-    user.role = User.ADMIN
-    user.save(update_fields=('role',))
-    return user
-
-
-@pytest.fixture
-def make_client():
-    def _make(user):
-        client = APIClient()
-        client.force_authenticate(user)
-        return client
-
-    return _make
-
 
 @pytest.fixture
 def make_poll(admin):
