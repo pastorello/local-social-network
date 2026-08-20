@@ -117,4 +117,37 @@ describe('user store', () => {
     expect(store.user.isAuthenticated).toBe(false)
     expect(localStorage.getItem('user.access')).toBe('')
   })
+
+  it('removeToken stops axios from sending the old bearer token', () => {
+    const store = useUserStore()
+    store.setToken({ access: 'access-token', refresh: 'refresh-token' })
+    axios.defaults.headers.common['Authorization'] = 'Bearer access-token'
+
+    store.removeToken()
+
+    // Until this was fixed, every request in the tab kept the logged-out user's
+    // token until the page was reloaded (TD-20).
+    expect(axios.defaults.headers.common['Authorization']).toBeUndefined()
+  })
+
+  it('logout asks the server to blacklist the refresh token', async () => {
+    const store = useUserStore()
+    store.setToken({ access: 'access-token', refresh: 'refresh-token' })
+
+    await store.logout()
+
+    expect(axios.post).toHaveBeenCalledWith('/api/users/logout/', { refresh: 'refresh-token' })
+    expect(store.user.isAuthenticated).toBe(false)
+  })
+
+  it('logout still clears the session when the server call fails', async () => {
+    vi.mocked(axios.post).mockRejectedValueOnce(new Error('offline'))
+    const store = useUserStore()
+    store.setToken({ access: 'access-token', refresh: 'refresh-token' })
+
+    await store.logout()
+
+    expect(store.user.isAuthenticated).toBe(false)
+    expect(localStorage.getItem('user.refresh')).toBe('')
+  })
 })

@@ -14,6 +14,7 @@ urlpatterns = [
     path('me/', api.me, name='me'),
     path('signup/', api.signup, name='signup'),
     path('login/', ThrottledTokenObtainPairView.as_view(), name='token_obtain'),
+    path('logout/', api.logout, name='logout'),
     path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('editprofile/', api.editprofile, name='editprofile'),
     path('editpassword/', api.editpassword, name='editpassword'),

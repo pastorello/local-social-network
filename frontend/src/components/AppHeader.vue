@@ -14,8 +14,8 @@ const user = userStore.user
 
 const router = useRouter()
 
-const logout = () => {
-  userStore.removeToken()
+const logout = async () => {
+  await userStore.logout()
   router.push('/login')
 }
 </script>
@@ -55,7 +55,7 @@ const logout = () => {
           <template v-if="user.isAuthenticated && user.id">
             <RouterLink :to="{ name: 'profile', params: { id: user.id } }">
               <img
-                :src="user.avatar ?? undefined"
+                :src="user.avatar || undefined"
                 alt="Il tuo profilo"
                 class="w-12 rounded-full inline-block mr-4"
               />

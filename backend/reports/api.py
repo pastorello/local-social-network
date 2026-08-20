@@ -1,14 +1,15 @@
 from uuid import UUID
 
+from django.db import transaction
 from django.db.models import F
 from django.shortcuts import get_object_or_404
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import NotAuthenticated, PermissionDenied, ValidationError
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from account.models import User
+from common.pagination import StandardPagination
 
 from .models import Category, IssueReport, Upvote
 from .serializers import (
@@ -19,10 +20,6 @@ from .serializers import (
 )
 
 
-class ReportPagination(PageNumberPagination):
-    page_size = 20
-    page_size_query_param = 'page_size'
-    max_page_size = 100
 
 
 def _uuid_param(request, name):
@@ -103,7 +100,7 @@ def report_list(request):
             status=201,
         )
 
-    paginator = ReportPagination()
+    paginator = StandardPagination()
     page = paginator.paginate_queryset(_filtered_reports(request), request)
     serializer = ReportSerializer(
         page, many=True, context={'upvoted_report_ids': _upvoted_ids(request, page)}
@@ -162,17 +159,26 @@ def report_upvote(request, pk):
     # Toggle (spec F2.7); authors may upvote their own report.
     report = get_object_or_404(IssueReport, pk=pk)
 
-    upvote, created = Upvote.objects.get_or_create(user=request.user, report=report)
-    delta = 1
-    if not created:
-        upvote.delete()
-        delta = -1
+    with transaction.atomic():
+        upvote, created = Upvote.objects.get_or_create(user=request.user, report=report)
 
-    IssueReport.objects.filter(pk=report.pk).update(
-        upvotes_count=F('upvotes_count') + delta
-    )
+        if created:
+            delta = 1
+        else:
+            # Derive the delta from what the DELETE actually did, not from
+            # `created`: two concurrent removals both see created=False, and the
+            # second one used to decrement a row it had not removed (TD-19).
+            deleted, _ = Upvote.objects.filter(pk=upvote.pk).delete()
+            if not deleted:
+                report.refresh_from_db()
+                return Response({'upvoted': False, 'upvotes_count': report.upvotes_count})
+            delta = -1
+
+        IssueReport.objects.filter(pk=report.pk).update(
+            upvotes_count=F('upvotes_count') + delta
+        )
+
     report.refresh_from_db()
-
     return Response({'upvoted': created, 'upvotes_count': report.upvotes_count})
 
 

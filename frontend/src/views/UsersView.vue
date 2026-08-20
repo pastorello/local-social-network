@@ -9,20 +9,42 @@ import UserCard from '@/components/cards/UserCard.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
 import type User from '@/definitions/interfaces/User'
 
+interface PaginatedUsers {
+  count: number
+  next: string | null
+  previous: string | null
+  results: User[]
+}
+
 const query = ref('')
 const users = ref<User[]>([])
+const total = ref(0)
+const nextPage = ref<string | null>(null)
 
 const getUsers = async () => {
   await axios
     .get('/api/users/list/', {
       params: { q: query.value },
     })
-    .then((response) => {
-      users.value = response.data
+    .then((response: { data: PaginatedUsers }) => {
+      users.value = response.data.results
+      total.value = response.data.count
+      nextPage.value = response.data.next
     })
     .catch((error) => {
       console.log('error:', error)
     })
+}
+
+const loadMore = async () => {
+  if (!nextPage.value) return
+  try {
+    const response = await axios.get<PaginatedUsers>(nextPage.value)
+    users.value = [...users.value, ...response.data.results]
+    nextPage.value = response.data.next
+  } catch (error) {
+    console.log('error:', error)
+  }
 }
 
 onMounted(() => {
@@ -60,8 +82,18 @@ onMounted(() => {
             </svg>
           </ActionButton>
         </form>
-        <div class="grid grid-cols-4 gap-6" v-if="users.length">
-          <UserCard v-for="user in users" :key="user.id" :user="user" />
+        <div v-if="users.length" class="space-y-6">
+          <p class="text-sm text-gray-500">
+            {{ total }} {{ total === 1 ? 'utente' : 'utenti' }}
+          </p>
+
+          <div class="grid grid-cols-4 gap-6">
+            <UserCard v-for="user in users" :key="user.id" :user="user" />
+          </div>
+
+          <div v-if="nextPage" class="flex justify-center">
+            <ActionButton size="small" @click="loadMore">Carica altri</ActionButton>
+          </div>
         </div>
 
         <div class="flex-1 flex items-center justify-center" v-else>

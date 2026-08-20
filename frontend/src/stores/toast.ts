@@ -7,6 +7,11 @@ interface ToastState {
   isVisible: boolean
 }
 
+// Module scope, not state: these are handles, not data. Keeping them lets a new
+// toast cancel the previous one's timers — without that, two toasts within the
+// same window let the first one's callbacks hide the second early (TD-31).
+let timers: ReturnType<typeof setTimeout>[] = []
+
 export const useToastStore = defineStore('toast', {
   state: (): ToastState => ({
     ms: 0,
@@ -17,22 +22,19 @@ export const useToastStore = defineStore('toast', {
 
   actions: {
     showToast(ms: number, message: string, classes: string) {
+      timers.forEach(clearTimeout)
+      timers = []
+
       this.ms = ms
       this.message = message
       this.classes = classes
       this.isVisible = true
 
-      setTimeout(() => {
-        this.classes += ' -translate-y-28'
-      }, 10)
-
-      setTimeout(() => {
-        this.classes = this.classes.replace('-translate-y-28', '')
-      }, this.ms - 500)
-
-      setTimeout(() => {
-        this.isVisible = false
-      }, this.ms)
+      // Rebuilt from `classes` each time rather than concatenated onto the
+      // current value, which used to accumulate across toasts.
+      timers.push(setTimeout(() => (this.classes = `${classes} -translate-y-28`), 10))
+      timers.push(setTimeout(() => (this.classes = classes), ms - 500))
+      timers.push(setTimeout(() => (this.isVisible = false), ms))
     },
   },
 })

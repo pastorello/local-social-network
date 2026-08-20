@@ -3,6 +3,19 @@ import { it } from 'zod/locales'
 
 z.config(it())
 
+// Zod's built-in messages are generic ("almeno 8 caratteri"), so the field has
+// to be named — but naming it with the raw path leaked "password2" into the UI.
+const FIELD_LABELS: Record<string, string> = {
+  email: 'E-mail',
+  name: 'Nome',
+  password: 'Password',
+  password1: 'Password',
+  password2: 'Conferma password',
+  old_password: 'Password attuale',
+  new_password1: 'Nuova password',
+  new_password2: 'Conferma nuova password',
+}
+
 export const parseZodObject = <Schema extends z.ZodType>(schema: Schema, data: unknown) => {
   const result: { data: z.output<Schema> | null; errors: string[] } = {
     data: null,
@@ -14,7 +27,8 @@ export const parseZodObject = <Schema extends z.ZodType>(schema: Schema, data: u
   } catch (error) {
     if (error instanceof z.ZodError) {
       error.issues.forEach((issue) => {
-        result.errors.push(`${issue.path.join(', ')} ${issue.message}`)
+        const label = FIELD_LABELS[String(issue.path[0] ?? '')]
+        result.errors.push(label ? `${label}: ${issue.message}` : issue.message)
       })
     }
   }

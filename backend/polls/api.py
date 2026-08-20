@@ -6,19 +6,15 @@ from django.utils import timezone
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import NotAuthenticated, PermissionDenied, ValidationError
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from account.models import User
+from common.pagination import StandardPagination
 
 from .models import Poll, PollOption, Vote
 from .serializers import PollCreateSerializer, PollSerializer
 
 
-class PollPagination(PageNumberPagination):
-    page_size = 20
-    page_size_query_param = 'page_size'
-    max_page_size = 100
 
 
 def _poll_queryset():
@@ -87,7 +83,7 @@ def poll_list(request):
 
         return _poll_response(request, poll.pk, status=201)
 
-    paginator = PollPagination()
+    paginator = StandardPagination()
     page = paginator.paginate_queryset(_poll_queryset(), request)
     serializer = PollSerializer(page, many=True, context=_serializer_context(request, page))
     return paginator.get_paginated_response(serializer.data)

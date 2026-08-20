@@ -67,6 +67,11 @@ export const useUserStore = defineStore('user', {
     },
 
     removeToken() {
+      // The header is set in three places on login; forgetting to clear it here
+      // meant every request in the tab still carried the old token until the
+      // page was reloaded (TD-20).
+      delete axios.defaults.headers.common['Authorization']
+
       this.user.refresh = null
       this.user.access = null
       this.user.isAuthenticated = false
@@ -97,6 +102,21 @@ export const useUserStore = defineStore('user', {
       localStorage.setItem('user.email', this.user.email ?? '')
       localStorage.setItem('user.role', this.user.role ?? '')
       localStorage.setItem('user.avatar', this.user.avatar ?? '')
+    },
+
+    async logout(): Promise<void> {
+      // Best effort: the server blacklists the refresh token so it cannot be
+      // replayed for the rest of its 30-day life. A failure here must still log
+      // the user out locally.
+      const refresh = this.user.refresh
+      if (refresh) {
+        try {
+          await axios.post('/api/users/logout/', { refresh })
+        } catch {
+          // already invalid, or offline — nothing useful to do
+        }
+      }
+      this.removeToken()
     },
 
     async refreshToken(): Promise<boolean> {

@@ -9,6 +9,7 @@ import FormInput from '@/components/forms/FormInput.vue'
 import PanelBox from '@/components/boxes/PanelBox.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
+import { extractApiErrors } from '@/lib/apiErrors'
 
 const toastStore = useToastStore()
 const router = useRouter()
@@ -49,10 +50,7 @@ const submitForm = () => {
       router.push('/login')
     })
     .catch((error) => {
-      const fields = error.response?.data?.fields as Record<string, string[]> | undefined
-      formErrors.value = fields
-        ? Object.values(fields).flat()
-        : ['Si è verificato un errore. Riprova.']
+      formErrors.value = extractApiErrors(error)
 
       toastStore.showToast(5000, 'Qualcosa è andato storto. Riprova.', 'bg-red-300')
     })
