@@ -9,6 +9,7 @@ import ViewContainer from '@/components/boxes/ViewContainer.vue'
 import StatusBadge from '@/components/reports/StatusBadge.vue'
 import type Report from '@/definitions/interfaces/Report'
 import type User from '@/definitions/interfaces/User'
+import UserAvatar from '@/components/cards/UserAvatar.vue'
 
 const userStore = useUserStore()
 const route = useRoute()
@@ -49,13 +50,13 @@ watch(
 
 <template>
   <ViewContainer class="grid-cols-4">
-    <div class="main-left col-span-1">
+    <div class="col-span-1">
       <PanelBox class="text-center">
-        <img
+        <UserAvatar
           v-if="profileUser"
           :src="profileUser.avatarURL"
-          :alt="`Foto profilo di ${profileUser.name}`"
-          class="mt-6 mb-6 rounded-full m-auto w-50 h-50"
+          :name="profileUser.name"
+          class="mt-6 mb-6 rounded-full m-auto w-50 h-50 object-cover text-5xl"
         />
 
         <p>
@@ -78,7 +79,7 @@ watch(
       </PanelBox>
     </div>
 
-    <div class="main-center col-span-3 space-y-4">
+    <div class="col-span-3 space-y-4">
       <PanelBox>
         <h2 class="mb-4 text-lg font-semibold">Segnalazioni</h2>
 

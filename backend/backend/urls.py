@@ -10,7 +10,7 @@ urlpatterns = [
     path('api/', include('reports.urls')),
 ]  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-if not settings.TESTING:
+if settings.DEBUG and not settings.TESTING:
     from debug_toolbar.toolbar import debug_toolbar_urls
 
     urlpatterns = [

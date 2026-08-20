@@ -70,7 +70,7 @@ onMounted(() => {
   <ViewContainer class="grid-cols-4">
     <!-- self-start: keep the column content-sized; PanelBox is h-full and
          would otherwise stretch every panel to the grid row height -->
-    <div class="main-center col-span-2 col-start-2 space-y-4 self-start">
+    <div class="col-span-2 col-start-2 space-y-4 self-start">
       <PanelBox>
         <div class="flex items-center justify-between gap-4">
           <MainTitle>Sondaggi</MainTitle>

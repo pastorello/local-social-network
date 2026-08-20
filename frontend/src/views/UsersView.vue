@@ -54,7 +54,7 @@ onMounted(() => {
 
 <template>
   <ViewContainer class="grid-cols-4">
-    <div class="main-left col-span-4 space-y-2">
+    <div class="col-span-4 space-y-2">
       <PanelBox class="flex flex-col">
         <MainTitle>Utenti del network</MainTitle>
         <form v-on:submit.prevent="getUsers" class="pb-6 flex space-x-4">

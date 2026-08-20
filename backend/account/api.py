@@ -1,5 +1,4 @@
 from django.contrib.auth.forms import PasswordChangeForm
-from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 
 from rest_framework.decorators import (
@@ -18,7 +17,7 @@ from common.pagination import StandardPagination
 
 from .forms import ProfileForm, SignupForm
 from .models import User
-from .serializers import UserSerializer
+from .serializers import MeSerializer, UserSerializer
 from .throttling import PasswordChangeRateThrottle, SignupRateThrottle
 
 
@@ -38,13 +37,7 @@ def _form_errors(form):
 
 @api_view(['GET'])
 def me(request):
-    return JsonResponse({
-        'id': request.user.id,
-        'name': request.user.name,
-        'email': request.user.email,
-        'role': request.user.role,
-        'avatar': request.user.get_avatar()
-    })
+    return Response(MeSerializer(request.user).data)
 
 
 @api_view(['POST'])
@@ -70,9 +63,7 @@ def signup(request):
 
 @api_view(['GET'])
 def user(request, pk):
-    user = get_object_or_404(User, pk=pk)
-
-    return JsonResponse(UserSerializer(user).data, safe=False)
+    return Response(UserSerializer(get_object_or_404(User, pk=pk)).data)
 
 @api_view(['GET'])
 def user_list(request):
@@ -96,7 +87,7 @@ def editprofile(request):
     if User.objects.exclude(id=user.id).filter(email=email).exists():
         raise ValidationError({'email': ['Questa e-mail è già in uso.']})
 
-    form = ProfileForm(request.POST, request.FILES, instance=user)
+    form = ProfileForm(request.data, request.FILES, instance=user)
     if not form.is_valid():
         raise ValidationError(_form_errors(form))
 
@@ -107,7 +98,7 @@ def editprofile(request):
 @api_view(['POST'])
 @throttle_classes([PasswordChangeRateThrottle])
 def editpassword(request):
-    form = PasswordChangeForm(data=request.POST, user=request.user)
+    form = PasswordChangeForm(data=request.data, user=request.user)
 
     if not form.is_valid():
         raise ValidationError(_form_errors(form))

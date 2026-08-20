@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type User from '@/definitions/interfaces/User'
+import UserAvatar from './UserAvatar.vue'
 
 defineProps<{
   user: User
@@ -9,7 +10,7 @@ defineProps<{
 <template>
   <div class="w-full max-w-sm mx-auto overflow-hidden bg-white rounded-lg shadow-md">
     <RouterLink :to="{ name: 'profile', params: { id: user.id } }">
-      <img class="object-cover w-full h-48" :src="user.avatarURL" :alt="`Avatar di ${user.name}`" />
+      <UserAvatar class="object-cover w-full h-48 text-4xl" :src="user.avatarURL" :name="user.name" />
     </RouterLink>
 
     <div class="px-6 py-4">

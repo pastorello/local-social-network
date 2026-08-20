@@ -8,6 +8,7 @@ import PollsIcon from './icons/PollsIcon.vue'
 import HomeIcon from './icons/HomeIcon.vue'
 import MenuButton from './buttons/MenuButton.vue'
 import SiteTitle from './typography/SiteTitle.vue'
+import UserAvatar from './cards/UserAvatar.vue'
 
 const userStore = useUserStore()
 const user = userStore.user
@@ -54,10 +55,10 @@ const logout = async () => {
         <div class="flex justify-end">
           <template v-if="user.isAuthenticated && user.id">
             <RouterLink :to="{ name: 'profile', params: { id: user.id } }">
-              <img
-                :src="user.avatar || undefined"
-                alt="Il tuo profilo"
-                class="w-12 rounded-full inline-block mr-4"
+              <UserAvatar
+                :src="user.avatarURL"
+                :name="user.name"
+                class="w-12 h-12 rounded-full inline-block mr-4 object-cover"
               />
             </RouterLink>
             <ActionButton class="inline-block" size="small" button-type="danger" @click="logout">

@@ -56,7 +56,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = []
 
     def get_avatar(self):
-        if self.avatar:
-            return settings.WEBSITE_URL + self.avatar.url
-        else:
-            return 'https://picsum.photos/200/200'
+        """Absolute URL of the uploaded avatar, or None (TD-30).
+
+        This used to fall back to picsum.photos, which serves a *different*
+        random image per request — so the same citizen had a different face in
+        the header, in their card and on every reload. It also sent every
+        visitor's IP to a third party. Callers render initials instead.
+        """
+        if not self.avatar:
+            return None
+        return settings.WEBSITE_URL + self.avatar.url
