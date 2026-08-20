@@ -99,7 +99,7 @@ onMounted(() => {
 <template>
   <ViewContainer class="grid-cols-6">
     <!-- self-start: PanelBox is h-full; a stacked column must not stretch to row height -->
-    <div class="col-span-2 main-left space-y-4 self-start">
+    <div class="col-span-2 space-y-4 self-start">
       <PanelBox>
         <MainTitle>Segnalazioni</MainTitle>
 
@@ -178,7 +178,7 @@ onMounted(() => {
       </PanelBox>
     </div>
 
-    <div class="col-span-4 main-right">
+    <div class="col-span-4">
       <PanelBox>
         <div class="h-[36rem]">
           <ReportsMap

@@ -37,7 +37,6 @@ const submitForm = async () => {
     .then((response) => {
       userStore.setToken(response.data)
 
-      axios.defaults.headers.common['Authorization'] = 'Bearer ' + response.data.access
     })
     .catch((error) => {
       console.log('error', error)
@@ -65,7 +64,7 @@ const submitForm = async () => {
 
 <template>
   <ViewContainer class="grid-cols-2">
-    <div class="main-left">
+    <div >
       <PanelBox>
         <MainTitle>Accedi</MainTitle>
 
@@ -80,7 +79,7 @@ const submitForm = async () => {
       </PanelBox>
     </div>
 
-    <div class="main-right">
+    <div >
       <PanelBox>
         <form class="space-y-6" v-on:submit.prevent="submitForm">
           <div>

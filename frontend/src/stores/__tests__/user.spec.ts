@@ -36,7 +36,7 @@ describe('user store', () => {
       name: 'Anna',
       email: 'anna@example.com',
       role: 'citizen',
-      avatar: 'https://example.com/a.png',
+      avatarURL: 'https://example.com/a.png',
     })
 
     expect(store.user.role).toBe('citizen')
@@ -52,7 +52,7 @@ describe('user store', () => {
       name: 'Anna',
       email: 'anna@example.com',
       role: 'admin',
-      avatar: null,
+      avatarURL: null,
     })
 
     store.removeToken()
@@ -71,7 +71,7 @@ describe('user store', () => {
     localStorage.setItem('user.name', 'Anna')
     localStorage.setItem('user.email', 'anna@example.com')
     localStorage.setItem('user.role', 'admin')
-    localStorage.setItem('user.avatar', 'x')
+    localStorage.setItem('user.avatarURL', 'x')
 
     const store = useUserStore()
     store.initStore()

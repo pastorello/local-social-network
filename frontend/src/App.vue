@@ -1,30 +1,8 @@
 <script setup lang="ts">
-import axios from 'axios'
-import { onBeforeMount } from 'vue'
-
-import { useUserStore } from './stores/user'
-
+// Session restore and the Authorization header both moved to main.ts and
+// lib/auth.ts (TD-32) — this component only composes the shell now.
 import AppToast from '@/components/modals/AppToast.vue'
 import AppHeader from './components/AppHeader.vue'
-
-const userStore = useUserStore()
-const user = userStore.user
-
-const initToken = () => {
-  userStore.initStore()
-
-  const token = user.access
-
-  if (token) {
-    axios.defaults.headers.common['Authorization'] = 'Bearer ' + token
-  } else {
-    axios.defaults.headers.common['Authorization'] = ''
-  }
-}
-
-onBeforeMount(() => {
-  initToken()
-})
 </script>
 
 <template>

@@ -7,6 +7,7 @@ import { useUserStore } from '@/stores/user'
 
 const state = vi.hoisted(() => ({
   onRejected: undefined as undefined | ((error: unknown) => Promise<unknown>),
+  onRequest: undefined as undefined | ((config: unknown) => unknown),
 }))
 
 vi.mock('axios', () => {
@@ -14,6 +15,11 @@ vi.mock('axios', () => {
     vi.fn(() => Promise.resolve({ data: 'retried-response' })),
     {
       interceptors: {
+        request: {
+          use: (onRequest: (config: unknown) => unknown) => {
+            state.onRequest = onRequest
+          },
+        },
         response: {
           use: (_onFulfilled: unknown, onRejected: (error: unknown) => Promise<unknown>) => {
             state.onRejected = onRejected
@@ -53,10 +59,10 @@ describe('setupAuthInterceptor', () => {
 
     expect(axios.post).toHaveBeenCalledWith('/api/users/refresh/', { refresh: 'refresh-1' })
     expect(store.user.refresh).toBe('refresh-2') // rotated token persisted
-    expect(error.config.headers.set).toHaveBeenCalledWith(
-      'Authorization',
-      'Bearer fresh-access',
-    )
+    expect(store.user.access).toBe('fresh-access')
+    // The replay goes back through axios, so the request interceptor attaches
+    // the refreshed token — this handler no longer sets the header itself
+    // (TD-32). That attachment is covered by its own tests below.
     expect(axios).toHaveBeenCalledWith(error.config)
     expect(result).toEqual({ data: 'retried-response' })
   })
@@ -93,5 +99,25 @@ describe('setupAuthInterceptor', () => {
 
     await expect(state.onRejected!(error)).rejects.toBe(error)
     expect(axios.post).not.toHaveBeenCalled()
+  })
+
+  it('attaches the access token to every outgoing request', () => {
+    const store = useUserStore()
+    store.setToken({ access: 'access-token', refresh: 'refresh-token' })
+    const headers = { set: vi.fn(), delete: vi.fn() }
+
+    state.onRequest!({ headers })
+
+    // Three places used to assign this by hand; now there is one (TD-32).
+    expect(headers.set).toHaveBeenCalledWith('Authorization', 'Bearer access-token')
+  })
+
+  it('sends no Authorization header when there is no session', () => {
+    const headers = { set: vi.fn(), delete: vi.fn() }
+
+    state.onRequest!({ headers })
+
+    expect(headers.set).not.toHaveBeenCalled()
+    expect(headers.delete).toHaveBeenCalledWith('Authorization')
   })
 })

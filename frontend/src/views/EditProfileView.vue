@@ -58,7 +58,7 @@ const submitForm = () => {
           name: form.value.name,
           email: form.value.email,
           role: userStore.user.role ?? 'citizen',
-          avatar: response.data.user.avatarURL,
+          avatarURL: response.data.user.avatarURL,
         })
 
         router.back()
@@ -72,7 +72,7 @@ const submitForm = () => {
 
 <template>
   <ViewContainer class="grid-cols-2">
-    <div class="main-left">
+    <div >
       <PanelBox>
         <MainTitle>Modifica profilo</MainTitle>
 
@@ -85,7 +85,7 @@ const submitForm = () => {
       </PanelBox>
     </div>
 
-    <div class="main-right">
+    <div >
       <PanelBox>
         <form class="space-y-6" v-on:submit.prevent="submitForm">
           <div>

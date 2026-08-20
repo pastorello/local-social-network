@@ -11,6 +11,20 @@ type RetriableConfig = InternalAxiosRequestConfig & { _retried?: boolean }
 export function setupAuthInterceptor() {
   let refreshing: Promise<boolean> | null = null
 
+  // The header used to be assigned in three places with three spellings
+  // (App.vue, LoginView, the store's refreshToken), which is how a logged-out
+  // tab kept sending a stale token. One request interceptor reading the store
+  // is the whole policy now (TD-32).
+  axios.interceptors.request.use((config) => {
+    const { access } = useUserStore().user
+    if (access) {
+      config.headers.set('Authorization', 'Bearer ' + access)
+    } else {
+      config.headers.delete('Authorization')
+    }
+    return config
+  })
+
   axios.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
@@ -42,7 +56,7 @@ export function setupAuthInterceptor() {
       }
 
       config._retried = true
-      config.headers.set('Authorization', 'Bearer ' + userStore.user.access)
+      // The request interceptor re-reads the refreshed token on the replay.
       return axios(config)
     },
   )

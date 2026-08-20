@@ -112,7 +112,8 @@ def test_me_returns_profile_with_role(auth_client, citizen):
     assert data['email'] == citizen.email
     assert data['name'] == citizen.name
     assert data['role'] == User.CITIZEN
-    assert data['avatar']
+    # None until the user uploads one — no third-party placeholder (TD-30).
+    assert data['avatarURL'] is None
 
 
 # --- F1.4 profile editing ---
@@ -533,3 +534,65 @@ def test_user_list_search_still_works_and_is_paginated(auth_client):
 
     assert body['count'] == 3
     assert all('Mario' in u['name'] for u in body['results'])
+
+
+# --- TD-27: /api/users/me/ used to invent a fourth user shape ---
+
+
+def test_me_uses_the_same_avatar_field_name_as_every_other_endpoint(auth_client, citizen):
+    body = auth_client.get('/api/users/me/').json()
+
+    # It used to return `avatar` while UserSerializer returned `avatarURL`, and
+    # the SPA carried both spellings as a result.
+    assert 'avatarURL' in body
+    assert 'avatar' not in body
+
+
+def test_me_returns_the_owner_email_and_role(auth_client, citizen):
+    body = auth_client.get('/api/users/me/').json()
+
+    assert body['email'] == citizen.email
+    assert body['role'] == citizen.role
+    assert body['id'] == str(citizen.id)
+
+
+# --- TD-30: the placeholder avatar was a third-party random image ---
+
+
+def test_a_user_without_an_avatar_reports_no_url(auth_client, citizen):
+    """It used to return picsum.photos, which serves a *different* image per
+    request — the same citizen had a different face on every reload, and every
+    page view leaked visitor IPs to a third party."""
+    assert citizen.get_avatar() is None
+    assert auth_client.get('/api/users/me/').json()['avatarURL'] is None
+
+
+# --- TD-28: the account endpoints forced multipart on a JSON API ---
+
+
+def test_editpassword_accepts_a_json_body(auth_client, citizen):
+    response = auth_client.post(
+        '/api/users/editpassword/',
+        {
+            'old_password': PASSWORD,
+            'new_password1': 'NuovaPassword2026!',
+            'new_password2': 'NuovaPassword2026!',
+        },
+        format='json',
+    )
+
+    assert response.status_code == 200
+    citizen.refresh_from_db()
+    assert citizen.check_password('NuovaPassword2026!')
+
+
+def test_editprofile_accepts_a_json_body(auth_client, citizen):
+    response = auth_client.post(
+        '/api/users/editprofile/',
+        {'name': 'Nome Aggiornato', 'email': citizen.email},
+        format='json',
+    )
+
+    assert response.status_code == 200
+    citizen.refresh_from_db()
+    assert citizen.name == 'Nome Aggiornato'

@@ -62,8 +62,6 @@ WEBSITE_URL = os.environ.get('WEBSITE_URL', 'http://127.0.0.1:8000')
 
 # Application definition
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-EMAIL_HOST_USER = "noreply@pastorello.info"
 
 AUTH_USER_MODEL = 'account.User'
 
@@ -258,7 +256,11 @@ if TESTING:
     # hasher, only on the round trip through it.
     PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
 
-if not TESTING:
+# `DEBUG and not TESTING`, not `not TESTING`: this used to install the app and
+# put its middleware first in the chain on every production request, with only
+# the toolbar's own DEBUG check standing between a public host and full
+# SQL/settings introspection (TD-24).
+if DEBUG and not TESTING:
     INSTALLED_APPS = [
         *INSTALLED_APPS,
         "debug_toolbar",

@@ -18,12 +18,12 @@
 
 | Gate | Command | Result |
 |---|---|---|
-| Backend tests | `python -m pytest` | **137 passed** in 3.1s (was 76 in 54.4s; see TD-05) |
+| Backend tests | `python -m pytest` | **142 passed** in 3.3s (was 76 in 54.4s; see TD-05) |
 | Backend lint | `python -m ruff check .` | clean |
-| Frontend tests | `npm run test:unit -- run` | **41 passed** (11 files) in ~2s |
+| Frontend tests | `npm run test:unit -- run` | **43 passed** (11 files) in ~2s |
 | Frontend lint | `npm run lint` | clean (61 files, 116 rules) |
 | Build | `npm run build` | green, ~300ms |
-| E2E | `npm run test:e2e` | **3 passed** (green since TD-16; in CI since 2026-08-19) |
+| E2E | `npm run test:e2e` | **4 passed** (green since TD-16; in CI since 2026-08-19) |
 
 Green gates are not the same as covered behaviour — see TD-16 and TD-17, both of
 which are silent regressions that the five gates above cannot see.
@@ -123,7 +123,23 @@ until a real map with clustered pins has been loaded.
 
 **Risk:** medium. Do not land it on the strength of a green build alone.
 
-### TD-03 · Build tooling sits in `dependencies`
+### TD-03 · Build tooling sits in `dependencies` — **FIXED 2026-08-20, and the finding's reasoning was wrong** ✔
+
+> `@tailwindcss/vite` and `tailwindcss` moved to `devDependencies`, which is
+> correct on its own merits — build tooling is not a runtime dependency.
+>
+> **But it changed nothing about the audit, because the diagnosis above is
+> wrong.** `npm audit --omit=dev` still reports 5 advisories, and they are not in
+> `vite`/`launch-editor` at all: they are in **axios** (many high-severity CVEs),
+> `follow-redirects`, `form-data`, `nanoid` and `postcss`. The claim that "none of
+> them touches the static bundle a visitor downloads" is false — axios is
+> imported in 21 places in `src/` and ships in the built output (verified by
+> grepping `dist/`).
+>
+> **This promotes part of TD-06.** axios is pinned at 1.15.0 with 1.19.0
+> available, and the gap is not routine drift: it is a runtime dependency with
+> open high-severity advisories. It deserves its own change, because a minor bump
+> touches the 401 interceptor and needs the e2e suite to verify.
 
 **Evidence:** `@tailwindcss/vite` and `tailwindcss` are in `dependencies`, not
 `devDependencies`. Consequence: `npm audit --omit=dev` reports **6
@@ -599,7 +615,11 @@ lines or ~40 tests in one file, or the first time a cross-cutting
 `test_permissions.py` spanning reports *and* polls is wanted. `reports/tests.py`
 will cross it once the TD-17 and coverage gaps below are filled.
 
-### TD-24 · `django-debug-toolbar` runs in production, gated on `TESTING` not `DEBUG` ✔
+### TD-24 · `django-debug-toolbar` runs in production, gated on `TESTING` not `DEBUG` — **FIXED 2026-08-20** ✔
+
+> Both gates are now `DEBUG and not TESTING` (`settings.py` and `urls.py`), and
+> the pin moved from `requirements.txt` to `requirements-dev.txt`, so it is not
+> installed in the production image at all.
 
 `settings.py:229-237` appends the app to `INSTALLED_APPS` and its middleware to
 the **front** of `MIDDLEWARE` whenever `TESTING` is false — which includes
@@ -653,7 +673,13 @@ roughly 270 MB, plus a re-encode buffer. Applies with no size cap at all on the
 avatar path (TD-12). **Fix:** explicit `width * height` cap before `load()`, and
 widen the except.
 
-### TD-27 · `/api/users/me/` invents a fourth user shape
+### TD-27 · `/api/users/me/` invents a fourth user shape — **FIXED 2026-08-20** ✔
+
+> `MeSerializer(UserSerializer)` adds `email` and `role`; `me` and `user` return
+> DRF `Response` objects instead of `JsonResponse`, so content negotiation and
+> the renderer apply. One avatar field name — `avatarURL` — end to end: the store
+> field, its localStorage key and `LoginView` were renamed to match. Two tests
+> pin it, including one asserting `avatar` is **absent** from the payload.
 
 `account/api.py:24`, `:57` and `:70` return `django.http.JsonResponse` instead of
 DRF's `Response`, skipping content negotiation and the renderer. Worse, `me`
@@ -669,7 +695,12 @@ one real interface drift: `User.ts` mirrors `UserSerializer` correctly, but the
 **Fix:** a `MeSerializer(UserSerializer)` adding `email` and `role`, returned via
 `Response`; one avatar field name everywhere; an interface to match.
 
-### TD-28 · The account endpoints read `request.POST`, forcing multipart on a JSON API
+### TD-28 · The account endpoints read `request.POST`, forcing multipart on a JSON API — **FIXED 2026-08-20** ✔
+
+> Both read `request.data` now, so DRF's parser negotiation applies and a JSON
+> body works. Two tests post JSON to `editprofile` and `editpassword`.
+> `EditProfileView` still sends multipart, because it carries the avatar file —
+> that is the format being appropriate, not the endpoint forcing it.
 
 `account/api.py:80` and `:90` use `request.POST`/`request.FILES` while every other
 endpoint uses `request.data`. That undocumented coupling is why
@@ -682,17 +713,35 @@ negotiation is bypassed entirely. **Fix:** `request.data` on both.
 
 ## P3 — cheap, cosmetic, or waiting on real data
 
-Carried over from the first pass: **TD-07** ghost `backend/posts/` and
-`backend/notifications/` directories — plus a **third ghost**,
-`backend/media/post_attachments/`, surviving the removed `posts` app (gitignored,
-so it never reached the repo; delete it with the others). **TD-08** unindexed
-`IssueReport.status`. **TD-09** reduced to the `SiteTitle.vue` gradient alone (a
-product decision). **TD-10** the borrowed venv, now known to break the documented
-test command outright.
+**TD-07 — FIXED 2026-08-20** ✔ The ghost `backend/posts/` and
+`backend/notifications/` directories are gone, along with the third ghost the
+second pass found — `backend/media/post_attachments/` — and a personal file left
+in `backend/media/avatars/`. All were gitignored, so none of this appears in a
+diff; it was disk state that made the backend folder lie to a newcomer.
+
+**TD-08 — still open, deliberately.** `IssueReport.status` has no index. The
+list endpoint filters on it, and that is irrelevant with zero rows. Revisit when
+there is real data, not before.
+
+**TD-09 — not debt.** Reduced to the `SiteTitle.vue` purple gradient, which is
+the M4 brand. Changing it is a product decision, not a fix. (The `PollCard.vue`
+half was a detector false positive — see Corrections.)
+
+**TD-10 — FIXED 2026-08-20** ✔ The venv was recreated in place from
+`backend/requirements-dev.txt`. `source .venv/bin/activate && python -m pytest`
+and `pip` both work now, verified by running them, and the gotcha has been
+removed from `CLAUDE.md`.
 
 New:
 
-- **TD-29 · Dead code and phantom CSS.** `assets/base.css` is **0 bytes** and
+- **TD-29 · Dead code and phantom CSS — FIXED 2026-08-20** ✔ Removed: the
+  0-byte `assets/base.css` and its import, four unreferenced custom properties
+  in `main.css`, the unreferenced `UserIcon.vue`, the `EMAIL_BACKEND` /
+  `EMAIL_HOST_USER` settings left from the dropped M0 activation flow (which
+  also embedded a personal domain), and the `main-left`/`main-right`/
+  `main-center` classes that were applied across **nine** views and defined
+  nowhere. `account/views.py` and `backend/media/post_attachments/` went
+  earlier. Original text: **TD-29 · Dead code and phantom CSS.** `assets/base.css` is **0 bytes** and
   still imported at `main.css:2`. `main-left` / `main-right` / `main-center` are
   applied in **8 view templates** and **defined nowhere** — they read as layout
   hooks and do nothing. Four unreferenced custom properties in `main.css:5-6,18,31`
@@ -703,7 +752,12 @@ New:
   removed M0 activation flow — nothing sends mail, and it embeds a personal
   domain. `backend/media/avatars/pastorello-stackoverflow.jpg` is a personal file
   in the working tree.
-- **TD-30 · `get_avatar()` hardcodes picsum.photos.** `account/models.py:58-62`
+- **TD-30 · `get_avatar()` hardcodes picsum.photos — FIXED 2026-08-20** ✔ It
+  returns `None` now, and `components/cards/UserAvatar.vue` renders initials in
+  its place across the header, the user cards and the profile page. No
+  third-party request per page view, and a citizen keeps the same face between
+  reloads. `User.avatarURL` is typed `string | null` to match. Original text:
+  **TD-30 · `get_avatar()` hardcodes picsum.photos.** `account/models.py:58-62`
   returns `https://picsum.photos/200/200` as the placeholder. It serves a
   **random** image per request, so the same citizen has a different face in the
   header, in `UserCard`, and on every reload — it reads as a bug. It also leaks
@@ -738,7 +792,16 @@ New:
   Duplication: `UsersView.vue:38-62` re-implements `SearchBar.vue:37-60` verbatim;
   `EditProfileView.vue:23,39` hand-rolls file handling instead of
   `useFileUpload.ts` and therefore has no preview.
-- **TD-32 · Auth bootstrap ordering is latently fragile.** `main.ts:15-17`
+- **TD-32 · Auth bootstrap ordering is latently fragile — FIXED 2026-08-20** ✔
+  `initStore()` runs in `main.ts` between pinia and the router, so the session
+  exists before the first navigation runs the guard. The three hand-written
+  `Authorization` assignments are gone, replaced by one axios **request**
+  interceptor reading the store — `lib/auth.ts` already owned the response half.
+  A Cypress spec pins it: an authenticated hard reload of `/users` must stay on
+  `/users`. Honest note — that spec passed before the fix too, since the guard
+  queue starts from a resolved promise; it exists so the accident cannot be
+  relied on again. Original text: **TD-32 · Auth bootstrap ordering is latently
+  fragile.** `main.ts:15-17`
   installs the router (which starts the initial navigation and runs the
   `beforeEach` guard) before `App.vue:25-27`'s `onBeforeMount` calls
   `initStore()`, which restores `isAuthenticated` from localStorage. It works

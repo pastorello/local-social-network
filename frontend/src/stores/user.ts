@@ -11,7 +11,7 @@ interface UserState {
   role: UserRole | null
   access: string | null
   refresh: string | null
-  avatar: string | null
+  avatarURL: string | null
 }
 
 interface TokenPair {
@@ -24,7 +24,7 @@ interface UserInfo {
   name: string
   email: string
   role: UserRole
-  avatar: string | null
+  avatarURL: string | null
 }
 
 export const useUserStore = defineStore('user', {
@@ -37,7 +37,7 @@ export const useUserStore = defineStore('user', {
       role: null,
       access: null,
       refresh: null,
-      avatar: null,
+      avatarURL: null,
     },
   }),
 
@@ -50,7 +50,7 @@ export const useUserStore = defineStore('user', {
         this.user.name = localStorage.getItem('user.name')
         this.user.email = localStorage.getItem('user.email')
         this.user.role = (localStorage.getItem('user.role') as UserRole) || null
-        this.user.avatar = localStorage.getItem('user.avatar')
+        this.user.avatarURL = localStorage.getItem('user.avatarURL')
         this.user.isAuthenticated = true
 
         this.refreshToken()
@@ -67,9 +67,9 @@ export const useUserStore = defineStore('user', {
     },
 
     removeToken() {
-      // The header is set in three places on login; forgetting to clear it here
-      // meant every request in the tab still carried the old token until the
-      // page was reloaded (TD-20).
+      // The request interceptor reads the store, so clearing the state below is
+      // what stops the token being sent (TD-32). This stays as belt and braces
+      // for any default set outside that path (TD-20).
       delete axios.defaults.headers.common['Authorization']
 
       this.user.refresh = null
@@ -79,7 +79,7 @@ export const useUserStore = defineStore('user', {
       this.user.name = null
       this.user.email = null
       this.user.role = null
-      this.user.avatar = null
+      this.user.avatarURL = null
 
       localStorage.setItem('user.access', '')
       localStorage.setItem('user.refresh', '')
@@ -87,7 +87,7 @@ export const useUserStore = defineStore('user', {
       localStorage.setItem('user.name', '')
       localStorage.setItem('user.email', '')
       localStorage.setItem('user.role', '')
-      localStorage.setItem('user.avatar', '')
+      localStorage.setItem('user.avatarURL', '')
     },
 
     setUserInfo(user: UserInfo) {
@@ -95,13 +95,13 @@ export const useUserStore = defineStore('user', {
       this.user.name = user.name
       this.user.email = user.email
       this.user.role = user.role
-      this.user.avatar = user.avatar
+      this.user.avatarURL = user.avatarURL
 
       localStorage.setItem('user.id', this.user.id ?? '')
       localStorage.setItem('user.name', this.user.name ?? '')
       localStorage.setItem('user.email', this.user.email ?? '')
       localStorage.setItem('user.role', this.user.role ?? '')
-      localStorage.setItem('user.avatar', this.user.avatar ?? '')
+      localStorage.setItem('user.avatarURL', this.user.avatarURL ?? '')
     },
 
     async logout(): Promise<void> {
@@ -137,7 +137,6 @@ export const useUserStore = defineStore('user', {
           localStorage.setItem('user.refresh', response.data.refresh)
         }
 
-        axios.defaults.headers.common['Authorization'] = 'Bearer ' + response.data.access
         return true
       } catch {
         this.removeToken()

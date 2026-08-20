@@ -12,11 +12,12 @@ distance between those two things.
 ## 1. Pay down the technical debt — **active**
 
 The measured register is [tech-debt.md](./tech-debt.md), audited twice on
-2026-08-19: first by measurement, then by reading the source. Eighteen of its 32 items are
-closed, plus all 10 documentation items — including every security finding, the
-whole CI story, and every user-visible bug the audit turned up. What is left is
-maintenance-grade: the double Leaflet bundle, dependency drift, dead code, and a
-few structural tidies no user can see.
+2026-08-19: first by measurement, then by reading the source. Twenty-seven of its 32 items are
+closed, plus all 10 documentation items. What is left is three entries: the
+double Leaflet bundle (TD-02, needs browser verification), broader end-to-end
+coverage (TD-04, deliberately deferred until the flows stop moving), and
+dependency drift (TD-06 — which now matters more than "drift" suggests: axios is
+a runtime dependency with open high-severity advisories).
 
 None of it blocks anything else. It is the default work when there is no larger
 goal in flight.

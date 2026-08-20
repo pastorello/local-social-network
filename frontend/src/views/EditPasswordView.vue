@@ -59,7 +59,7 @@ const submitForm = () => {
 
 <template>
   <ViewContainer class="grid-cols-2">
-    <div class="main-left">
+    <div >
       <PanelBox>
         <MainTitle>Cambia password</MainTitle>
         <p class="mb-6 text-gray-500">Da qui puoi cambiare la tua password.</p>
@@ -67,7 +67,7 @@ const submitForm = () => {
       </PanelBox>
     </div>
 
-    <div class="main-right">
+    <div >
       <PanelBox>
         <form class="space-y-6" v-on:submit.prevent="submitForm">
           <div>
