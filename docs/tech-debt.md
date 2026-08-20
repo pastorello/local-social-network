@@ -22,7 +22,8 @@
 | Backend lint | `python -m ruff check .` | clean |
 | Frontend tests | `npm run test:unit` | **32 passed** (10 files) in 4.2s |
 | Frontend lint | `npm run lint` | clean (61 files, 116 rules) |
-| Build | `npm run build` | green, 469ms |
+| Build | `npm run build` | green, ~300ms |
+| E2E | `npm run test:e2e` | **3 passed** (green since TD-16; in CI since 2026-08-19) |
 
 Green gates are not the same as covered behaviour — see TD-16 and TD-17, both of
 which are silent regressions that the five gates above cannot see.
@@ -143,8 +144,9 @@ genuine runtime advisory lands, it will be buried in dev-server noise.
 *are* the product — filing a report on the map, upvoting, voting in a poll — have
 unit tests but no end-to-end proof that the SPA and the API agree.
 
-**Sharpened by the second pass — see TD-16:** that one file is also *red*, and has
-been since M4. Fix TD-16 before adding specs, and before wiring Cypress into CI.
+**Partially addressed 2026-08-19:** TD-16 fixed the red spec and Cypress now runs
+in CI, so the harness is trustworthy. The *coverage* is still one file — filing a
+report on the map, upvoting and voting in a poll remain unproven end to end.
 
 ### TD-05 · The backend suite takes 54s for 76 tests — **FIXED 2026-08-19** ✔
 
@@ -374,7 +376,19 @@ catching Django's `ValidationError` in `backend/exceptions.py` as a net.
 ignore file. The demo-deploy session is precisely when someone fills in a real
 key and a real password. **Fix:** `.env`, `.env.*`, `!.env.example`.
 
-### TD-16 · The only e2e spec has been failing since M4 ✔
+### TD-16 · The only e2e spec has been failing since M4 — **FIXED 2026-08-19** ✔
+
+> Closed, and confirmed by **running Cypress** rather than by reading the
+> strings — the mistake that produced this item in the first place. Before: 3
+> tests, 2 passing, 1 failing. After the two-string fix: 3 passing.
+>
+> Cypress is now a third CI job, as TD-01's workflow header planned. It runs
+> against a **production build** (`npm run test:e2e`, vite preview on :4173),
+> not the dev server, because TD-02's double bundle and the Leaflet
+> default-import gotcha only appear in built output. The binary is cached; a
+> failed run uploads screenshots and videos. No backend service — today's specs
+> exercise the SPA shell only, and that is noted in the job so the next spec
+> author knows to add one.
 
 `frontend/cypress/e2e/login.cy.ts:17` and `:20` assert `'Log in'`;
 `LoginView.vue:70` and `:103` render **"Accedi"**. The M4 Italian sweep updated
@@ -388,7 +402,12 @@ the field evidence that TD-01 (CI) is correctly ranked first. **Fix:** two
 strings. Do it *before* writing any new e2e, or the new specs inherit a suite
 nobody trusts.
 
-### TD-17 · Nothing stops `role` from becoming writable ✔
+### TD-17 · Nothing stops `role` from becoming writable — **FIXED 2026-08-19** ✔
+
+> Closed by two tests, since the code was already correct — the debt was the
+> unpinned invariant, not a bug. Signup and `editprofile` now both POST
+> `role: admin` and assert the stored role is unchanged. Verified by mutation:
+> adding `'role'` to either form's `Meta.fields` fails them both.
 
 `ProfileForm.Meta.fields` (`account/forms.py:22`) and `SignupForm.Meta.fields`
 (`:10`) both correctly omit `role`. **No test pins either one.** Adding `'role'`
@@ -500,7 +519,14 @@ modificabile: è già stata presa in carico." Same for every 403/404 across thos
 four forms. **Fix:** delete four blocks, call the helper that already handles
 `detail`, nested `fields`, and the fallback.
 
-### TD-22 · The option-ordering test cannot fail
+### TD-22 · The option-ordering test cannot fail — **FIXED 2026-08-19** ✔
+
+> Closed by one test that inserts `Seconda` at `position=1` **before** `Prima`
+> at `position=0`, then asserts both the list and the detail endpoint return
+> them in position order. Verified by mutation: dropping the
+> `.order_by('position')` at `polls/api.py:35` fails this test while the six
+> pre-existing ordering assertions all still pass — which is precisely the
+> finding.
 
 `polls/tests.py:94` and `:152` assert option order, but every fixture inserts
 options in ascending `position` order, so with no `ORDER BY` at all the database
@@ -753,8 +779,8 @@ clustering in built output *only*), then vote in a poll, then upvote.
    spec sat unnoticed for a month. Everything below is now watched automatically.
 2. ~~**TD-11**~~ — **done 2026-08-19**, along with TD-15 and DOC-03. The
    deploy-blocking configuration items are now closed.
-3. **TD-16, TD-17, TD-22** — three small tests and two string edits that close the
-   three silent-regression holes. Under an hour together.
+3. ~~**TD-16, TD-17, TD-22**~~ — **done 2026-08-19**, and Cypress joined CI with
+   them.
 4. ~~**TD-12 + TD-13 + TD-26**~~ — **done 2026-08-19** as one change, and TD-13's
    severity corrected downward in the process.
 5. ~~**TD-14**, then **TD-18**~~ — **done 2026-08-19.**

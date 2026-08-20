@@ -38,6 +38,7 @@ New entries use [`_template.md`](_template.md).
 | 2026-08-19 | Post-MVP | TD-12/13/26: upload hardening | [2026-08-19-td-12-upload-hardening.md](2026-08-19-td-12-upload-hardening.md) |
 | 2026-08-19 | Post-MVP | TD-14/18: input validation & rate limiting | [2026-08-19-td-14-18-input-and-throttling.md](2026-08-19-td-14-18-input-and-throttling.md) |
 | 2026-08-19 | Post-MVP | TD-05/23: a 3-second test suite | [2026-08-19-td-05-23-test-suite.md](2026-08-19-td-05-23-test-suite.md) |
+| 2026-08-19 | Post-MVP | TD-16/17/22: silent-regression guards, Cypress in CI | [2026-08-19-td-16-17-22-guards.md](2026-08-19-td-16-17-22-guards.md) |
 
 ## Reading suggestions
 
