@@ -199,7 +199,7 @@ def test_user_list_searches_by_name_and_hides_email(auth_client):
     response = auth_client.get('/api/users/list/', {'q': 'Sindaco'})
 
     assert response.status_code == 200
-    results = response.json()
+    results = response.json()['results']
     assert len(results) == 1
     assert results[0]['name'] == 'Sindaco Gaeta'
     assert 'email' not in results[0]
@@ -463,3 +463,73 @@ def test_editprofile_ignores_a_self_assigned_role(auth_client, citizen):
     assert response.status_code == 200
     citizen.refresh_from_db()
     assert citizen.role == User.CITIZEN
+
+
+# --- TD-20: logging out must actually end the session ---
+
+
+def test_logout_blacklists_the_refresh_token(api_client, citizen):
+    login = api_client.post(
+        '/api/users/login/', {'email': citizen.email, 'password': PASSWORD}
+    ).json()
+    api_client.credentials(HTTP_AUTHORIZATION='Bearer ' + login['access'])
+
+    response = api_client.post('/api/users/logout/', {'refresh': login['refresh']})
+
+    assert response.status_code == 200
+    replay = api_client.post('/api/users/refresh/', {'refresh': login['refresh']})
+    assert replay.status_code == 401
+
+
+def test_logout_requires_authentication(api_client):
+    assert api_client.post('/api/users/logout/', {'refresh': 'x'}).status_code == 401
+
+
+def test_logout_rejects_a_token_that_is_not_a_refresh_token(auth_client):
+    response = auth_client.post('/api/users/logout/', {'refresh': 'non-un-token'})
+
+    assert response.status_code == 400
+
+
+def test_changing_the_password_evicts_existing_sessions(api_client, citizen):
+    """'I changed my password because I think I was compromised' has to mean
+    something — refresh tokens live 30 days."""
+    login = api_client.post(
+        '/api/users/login/', {'email': citizen.email, 'password': PASSWORD}
+    ).json()
+    api_client.credentials(HTTP_AUTHORIZATION='Bearer ' + login['access'])
+
+    response = api_client.post('/api/users/editpassword/', {
+        'old_password': PASSWORD,
+        'new_password1': 'NuovaPassword2026!',
+        'new_password2': 'NuovaPassword2026!',
+    })
+
+    assert response.status_code == 200
+    replay = api_client.post('/api/users/refresh/', {'refresh': login['refresh']})
+    assert replay.status_code == 401
+
+
+# --- TD-25: the user directory is unbounded ---
+
+
+def test_user_list_is_paginated(auth_client, citizen):
+    for n in range(25):
+        User.objects.create_user(name=f'Utente {n}', email=f'u{n}@example.com', password=PASSWORD)
+
+    body = auth_client.get('/api/users/list/').json()
+
+    assert body['count'] == 26
+    assert len(body['results']) == 20
+    assert body['next']
+
+
+def test_user_list_search_still_works_and_is_paginated(auth_client):
+    for n in range(3):
+        User.objects.create_user(name=f'Mario {n}', email=f'm{n}@example.com', password=PASSWORD)
+    User.objects.create_user(name='Giulia', email='g@example.com', password=PASSWORD)
+
+    body = auth_client.get('/api/users/list/', {'q': 'mario'}).json()
+
+    assert body['count'] == 3
+    assert all('Mario' in u['name'] for u in body['results'])

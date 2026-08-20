@@ -10,6 +10,7 @@ import FormInput from '@/components/forms/FormInput.vue'
 import PanelBox from '@/components/boxes/PanelBox.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
 import ViewContainer from '@/components/boxes/ViewContainer.vue'
+import { extractApiErrors } from '@/lib/apiErrors'
 
 const toastStore = useToastStore()
 const userStore = useUserStore()
@@ -42,15 +43,15 @@ const submitForm = () => {
         },
       })
       .then(() => {
-        toastStore.showToast(5000, 'La password è stata aggiornata', 'bg-emerald-500')
-
-        router.push(`/profile/${userStore.user.id}`)
+        // The backend revokes every outstanding token on a password change
+        // (TD-20), so this session is over — say so instead of letting the next
+        // request 401 on its own.
+        userStore.removeToken()
+        toastStore.showToast(5000, 'Password aggiornata. Accedi di nuovo.', 'bg-emerald-500')
+        router.push('/login')
       })
       .catch((error) => {
-        const fields = error.response?.data?.fields as Record<string, string[]> | undefined
-        formErrors.value = fields
-          ? Object.values(fields).flat()
-          : ['Si è verificato un errore. Riprova.']
+        formErrors.value = extractApiErrors(error)
       })
   }
 }

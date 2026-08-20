@@ -8,6 +8,7 @@ import type Category from '@/definitions/interfaces/Category'
 import type Report from '@/definitions/interfaces/Report'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import FormInput from '@/components/forms/FormInput.vue'
+import { extractApiErrors } from '@/lib/apiErrors'
 
 const props = defineProps<{
   categories: Category[]
@@ -64,11 +65,7 @@ const submitForm = async () => {
     resetFile()
     emit('saved', response.data)
   } catch (error) {
-    const fields = (error as { response?: { data?: { fields?: Record<string, string[]> } } })
-      .response?.data?.fields
-    formErrors.value = fields
-      ? Object.values(fields).flat()
-      : ['Si è verificato un errore. Riprova.']
+    formErrors.value = extractApiErrors(error)
   } finally {
     submitting.value = false
   }

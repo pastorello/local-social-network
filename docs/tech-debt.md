@@ -18,9 +18,9 @@
 
 | Gate | Command | Result |
 |---|---|---|
-| Backend tests | `python -m pytest` | **125 passed** in 3.3s (was 76 in 54.4s; see TD-05) |
+| Backend tests | `python -m pytest` | **137 passed** in 3.1s (was 76 in 54.4s; see TD-05) |
 | Backend lint | `python -m ruff check .` | clean |
-| Frontend tests | `npm run test:unit` | **32 passed** (10 files) in 4.2s |
+| Frontend tests | `npm run test:unit -- run` | **41 passed** (11 files) in ~2s |
 | Frontend lint | `npm run lint` | clean (61 files, 116 rules) |
 | Build | `npm run build` | green, ~300ms |
 | E2E | `npm run test:e2e` | **3 passed** (green since TD-16; in CI since 2026-08-19) |
@@ -452,7 +452,21 @@ small-city civic platform reveals who files complaints about the municipality.
 **Fix:** `ScopedRateThrottle` + rates in settings, `throttle_scope` on login,
 signup and `editpassword`. Smallest security-per-line ratio in this register.
 
-### TD-19 · The upvote counter can drift, cannot be repaired, and has no invariant test
+### TD-19 · The upvote counter can drift, cannot be repaired, and has no invariant test — **FIXED 2026-08-20** ✔
+
+> Closed on all three counts. The toggle runs inside `transaction.atomic()` and
+> derives its delta from the row count the DELETE actually returned, so a
+> removal that removed nothing no longer decrements. `manage.py
+> reconcile_upvotes` (with `--dry-run`) recomputes the counter from the `Upvote`
+> rows, so drift is repairable — the admin marks the field read-only, and
+> nothing else could fix it. Tests assert the invariant
+> `upvotes_count == upvotes.count()` across a toggle sequence and that the
+> command repairs a counter forced to `-7`.
+>
+> **Honest limit:** the racing double-DELETE itself is not reproduced by a test —
+> the suite has no real concurrency, and simulating it would mean mocking the
+> ORM. The guard is verified by inspection; what is tested is that drift, however
+> it arises, can be measured and repaired.
 
 `reports/api.py:146-155` runs `get_or_create` → `delete()` → `F('upvotes_count') + delta`
 as three statements with **no `transaction.atomic()`**, and infers `delta` from
@@ -479,7 +493,17 @@ add the invariant assertion to the existing toggle tests, and add a management
 command doing `update(upvotes_count=Count('upvotes'))` so drift is recoverable.
 A threaded concurrency test is **not** worth writing.
 
-### TD-20 · Logout leaves the token live, client-side and server-side
+### TD-20 · Logout leaves the token live, client-side and server-side — **FIXED 2026-08-20** ✔
+
+> All three gaps closed. `removeToken()` now deletes
+> `axios.defaults.headers.common['Authorization']`, so a logged-out tab stops
+> sending the old bearer token instead of carrying it until the next reload.
+> `POST /api/users/logout/` blacklists the presented refresh token, and the SPA
+> calls it — best effort, so an offline failure still clears the session locally.
+> Changing a password blacklists every `OutstandingToken` for that user, which
+> ends *all* sessions including the caller's; `EditPasswordView` now says so and
+> sends them to the login screen rather than letting the next request 401 on its
+> own.
 
 Three gaps that compound:
 
@@ -503,7 +527,13 @@ that blacklists the presented refresh token; blacklist the user's
 
 ## P2 — schedule, don't rush
 
-### TD-21 · `extractApiErrors` is reimplemented four times, and the copies drop `detail`
+### TD-21 · `extractApiErrors` is reimplemented four times, and the copies drop `detail` — **FIXED 2026-08-20** ✔
+
+> Closed: `ReportForm`, `SignupView`, `EditProfileView` and `EditPasswordView`
+> all call the tested helper, and the four unchecked
+> `as Record<string, string[]>` casts are gone with them. A `ReportForm` test
+> now rejects with a `{detail}`-only body and asserts the backend's Italian
+> sentence reaches the user — reverting to the old extractor fails it.
 
 `lib/apiErrors.ts` exists, is tested, and is used by exactly two files
 (`PollCard.vue:65,80`, `PollForm.vue:57`). Four others hand-roll a worse version —
@@ -582,7 +612,17 @@ between a public host and full SQL/settings/request introspection is a
 third-party default, while the app and middleware load on every request anyway.
 **Fix:** `if DEBUG and not TESTING:`, and move the pin to `requirements-dev.txt`.
 
-### TD-25 · `/api/users/list/` is unpaginated, and the profile count lies
+### TD-25 · `/api/users/list/` is unpaginated, and the profile count lies — **FIXED 2026-08-20** ✔
+
+> Closed, and the duplication went with it: `ReportPagination` and
+> `PollPagination` were byte-identical, so both were replaced by
+> `common/pagination.py::StandardPagination`, which `/api/users/list/` now uses
+> too. `ProfileView` renders `count` from the paginated body instead of
+> `results.length`, so a citizen with 25 reports is no longer told they have 20.
+>
+> Paginating the directory would have introduced the same silent truncation in
+> `UsersView`, so it gained the total and a "Carica altri" button, matching what
+> `PollsView` already did.
 
 `account/api.py:59-70` returns every `User` row; both report and poll lists
 paginate at 20 with `max_page_size = 100`. `UsersView.vue:15-26` renders the
@@ -670,7 +710,19 @@ New:
   visitor IPs and referrers to a third party on every page view, and fails
   entirely on a network without picsum. **Fix:** a static asset, or return `None`
   and render initials.
-- **TD-31 · Frontend paper cuts.** `SiteTitle.vue:3-4` uses `<a href="/">`
+- **TD-31 · Frontend paper cuts — FIXED 2026-08-20** ✔ `SiteTitle` uses
+  `RouterLink`, so the brand no longer reloads the SPA and re-runs the auth
+  bootstrap. The toast store tracks its timer handles and rebuilds `classes`
+  from the base, so a second toast is no longer cut short by the first one's
+  callbacks. `forms/user.ts` maps field paths to Italian labels, so the UI shows
+  "Conferma password: Le due password non corrispondono" instead of leaking
+  `password2`. A failed upvote raises a toast instead of failing silently. Three
+  one-line a11y defects fixed: `role="status"`/`aria-live` on the toast, an
+  `alt` on the profile avatar, and `src=""` after logout. **Still open from this
+  item:** the `PanelBox` non-reactive `classObject` (harmless — no caller passes
+  `size`), the `SearchBar` duplication in `UsersView`, and `EditProfileView`
+  hand-rolling file handling instead of `useFileUpload`. Original text: **TD-31 ·
+  Frontend paper cuts.** `SiteTitle.vue:3-4` uses `<a href="/">`
   instead of `<RouterLink>`, so clicking the brand does a full page reload and
   re-runs the whole auth bootstrap. `stores/toast.ts:19-36` fires three untracked
   `setTimeout`s per toast and mutates `classes` by string concatenation — two

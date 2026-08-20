@@ -11,6 +11,7 @@ import ActionButton from '@/components/buttons/ActionButton.vue'
 import FormInput from '@/components/forms/FormInput.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
 import ViewContainer from '@/components/boxes/ViewContainer.vue'
+import { extractApiErrors } from '@/lib/apiErrors'
 
 const router = useRouter()
 const toastStore = useToastStore()
@@ -63,10 +64,7 @@ const submitForm = () => {
         router.back()
       })
       .catch((error) => {
-        const fields = error.response?.data?.fields as Record<string, string[]> | undefined
-        errors.value = fields
-          ? Object.values(fields).flat()
-          : ['Si è verificato un errore. Riprova.']
+        errors.value = extractApiErrors(error)
       })
   }
 }
