@@ -16,8 +16,8 @@ The measured register is [tech-debt.md](./tech-debt.md), audited twice on
 closed, plus all 10 documentation items. What is left is three entries: the
 double Leaflet bundle (TD-02, needs browser verification), broader end-to-end
 coverage (TD-04, deliberately deferred until the flows stop moving), and
-dependency drift (TD-06 — which now matters more than "drift" suggests: axios is
-a runtime dependency with open high-severity advisories).
+dependency drift (TD-06 — axios, the one entry with a security
+profile, was updated on 2026-08-20; what is left is ordinary maintenance).
 
 None of it blocks anything else. It is the default work when there is no larger
 goal in flight.

@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@vue-leaflet/vue-leaflet": "^0.10.1",
-    "axios": "^1.14.0",
+    "axios": "^1.19.0",
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3",
     "pinia": "^3.0.4",

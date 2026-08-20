@@ -21,7 +21,7 @@
 | Backend tests | `python -m pytest` | **142 passed** in 3.3s (was 76 in 54.4s; see TD-05) |
 | Backend lint | `python -m ruff check .` | clean |
 | Frontend tests | `npm run test:unit -- run` | **43 passed** (11 files) in ~2s |
-| Frontend lint | `npm run lint` | clean (61 files, 116 rules) |
+| Frontend lint | `npm run lint` | clean (62 files, 116 rules) |
 | Build | `npm run build` | green, ~300ms |
 | E2E | `npm run test:e2e` | **4 passed** (green since TD-16; in CI since 2026-08-19) |
 
@@ -192,7 +192,31 @@ inference from the hashing count, not a profile.
 **Now measured — see Corrections above:** 0.296s per hash, ≈38% of the runtime,
 and the `if not TESTING:` insertion point already exists. Do it with TD-23.
 
-### TD-06 · Dependencies have drifted
+### TD-06 · Dependencies have drifted — **axios done 2026-08-20, the rest still open** ✔
+
+> **axios 1.15.0 → 1.19.0.** Not routine drift: it is a runtime dependency that
+> ships in the bundle, and it carried a long list of open high-severity
+> advisories. `npm audit --omit=dev` goes from 5 advisories to 2, and the two
+> that remain (`postcss`, `nanoid`) are genuinely build-time — they arrive via
+> `vue-router → @vue/compiler-sfc → postcss` and **neither appears in the built
+> output**, checked by grepping `dist/` rather than assumed. (The `nanoid` string
+> that does appear there is zod's format-validator name, not the package.)
+>
+> **Verified by running the app, because the test suite cannot see this.**
+> `lib/__tests__/auth.spec.ts` mocks axios entirely and the e2e job runs no
+> backend, so a green suite says nothing about a real library upgrade. Against a
+> live backend and SPA: login and `/me/` (proving the TD-32 request interceptor
+> attaches the token), a multipart report upload with a photo (201, and the
+> stored name normalised to `.png`), and — with `ACCESS_TOKEN_LIFETIME`
+> temporarily set to 10 seconds — the full expiry cycle, observed twice in the
+> network log: `GET /list/?q= 401 → POST /refresh/ 200 → GET /list/?q= 200`.
+> That last one matters because 1.19 changed interceptor dispatch on synchronous
+> request-interceptor failure, which is exactly where this app now lives.
+>
+> **Still open:** the backend pins (Django 6.0.3 → 6.1, DRF 3.17.1 → 3.18.0,
+> pillow, PyJWT, ruff, gunicorn) and the frontend's remaining minors, plus the
+> three majors held back on purpose (pinia 3 → 4, typescript 6 → 7, oxlint).
+> None of those carry a known advisory; they are ordinary maintenance.
 
 Backend (pinned exactly, which is why this is safe to defer): Django
 6.0.3 → 6.1, DRF 3.17.1 → 3.18.0, django-debug-toolbar 6.3 → 7.1.1,
