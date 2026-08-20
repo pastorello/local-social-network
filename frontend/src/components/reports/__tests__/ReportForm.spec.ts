@@ -54,4 +54,27 @@ describe('ReportForm', () => {
 
     expect(wrapper.emitted('cancel')).toHaveLength(1)
   })
+
+  it('shows the message the API sent when the body carries only `detail`', async () => {
+    // PermissionDenied bodies have no `fields` key. The hand-rolled extractor
+    // this form used to carry read only `fields`, so a citizen who submitted
+    // just after an admin acknowledged the report saw the generic fallback
+    // instead of the sentence the backend wrote (TD-21).
+    vi.mocked(axios.post).mockRejectedValueOnce({
+      response: {
+        data: { detail: 'La segnalazione non è più modificabile: è già stata presa in carico.' },
+      },
+    })
+    const wrapper = mountForm()
+
+    await wrapper.find('input[type="text"]').setValue('Buca in via Indipendenza')
+    await wrapper.find('textarea').setValue('Una buca profonda vicino al civico 12.')
+    await wrapper.find('select').setValue('cat-1')
+    await wrapper.find('form').trigger('submit')
+    await new Promise((resolve) => setTimeout(resolve))
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).toContain('non è più modificabile')
+    expect(wrapper.text()).not.toContain('Si è verificato un errore')
+  })
 })

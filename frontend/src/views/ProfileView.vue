@@ -15,6 +15,7 @@ const route = useRoute()
 const isMyProfile = computed(() => route.params.id === userStore.user.id)
 const profileUser = ref<User | null>(null)
 const reports = ref<Report[]>([])
+const reportCount = ref(0)
 
 const getProfile = () => {
   axios
@@ -28,8 +29,9 @@ const getProfile = () => {
 
   axios
     .get('/api/reports/', { params: { author: route.params.id } })
-    .then((response: { data: { results: Report[] } }) => {
+    .then((response: { data: { count: number; results: Report[] } }) => {
       reports.value = response.data.results
+      reportCount.value = response.data.count
     })
     .catch((error) => {
       console.log('error', error)
@@ -52,6 +54,7 @@ watch(
         <img
           v-if="profileUser"
           :src="profileUser.avatarURL"
+          :alt="`Foto profilo di ${profileUser.name}`"
           class="mt-6 mb-6 rounded-full m-auto w-50 h-50"
         />
 
@@ -60,7 +63,7 @@ watch(
         </p>
 
         <p class="mt-2 text-sm text-gray-500" v-if="profileUser">
-          {{ reports.length }} {{ reports.length === 1 ? 'segnalazione' : 'segnalazioni' }}
+          {{ reportCount }} {{ reportCount === 1 ? 'segnalazione' : 'segnalazioni' }}
         </p>
 
         <div class="mt-6">

@@ -83,8 +83,10 @@ const toggleUpvote = async () => {
         report.value.upvotes_count = response.data.upvotes_count
       }
     })
-    .catch((error) => {
-      console.log('error', error)
+    .catch(() => {
+      // Every other action in the app raises a toast; this one used to fail
+      // silently, so the button simply did not move (TD-31).
+      toastStore.showToast(5000, 'Non è stato possibile registrare il voto.', 'bg-red-300')
     })
 }
 

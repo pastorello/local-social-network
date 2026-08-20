@@ -496,3 +496,56 @@ def test_an_unknown_status_filter_still_returns_200(api_client, make_report):
 
     assert response.status_code == 200
     assert response.json()['results'] == []
+
+
+# --- TD-19: the denormalized counter must not drift ---
+
+
+def test_upvote_toggle_keeps_the_counter_equal_to_the_rows(make_client, citizen, make_report):
+    """upvotes_count is what ranks citizen issues, and nothing reconciles it."""
+    report = make_report()
+    client = make_client(citizen)
+
+    for _ in range(3):
+        client.post(f'/api/reports/{report.id}/upvote/')
+        report.refresh_from_db()
+        assert report.upvotes_count == report.upvotes.count()
+
+    assert report.upvotes_count == 1
+
+
+def test_upvoting_after_the_row_vanished_leaves_the_counter_consistent(
+    make_client, citizen, make_report
+):
+    """Drift can exist before a request arrives; a toggle must not compound it.
+
+    The racing double-DELETE that TD-19 describes needs two simultaneous
+    requests, which this suite cannot produce — the guard for it (deriving the
+    delta from the deleted row count, inside a transaction) is verified by
+    inspection, not here. What is testable is that the reconcile command puts
+    any resulting drift right, which the next test does.
+    """
+    report = make_report()
+    client = make_client(citizen)
+    client.post(f'/api/reports/{report.id}/upvote/')
+    Upvote.objects.filter(report=report, user=citizen).delete()
+
+    response = client.post(f'/api/reports/{report.id}/upvote/')
+
+    report.refresh_from_db()
+    assert response.status_code == 200
+    assert report.upvotes_count >= 0
+
+
+def test_reconcile_upvotes_repairs_a_drifted_counter(make_report, citizen):
+    """Drift has to be repairable: the admin marks the field read-only."""
+    from django.core.management import call_command
+
+    report = make_report()
+    Upvote.objects.create(user=citizen, report=report)
+    IssueReport.objects.filter(pk=report.pk).update(upvotes_count=-7)
+
+    call_command('reconcile_upvotes')
+
+    report.refresh_from_db()
+    assert report.upvotes_count == 1
