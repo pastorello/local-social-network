@@ -1,80 +1,96 @@
-# Post-MVP roadmap
+# Roadmap
 
-> The MVP (spec §11, all milestones M0–M4) is closed as of 2026-07-20 — see
-> [mvp-spec.md §13](./mvp-spec.md#13-mvp-closure-2026-07-20). This document is
-> where scope now goes instead of back into the spec: candidate next steps,
-> not commitments. When one is picked up, it gets its own spec-first session
-> (§10) like every milestone before it — a short scope note, then a
-> `docs/ai-log/` entry. Items are ordered by what is **active**, not by what is
-> most exciting: shipping the demo led this list until 2026-08-19, when it was
-> parked for lack of hosting and the technical-debt work took its place.
+What is planned and in what order. Ordered by what is **active**, not by what is
+most interesting. Items here are candidates until they are picked up; when one
+is, it gets a scope note in [mvp-spec.md](./mvp-spec.md) if it changes what the
+product does.
 
-## 1. Codebase audit & technical debt — **active**
+The feature set in the spec is delivered and tested. That is not the same as
+being ready for other people to use, and this document is mostly about the
+distance between those two things.
 
-The MVP is feature-complete and every quality gate is green, but nothing runs
-those gates automatically, and a code-reading pass found that green gates are not
-the same as covered behaviour. The register lives in
-[tech-debt.md](./tech-debt.md), audited twice on 2026-08-19 — first by
-measurement (TD-01…TD-10), then by reading the source (TD-11…TD-32, DOC-01…DOC-10).
-CI (TD-01) landed on 2026-08-19 and now runs all five gates on every push and
-pull request. The committed `SECRET_KEY` (TD-11) went with it. The upload hardening (TD-12, TD-13, TD-26) followed. Still to
-land before the demo is unparked: an anonymous 500 on a public endpoint (TD-14)
-and rate limiting (TD-18) — plus three small tests that close silent-regression
-holes.
+## 1. Pay down the technical debt — **active**
 
-This became the active workstream when shipping the demo was parked — see below.
+The measured register is [tech-debt.md](./tech-debt.md), audited twice on
+2026-08-19: first by measurement, then by reading the source. Thirteen of its 32 items are
+closed, plus all 10 documentation items — including every security finding and
+the whole CI story. What is left is
+mostly maintenance-grade: the double Leaflet bundle, dependency drift, dead CSS,
+a handful of frontend paper cuts.
 
-## 2. Ship the demo — **parked (2026-08-19)**
+None of it blocks anything else. It is the default work when there is no larger
+goal in flight.
 
-Deferred by author decision: there is no domain, no host that runs Python, and
-no public database available for this project right now. Nothing about the code
-blocks it — `docs/deploy.md` stays ready — so this is a resource decision, not
-an engineering one, and it resumes when those three things exist.
+## 2. Decide what "publishable" means
 
-Two constraints to remember when it does resume, both found during the M4 deploy
-prep and re-confirmed on 2026-08-19:
+**The gap this roadmap exists for.** The spec describes an MVP feature set, and
+that feature set works. It does not describe a product someone else could adopt,
+and that design work has not been done. It has to happen before hosting is worth
+paying for.
 
-- Report photos are written to the local filesystem (`MEDIA_ROOT`). Ephemeral
-  disks on free PaaS tiers lose them on every redeploy — a persistent disk or
-  S3-compatible storage is a prerequisite, not a nice-to-have.
-- `VITE_API_BASE_URL` is read **at build time**, so the API hostname has to be
-  decided before the frontend is built.
+Open questions, none of them answered yet:
 
-Original checklist, unchanged:
+- **Who is the first real user, and how do they arrive?** An admin at a comune,
+  or citizens first? The product currently assumes an admin already exists and
+  was promoted through the Django admin.
+- **What does an empty instance look like?** Today a fresh deployment is an
+  empty map. There is no onboarding, no seed content, no explanation.
+- **What is the moderation load?** `rejected` exists as a status but nothing
+  notifies a citizen that their report was rejected, or why.
+- **Accessibility.** Spec N5 scoped a WCAG pass out of the MVP. A public civic
+  service that some citizens cannot use is a different kind of failure from a
+  missing feature, and this is the natural point to reconsider it.
+- **What is the smallest thing worth putting in front of a real person?** Not
+  necessarily everything below.
 
-- [ ] Pick a platform (PaaS free tier vs. VPS — sketches in `docs/deploy.md`)
-- [ ] Deploy, seed real Gaeta categories, create the first admin
-- [ ] Record the platform + URL in spec §6
-- [ ] Publish the LinkedIn write-up (`docs/linkedin-draft.md`) with the live link
+## 3. Candidate features — unordered, unvalidated
 
-## 3. Pilot feedback loop
+Written against assumed requirements, not observed ones. Expect this list to be
+wrong until item 2 is answered.
 
-The MVP was built against assumed requirements, not real usage. Before adding
-features, get it in front of actual Gaeta citizens/admins for a few weeks and
-see what F2/F3 usage looks like — which categories get used, whether
-moderation keeps up, whether poll turnout is meaningful. Candidate features
-below are ordered by what that feedback will most likely validate or kill.
+- **Admin analytics** — reports per category and status over time, poll turnout.
+  An admin currently sees a flat list.
+- **Category management UI** — categories are Django-admin-only (F2.2). A
+  citizen-facing admin panel removes the last "log into `/admin/`" step.
+- **Status-change notifications** — someone who filed a report has no signal
+  when it moves to `acknowledged` or `resolved` short of re-checking the map. No
+  chat or DM is an explicit non-goal (§2); a transactional e-mail is not the
+  same feature.
+- **More than one photo per report** — F2.2 caps it at one. A pothole needs one
+  angle; a stretch of broken pavement does not.
 
-## 4. Candidate features (unordered, unvalidated)
+## 4. Deploy — **last, and on the author's signal**
 
-- **Admin analytics** — reports per category/status over time, poll turnout;
-  today an admin only sees a flat list.
-- **Category management UI** — categories are Django-admin-only (F2.2); a
-  citizen-facing admin panel would remove the last "log into /admin/" step.
-- **Status-change notifications** — a citizen who filed a report has no signal
-  when it moves to `acknowledged`/`resolved` beyond re-checking the map. No
-  chat/DM is an explicit non-goal (§2), but a transactional e-mail here isn't
-  the same feature.
-- **Multiple photos per report** — F2.2 caps at one; useful for issues where
-  one angle doesn't tell the story (a pothole vs. a stretch of broken
-  sidewalk).
-- **Full WCAG audit** — N5 explicitly scoped this out of the MVP; worth doing
-  before a real public launch, not before.
+Not blocked by anything technical, and not scheduled. It happens when the
+project feels mature enough to be worth hosting, which is a call the author
+makes, not a milestone that unlocks.
 
-## 5. Explicit non-goals, revisited
+Three things are already known to be waiting when that day comes:
 
-§2's non-goals (chat/DM, election-day vote counting, groups/invitations,
-native app, multi-city) were right for an MVP. None are reopened by this
-roadmap — multi-city is the one worth watching if a second comune asks to
-adopt the platform, since the schema (single `Category` set, no tenancy) would
-need a real design pass, not a quick patch.
+- **Photos are broken on any deployment made today.**
+  `django.conf.urls.static.static()` is a no-op when `DEBUG` is false, so every
+  photo and avatar returns 404. See
+  [ADR-0003](./adr/0003-media-on-local-filesystem.md) — fixing it is entangled
+  with *how* media gets served, which is why it was not done blind.
+- **Uploads need somewhere durable.** Ephemeral disks on free PaaS tiers lose
+  `MEDIA_ROOT` on every redeploy.
+- **Rate limiting needs a shared cache.** DRF counts through the Django cache,
+  and the default `LocMemCache` is per process, so behind N workers the limits
+  multiply by N (`docs/deploy.md`).
+
+Also worth remembering: `VITE_API_BASE_URL` is read at **build time**, so the
+API hostname has to be decided before the SPA is built.
+
+## 5. Learn from real usage — after 4
+
+The product was built against assumptions. Before adding anything from item 3,
+watch what actual usage looks like: which categories get used, whether
+moderation keeps up, whether poll turnout means anything.
+
+## 6. Non-goals, revisited
+
+The spec's non-goals (§2) — chat and DMs, election-grade vote counting, groups
+and invitations, a native app, multi-city — were right for the first version and
+none are reopened here. **Multi-city** is the one worth watching: if a second
+comune ever asks, the schema (one `Category` set, no tenancy) needs a real
+design pass, not a patch.

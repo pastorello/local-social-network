@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-This repo is pivoting from a generic social network into a **civic engagement platform for small cities** (map-based issue reports + polls; pilot city: Gaeta). The authoritative spec is [docs/mvp-spec.md](docs/mvp-spec.md) — read it before making product decisions; scope changes start by editing the spec (§10, spec-first workflow). Every work session gets a log in `docs/ai-log/YYYY-MM-DD-topic.md` and commits reference it.
+This repo is pivoting from a generic social network into a **civic engagement platform for small cities** (map-based issue reports + polls; pilot city: Gaeta). The authoritative spec is [docs/mvp-spec.md](docs/mvp-spec.md) — read it before making product decisions; scope changes start by editing the spec (§10). Decisions that would be expensive to reverse go in [docs/adr/](docs/adr/README.md); measured debt goes in [docs/tech-debt.md](docs/tech-debt.md); planned work goes in [docs/roadmap.md](docs/roadmap.md).
 
-Milestone state: **the MVP is closed (2026-07-20) — M0 through M4 are all done**, per spec §11/§13. M4 delivered the Gaeta Partecipa rebrand, full Italian copy sweep, auth hardening, deploy prep (docs/deploy.md), and README/AI-log-index/LinkedIn docs. See `docs/ai-log/` for what happened in each session. The hosting decision + live demo URL (spec §6) and publishing the LinkedIn draft were **explicitly descoped from the MVP** (author decision, spec §13) — they're now **item 2** in `docs/roadmap.md`, the post-MVP scope doc, and were **parked on 2026-08-19** (no domain, no Python host, no public database — author decision). The **active workstream is item 1**: the technical-debt register in [docs/tech-debt.md](docs/tech-debt.md), audited twice on 2026-08-19 (measurement, then code-reading). Read it before proposing work — it carries four P0 security items that must land before the demo is unparked. The old `posts` and `notifications` apps were **removed in M2** (their patterns live on in `reports`); the tutorial `Question`/`Choice` polls were **replaced in M3** by the spec §7 `Poll`/`PollOption`/`Vote` schema.
+State: **the feature set in the spec is delivered and tested** (spec §11/§13) — M0 through M4, ending with the Gaeta Partecipa rebrand, the Italian copy sweep, auth hardening and deploy prep. A security and quality audit on 2026-08-19 produced [docs/tech-debt.md](docs/tech-debt.md); 13 of its 32 items are closed, plus all 10 documentation items — including every security finding and the whole CI story. **Read that register before proposing work.** "Delivered" is narrow: it means the spec is implemented, not that the product is ready for outside users — the design work that would make it publishable has not been done, and is item 2 of the roadmap. **Deployment is last and happens on the author's signal**, not as a milestone that unlocks; note that photos 404 on any deployment made today ([ADR-0003](docs/adr/0003-media-on-local-filesystem.md)). The old `posts` and `notifications` apps were **removed in M2** (their patterns live on in `reports`); the tutorial `Question`/`Choice` polls were **replaced in M3** by the spec §7 `Poll`/`PollOption`/`Vote` schema.
 
 Standing decisions (recorded in the spec and audit): no chat/DM; no email activation (signup creates active accounts); anonymous visitors get read access to map/reports/polls in M2, but the user directory and profile pages stay login-only; user e-mails are returned only to their owner via `/api/users/me/` and are never serialized elsewhere; UI copy is Italian (fully swept in M4), code/docs are English; the product brand is **Gaeta Partecipa** (M4) while repo/package names stay `local-social-network`.
 
@@ -119,7 +119,7 @@ things to know before editing it: the linters run **check-only** there, because
 e2e job runs no backend, since today's specs exercise the SPA shell only — a
 spec that talks to the API needs a service added.
 
-Definition of done for a feature (spec §9): spec section referenced, pytest + Vitest green, ruff + eslint clean, `npm run build` green, self-review notes in the PR/commit description, session log in `docs/ai-log/`, commits reference the log.
+Definition of done for a feature (spec §9): the spec section it implements is referenced, pytest + Vitest green, ruff + eslint clean, `npm run build` green. CI runs all of it on every push and pull request.
 
 ## External agent skills (agent-skills + impeccable)
 
@@ -151,9 +151,11 @@ meta-skill at every session start whose behaviours are phrased as
 commands above, this file is authoritative.
 
 **Where artifacts go.** agent-skills defaults to writing `tasks/plan.md` and
-`tasks/todo.md` at the repo root — **don't**. The spec is the only scope
-authority, post-MVP scope goes in [docs/roadmap.md](docs/roadmap.md), and
-per-session planning belongs in that session's `docs/ai-log/` entry.
+`tasks/todo.md` at the repo root — **don't**. `docs/mvp-spec.md` is the scope
+authority, planned work goes in [docs/roadmap.md](docs/roadmap.md), debt in
+[docs/tech-debt.md](docs/tech-debt.md), and expensive-to-reverse decisions in
+[docs/adr/](docs/adr/README.md). Per-task planning files are churn: this repo
+has no session logs, by decision (2026-08-20).
 
 **Definition of done** stays the project's own (spec §9): pytest + ruff + Vitest
 + eslint + `npm run build`. A skill's generic checklist does not replace it.
@@ -162,18 +164,26 @@ per-session planning belongs in that session's `docs/ai-log/` entry.
 (N4). Any copy a skill proposes for the SPA must be translated before it lands.
 
 **Scope guard.** `/impeccable audit` and agent-skills' `frontend-ui-engineering`
-both push for a full WCAG pass. N5 scopes that out of the MVP and the roadmap
-places it before a real public launch — treat those findings as advisory, not as
-work to start.
+both push for a full WCAG pass. N5 scoped that out of the delivered feature set;
+roadmap item 2 reopens it as an open question, not as scheduled work. Treat
+those findings as advisory until that question is answered.
+
+**Adopted from the pack:** `documentation-and-adrs` — its README structure
+(name, one-paragraph description, Quick Start, Commands, Architecture) and its
+ADR format and rules on when one is worth writing. See `docs/adr/README.md`.
 
 **Skills not to use here.** Enabling the pack loads all 24 skills, so the
 exclusions are rules rather than missing files:
 
-- `spec-driven-development` and `planning-and-task-breakdown` — this project's
-  spec system is `docs/mvp-spec.md` + `docs/roadmap.md` + `docs/ai-log/`. Two
-  overlapping spec systems produce inconsistent behaviour between sessions. If
-  the pack's version ever looks better, replace ours deliberately and record the
-  decision — do not run both. (Same call the author made in the
+- `spec-driven-development` and `planning-and-task-breakdown` — **evaluated
+  2026-08-20 and not adopted**, deliberately, as this file's own rule required.
+  The reason is worth keeping: the six areas of the pack's spec template are
+  Objective, Commands, Project Structure, Code Style, Testing Strategy and
+  Boundaries — five of which are *this file*. It overlaps CLAUDE.md, not
+  `docs/mvp-spec.md`, and it has no equivalent of a product spec (F1/F2/F3,
+  non-goals). It also mandates `tasks/plan.md` + `tasks/todo.md` per task. So:
+  `docs/mvp-spec.md` stays the product spec, CLAUDE.md stays the working
+  agreement. Do not run both systems. (Same call the author made in the
   `next-cmp-settings` project, for the same reason.)
 - `browser-testing-with-devtools` — requires the `chrome-devtools` MCP server,
   which this setup does not have; use the built-in browser preview instead.

@@ -67,7 +67,7 @@ A civic engagement platform for small cities (pilot: Gaeta, LT). Citizens report
 ## 5. Non-functional requirements
 
 - **N1 — Type safety:** frontend in **TypeScript `strict: true`**; no `any` in application code (lint-enforced).
-- **N2 — Testing:** unit tests on business logic and API integration tests; minimum coverage gates defined in the quality plan (§9).
+- **N2 — Testing:** unit tests on business logic and API integration tests. No numeric coverage gate — see §9 for what is actually required.
 - **N3 — Responsive:** usable on mobile (map interactions included); desktop-first layout is acceptable.
 - **N4 — Language:** UI copy in Italian; codebase and docs in English.
 - **N5 — Accessibility:** semantic HTML, keyboard-accessible forms, alt text on images. Full WCAG audit is out of scope.
@@ -79,7 +79,7 @@ A civic engagement platform for small cities (pilot: Gaeta, LT). Citizens report
 |---|---|---|
 | Frontend | **Vue 3 (Composition API) + TypeScript strict** | ≈⅔ of SFCs already TS; the 2 Pinia stores + 9 script blocks are converted in M0 (A6) |
 | State | Pinia | Confirmed (A3); stores become typed TS in M0 |
-| Map | **Leaflet + OpenStreetMap tiles** | Already integrated (`CityMap.vue` on the home view, centered on Gaeta) |
+| Map | **Leaflet + OpenStreetMap tiles** | `components/maps/ReportsMap.vue` + markercluster, centered on Gaeta (the pre-MVP `CityMap.vue` was replaced in M2) |
 | Backend | **Django + Django REST Framework** | Existing |
 | DB | PostgreSQL from M0 (Docker Compose) | SQLite fallback for bare-metal dev; plain lat/lng columns; PostGIS is overkill for MVP |
 | Auth | **JWT via djangorestframework-simplejwt (existing — keep)** | Decided after audit (A2); hardened in M4: 60-min access, 30-day rotating refresh + blacklist, transparent 401-refresh in the SPA |
@@ -90,7 +90,7 @@ A civic engagement platform for small cities (pilot: Gaeta, LT). Citizens report
 ## 7. Data model (draft)
 
 ```
-User          id, email, password, display_name, avatar?, role, created_at
+User          id, email, password, name, avatar?, role, date_joined
 Category      id, name, color, is_active
 IssueReport   id, author→User, category→Category, title, description,
               lat, lng, photo?, status, created_at, updated_at
@@ -108,6 +108,8 @@ The existing URL prefixes are canonical (decision 2026-07-16 — smallest change
 # Existing (keep)
 POST   /api/users/signup/            POST   /api/users/login/        POST /api/users/refresh/
 GET    /api/users/me/
+POST   /api/users/editprofile/       POST   /api/users/editpassword/
+GET    /api/users/list/?q=           GET    /api/users/:id/          (both auth-only, F1.4)
 
 # Implemented in M2
 GET    /api/categories/
@@ -125,37 +127,37 @@ PATCH  /api/polls/:id/close/        (admin)
 
 Conventions: JSON everywhere, pagination on list endpoints, errors as `{ "detail": string, "fields"?: {...} }`.
 
-Migration tasks recorded by the audit: existing list endpoints implemented as `POST .../list/` move to `GET` + query params when their area is touched (users → done in M1, polls → done in M3); ad-hoc error shapes converged to `{detail, fields}` in M2 (global DRF exception handler + account endpoints on real 4xx codes).
+Migration tasks recorded by the audit: existing list endpoints implemented as `POST .../list/` move to `GET` + query params when their area is touched (users → done in M1, keeping the `/list/` path segment; polls → done in M3); ad-hoc error shapes converged to `{detail, fields}` in M2 (global DRF exception handler + account endpoints on real 4xx codes).
 
 ## 9. Quality plan
 
-- **Frontend:** Vitest + Vue Testing Library. Every store/composable with logic has unit tests; each view has at least one rendering test. Target: meaningful coverage of logic, not a vanity %.
+- **Frontend:** Vitest + Vue Test Utils. Every store/composable with logic has unit tests; each view has at least one rendering test. Cypress covers end-to-end flows against a production build. Target: meaningful coverage of logic, not a vanity %.
 - **Backend:** pytest + DRF test client. Every endpoint: happy path + auth/permission failure + validation failure.
-- **Linting:** ESLint (with `@typescript-eslint` strict rules) + Prettier; ruff for Python.
-- **Definition of done** for a feature: spec section referenced, tests green, lint clean, AI session logged (§10), self-review notes in the PR/commit description.
+- **Linting:** oxlint then ESLint (`vueTsConfigs.recommended` + `eslint-plugin-vue` essential), plus Prettier; ruff for Python. CI runs both linters check-only — `npm run lint` applies `--fix`.
+- **Definition of done** for a feature: the spec section it implements is referenced, pytest + Vitest green, ruff + ESLint clean, `npm run build` green. All of it runs in CI on every push and pull request.
 
-## 10. AI-assisted workflow (how this project is built)
+## 10. Working agreement
 
-This project doubles as a documented case study of structured AI-assisted development:
-
-1. **Spec first** — this document precedes implementation; changes to scope require editing the spec.
-2. **Session cycle** — each work session: a planning prompt → implementation with Claude Code → human code review with written notes (what the AI got wrong, what was changed and why).
-3. **Traceability** — session logs live in `docs/ai-log/YYYY-MM-DD-topic.md`; commits reference the session file.
-4. **Human ownership** — every merge is reviewed and approved by the author; the AI proposes, the author decides.
+1. **Spec first for product scope.** This document decides what the product
+   does. Adding or cutting a feature starts by editing it, not by writing code.
+2. **Decisions that are expensive to reverse** go in `docs/adr/`; known debt goes
+   in `docs/tech-debt.md`; conventions and gotchas go in `CLAUDE.md`.
+3. **Every merge is reviewed by the author.** Most of the code here is written
+   with Claude Code; that changes who types it, not who is responsible for it.
 
 ## 11. Milestones
 
 | # | Milestone | Content | Exit criteria |
 |---|---|---|---|
-| M0 | **Recovery & audit** | Project runs locally (Docker); AI-generated tech-debt report; dead code (friend-request remnants, broken polls views) removed | `docker compose up` works; audit doc committed; `npm run build`, `npm run lint`, `npm run test:unit`, `python manage.py test` all exit 0 |
+| M0 | **Recovery & audit** | Project runs locally (Docker); AI-generated tech-debt report; dead code (friend-request remnants, broken polls views) removed | `docker compose up` works; audit committed; `npm run build`, `npm run lint`, `npm run test:unit`, `python -m pytest` all exit 0 |
 | M1 | **Auth & roles** | Consolidated login, roles, profile; auth tests | F1 complete + tests green |
 | M2 | **Map & reports** | Map, report CRUD, filters, upvotes, moderation | F2 complete + tests green |
 | M3 | **Polls** | Poll creation, voting, results | F3 complete + tests green |
-| M4 | **Showcase** | Public demo, polished README, AI-log index, LinkedIn write-up | Docs complete ✅. Demo URL descoped from the MVP — decision 2026-07-20, §13 |
+| M4 | **Polish** | Rebrand to Gaeta Partecipa, Italian copy sweep, auth hardening, deploy notes, README | Complete ✅. Deployment was never part of it — see §13 |
 
 ## 12. Assumptions — RESOLVED
 
-Validated in the M0 audit ([docs/ai-log/2026-07-16-audit.md](./ai-log/2026-07-16-audit.md), incl. a runtime smoke test):
+Validated in the M0 audit (2026-07-16, including a runtime smoke test):
 
 - **A1** Login works end-to-end (runtime-verified). Registration worked but was gated on a console-only activation email (**dropped by decision**) and had a broken success redirect; profile editing was broken — both fixed in M0.
 - **A2** Auth is **JWT via djangorestframework-simplejwt** — kept as-is; hardening deferred to M4.
@@ -164,18 +166,17 @@ Validated in the M0 audit ([docs/ai-log/2026-07-16-audit.md](./ai-log/2026-07-16
 - **A5** Dev DB was SQLite with clean, in-sync migrations; **Postgres from M0** via Docker Compose.
 - **A6** Real TS coverage is **≈⅔ of SFCs**, not ~10% (GitHub language stats count `.vue` files as Vue); the remaining 2 stores + 9 script blocks are converted in M0.
 
-## 13. MVP closure (2026-07-20)
+## 13. Delivery status
 
-All five milestones (§11) are done: F1–F3 implemented and tested, N1–N6 met,
-and M4's documentation deliverables (README, AI-log index, deploy guide,
-LinkedIn draft) are in place. Backend: 76 pytest tests green, ruff clean.
-Frontend: 32 Vitest tests green, eslint clean, `npm run build` green.
+**The feature set specified above is delivered** (2026-07-20). All five
+milestones in §11 are done: F1–F3 implemented and tested, N1–N6 met. A security
+and quality audit followed on 2026-08-19 and its findings are tracked in
+[tech-debt.md](./tech-debt.md).
 
-**Decision:** M4's original exit criterion "Demo URL live" is **descoped from
-the MVP** — the author's call, made explicitly rather than left ambiguous.
-Choosing a hosting platform and running a real deploy is an infrastructure
-decision with cost/ops implications that shouldn't gate calling the MVP done;
-`docs/deploy.md` already makes the app deployable anywhere without further
-code changes. The MVP is closed as **code-complete**; the live demo and the
-LinkedIn publish move to the post-MVP roadmap ([docs/roadmap.md](./roadmap.md))
-as the first item, not a loose end.
+Read "delivered" narrowly: it means *this document* is implemented. It does not
+mean the product is ready for people outside the project to use. Hosting was
+never part of it — `docs/deploy.md` makes the app deployable, but choosing where
+and paying for it is a decision the author takes when the product is worth it,
+and the design work that would make it worth it has not been done yet. That gap
+is item 2 of the [roadmap](./roadmap.md), and it is deliberately named there
+rather than hidden behind "MVP complete".

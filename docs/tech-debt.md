@@ -707,10 +707,12 @@ New:
 
 ## Documentation debt
 
-The docs are unusually accurate — test counts (76/32) are mutually consistent
-across five files, every relative link and anchor resolves, the ai-log index
-matches the files on disk, and the whole architecture section of `CLAUDE.md`
-was verified line by line. These are the exceptions.
+Audited 2026-08-19. Most of this table was **fixed on 2026-08-20**, when the
+documentation was reset around the app rather than around a case study: the
+session logs and the LinkedIn draft were deleted, the README was rewritten to
+the standard GitHub shape, and the spec's stale claims were corrected. The rows
+below are kept because the *evidence* is still useful — each one records a way
+docs and code drifted apart, which is the failure mode to watch for next time.
 
 **Closed 2026-08-19:** DOC-03 (with TD-11 — compose now forwards the variables
 its comment promised), DOC-01, DOC-02, **DOC-04**
@@ -720,16 +722,16 @@ The rest of the table is open.
 
 | # | Where | The problem | Fix |
 |---|---|---|---|
-| DOC-01 | `CLAUDE.md:9,145` | Still says the demo is roadmap item #1 and points at `shipping-and-launch`. `roadmap.md:12,21` made it item **2, parked**, and the tech-debt work item 1. The skills section landed in `44ebc7d`, the parking in `78c3d97`; CLAUDE.md was never re-synced. | Point at TD-01 / `ci-cd-and-automation` as the active workstream; demo is item 2, parked. |
-| DOC-02 | `CLAUDE.md:157`, `tech-debt.md` TD-09 | Repeats the `PollCard.vue` contrast finding as "real and still open". ✔ It is a false positive (see Corrections). | Restate TD-09 as the `SiteTitle` gradient alone; note the ternary false positive so it is not re-reported. |
-| DOC-03 ✅ | `docker-compose.yml:31` — **fixed 2026-08-19 with TD-11** | The comment says "set it in .env for anything beyond local development" — but ✔ the `backend` service `environment` block never forwards `DJANGO_SECRET_KEY` (nor `DJANGO_SSL_REDIRECT`). Following the instruction exactly still yields the committed insecure fallback. A comment that lies is worse than none. | Either forward both vars, or say plainly they are deployment-only and not wired into the dev stack. Ties to TD-11. |
-| DOC-04 | `CLAUDE.md:120` | Claims `.claude/settings.local.json` "is gitignored, so the marketplace reference never reaches the public repo". ✔ It is ignored **only** by the machine-level `~/.config/git/ignore`; this repo's `.gitignore` has no `.claude/` rule. The guarantee holds on one Mac. | Add the rule to `.gitignore`, then the sentence becomes true. |
-| DOC-05 | `mvp-spec.md:108-110` | §8 lists four account endpoints; `account/urls.py:11-14` routes **four more** that are live and auth-only: `POST /editprofile/`, `POST /editpassword/`, `GET /list/?q=`, `GET /:id/`. Nothing in the doc set tells an agent they exist. | Add them to the "Existing (keep)" block; amend `:128` to note the users list moved to `GET` but kept the `/list/` path. |
-| DOC-06 | `README.md:58-61`, `CLAUDE.md:60-70` | The quality-gate block cannot be run as written — line 2 `cd frontend` executes from inside `backend/`. It also omits the venv activation, and `"test:unit": "vitest"` is watch mode in a TTY, so the `&&` chain never reaches `lint`/`build`. Compounded by TD-10: the documented pytest invocation does not run at all. | Subshells `(cd backend && …)`, add the venv step, and either add a `test:unit:run` script or document `-- run`. |
-| DOC-07 | `README.md:37`, `mvp-spec.md:132` | "Vue Testing Library" — the dependency is `@vue/test-utils` and every spec imports `mount` from it. No `@testing-library/*` anywhere. | "Vue Test Utils". |
-| DOC-08 | `CLAUDE.md:37` | Says `Category` lives in `Report.ts`; it is in its own `Category.ts`, imported by `Report.ts:1`. | `Report`/`ReportPin`/`ReportStatus` in `Report.ts`, `Category` in `Category.ts`. |
-| DOC-09 | `mvp-spec.md` | Four stale claims: `:82` names `CityMap.vue` (deleted in M2 — it is `ReportsMap.vue`); `:150` names `python manage.py test` as an M0 exit gate (runs zero tests); `:70` promises "minimum coverage gates defined in §9" that `:132` explicitly declines to define and no tool computes; `:134` describes `@typescript-eslint` **strict** rules when `eslint.config.ts:23` uses `recommended` and never mentions that oxlint runs first. `:93` also names `display_name`/`created_at` where the model has `name`/`date_joined`. | Five line edits. |
-| DOC-10 | `.env.example`, `frontend/.env.example` | `VITE_API_BASE_URL` is read by `docker-compose.yml:43` from the root `.env`, but the root `.env.example` — which claims at line 1 to cover what compose uses — never lists it. Otherwise env-var documentation is complete in both directions. | Add a commented entry noting the compose service consumes it. |
+| DOC-01 ✅ | `CLAUDE.md:9,145` | Still says the demo is roadmap item #1 and points at `shipping-and-launch`. `roadmap.md:12,21` made it item **2, parked**, and the tech-debt work item 1. The skills section landed in `44ebc7d`, the parking in `78c3d97`; CLAUDE.md was never re-synced. | Point at TD-01 / `ci-cd-and-automation` as the active workstream; demo is item 2, parked. |
+| DOC-02 ✅ | `CLAUDE.md:157`, `tech-debt.md` TD-09 | Repeats the `PollCard.vue` contrast finding as "real and still open". ✔ It is a false positive (see Corrections). | Restate TD-09 as the `SiteTitle` gradient alone; note the ternary false positive so it is not re-reported. |
+| DOC-03 ✅ | `docker-compose.yml:31` | The comment says "set it in .env for anything beyond local development" — but ✔ the `backend` service `environment` block never forwards `DJANGO_SECRET_KEY` (nor `DJANGO_SSL_REDIRECT`). Following the instruction exactly still yields the committed insecure fallback. A comment that lies is worse than none. | Either forward both vars, or say plainly they are deployment-only and not wired into the dev stack. Ties to TD-11. |
+| DOC-04 ✅ | `CLAUDE.md:120` | Claims `.claude/settings.local.json` "is gitignored, so the marketplace reference never reaches the public repo". ✔ It is ignored **only** by the machine-level `~/.config/git/ignore`; this repo's `.gitignore` has no `.claude/` rule. The guarantee holds on one Mac. | Add the rule to `.gitignore`, then the sentence becomes true. |
+| DOC-05 ✅ | `mvp-spec.md:108-110` | §8 lists four account endpoints; `account/urls.py:11-14` routes **four more** that are live and auth-only: `POST /editprofile/`, `POST /editpassword/`, `GET /list/?q=`, `GET /:id/`. Nothing in the doc set tells an agent they exist. | Add them to the "Existing (keep)" block; amend `:128` to note the users list moved to `GET` but kept the `/list/` path. |
+| DOC-06 ✅ | `README.md:58-61`, `CLAUDE.md:60-70` | The quality-gate block cannot be run as written — line 2 `cd frontend` executes from inside `backend/`. It also omits the venv activation, and `"test:unit": "vitest"` is watch mode in a TTY, so the `&&` chain never reaches `lint`/`build`. Compounded by TD-10: the documented pytest invocation does not run at all. | Subshells `(cd backend && …)`, add the venv step, and either add a `test:unit:run` script or document `-- run`. |
+| DOC-07 ✅ | `README.md:37`, `mvp-spec.md:132` | "Vue Testing Library" — the dependency is `@vue/test-utils` and every spec imports `mount` from it. No `@testing-library/*` anywhere. | "Vue Test Utils". |
+| DOC-08 ✅ | `CLAUDE.md:37` | Says `Category` lives in `Report.ts`; it is in its own `Category.ts`, imported by `Report.ts:1`. | `Report`/`ReportPin`/`ReportStatus` in `Report.ts`, `Category` in `Category.ts`. |
+| DOC-09 ✅ | `mvp-spec.md` | Four stale claims: `:82` names `CityMap.vue` (deleted in M2 — it is `ReportsMap.vue`); `:150` names `python manage.py test` as an M0 exit gate (runs zero tests); `:70` promises "minimum coverage gates defined in §9" that `:132` explicitly declines to define and no tool computes; `:134` describes `@typescript-eslint` **strict** rules when `eslint.config.ts:23` uses `recommended` and never mentions that oxlint runs first. `:93` also names `display_name`/`created_at` where the model has `name`/`date_joined`. | Five line edits. |
+| DOC-10 ✅ | `.env.example`, `frontend/.env.example` | `VITE_API_BASE_URL` is read by `docker-compose.yml:43` from the root `.env`, but the root `.env.example` — which claims at line 1 to cover what compose uses — never lists it. Otherwise env-var documentation is complete in both directions. | Add a commented entry noting the compose service consumes it. |
 
 ---
 
