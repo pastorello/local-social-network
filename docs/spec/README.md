@@ -1,4 +1,4 @@
-# Gaeta Partecipa — Product spec (v2: the cultural map)
+# Vivere Gaeta — Product spec (v2: the cultural map)
 
 > **This is the product authority** (2026-08-21), superseding
 > [../mvp-spec.md](../mvp-spec.md). v1 (map reports + polls) was delivered and
@@ -14,7 +14,7 @@
 
 ## What this becomes
 
-Gaeta Partecipa recenters from *"help fix what is broken in my city"* to
+**Vivere Gaeta** (renamed from *Gaeta Partecipa*, 2026-08-21) recenters from *"help fix what is broken in my city"* to
 *"this is my city — here is what we are."* A curated cultural map-archive of
 Gaeta: feasts and their processions, churches, recipes and where to buy them,
 historical figures, the dialect. Written by a small circle of trusted
@@ -28,6 +28,17 @@ feature count.
 The map is the heart: opening the app, logged in or not, shows a large map of
 Gaeta with a minimal menu. But **the map is the index of what has a place, not
 the container of everything** — recipes and polls live without it.
+
+## The name
+
+The product is **Vivere Gaeta**. It was *Gaeta Partecipa* through v1 and was
+renamed on 2026-08-21, with this spec: "Partecipa" is an imperative aimed at a
+citizen who must *do* something — report, vote — which is the v1 product.
+"Vivere" describes what this one is: an archive that lets you live the city,
+and that speaks equally to someone here for a week.
+
+The repository and package names stay `local-social-network` (unchanged since
+v1 — renaming them buys nothing and breaks links).
 
 ## The role model
 

@@ -3,7 +3,9 @@
 > **Superseded as product authority on 2026-08-21 by [spec/README.md](./spec/README.md)**
 > (the v2 pivot: cultural map-archive, collaborator-only accounts). This
 > document remains the record of the delivered v1 — everything in it was
-> built, tested and remains in the codebase.
+> built, tested and remains in the codebase. The product was called *Gaeta
+> Partecipa* at the time; it is **Vivere Gaeta** from v2 on. Mentions of the old
+> name below are left as written — this is a record of what happened.
 
 
 > **Status:** v0.3 — **MVP closed** (code-complete, all milestones done); see §13

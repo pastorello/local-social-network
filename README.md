@@ -1,4 +1,4 @@
-# Gaeta Partecipa
+# Vivere Gaeta
 
 A cultural map of Gaeta (LT), in the making: the feasts and their processional
 routes, the churches, the recipes and where to buy them, the historical

@@ -64,7 +64,7 @@ const submitForm = () => {
         <MainTitle>Registrati</MainTitle>
 
         <p class="mb-6 text-gray-500">
-          Unisciti a Gaeta Partecipa e contribuisci a migliorare la tua città!
+          Unisciti a Vivere Gaeta e contribuisci a raccontare la tua città!
         </p>
 
         <p class="font-bold">
