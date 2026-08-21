@@ -1,5 +1,11 @@
 # Local Social Network — MVP Specification
 
+> **Superseded as product authority on 2026-08-21 by [spec/README.md](./spec/README.md)**
+> (the v2 pivot: cultural map-archive, collaborator-only accounts). This
+> document remains the record of the delivered v1 — everything in it was
+> built, tested and remains in the codebase.
+
+
 > **Status:** v0.3 — **MVP closed** (code-complete, all milestones done); see §13
 > **Author:** Luca Pastorello (spec developed with AI assistance, reviewed and approved by the author)
 > **Last update:** 2026-07-20

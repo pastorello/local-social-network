@@ -1,97 +1,67 @@
 # Roadmap
 
-What is planned and in what order. Ordered by what is **active**, not by what is
-most interesting. Items here are candidates until they are picked up; when one
-is, it gets a scope note in [mvp-spec.md](./mvp-spec.md) if it changes what the
-product does.
+What is planned and in what order. Ordered by what is **active**. The product
+authority is [spec (v2)](./spec/README.md) (v2, 2026-08-21); this file only sequences
+the work.
 
-The feature set in the spec is delivered and tested. That is not the same as
-being ready for other people to use, and this document is mostly about the
-distance between those two things.
+The open question that used to sit here — *"decide what publishable means"* —
+was answered on 2026-08-21 by the v2 spec: the product recenters as a curated
+cultural map-archive of Gaeta, written by a small circle of approved
+collaborators, read by everyone, ultimately aimed at tourists. The old item 2
+is therefore gone; its accessibility sub-question survives below.
 
-## 1. Pay down the technical debt — **active**
+## 1. Build v2 — **active**
 
-The measured register is [tech-debt.md](./tech-debt.md), audited twice on
-2026-08-19: first by measurement, then by reading the source. Twenty-seven of its 32 items are
-closed, plus all 10 documentation items. What is left is three entries: the
-double Leaflet bundle (TD-02, needs browser verification), broader end-to-end
-coverage (TD-04, deliberately deferred until the flows stop moving), and
-dependency drift (TD-06 — axios, the one entry with a security
-profile, was updated on 2026-08-20; what is left is ordinary maintenance).
+The spec's build order ([spec/README.md](./spec/README.md#suggested-build-order)),
+one phase per PR, each proven before the next:
 
-None of it blocks anything else. It is the default work when there is no larger
-goal in flight.
+1. **C1 — accounts**: "Collabora con noi" request + CAPTCHA, admin approval,
+   invite e-mail with single-use setup link, password reset. Reverses v1's
+   open-signup decision; brings e-mail back as real configuration. The
+   **steering capability** lands here as an admin-set flag (spec
+   [politics.md](./spec/politics.md)); its tooling does not.
+2. **C2 — content core + feste end-to-end**: sanitized rich text (requires
+   the ADR-0001 revision *before* the first card renders), images,
+   translations plumbing, a procession route on the map, a published card
+   readable anonymously. The richest type first, to prove the core.
+3. **C3 — the remaining thin type apps**: chiese, ricette, personaggi,
+   dialetto — each a small diff over the proven core (ADR-0004).
+4. **C4 — translations** authoring and the reader's language switch.
+5. **C5 — overlays**: quartieri + seggi polygons (**seggi confidential /
+   steering-only by default**), then georeferenced historical rasters.
 
-## 2. Decide what "publishable" means
+## 2. Residual technical debt — fold into item 1
 
-**The gap this roadmap exists for.** The spec describes an MVP feature set, and
-that feature set works. It does not describe a product someone else could adopt,
-and that design work has not been done. It has to happen before hosting is worth
-paying for.
+Three entries remain in [tech-debt.md](./tech-debt.md), and the v2 work
+changes their weight:
 
-Open questions, none of them answered yet:
+- **TD-02** (double Leaflet bundle) — *graduates*: the map is about to gain
+  layers, routes and raster overlays, so pay it early in phase C5 work, with
+  the browser-verification session it always needed.
+- **TD-04** (e2e coverage) — still deferred, now with a date attached: the
+  flows to cover are the v2 flows, so write them per phase as each lands, not
+  retroactively for screens about to change.
+- **TD-06** (remaining dependency drift) — ordinary maintenance; axios (the
+  security-relevant half) was done 2026-08-20.
 
-- **Who is the first real user, and how do they arrive?** An admin at a comune,
-  or citizens first? The product currently assumes an admin already exists and
-  was promoted through the Django admin.
-- **What does an empty instance look like?** Today a fresh deployment is an
-  empty map. There is no onboarding, no seed content, no explanation.
-- **What is the moderation load?** `rejected` exists as a status but nothing
-  notifies a citizen that their report was rejected, or why.
-- **Accessibility.** Spec N5 scoped a WCAG pass out of the MVP. A public civic
-  service that some citizens cannot use is a different kind of failure from a
-  missing feature, and this is the natural point to reconsider it.
-- **What is the smallest thing worth putting in front of a real person?** Not
-  necessarily everything below.
+## 3. Accessibility — decide during C2, not after
 
-## 3. Candidate features — unordered, unvalidated
+v1 scoped WCAG out (N5). A tourist-facing public site raises the stakes: this
+is now a real audience of strangers on unknown devices. The cheap version —
+semantic markup, contrast, alt text as the card system is *built* — costs
+little in-flight and a rewrite later. Decide the bar when the card templates
+are designed, and record it.
 
-Written against assumed requirements, not observed ones. Expect this list to be
-wrong until item 2 is answered.
+## 4. Deploy — **last, on the author's signal** (unchanged)
 
-- **Admin analytics** — reports per category and status over time, poll turnout.
-  An admin currently sees a flat list.
-- **Category management UI** — categories are Django-admin-only (F2.2). A
-  citizen-facing admin panel removes the last "log into `/admin/`" step.
-- **Status-change notifications** — someone who filed a report has no signal
-  when it moves to `acknowledged` or `resolved` short of re-checking the map. No
-  chat or DM is an explicit non-goal (§2); a transactional e-mail is not the
-  same feature.
-- **More than one photo per report** — F2.2 caps it at one. A pothole needs one
-  angle; a stretch of broken pavement does not.
+Everything recorded before still holds: media serving must be designed first
+([ADR-0003](./adr/0003-media-on-local-filesystem.md) — photos 404 on any
+deploy made today), uploads need a durable disk, rate limits need a shared
+cache, `VITE_API_BASE_URL` is baked at build time. New since v2: **SMTP** —
+the invite and reset e-mails need a real sender (spec §11.3).
 
-## 4. Deploy — **last, and on the author's signal**
+## 5. Explicitly not planned
 
-Not blocked by anything technical, and not scheduled. It happens when the
-project feels mature enough to be worth hosting, which is a call the author
-makes, not a milestone that unlocks.
-
-Three things are already known to be waiting when that day comes:
-
-- **Photos are broken on any deployment made today.**
-  `django.conf.urls.static.static()` is a no-op when `DEBUG` is false, so every
-  photo and avatar returns 404. See
-  [ADR-0003](./adr/0003-media-on-local-filesystem.md) — fixing it is entangled
-  with *how* media gets served, which is why it was not done blind.
-- **Uploads need somewhere durable.** Ephemeral disks on free PaaS tiers lose
-  `MEDIA_ROOT` on every redeploy.
-- **Rate limiting needs a shared cache.** DRF counts through the Django cache,
-  and the default `LocMemCache` is per process, so behind N workers the limits
-  multiply by N (`docs/deploy.md`).
-
-Also worth remembering: `VITE_API_BASE_URL` is read at **build time**, so the
-API hostname has to be decided before the SPA is built.
-
-## 5. Learn from real usage — after 4
-
-The product was built against assumptions. Before adding anything from item 3,
-watch what actual usage looks like: which categories get used, whether
-moderation keeps up, whether poll turnout means anything.
-
-## 6. Non-goals, revisited
-
-The spec's non-goals (§2) — chat and DMs, election-grade vote counting, groups
-and invitations, a native app, multi-city — were right for the first version and
-none are reopened here. **Multi-city** is the one worth watching: if a second
-comune ever asks, the schema (one `Category` set, no tenancy) needs a real
-design pass, not a patch.
+The spec's non-goals (§10): mass signup, reader comments, notifications,
+machine translation, multilingual UI (until translated content exists),
+election-operations tooling, new work on polls.

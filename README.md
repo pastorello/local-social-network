@@ -1,9 +1,15 @@
 # Gaeta Partecipa
 
-A civic engagement platform for small cities. Citizens report local problems as
-pins on a shared map, upvote each other's reports, and vote in polls opened by
-the city administration — one place for problems and opinions, instead of a
-comune's Facebook comments. Built around a pilot city, Gaeta (LT).
+A cultural map of Gaeta (LT), in the making: the feasts and their processional
+routes, the churches, the recipes and where to buy them, the historical
+figures, the dialect — rich-text cards written by a small circle of approved
+collaborators, drawn on a shared map, readable by anyone. Built for the people
+who love this city, and ultimately for the tourists who visit it.
+
+It grew out of (and still contains) a civic-reporting platform: geolocated
+issue reports with a moderated status workflow, and polls. Those remain — the
+reports as one of the map's layers, now collaborator-authored. The product
+direction is [docs/spec/](./docs/spec/README.md) (v2, 2026-08-21).
 
 > The repository is still named `local-social-network`: the project started as a
 > generic social-network tutorial app and was rebuilt into this. The UI is in
@@ -92,7 +98,8 @@ in [docs/adr/](./docs/adr/README.md).
 
 | Document | What it holds |
 |---|---|
-| [docs/mvp-spec.md](./docs/mvp-spec.md) | Product spec — functional requirements, non-goals, data model |
+| [docs/spec/](./docs/spec/README.md) | **Product spec (v2)** — the cultural map: content types, roles, non-goals |
+| [docs/mvp-spec.md](./docs/mvp-spec.md) | v1 spec (delivered) — map reports + polls; historical record |
 | [docs/roadmap.md](./docs/roadmap.md) | What is planned and in what order |
 | [docs/tech-debt.md](./docs/tech-debt.md) | Measured debt register, with what is fixed and what is not |
 | [docs/adr/](./docs/adr/README.md) | Architecture decision records |
@@ -101,8 +108,8 @@ in [docs/adr/](./docs/adr/README.md).
 
 ## Status
 
-The feature set specified in `docs/mvp-spec.md` is implemented and tested; the
-security and test-infrastructure debt found in the 2026-08-19 audit is largely
-paid down. It has **not** been deployed anywhere, and it is not yet designed as
-a product someone else could adopt — see the roadmap for what stands between
-here and a public instance.
+The v1 feature set (`docs/mvp-spec.md` — map reports + polls) is implemented
+and tested, and the 2026-08-19 audit's debt is paid down to three
+maintenance-grade items. The v2 pivot to a cultural map-archive is **specified
+but not yet built** — `docs/spec/` is the plan, `docs/roadmap.md` the order.
+Nothing is deployed; deployment is last, on the author's signal.
