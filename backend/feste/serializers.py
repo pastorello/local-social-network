@@ -1,21 +1,11 @@
 from rest_framework import serializers
 
 from account.serializers import UserSerializer
-from content.models import CardImage, MapFeature
+from content.models import MapFeature
+from content.serializers import CardImageSerializer
 from content.sanitize import sanitize_html
 
 from .models import Feste
-
-
-class CardImageSerializer(serializers.ModelSerializer):
-    imageURL = serializers.SerializerMethodField()
-
-    def get_imageURL(self, obj):
-        return obj.get_image_url()
-
-    class Meta:
-        model = CardImage
-        fields = ('id', 'imageURL', 'position', 'caption')
 
 
 def _map_point(feature):

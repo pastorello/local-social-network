@@ -31,8 +31,14 @@ one phase per PR, each proven before the next:
    anonymously. The richest type first, to prove the core. **Did not** include
    an accessibility-bar decision at the time — that followed two days later,
    see item 3 below.
-3. **C3 — the remaining thin type apps**: chiese, ricette, personaggi,
-   dialetto — each a small diff over the proven core (ADR-0004).
+3. **C3 — the remaining thin type apps — delivered (2026-08-22)**: chiese,
+   ricette, personaggi, dialetto, each a small diff over the proven core
+   (ADR-0004). Extracted `content/api_helpers.py`/`content/serializers.py`
+   (shared image/point-pin/permission logic) once a second type app needed
+   what feste had inlined, and one generic config-driven frontend
+   `TypeForm`/`TypeListView`/`TypeDetailView`/`TypeCreateView` set instead of
+   four more `Feste*.vue` copies — both extend the "days not weeks" bar to
+   the frontend, not just the backend.
 4. **C4 — translations** authoring and the reader's language switch.
 5. **C5 — overlays**: quartieri + seggi polygons (**seggi confidential /
    steering-only by default**), then georeferenced historical rasters.

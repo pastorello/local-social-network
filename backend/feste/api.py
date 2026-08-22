@@ -1,16 +1,21 @@
 import json
 
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.exceptions import NotAuthenticated, PermissionDenied, ValidationError
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from django.db import transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 
 from account.models import User
-from common.images import ImageRejected, validate_image
 from common.pagination import StandardPagination
-from content.models import Card, CardImage, MapFeature
+from content.api_helpers import (
+    require_authenticated,
+    require_author_or_admin,
+    save_images,
+    remove_images,
+)
+from content.models import Card, MapFeature
 
 from .models import Feste
 from .serializers import FesteReadSerializer, FesteWriteSerializer, RoutePointSerializer
@@ -22,17 +27,6 @@ def _base_queryset():
     return Feste.objects.select_related('card', 'card__author').prefetch_related(
         'card__images', 'card__map_features'
     )
-
-
-def _require_authenticated(request):
-    if not request.user.is_authenticated:
-        raise NotAuthenticated()
-
-
-def _require_author_or_admin(request, feste):
-    _require_authenticated(request)
-    if feste.card.author_id != request.user.id and request.user.role != User.ADMIN:
-        raise PermissionDenied('Puoi modificare solo le tue schede.')
 
 
 def _parse_route(raw):
@@ -55,28 +49,6 @@ def _parse_route(raw):
     return serializer.validated_data
 
 
-def _save_images(card, files):
-    if not files:
-        return
-    next_position = card.images.count()
-    for offset, upload in enumerate(files):
-        try:
-            cleaned = validate_image(upload)
-        except ImageRejected as exc:
-            raise ValidationError({'images': [str(exc)]}) from exc
-        CardImage.objects.create(card=card, image=cleaned, position=next_position + offset)
-
-
-def _remove_images(card, raw_ids):
-    if not raw_ids:
-        return
-    try:
-        ids = json.loads(raw_ids)
-    except (TypeError, ValueError):
-        raise ValidationError({'remove_image_ids': ['Valore non valido.']}) from None
-    card.images.filter(id__in=ids).delete()
-
-
 def _replace_route(card, points):
     if points is None:
         return
@@ -91,7 +63,7 @@ def _replace_route(card, points):
 @permission_classes([])
 def feste_list(request):
     if request.method == 'POST':
-        _require_authenticated(request)
+        require_authenticated(request)
 
         write_serializer = FesteWriteSerializer(data=request.data)
         write_serializer.is_valid(raise_exception=True)
@@ -106,7 +78,7 @@ def feste_list(request):
             feste = Feste.objects.create(
                 card=card, recurrence=data['recurrence'], programme=data['programme'],
             )
-            _save_images(card, request.FILES.getlist('images'))
+            save_images(card, request.FILES.getlist('images'))
             _replace_route(card, route)
 
         feste = _base_queryset().get(pk=feste.pk)
@@ -145,7 +117,7 @@ def feste_detail(request, pk):
             raise Http404
         return Response(FesteReadSerializer(feste).data)
 
-    _require_author_or_admin(request, feste)
+    require_author_or_admin(request, feste)
 
     if request.method == 'DELETE':
         feste.card.delete()
@@ -168,8 +140,8 @@ def feste_detail(request, pk):
                 setattr(feste, field, data[field])
         feste.save()
 
-        _remove_images(card, request.data.get('remove_image_ids'))
-        _save_images(card, request.FILES.getlist('images'))
+        remove_images(card, request.data.get('remove_image_ids'))
+        save_images(card, request.FILES.getlist('images'))
         _replace_route(card, route)
 
     feste = _base_queryset().get(pk=feste.pk)
