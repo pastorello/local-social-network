@@ -1,0 +1,51 @@
+from rest_framework import serializers
+
+from account.serializers import UserSerializer
+from content.models import MapFeature
+from content.serializers import CardImageSerializer
+from content.sanitize import sanitize_html
+
+from .models import Chiesa
+
+
+def _map_point(feature):
+    return {'lat': feature.lat, 'lng': feature.lng, 'label': feature.label}
+
+
+class ChiesaReadSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(source='pk', read_only=True)
+    title = serializers.CharField(source='card.title')
+    body_html = serializers.CharField(source='card.body_html')
+    author = UserSerializer(source='card.author', read_only=True)
+    is_published = serializers.BooleanField(source='card.is_published')
+    created_at = serializers.DateTimeField(source='card.created_at', read_only=True)
+    updated_at = serializers.DateTimeField(source='card.updated_at', read_only=True)
+    images = serializers.SerializerMethodField()
+    pins = serializers.SerializerMethodField()
+
+    def get_images(self, obj):
+        return CardImageSerializer(obj.card.images.all(), many=True).data
+
+    def get_pins(self, obj):
+        points = obj.card.map_features.filter(kind=MapFeature.POINT)
+        return [_map_point(p) for p in points]
+
+    class Meta:
+        model = Chiesa
+        fields = (
+            'id', 'title', 'body_html', 'author', 'is_published',
+            'images', 'pins', 'created_at', 'updated_at',
+        )
+
+
+class ChiesaWriteSerializer(serializers.Serializer):
+    """Plain Serializer, not a ModelSerializer — same reasoning as
+    FesteWriteSerializer: it writes across Card+Chiesa at once, and
+    images/pins are handled by the view (see chiese/api.py)."""
+
+    title = serializers.CharField(max_length=200)
+    body_html = serializers.CharField(allow_blank=True)
+    is_published = serializers.BooleanField(required=False, default=False)
+
+    def validate_body_html(self, value):
+        return sanitize_html(value)

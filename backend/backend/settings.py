@@ -131,6 +131,10 @@ INSTALLED_APPS = [
     'account',
     'content',
     'feste',
+    'chiese',
+    'ricette',
+    'personaggi',
+    'dialetto',
     'polls',
     'reports',
 ]
