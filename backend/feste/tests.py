@@ -4,6 +4,7 @@ from io import BytesIO
 import pytest
 from PIL import Image
 from django.core.files.uploadedfile import SimpleUploadedFile
+from rest_framework.test import APIClient
 
 from common.testing import PASSWORD
 from content.models import Card, CardImage, MapFeature
@@ -311,3 +312,112 @@ def test_patch_without_a_route_field_leaves_the_existing_route_alone(auth_client
 
     assert response.status_code == 200
     assert len(response.json()['route']) == 1
+
+
+# --- translations (spec translations.md T1/T2) ---
+
+
+def test_translate_requires_auth(api_client, make_feste):
+    feste = make_feste(is_published=True)
+
+    response = api_client.post(f'/api/feste/{feste.pk}/traduci/', {'language': 'en'})
+
+    assert response.status_code == 401
+
+
+def test_translate_requires_author_or_admin(make_client, other_citizen, make_feste):
+    feste = make_feste(is_published=True)
+
+    response = make_client(other_citizen).post(f'/api/feste/{feste.pk}/traduci/', {'language': 'en'})
+
+    assert response.status_code == 403
+
+
+def test_translate_creates_an_empty_draft_linked_to_the_source(auth_client, citizen, make_feste):
+    feste = make_feste(author=citizen, is_published=True, title='Festa di Sant’Erasmo')
+
+    response = auth_client.post(f'/api/feste/{feste.pk}/traduci/', {'language': 'en'})
+
+    assert response.status_code == 201
+    data = response.json()
+    assert data['title'] == ''
+    assert data['body_html'] == ''
+    assert data['recurrence'] == ''
+    assert data['is_published'] is False
+    assert data['language'] == 'en'
+    assert data['translation_of'] == str(feste.pk)
+
+
+def test_translate_rejects_an_unsupported_language(auth_client, citizen, make_feste):
+    feste = make_feste(author=citizen)
+
+    response = auth_client.post(f'/api/feste/{feste.pk}/traduci/', {'language': 'fr'})
+
+    assert response.status_code == 400
+
+
+def test_translate_rejects_the_source_cards_own_language(auth_client, citizen, make_feste):
+    feste = make_feste(author=citizen)
+
+    response = auth_client.post(f'/api/feste/{feste.pk}/traduci/', {'language': 'it'})
+
+    assert response.status_code == 400
+
+
+def test_translate_rejects_a_second_translation_in_the_same_language(auth_client, citizen, make_feste):
+    feste = make_feste(author=citizen)
+    auth_client.post(f'/api/feste/{feste.pk}/traduci/', {'language': 'en'})
+
+    response = auth_client.post(f'/api/feste/{feste.pk}/traduci/', {'language': 'en'})
+
+    assert response.status_code == 400
+
+
+def test_translate_rejects_translating_a_translation(auth_client, citizen, make_feste):
+    feste = make_feste(author=citizen)
+    translation_id = auth_client.post(f'/api/feste/{feste.pk}/traduci/', {'language': 'en'}).json()['id']
+
+    response = auth_client.post(f'/api/feste/{translation_id}/traduci/', {'language': 'it'})
+
+    assert response.status_code == 400
+
+
+def test_translations_list_hides_draft_translations_from_the_public(auth_client, citizen, make_feste):
+    feste = make_feste(author=citizen, is_published=True)
+    auth_client.post(f'/api/feste/{feste.pk}/traduci/', {'language': 'en'})
+
+    # A fresh, unauthenticated client — auth_client shares api_client's
+    # instance when both are requested by the same test, so it can't stand
+    # in for "an anonymous visitor" here.
+    response = APIClient().get(f'/api/feste/{feste.pk}/')
+
+    assert response.json()['translations'] == []
+
+
+def test_translations_list_shows_the_authors_own_draft_translation(auth_client, citizen, make_feste):
+    feste = make_feste(author=citizen, is_published=True)
+    auth_client.post(f'/api/feste/{feste.pk}/traduci/', {'language': 'en'})
+
+    response = auth_client.get(f'/api/feste/{feste.pk}/')
+
+    translations = response.json()['translations']
+    assert len(translations) == 1
+    assert translations[0]['language'] == 'en'
+    assert translations[0]['is_published'] is False
+
+
+def test_translations_list_is_visible_on_the_translation_itself_once_published(auth_client, citizen, make_feste):
+    feste = make_feste(author=citizen, is_published=True)
+    translation_id = auth_client.post(f'/api/feste/{feste.pk}/traduci/', {'language': 'en'}).json()['id']
+    auth_client.patch(
+        f'/api/feste/{translation_id}/',
+        {'title': 'Saint Erasmus Feast', 'body_html': '<p>Text</p>', 'is_published': 'true'},
+        format='multipart',
+    )
+
+    response = APIClient().get(f'/api/feste/{translation_id}/')
+
+    translations = response.json()['translations']
+    assert len(translations) == 1
+    assert translations[0]['id'] == str(feste.pk)
+    assert translations[0]['language'] == 'it'

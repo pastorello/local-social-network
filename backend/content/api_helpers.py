@@ -15,9 +15,14 @@ from rest_framework import serializers
 from account.models import User
 from common.images import ImageRejected, validate_image
 
-from .models import CardImage, MapFeature
+from .models import Card, CardImage, MapFeature
 
 MAX_POINTS = 50
+
+# T1/T3 (spec translations.md): English first, machine translation is a later
+# phase — this is the whole target-language set for now. Keyed by code so a
+# future language is one more entry, not a new code path.
+TRANSLATABLE_LANGUAGES = {'en': 'English'}
 
 
 class PointSerializer(serializers.Serializer):
@@ -36,12 +41,45 @@ def require_authenticated(request):
         raise NotAuthenticated()
 
 
+def require_author_or_admin_for_card(request, card):
+    require_authenticated(request)
+    if card.author_id != request.user.id and request.user.role != User.ADMIN:
+        raise PermissionDenied('Puoi modificare solo le tue schede.')
+
+
 def require_author_or_admin(request, instance):
     """`instance` is any type's model instance — Feste/Chiesa/Ricetta/
     Personaggio/Termine — all of which expose `.card`."""
-    require_authenticated(request)
-    if instance.card.author_id != request.user.id and request.user.role != User.ADMIN:
-        raise PermissionDenied('Puoi modificare solo le tue schede.')
+    require_author_or_admin_for_card(request, instance.card)
+
+
+def start_translation(request, card, type_model, language, extra_defaults=None):
+    """Creates the empty target-language sibling card T2 describes ("traduci
+    questo articolo in…" opens an empty version alongside the source) — the
+    write is generic (Card + a blank type row), only the type row's shape
+    (`type_model`, `extra_defaults`) varies per caller.
+
+    Only an original can be translated: chaining translation_of would make
+    "the reader's language switch" ambiguous about which card is the source,
+    and the spec's translation unit is one card, not a tree of them.
+    """
+    require_author_or_admin_for_card(request, card)
+
+    if language not in TRANSLATABLE_LANGUAGES:
+        raise ValidationError({'language': ['Valore non valido.']})
+    if card.translation_of_id is not None:
+        raise ValidationError({'detail': 'Non è possibile tradurre una traduzione.'})
+    if language == card.language:
+        raise ValidationError({'language': ['La scheda è già in questa lingua.']})
+    if card.translations.filter(language=language).exists():
+        raise ValidationError({'detail': 'Esiste già una traduzione in questa lingua.'})
+
+    new_card = Card.objects.create(
+        title='', body_html='', author=request.user, is_published=False,
+        language=language, translation_of=card,
+    )
+    type_model.objects.create(card=new_card, **(extra_defaults or {}))
+    return new_card
 
 
 def save_images(card, files):

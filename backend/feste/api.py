@@ -14,6 +14,7 @@ from content.api_helpers import (
     require_author_or_admin,
     save_images,
     remove_images,
+    start_translation,
 )
 from content.models import Card, MapFeature
 
@@ -82,12 +83,12 @@ def feste_list(request):
             _replace_route(card, route)
 
         feste = _base_queryset().get(pk=feste.pk)
-        return Response(FesteReadSerializer(feste).data, status=201)
+        return Response(FesteReadSerializer(feste, context={'request': request}).data, status=201)
 
     paginator = StandardPagination()
     queryset = _base_queryset().filter(card__is_published=True)
     page = paginator.paginate_queryset(queryset, request)
-    return paginator.get_paginated_response(FesteReadSerializer(page, many=True).data)
+    return paginator.get_paginated_response(FesteReadSerializer(page, many=True, context={'request': request}).data)
 
 
 @api_view(['GET'])
@@ -97,7 +98,7 @@ def feste_mine(request):
     paginator = StandardPagination()
     queryset = _base_queryset().filter(card__author=request.user)
     page = paginator.paginate_queryset(queryset, request)
-    return paginator.get_paginated_response(FesteReadSerializer(page, many=True).data)
+    return paginator.get_paginated_response(FesteReadSerializer(page, many=True, context={'request': request}).data)
 
 
 @api_view(['GET', 'PATCH', 'DELETE'])
@@ -115,7 +116,7 @@ def feste_detail(request, pk):
             # "exists but you can't see it" (same reasoning as reports' public
             # detail, generalised to a state reports don't have).
             raise Http404
-        return Response(FesteReadSerializer(feste).data)
+        return Response(FesteReadSerializer(feste, context={'request': request}).data)
 
     require_author_or_admin(request, feste)
 
@@ -145,4 +146,15 @@ def feste_detail(request, pk):
         _replace_route(card, route)
 
     feste = _base_queryset().get(pk=feste.pk)
-    return Response(FesteReadSerializer(feste).data)
+    return Response(FesteReadSerializer(feste, context={'request': request}).data)
+
+
+@api_view(['POST'])
+def feste_translate(request, pk):
+    feste = get_object_or_404(_base_queryset(), pk=pk)
+    language = request.data.get('language')
+    new_card = start_translation(
+        request, feste.card, Feste, language, extra_defaults={'recurrence': '', 'programme': ''}
+    )
+    translation = _base_queryset().get(pk=new_card.pk)
+    return Response(FesteReadSerializer(translation, context={'request': request}).data, status=201)

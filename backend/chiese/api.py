@@ -13,6 +13,7 @@ from content.api_helpers import (
     require_authenticated,
     require_author_or_admin,
     save_images,
+    start_translation,
 )
 from content.models import Card
 
@@ -52,12 +53,14 @@ def chiesa_list(request):
             replace_points(card, pins)
 
         chiesa = _base_queryset().get(pk=chiesa.pk)
-        return Response(ChiesaReadSerializer(chiesa).data, status=201)
+        return Response(ChiesaReadSerializer(chiesa, context={'request': request}).data, status=201)
 
     paginator = StandardPagination()
     queryset = _base_queryset().filter(card__is_published=True)
     page = paginator.paginate_queryset(queryset, request)
-    return paginator.get_paginated_response(ChiesaReadSerializer(page, many=True).data)
+    return paginator.get_paginated_response(
+        ChiesaReadSerializer(page, many=True, context={'request': request}).data
+    )
 
 
 @api_view(['GET'])
@@ -67,7 +70,9 @@ def chiesa_mine(request):
     paginator = StandardPagination()
     queryset = _base_queryset().filter(card__author=request.user)
     page = paginator.paginate_queryset(queryset, request)
-    return paginator.get_paginated_response(ChiesaReadSerializer(page, many=True).data)
+    return paginator.get_paginated_response(
+        ChiesaReadSerializer(page, many=True, context={'request': request}).data
+    )
 
 
 @api_view(['GET', 'PATCH', 'DELETE'])
@@ -83,7 +88,7 @@ def chiesa_detail(request, pk):
             # A draft is invisible to anyone but its author/admin, same
             # reasoning as feste_detail.
             raise Http404
-        return Response(ChiesaReadSerializer(chiesa).data)
+        return Response(ChiesaReadSerializer(chiesa, context={'request': request}).data)
 
     require_author_or_admin(request, chiesa)
 
@@ -108,4 +113,13 @@ def chiesa_detail(request, pk):
         replace_points(card, pins)
 
     chiesa = _base_queryset().get(pk=chiesa.pk)
-    return Response(ChiesaReadSerializer(chiesa).data)
+    return Response(ChiesaReadSerializer(chiesa, context={'request': request}).data)
+
+
+@api_view(['POST'])
+def chiesa_translate(request, pk):
+    chiesa = get_object_or_404(_base_queryset(), pk=pk)
+    language = request.data.get('language')
+    new_card = start_translation(request, chiesa.card, Chiesa, language)
+    translation = _base_queryset().get(pk=new_card.pk)
+    return Response(ChiesaReadSerializer(translation, context={'request': request}).data, status=201)

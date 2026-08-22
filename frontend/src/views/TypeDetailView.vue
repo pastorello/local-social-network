@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import axios from 'axios'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import PanelBox from '@/components/boxes/PanelBox.vue'
@@ -11,6 +11,8 @@ import UserAvatar from '@/components/cards/UserAvatar.vue'
 import RichText from '@/components/content/RichText.vue'
 import MapPinsEditor from '@/components/content/MapPinsEditor.vue'
 import TypeForm from '@/components/content/TypeForm.vue'
+import LanguageSwitch from '@/components/content/LanguageSwitch.vue'
+import TranslateControl from '@/components/content/TranslateControl.vue'
 import { useUserStore } from '@/stores/user'
 import { useToastStore } from '@/stores/toast'
 import type { TypeConfig } from '@/definitions/typeConfigs'
@@ -24,7 +26,10 @@ const userStore = useUserStore()
 const toastStore = useToastStore()
 
 const item = ref<ContentItem | null>(null)
-const editing = ref(false)
+// A freshly-started translation (see TranslateControl) is an empty draft —
+// its detail page opens straight into edit mode via ?edit=1 rather than
+// showing a blank read view first.
+const editing = ref(route.query.edit === '1')
 
 const canEdit = computed(
   () =>
@@ -76,6 +81,21 @@ const deleteItem = async () => {
 }
 
 onMounted(getItem)
+
+// Navigating from one card's detail page straight to another's (e.g. a
+// TranslateControl link) keeps the same route record, so Vue Router reuses
+// this component instance instead of remounting it — refetch when the id in
+// the URL changes. `editing` drops to false first: TypeForm only reads its
+// `item` prop once at setup, so flipping it straight to true would mount the
+// form with the still-stale (previous card's) item until the fetch resolves.
+watch(
+  () => route.params.id,
+  async () => {
+    editing.value = false
+    await getItem()
+    editing.value = route.query.edit === '1'
+  },
+)
 </script>
 
 <template>
@@ -83,6 +103,8 @@ onMounted(getItem)
     <div class="col-span-2 col-start-2 space-y-4 self-start">
       <PanelBox v-if="item">
         <template v-if="!editing">
+          <LanguageSwitch :translations="item.translations" :detail-route-name="config.routeNames.detail" />
+
           <div class="mb-2 flex items-center justify-between gap-4">
             <MainTitle>{{ item.title }}</MainTitle>
             <span v-if="!item.is_published" class="text-xs text-gray-500">Bozza</span>
@@ -126,11 +148,17 @@ onMounted(getItem)
             class="mb-6"
           />
 
-          <div class="flex gap-2" v-if="canEdit">
+          <div class="flex flex-wrap items-center gap-2" v-if="canEdit">
             <ActionButton size="small" @click="editing = true">Modifica</ActionButton>
             <ActionButton size="small" button-type="danger" @click="deleteItem">
               Elimina
             </ActionButton>
+            <TranslateControl
+              v-if="!item.translation_of"
+              :translate-endpoint="`${config.endpoint}${item.id}/traduci/`"
+              :translations="item.translations"
+              :detail-route-name="config.routeNames.detail"
+            />
           </div>
         </template>
 

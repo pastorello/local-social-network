@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import axios from 'axios'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import PanelBox from '@/components/boxes/PanelBox.vue'
@@ -11,6 +11,8 @@ import UserAvatar from '@/components/cards/UserAvatar.vue'
 import RichText from '@/components/content/RichText.vue'
 import FesteRouteEditor from '@/components/content/FesteRouteEditor.vue'
 import FesteForm from '@/components/content/FesteForm.vue'
+import LanguageSwitch from '@/components/content/LanguageSwitch.vue'
+import TranslateControl from '@/components/content/TranslateControl.vue'
 import { useUserStore } from '@/stores/user'
 import { useToastStore } from '@/stores/toast'
 import type Feste from '@/definitions/interfaces/Feste'
@@ -21,7 +23,10 @@ const userStore = useUserStore()
 const toastStore = useToastStore()
 
 const feste = ref<Feste | null>(null)
-const editing = ref(false)
+// A freshly-started translation (see TranslateControl) is an empty draft —
+// its detail page opens straight into edit mode via ?edit=1 rather than
+// showing a blank read view first.
+const editing = ref(route.query.edit === '1')
 
 const canEdit = computed(
   () =>
@@ -71,6 +76,22 @@ const deleteFeste = async () => {
 }
 
 onMounted(getFeste)
+
+// Navigating from one card's detail page straight to another's (e.g. a
+// TranslateControl link) keeps the same route record, so Vue Router reuses
+// this component instance instead of remounting it — refetch when the id in
+// the URL changes. `editing` drops to false first: FesteForm only reads its
+// `feste` prop once at setup, so flipping it straight to true would mount
+// the form with the still-stale (previous card's) feste until the fetch
+// resolves.
+watch(
+  () => route.params.id,
+  async () => {
+    editing.value = false
+    await getFeste()
+    editing.value = route.query.edit === '1'
+  },
+)
 </script>
 
 <template>
@@ -78,6 +99,8 @@ onMounted(getFeste)
     <div class="col-span-2 col-start-2 space-y-4 self-start">
       <PanelBox v-if="feste">
         <template v-if="!editing">
+          <LanguageSwitch :translations="feste.translations" detail-route-name="festedetail" />
+
           <div class="mb-2 flex items-center justify-between gap-4">
             <MainTitle>{{ feste.title }}</MainTitle>
             <span v-if="!feste.is_published" class="text-xs text-gray-500">Bozza</span>
@@ -117,11 +140,17 @@ onMounted(getFeste)
             class="mb-6"
           />
 
-          <div class="flex gap-2" v-if="canEdit">
+          <div class="flex flex-wrap items-center gap-2" v-if="canEdit">
             <ActionButton size="small" @click="editing = true">Modifica</ActionButton>
             <ActionButton size="small" button-type="danger" @click="deleteFeste">
               Elimina
             </ActionButton>
+            <TranslateControl
+              v-if="!feste.translation_of"
+              :translate-endpoint="`/api/feste/${feste.id}/traduci/`"
+              :translations="feste.translations"
+              detail-route-name="festedetail"
+            />
           </div>
         </template>
 
