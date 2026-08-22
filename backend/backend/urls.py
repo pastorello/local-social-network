@@ -6,6 +6,7 @@ from django.contrib import admin
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/users/', include('account.urls')),
+    path('api/feste/', include('feste.urls')),
     path('api/polls/', include('polls.urls')),
     path('api/', include('reports.urls')),
 ]  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

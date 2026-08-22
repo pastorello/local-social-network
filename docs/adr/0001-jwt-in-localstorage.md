@@ -49,3 +49,31 @@ used occasionally from a phone is a worse product.
 - If a rendering path ever needs raw HTML (rich text in reports, an embedded
   third-party widget), this ADR must be revisited **before** that ships — that
   change is what would create the entry point this decision assumes away.
+
+## Amendment (C2, 2026-08-22): the no-HTML premise no longer holds
+
+Phase C2 ([spec content.md](../spec/content.md)) added rich-text cards, exactly
+the change the note above called out — revisited before it shipped, not after.
+The Context section's "no `v-html`... anywhere" is no longer true; the decision
+itself (tokens stay in `localStorage`) is **not reversed**, but the assumption
+it partly rested on now has a different guard, recorded here so a future audit
+finds the current reasoning instead of the stale one:
+
+- `frontend/src/components/content/RichText.vue` is the **only** `v-html` in
+  the codebase, and it renders exactly one thing: a card's `body_html` as
+  returned by the API.
+- That value is never raw collaborator input. `backend/content/sanitize.py`
+  (`nh3`, strict tag/attribute allowlist, `javascript:` URLs already rejected
+  by `nh3`'s own defaults) sanitizes it **on write** — every card type's write
+  path goes through this one function, so there is one chokepoint, not one per
+  type (ADR-0004).
+- The blast radius this ADR originally worried about (npm supply chain reading
+  `localStorage`) is unchanged by this — sanitization defends against a
+  *different* attacker (a collaborator submitting a hostile card body), not
+  against a compromised dependency. The CSP gap noted above is still open and
+  still not scheduled; it remains the mitigation that would bound both risks
+  at once.
+- **This must be revisited again** if `RichText.vue` ever gains a second
+  caller that isn't `card.body_html`, or if any other component reaches for
+  `v-html`/`innerHTML` — the safety argument above is specific to there being
+  exactly one rendering path fed by exactly one sanitizing chokepoint.

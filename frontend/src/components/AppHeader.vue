@@ -4,6 +4,7 @@ import { useUserStore } from '@/stores/user'
 
 import ActionButton from './buttons/ActionButton.vue'
 import CommunityIcon from './icons/CommunityIcon.vue'
+import FesteIcon from './icons/FesteIcon.vue'
 import PollsIcon from './icons/PollsIcon.vue'
 import HomeIcon from './icons/HomeIcon.vue'
 import MenuButton from './buttons/MenuButton.vue'
@@ -40,6 +41,13 @@ const logout = async () => {
               <PollsIcon class="w-6 h-6" />
             </template>
             Sondaggi
+          </MenuButton>
+
+          <MenuButton to="/feste">
+            <template #icon>
+              <FesteIcon class="w-6 h-6" />
+            </template>
+            Feste
           </MenuButton>
 
           <template v-if="user.isAuthenticated">

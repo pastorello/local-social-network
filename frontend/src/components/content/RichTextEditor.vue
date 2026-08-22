@@ -1,0 +1,152 @@
+<script setup lang="ts">
+import { onBeforeUnmount, watch } from 'vue'
+import { useEditor, EditorContent } from '@tiptap/vue-3'
+import StarterKit from '@tiptap/starter-kit'
+
+const props = withDefaults(defineProps<{ modelValue: string; label?: string }>(), {
+  label: 'Testo',
+})
+const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
+
+// The allowed tag set here is deliberately exactly what content/sanitize.py
+// allows server-side (h2/h3 only, no h1 — the card's own title is the H1).
+// Nothing here weakens the sanitizer: its allowlist is authoritative
+// regardless of what this editor produces. StarterKit already bundles Link
+// (Tiptap v3) — a separate @tiptap/extension-link would just duplicate it.
+const editor = useEditor({
+  content: props.modelValue,
+  extensions: [
+    StarterKit.configure({ heading: { levels: [2, 3] }, link: { openOnClick: false } }),
+  ],
+  // `label` fallthrough as a plain attribute would land on this component's
+  // wrapper <div>, not the actual contenteditable region ProseMirror renders
+  // deep inside <editor-content> — this is the only way to name that element.
+  editorProps: {
+    attributes: { role: 'textbox', 'aria-label': props.label, 'aria-multiline': 'true' },
+  },
+  onUpdate: ({ editor }) => {
+    emit('update:modelValue', editor.getHTML())
+  },
+})
+
+watch(
+  () => props.modelValue,
+  (value) => {
+    if (editor.value && value !== editor.value.getHTML()) {
+      editor.value.commands.setContent(value, { emitUpdate: false })
+    }
+  },
+)
+
+const setLink = () => {
+  const url = window.prompt('Indirizzo del link (https://...)')
+  if (url === null) return
+  if (url === '') {
+    editor.value?.chain().focus().unsetLink().run()
+    return
+  }
+  editor.value?.chain().focus().setLink({ href: url }).run()
+}
+
+onBeforeUnmount(() => {
+  editor.value?.destroy()
+})
+</script>
+
+<template>
+  <div class="border border-gray-200 rounded-lg overflow-hidden">
+    <div v-if="editor" class="flex flex-wrap gap-1 p-2 bg-gray-50 border-b border-gray-200">
+      <button
+        type="button"
+        class="px-3 py-2 rounded"
+        aria-label="Grassetto"
+        :aria-pressed="editor.isActive('bold')"
+        :class="editor.isActive('bold') ? 'bg-purple-600 text-white' : 'bg-white'"
+        @click="editor.chain().focus().toggleBold().run()"
+      >
+        <strong>B</strong>
+      </button>
+      <button
+        type="button"
+        class="px-3 py-2 rounded"
+        aria-label="Corsivo"
+        :aria-pressed="editor.isActive('italic')"
+        :class="editor.isActive('italic') ? 'bg-purple-600 text-white' : 'bg-white'"
+        @click="editor.chain().focus().toggleItalic().run()"
+      >
+        <em>I</em>
+      </button>
+      <button
+        type="button"
+        class="px-3 py-2 rounded"
+        aria-label="Barrato"
+        :aria-pressed="editor.isActive('strike')"
+        :class="editor.isActive('strike') ? 'bg-purple-600 text-white' : 'bg-white'"
+        @click="editor.chain().focus().toggleStrike().run()"
+      >
+        <s>S</s>
+      </button>
+      <button
+        type="button"
+        class="px-3 py-2 rounded"
+        aria-label="Titolo di livello 2"
+        :aria-pressed="editor.isActive('heading', { level: 2 })"
+        :class="editor.isActive('heading', { level: 2 }) ? 'bg-purple-600 text-white' : 'bg-white'"
+        @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
+      >
+        H2
+      </button>
+      <button
+        type="button"
+        class="px-3 py-2 rounded"
+        aria-label="Titolo di livello 3"
+        :aria-pressed="editor.isActive('heading', { level: 3 })"
+        :class="editor.isActive('heading', { level: 3 }) ? 'bg-purple-600 text-white' : 'bg-white'"
+        @click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
+      >
+        H3
+      </button>
+      <button
+        type="button"
+        class="px-3 py-2 rounded"
+        aria-label="Elenco puntato"
+        :aria-pressed="editor.isActive('bulletList')"
+        :class="editor.isActive('bulletList') ? 'bg-purple-600 text-white' : 'bg-white'"
+        @click="editor.chain().focus().toggleBulletList().run()"
+      >
+        • Lista
+      </button>
+      <button
+        type="button"
+        class="px-3 py-2 rounded"
+        aria-label="Elenco numerato"
+        :aria-pressed="editor.isActive('orderedList')"
+        :class="editor.isActive('orderedList') ? 'bg-purple-600 text-white' : 'bg-white'"
+        @click="editor.chain().focus().toggleOrderedList().run()"
+      >
+        1. Lista
+      </button>
+      <button
+        type="button"
+        class="px-3 py-2 rounded"
+        aria-label="Citazione"
+        :aria-pressed="editor.isActive('blockquote')"
+        :class="editor.isActive('blockquote') ? 'bg-purple-600 text-white' : 'bg-white'"
+        @click="editor.chain().focus().toggleBlockquote().run()"
+      >
+        Citazione
+      </button>
+      <button
+        type="button"
+        class="px-3 py-2 rounded"
+        aria-label="Link"
+        :aria-pressed="editor.isActive('link')"
+        :class="editor.isActive('link') ? 'bg-purple-600 text-white' : 'bg-white'"
+        @click="setLink"
+      >
+        Link
+      </button>
+    </div>
+    <editor-content :editor="editor" class="prose max-w-none p-4 min-h-40" />
+  </div>
+</template>

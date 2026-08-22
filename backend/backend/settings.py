@@ -129,6 +129,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt', # api authentication
     'rest_framework_simplejwt.token_blacklist', # rotated refresh tokens die (M4)
     'account',
+    'content',
+    'feste',
     'polls',
     'reports',
 ]

@@ -60,6 +60,26 @@ const router = createRouter({
       meta: { requiresAuth: false },
     },
     {
+      // published feste are readable by anyone (spec content.md); the
+      // endpoint itself enforces draft-visibility, not the route guard.
+      path: '/feste',
+      name: 'festelist',
+      component: () => import('../views/FesteListView.vue'),
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/feste/nuova',
+      name: 'festecreate',
+      component: () => import('../views/FesteCreateView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/feste/:id',
+      name: 'festedetail',
+      component: () => import('../views/FesteDetailView.vue'),
+      meta: { requiresAuth: false },
+    },
+    {
       path: '/profile/edit',
       name: 'editprofile',
       component: () => import('../views/EditProfileView.vue'),
