@@ -4,13 +4,22 @@ from django.core.files.uploadedfile import UploadedFile
 
 from common.images import ImageRejected, validate_image
 
-from .models import User
+from .models import CollaborationRequest, User
 
 
 class SignupForm(UserCreationForm):
+    """Django admin's "add user" form (`UserAdmin.add_form`) — an admin's own
+    manual escape hatch, independent of the public collaboration flow."""
+
     class Meta:
         model = User
         fields = ('email', 'name', 'password1', 'password2')
+
+
+class CollaborationRequestForm(forms.ModelForm):
+    class Meta:
+        model = CollaborationRequest
+        fields = ('name', 'email', 'message')
 
 
 class AdminUserChangeForm(UserChangeForm):

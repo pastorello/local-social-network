@@ -17,15 +17,33 @@ const router = createRouter({
       meta: { requiresAuth: false },
     },
     {
-      path: '/signup',
-      name: 'signup',
-      component: () => import('../views/SignupView.vue'),
+      path: '/collabora',
+      name: 'collabora',
+      component: () => import('../views/CollaboraView.vue'),
       meta: { requiresAuth: false },
     },
     {
       path: '/login',
       name: 'login',
       component: () => import('../views/LoginView.vue'),
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/invito/:token',
+      name: 'inviteaccept',
+      component: () => import('../views/InviteAcceptView.vue'),
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/password-dimenticata',
+      name: 'passwordresetrequest',
+      component: () => import('../views/PasswordResetRequestView.vue'),
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/reimposta-password/:token',
+      name: 'passwordresetconfirm',
+      component: () => import('../views/PasswordResetConfirmView.vue'),
       meta: { requiresAuth: false },
     },
     {

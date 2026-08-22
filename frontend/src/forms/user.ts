@@ -8,6 +8,7 @@ z.config(it())
 const FIELD_LABELS: Record<string, string> = {
   email: 'E-mail',
   name: 'Nome',
+  message: 'Messaggio',
   password: 'Password',
   password1: 'Password',
   password2: 'Conferma password',
@@ -43,22 +44,42 @@ const useDataValidator = {
   password2: z.string().min(8),
 }
 
-export const SignupForm = z
+const passwordPairRefinement = (
+  { password1, password2 }: { password1: string; password2: string },
+  ctx: z.RefinementCtx,
+) => {
+  if (password1 !== password2) {
+    ctx.addIssue({
+      code: 'custom',
+      message: 'Le due password non corrispondono',
+      path: ['password2'],
+    })
+  }
+}
+
+export const CollaborateForm = z.object({
+  email: useDataValidator.email,
+  name: useDataValidator.name,
+  message: z.string().min(10).max(2000),
+})
+
+export const InviteAcceptForm = z
   .object({
-    email: useDataValidator.email,
-    name: useDataValidator.name,
     password1: useDataValidator.password1,
     password2: useDataValidator.password2,
   })
-  .superRefine(({ password1, password2 }, ctx) => {
-    if (password1 !== password2) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Le due password non corrispondono',
-        path: ['password2'],
-      })
-    }
+  .superRefine(passwordPairRefinement)
+
+export const PasswordResetRequestForm = z.object({
+  email: useDataValidator.email,
+})
+
+export const PasswordResetConfirmForm = z
+  .object({
+    password1: useDataValidator.password1,
+    password2: useDataValidator.password2,
   })
+  .superRefine(passwordPairRefinement)
 
 export const LoginForm = z.object({
   email: useDataValidator.email,

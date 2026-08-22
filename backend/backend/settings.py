@@ -60,6 +60,12 @@ INTERNAL_IPS = [
 
 WEBSITE_URL = os.environ.get('WEBSITE_URL', 'http://127.0.0.1:8000')
 
+# Public base URL of the SPA — distinct from WEBSITE_URL (the API's own base
+# URL, used for absolute media links). The invite/reset e-mails link into
+# frontend routes (/invito/:token, /reimposta-password/:token), which live
+# here, not on the API origin.
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
+
 # Application definition
 
 
@@ -84,11 +90,13 @@ REST_FRAMEWORK = {
     # Spec §8 error convention: {"detail": str, "fields"?: {...}}
     'EXCEPTION_HANDLER': 'backend.exceptions.api_exception_handler',
     # Credential endpoints only — see account/throttling.py (TD-18).
-    # signup is per-IP and generous on purpose: a small city means shared NAT,
-    # and a family or a classroom signing up together must not be locked out.
+    # collaborate/invite are per-IP and generous on purpose: a small city means
+    # shared NAT, and a family or a classroom must not be locked out of it.
     'DEFAULT_THROTTLE_RATES': {
         'login': '10/min',
-        'signup': '10/hour',
+        'collaborate': '10/hour',
+        'invite': '10/hour',
+        'password_reset': '5/hour',
         'password_change': '5/hour',
     },
 }
@@ -255,6 +263,23 @@ if TESTING:
     # storing passwords and perfect here: nothing under test depends on the
     # hasher, only on the round trip through it.
     PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
+
+# Invite and password-reset e-mails (spec A3/A4). TESTING is checked first —
+# CI runs with DJANGO_DEBUG=false, so without this the suite would try to
+# reach a real SMTP server; locmem also lets tests assert on mail.outbox.
+if TESTING:
+    EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+elif DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+    EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'true').lower() == 'true'
+
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@viveregaeta.it')
 
 # `DEBUG and not TESTING`, not `not TESTING`: this used to install the app and
 # put its middleware first in the chain on every production request, with only

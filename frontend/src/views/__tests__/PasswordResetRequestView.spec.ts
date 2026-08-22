@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 import { createRouter, createMemoryHistory } from 'vue-router'
 
-import SignupView from '../SignupView.vue'
+import PasswordResetRequestView from '../PasswordResetRequestView.vue'
 
 const stub = { template: '<div />' }
 
@@ -13,19 +13,18 @@ const makeRouter = () =>
     routes: [
       { path: '/', name: 'home', component: stub },
       { path: '/login', name: 'login', component: stub },
-      { path: '/signup', name: 'signup', component: stub },
+      { path: '/password-dimenticata', name: 'passwordresetrequest', component: stub },
     ],
   })
 
-describe('SignupView', () => {
-  it('renders the signup form with all four fields', () => {
-    const wrapper = mount(SignupView, {
+describe('PasswordResetRequestView', () => {
+  it('renders an e-mail-only form', () => {
+    const wrapper = mount(PasswordResetRequestView, {
       global: { plugins: [createPinia(), makeRouter()] },
     })
 
-    expect(wrapper.find('h1').text()).toContain('Registrati')
-    expect(wrapper.find('input[type="text"]').exists()).toBe(true)
+    expect(wrapper.find('h1').text()).toContain('Password dimenticata')
     expect(wrapper.find('input[type="email"]').exists()).toBe(true)
-    expect(wrapper.findAll('input[type="password"]')).toHaveLength(2)
+    expect(wrapper.find('input[type="password"]').exists()).toBe(false)
   })
 })

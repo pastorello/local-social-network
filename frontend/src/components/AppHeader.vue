@@ -70,8 +70,8 @@ const logout = async () => {
             <RouterLink to="/login" class="mr-4 py-4 px-6 bg-gray-600 text-white rounded-lg"
               >Accedi</RouterLink
             >
-            <RouterLink to="/signup" class="py-4 px-6 bg-purple-600 text-white rounded-lg"
-              >Registrati</RouterLink
+            <RouterLink to="/collabora" class="py-4 px-6 bg-purple-600 text-white rounded-lg"
+              >Collabora con noi</RouterLink
             >
           </template>
         </div>

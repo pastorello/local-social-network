@@ -13,7 +13,8 @@ const makeRouter = () =>
     routes: [
       { path: '/', name: 'home', component: stub },
       { path: '/login', name: 'login', component: stub },
-      { path: '/signup', name: 'signup', component: stub },
+      { path: '/collabora', name: 'collabora', component: stub },
+      { path: '/password-dimenticata', name: 'passwordresetrequest', component: stub },
     ],
   })
 
