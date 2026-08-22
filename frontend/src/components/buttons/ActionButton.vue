@@ -10,7 +10,8 @@ const classObject = computed(() => ({
   'rounded-lg cursor-pointer': true,
   'bg-purple-600 text-white': buttonType === 'default',
   'bg-red-600 text-white': buttonType === 'danger',
-  'bg-green-600 text-white': buttonType === 'success',
+  // green-600 measures ~3.3:1 against white text, short of WCAG AA's 4.5:1 (ADR-0005)
+  'bg-green-700 text-white': buttonType === 'success',
   'py-4 px-3 text-xs': size === 'small',
   'py-4 px-6 text-sm': size === 'medium',
   'py-4 px-8 text-base': size === 'large',

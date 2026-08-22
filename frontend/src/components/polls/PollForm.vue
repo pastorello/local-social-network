@@ -64,8 +64,9 @@ const submitForm = async () => {
 <template>
   <form class="space-y-4" v-on:submit.prevent="submitForm">
     <div>
-      <label class="font-semibold">Domanda</label><br />
+      <label class="font-semibold" for="poll-question">Domanda</label><br />
       <FormInput
+        id="poll-question"
         type="text"
         v-model="question"
         placeholder="Es. Dove costruire la nuova area giochi?"
@@ -73,9 +74,11 @@ const submitForm = async () => {
     </div>
 
     <div>
-      <label class="font-semibold">Opzioni (da 2 a 10)</label>
+      <span class="font-semibold">Opzioni (da 2 a 10)</span>
       <div v-for="(option, index) in options" :key="index" class="flex items-center gap-2">
+        <label class="sr-only" :for="`poll-option-${index}`">{{ `Opzione ${index + 1}` }}</label>
         <input
+          :id="`poll-option-${index}`"
           type="text"
           :value="option"
           @input="updateOption(index, ($event.target as HTMLInputElement).value)"
@@ -103,8 +106,9 @@ const submitForm = async () => {
     </div>
 
     <div>
-      <label class="font-semibold">Data di chiusura (facoltativa)</label><br />
+      <label class="font-semibold" for="poll-closes-at">Data di chiusura (facoltativa)</label><br />
       <input
+        id="poll-closes-at"
         type="datetime-local"
         v-model="closesAt"
         class="mt-2 rounded-lg border border-gray-200 py-4 px-6"
@@ -112,7 +116,7 @@ const submitForm = async () => {
     </div>
 
     <template v-if="formErrors.length > 0">
-      <div class="rounded-lg bg-red-300 p-4 text-white">
+      <div class="rounded-lg bg-red-50 p-4 text-red-800">
         <p v-for="error in formErrors" v-bind:key="error">{{ error }}</p>
       </div>
     </template>

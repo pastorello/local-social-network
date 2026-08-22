@@ -58,14 +58,16 @@ onMounted(() => {
       <PanelBox class="flex flex-col">
         <MainTitle>Utenti del network</MainTitle>
         <form v-on:submit.prevent="getUsers" class="pb-6 flex space-x-4">
+          <label class="sr-only" for="users-search-query">Ricerca utenti</label>
           <input
+            id="users-search-query"
             v-model="query"
             type="search"
             class="p-4 w-full bg-gray-100 rounded-lg"
             placeholder="Ricerca utenti..."
           />
 
-          <ActionButton class="inline-block">
+          <ActionButton class="inline-block" aria-label="Cerca">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -73,6 +75,7 @@ onMounted(() => {
               stroke-width="1.5"
               stroke="currentColor"
               class="w-6 h-6"
+              aria-hidden="true"
             >
               <path
                 stroke-linecap="round"

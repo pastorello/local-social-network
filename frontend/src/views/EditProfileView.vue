@@ -89,22 +89,22 @@ const submitForm = () => {
       <PanelBox>
         <form class="space-y-6" v-on:submit.prevent="submitForm">
           <div>
-            <label>Nome</label><br />
-            <FormInput type="text" v-model="form.name" placeholder="Il tuo nome completo" />
+            <label for="editprofile-name">Nome</label><br />
+            <FormInput id="editprofile-name" type="text" v-model="form.name" placeholder="Il tuo nome completo" />
           </div>
 
           <div>
-            <label>E-mail</label><br />
-            <FormInput type="email" v-model="form.email" placeholder="La tua e-mail" />
+            <label for="editprofile-email">E-mail</label><br />
+            <FormInput id="editprofile-email" type="email" v-model="form.email" placeholder="La tua e-mail" />
           </div>
 
           <div>
-            <label>Avatar</label><br />
-            <input type="file" ref="fileInput" accept="image/*" />
+            <label for="editprofile-avatar">Avatar</label><br />
+            <input id="editprofile-avatar" type="file" ref="fileInput" accept="image/*" />
           </div>
 
           <template v-if="errors.length > 0">
-            <div class="bg-red-300 text-white rounded-lg p-6">
+            <div class="bg-red-50 text-red-800 rounded-lg p-6">
               <p v-for="error in errors" v-bind:key="error">{{ error }}</p>
             </div>
           </template>

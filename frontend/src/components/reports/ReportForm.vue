@@ -75,13 +75,14 @@ const submitForm = async () => {
 <template>
   <form class="space-y-4" v-on:submit.prevent="submitForm">
     <div>
-      <label class="font-semibold">Titolo</label><br />
-      <FormInput type="text" v-model="title" placeholder="Es. Buca in via Indipendenza" />
+      <label class="font-semibold" for="report-title">Titolo</label><br />
+      <FormInput id="report-title" type="text" v-model="title" placeholder="Es. Buca in via Indipendenza" />
     </div>
 
     <div>
-      <label class="font-semibold">Descrizione</label><br />
+      <label class="font-semibold" for="report-description">Descrizione</label><br />
       <textarea
+        id="report-description"
         v-model="description"
         rows="4"
         class="p-4 w-full bg-gray-100 rounded-lg"
@@ -90,8 +91,8 @@ const submitForm = async () => {
     </div>
 
     <div>
-      <label class="font-semibold">Categoria</label><br />
-      <select v-model="categoryId" class="p-4 w-full bg-gray-100 rounded-lg">
+      <label class="font-semibold" for="report-category">Categoria</label><br />
+      <select id="report-category" v-model="categoryId" class="p-4 w-full bg-gray-100 rounded-lg">
         <option value="" disabled>Scegli una categoria...</option>
         <option v-for="category in categories" :key="category.id" :value="category.id">
           {{ category.name }}
@@ -100,15 +101,15 @@ const submitForm = async () => {
     </div>
 
     <div>
-      <label class="font-semibold">Foto (facoltativa, max 5 MB)</label><br />
-      <input type="file" ref="fileInput" accept="image/jpeg,image/png,image/webp" @change="onFileChange" />
+      <label class="font-semibold" for="report-photo">Foto (facoltativa, max 5 MB)</label><br />
+      <input id="report-photo" type="file" ref="fileInput" accept="image/jpeg,image/png,image/webp" @change="onFileChange" />
       <div v-if="url" class="mt-2">
         <img :src="url" class="w-32 rounded-lg" alt="Anteprima foto" />
       </div>
     </div>
 
     <template v-if="formErrors.length > 0">
-      <div class="bg-red-300 text-white rounded-lg p-4">
+      <div class="bg-red-50 text-red-800 rounded-lg p-4">
         <p v-for="error in formErrors" v-bind:key="error">{{ error }}</p>
       </div>
     </template>

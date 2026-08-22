@@ -174,6 +174,7 @@ onMounted(() => {
                 stroke-width="1.5"
                 stroke="currentColor"
                 class="w-5 h-5"
+                aria-hidden="true"
               >
                 <path
                   stroke-linecap="round"
