@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '../stores/user'
+import { chiesaConfig, dialettoConfig, personaggioConfig, ricettaConfig } from '../definitions/typeConfigs'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -77,6 +78,93 @@ const router = createRouter({
       path: '/feste/:id',
       name: 'festedetail',
       component: () => import('../views/FesteDetailView.vue'),
+      meta: { requiresAuth: false },
+    },
+    // C3: chiese/ricette/personaggi/dialetto share the same generic
+    // Type*View components, parameterized by definitions/typeConfigs.ts —
+    // feste keeps its own dedicated views (unique route editor).
+    {
+      path: '/chiese',
+      name: chiesaConfig.routeNames.list,
+      component: () => import('../views/TypeListView.vue'),
+      props: { config: chiesaConfig },
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/chiese/nuova',
+      name: chiesaConfig.routeNames.create,
+      component: () => import('../views/TypeCreateView.vue'),
+      props: { config: chiesaConfig },
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/chiese/:id',
+      name: chiesaConfig.routeNames.detail,
+      component: () => import('../views/TypeDetailView.vue'),
+      props: { config: chiesaConfig },
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/ricette',
+      name: ricettaConfig.routeNames.list,
+      component: () => import('../views/TypeListView.vue'),
+      props: { config: ricettaConfig },
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/ricette/nuova',
+      name: ricettaConfig.routeNames.create,
+      component: () => import('../views/TypeCreateView.vue'),
+      props: { config: ricettaConfig },
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/ricette/:id',
+      name: ricettaConfig.routeNames.detail,
+      component: () => import('../views/TypeDetailView.vue'),
+      props: { config: ricettaConfig },
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/personaggi',
+      name: personaggioConfig.routeNames.list,
+      component: () => import('../views/TypeListView.vue'),
+      props: { config: personaggioConfig },
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/personaggi/nuovo',
+      name: personaggioConfig.routeNames.create,
+      component: () => import('../views/TypeCreateView.vue'),
+      props: { config: personaggioConfig },
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/personaggi/:id',
+      name: personaggioConfig.routeNames.detail,
+      component: () => import('../views/TypeDetailView.vue'),
+      props: { config: personaggioConfig },
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/dialetto',
+      name: dialettoConfig.routeNames.list,
+      component: () => import('../views/TypeListView.vue'),
+      props: { config: dialettoConfig },
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/dialetto/nuovo',
+      name: dialettoConfig.routeNames.create,
+      component: () => import('../views/TypeCreateView.vue'),
+      props: { config: dialettoConfig },
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/dialetto/:id',
+      name: dialettoConfig.routeNames.detail,
+      component: () => import('../views/TypeDetailView.vue'),
+      props: { config: dialettoConfig },
       meta: { requiresAuth: false },
     },
     {
