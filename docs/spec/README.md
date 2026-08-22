@@ -58,7 +58,7 @@ not mean).
 | Area | File | Status |
 |---|---|---|
 | Accounts & the "Collabora con noi" flow | [accounts.md](./accounts.md) | delivered (C1, 2026-08-21) |
-| Content core + typed cards | [content.md](./content.md) | core + feste delivered (C2, 2026-08-22); remaining types to build (C3) |
+| Content core + typed cards | [content.md](./content.md) | delivered (core + feste C2, 2026-08-22; chiese/ricette/personaggi/dialetto C3, 2026-08-22) |
 | Translations | [translations.md](./translations.md) | to build (phase C4) |
 | The map: layers & overlays | [map.md](./map.md) | to build (phase C5) |
 | Reports & polls (from v1) | [reports-and-polls.md](./reports-and-polls.md) | delivered; reports change author |
@@ -114,7 +114,9 @@ Dependency-honest, one phase per PR, each proven before the next:
 2. **C2 — delivered (2026-08-22).** Content core + feste end-to-end (the
    richest type, to prove the core): sanitized rich text, images, a procession
    route, a card readable anonymously.
-3. **C3** — the remaining thin type apps: chiese, ricette, personaggi, dialetto.
+3. **C3 — delivered (2026-08-22).** The remaining thin type apps: chiese,
+   ricette, personaggi, dialetto — each over the same `content` core, proving
+   ADR-0004's "days not weeks" bar with four types at once.
 4. **C4** — translations.
 5. **C5** — overlays: quartieri/seggi polygons (seggi confidential by default),
    then historical rasters.
