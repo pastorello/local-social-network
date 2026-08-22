@@ -13,7 +13,10 @@ vetting where it belongs — outside the app.
 ## Requirements
 
 - **A1 — Request form (public).** Name, e-mail, free-text message ("who are
-  you, why do you want to collaborate"). CAPTCHA-protected. Its job is spam,
+  you, why do you want to collaborate"). Spam-protected via a honeypot field
+  plus a minimum-time-to-submit check — not a third-party CAPTCHA, so no
+  visitor data goes to Google/hCaptcha (consistent with TD-30, which ruled out
+  sending visitor data to third parties for the same reason). Its job is spam,
   not identity — it cannot verify someone is from Gaeta, and the spec does not
   pretend it can.
 - **A2 — Admin review.** The app stores each request and gives the admin an

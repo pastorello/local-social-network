@@ -6,6 +6,7 @@ import axios from 'axios'
 import { useUserStore } from '@/stores/user'
 import PanelBox from '@/components/boxes/PanelBox.vue'
 import ViewContainer from '@/components/boxes/ViewContainer.vue'
+import MainTitle from '@/components/typography/MainTitle.vue'
 import StatusBadge from '@/components/reports/StatusBadge.vue'
 import type Report from '@/definitions/interfaces/Report'
 import type User from '@/definitions/interfaces/User'
@@ -59,9 +60,8 @@ watch(
           class="mt-6 mb-6 rounded-full m-auto w-50 h-50 object-cover text-5xl"
         />
 
-        <p>
-          <strong>{{ profileUser?.name }}</strong>
-        </p>
+        <!-- The page's only h1 (ADR-0005) — SiteTitle in the header is chrome, not content -->
+        <MainTitle>{{ profileUser?.name }}</MainTitle>
 
         <p class="mt-2 text-sm text-gray-500" v-if="profileUser">
           {{ reportCount }} {{ reportCount === 1 ? 'segnalazione' : 'segnalazioni' }}

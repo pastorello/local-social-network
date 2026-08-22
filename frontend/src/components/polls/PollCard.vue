@@ -142,7 +142,7 @@ const closePoll = async () => {
       {{ poll.total_votes }} {{ poll.total_votes === 1 ? 'voto totale' : 'voti totali' }}
     </p>
 
-    <div v-if="formErrors.length > 0" class="mt-4 rounded-lg bg-red-300 p-4 text-white">
+    <div v-if="formErrors.length > 0" class="mt-4 rounded-lg bg-red-50 p-4 text-red-800">
       <p v-for="error in formErrors" :key="error">{{ error }}</p>
     </div>
 

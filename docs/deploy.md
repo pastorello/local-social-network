@@ -28,6 +28,8 @@ Environment (see `.env.example`):
 - `DJANGO_ALLOWED_HOSTS` — the API hostname
 - `CORS_ALLOWED_ORIGINS` / `CSRF_TRUSTED_ORIGINS` — the SPA origin (https)
 - `WEBSITE_URL` — public base URL of the API (absolute media URLs)
+- `FRONTEND_URL` — public base URL of the SPA (invite/password-reset e-mail
+  links, spec A3/A4 — these routes are in the frontend, not the API)
 - `POSTGRES_HOST/PORT/DB/USER/PASSWORD`
 
 Rate limiting (TD-18) counts through the Django cache. `settings.py` configures

@@ -18,8 +18,20 @@ class LoginRateThrottle(AnonRateThrottle):
     scope = 'login'
 
 
-class SignupRateThrottle(AnonRateThrottle):
-    scope = 'signup'
+class CollaborationRequestRateThrottle(AnonRateThrottle):
+    scope = 'collaborate'
+
+
+class InviteRateThrottle(AnonRateThrottle):
+    """Covers accepting an invite — no identity yet, keyed by IP like login."""
+
+    scope = 'invite'
+
+
+class PasswordResetRateThrottle(AnonRateThrottle):
+    """Covers both requesting and confirming a reset — no identity yet either."""
+
+    scope = 'password_reset'
 
 
 class PasswordChangeRateThrottle(UserRateThrottle):

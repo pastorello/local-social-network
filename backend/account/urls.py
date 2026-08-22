@@ -12,7 +12,10 @@ class ThrottledTokenObtainPairView(TokenObtainPairView):
 
 urlpatterns = [
     path('me/', api.me, name='me'),
-    path('signup/', api.signup, name='signup'),
+    path('collaborate/', api.collaborate, name='collaborate'),
+    path('acceptinvite/', api.acceptinvite, name='acceptinvite'),
+    path('requestpasswordreset/', api.requestpasswordreset, name='requestpasswordreset'),
+    path('confirmpasswordreset/', api.confirmpasswordreset, name='confirmpasswordreset'),
     path('login/', ThrottledTokenObtainPairView.as_view(), name='token_obtain'),
     path('logout/', api.logout, name='logout'),
     path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),

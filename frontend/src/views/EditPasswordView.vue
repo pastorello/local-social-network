@@ -71,8 +71,9 @@ const submitForm = () => {
       <PanelBox>
         <form class="space-y-6" v-on:submit.prevent="submitForm">
           <div>
-            <label>Password attuale</label><br />
+            <label for="editpassword-old">Password attuale</label><br />
             <FormInput
+              id="editpassword-old"
               type="password"
               v-model="form.old_password"
               placeholder="La tua password attuale"
@@ -80,8 +81,9 @@ const submitForm = () => {
           </div>
 
           <div>
-            <label>Nuova password</label><br />
+            <label for="editpassword-new1">Nuova password</label><br />
             <FormInput
+              id="editpassword-new1"
               type="password"
               v-model="form.new_password1"
               placeholder="La nuova password"
@@ -89,12 +91,12 @@ const submitForm = () => {
           </div>
 
           <div>
-            <label>Ripeti password</label><br />
-            <FormInput type="password" v-model="form.new_password2" placeholder="Ripeti la password" />
+            <label for="editpassword-new2">Ripeti password</label><br />
+            <FormInput id="editpassword-new2" type="password" v-model="form.new_password2" placeholder="Ripeti la password" />
           </div>
 
           <template v-if="formErrors.length > 0">
-            <div class="bg-red-300 text-white rounded-lg p-6">
+            <div class="bg-red-50 text-red-800 rounded-lg p-6">
               <p v-for="error in formErrors" v-bind:key="error">{{ error }}</p>
             </div>
           </template>

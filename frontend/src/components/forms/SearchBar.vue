@@ -35,13 +35,15 @@ const handleSubmit = (e: Event) => {
 
 <template>
   <form @submit.prevent="handleSubmit" class="pb-6 flex space-x-4">
+    <label class="sr-only" for="search-bar-query">{{ props.placeholder }}</label>
     <input
+      id="search-bar-query"
       v-model="localQuery"
       type="search"
       class="p-4 w-full bg-gray-100 rounded-lg"
       :placeholder="props.placeholder"
     />
-    <ActionButton class="inline-block">
+    <ActionButton class="inline-block" aria-label="Cerca">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
@@ -49,6 +51,7 @@ const handleSubmit = (e: Event) => {
         stroke-width="1.5"
         stroke="currentColor"
         class="w-6 h-6"
+        aria-hidden="true"
       >
         <path
           stroke-linecap="round"

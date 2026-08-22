@@ -17,15 +17,33 @@ const router = createRouter({
       meta: { requiresAuth: false },
     },
     {
-      path: '/signup',
-      name: 'signup',
-      component: () => import('../views/SignupView.vue'),
+      path: '/collabora',
+      name: 'collabora',
+      component: () => import('../views/CollaboraView.vue'),
       meta: { requiresAuth: false },
     },
     {
       path: '/login',
       name: 'login',
       component: () => import('../views/LoginView.vue'),
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/invito/:token',
+      name: 'inviteaccept',
+      component: () => import('../views/InviteAcceptView.vue'),
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/password-dimenticata',
+      name: 'passwordresetrequest',
+      component: () => import('../views/PasswordResetRequestView.vue'),
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/reimposta-password/:token',
+      name: 'passwordresetconfirm',
+      component: () => import('../views/PasswordResetConfirmView.vue'),
       meta: { requiresAuth: false },
     },
     {
@@ -39,6 +57,26 @@ const router = createRouter({
       path: '/polls',
       name: 'polls',
       component: () => import('../views/PollsView.vue'),
+      meta: { requiresAuth: false },
+    },
+    {
+      // published feste are readable by anyone (spec content.md); the
+      // endpoint itself enforces draft-visibility, not the route guard.
+      path: '/feste',
+      name: 'festelist',
+      component: () => import('../views/FesteListView.vue'),
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/feste/nuova',
+      name: 'festecreate',
+      component: () => import('../views/FesteCreateView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/feste/:id',
+      name: 'festedetail',
+      component: () => import('../views/FesteDetailView.vue'),
       meta: { requiresAuth: false },
     },
     {

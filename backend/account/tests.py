@@ -1,10 +1,13 @@
 from io import BytesIO
+from datetime import timedelta
 
 import pytest
 from PIL import Image
+from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.utils import timezone
 
-from account.models import User
+from account.models import AccountToken, CollaborationRequest, User
 from common.testing import PASSWORD
 
 pytestmark = pytest.mark.django_db
@@ -19,59 +22,18 @@ def auth_client(api_client, citizen):
     return api_client
 
 
-# --- F1.1 signup ---
+@pytest.fixture
+def admin_request(admin):
+    """A fake admin request, enough to drive an admin action directly (no
+    admin UI/URLs under test — `message_user` needs a messages backend)."""
+    from django.contrib.messages.storage.fallback import FallbackStorage
+    from django.test import RequestFactory
 
-
-def test_signup_creates_active_citizen(api_client):
-    response = api_client.post(
-        '/api/users/signup/',
-        {
-            'email': 'nuovo@example.com',
-            'name': 'Nuovo Utente',
-            'password1': PASSWORD,
-            'password2': PASSWORD,
-        },
-    )
-
-    assert response.status_code == 201
-    assert 'detail' in response.json()
-
-    user = User.objects.get(email='nuovo@example.com')
-    assert user.is_active is True  # no e-mail activation in the MVP
-    assert user.role == User.CITIZEN
-    assert user.is_staff is False
-
-
-def test_signup_rejects_duplicate_email(api_client, citizen):
-    response = api_client.post(
-        '/api/users/signup/',
-        {
-            'email': citizen.email,
-            'name': 'Impostore',
-            'password1': PASSWORD,
-            'password2': PASSWORD,
-        },
-    )
-
-    assert response.status_code == 400
-    assert 'email' in response.json()['fields']
-    assert User.objects.filter(email=citizen.email).count() == 1
-
-
-def test_signup_rejects_password_mismatch(api_client):
-    response = api_client.post(
-        '/api/users/signup/',
-        {
-            'email': 'mismatch@example.com',
-            'name': 'Password Sbagliata',
-            'password1': PASSWORD,
-            'password2': PASSWORD + 'x',
-        },
-    )
-
-    assert response.status_code == 400
-    assert 'password2' in response.json()['fields']
-    assert not User.objects.filter(email='mismatch@example.com').exists()
+    request = RequestFactory().post('/admin/account/collaborationrequest/')
+    request.user = admin
+    request.session = {}
+    request._messages = FallbackStorage(request)
+    return request
 
 
 # --- F1.2 login ---
@@ -377,15 +339,6 @@ def test_editprofile_leaves_an_unchanged_avatar_alone(auth_client, citizen):
 # --- TD-18: rate limiting on the credential endpoints ---
 
 
-def signup_payload(n):
-    return {
-        'email': f'nuovo{n}@example.com',
-        'name': f'Nuovo {n}',
-        'password1': PASSWORD,
-        'password2': PASSWORD,
-    }
-
-
 def test_login_is_throttled(api_client, citizen):
     """An unthrottled credential endpoint is a free password oracle — and every
     attempt costs a full PBKDF2 hash, so it is a CPU amplifier too."""
@@ -407,9 +360,11 @@ def test_a_throttled_login_explains_itself_in_italian(api_client, citizen):
     assert 'Troppi tentativi' in response.json()['detail']
 
 
-def test_signup_is_throttled(api_client):
+def test_collaborate_is_throttled(api_client):
     codes = [
-        api_client.post('/api/users/signup/', signup_payload(n)).status_code
+        api_client.post(
+            '/api/users/collaborate/', collaborate_payload(email=f'nuovo{n}@example.com')
+        ).status_code
         for n in range(12)
     ]
 
@@ -436,22 +391,6 @@ def test_throttling_does_not_leak_between_tests(api_client, citizen):
 
 
 # --- F1.3: role is admin-assigned only (TD-17) ---
-
-
-def test_signup_ignores_a_self_assigned_role(api_client):
-    """One token — adding 'role' to SignupForm.Meta.fields — would hand every
-    citizen admin authority over report statuses and poll creation, with the
-    whole suite still green. Nothing pinned that until this test."""
-    response = api_client.post('/api/users/signup/', {
-        'email': 'furbo@example.com',
-        'name': 'Furbo',
-        'password1': PASSWORD,
-        'password2': PASSWORD,
-        'role': User.ADMIN,
-    })
-
-    assert response.status_code == 201
-    assert User.objects.get(email='furbo@example.com').role == User.CITIZEN
 
 
 def test_editprofile_ignores_a_self_assigned_role(auth_client, citizen):
@@ -596,3 +535,299 @@ def test_editprofile_accepts_a_json_body(auth_client, citizen):
     assert response.status_code == 200
     citizen.refresh_from_db()
     assert citizen.name == 'Nome Aggiornato'
+
+
+# --- A1: "Collabora con noi" request form (public) ---
+
+
+def collaborate_payload(**overrides):
+    now_ms = int(timezone.now().timestamp() * 1000)
+    payload = {
+        'name': 'Aspirante Collaboratore',
+        'email': 'aspirante@example.com',
+        'message': 'Vorrei raccontare le feste patronali della città.',
+        'website': '',
+        'rendered_at': now_ms - 5000,
+    }
+    payload.update(overrides)
+    return payload
+
+
+def test_collaborate_creates_a_pending_request(api_client):
+    response = api_client.post('/api/users/collaborate/', collaborate_payload())
+
+    assert response.status_code == 201
+    request = CollaborationRequest.objects.get(email='aspirante@example.com')
+    assert request.status == CollaborationRequest.PENDING
+
+
+def test_collaborate_silently_drops_a_filled_honeypot(api_client):
+    response = api_client.post(
+        '/api/users/collaborate/', collaborate_payload(website='http://spam.example')
+    )
+
+    assert response.status_code == 201
+    assert not CollaborationRequest.objects.exists()
+
+
+def test_collaborate_silently_drops_a_too_fast_submission(api_client):
+    now_ms = int(timezone.now().timestamp() * 1000)
+    response = api_client.post(
+        '/api/users/collaborate/', collaborate_payload(rendered_at=now_ms)
+    )
+
+    assert response.status_code == 201
+    assert not CollaborationRequest.objects.exists()
+
+
+def test_collaborate_still_validates_a_genuine_submission(api_client):
+    response = api_client.post(
+        '/api/users/collaborate/', collaborate_payload(email='non-una-email')
+    )
+
+    assert response.status_code == 400
+    assert 'email' in response.json()['fields']
+
+
+# --- A2/A3: admin review → invite e-mail ---
+
+
+def make_collaboration_request(**overrides):
+    payload = {
+        'name': 'Aspirante Collaboratore',
+        'email': 'aspirante@example.com',
+        'message': 'Vorrei collaborare.',
+    }
+    payload.update(overrides)
+    return CollaborationRequest.objects.create(**payload)
+
+
+def _admin_site():
+    from django.contrib.admin.sites import AdminSite
+
+    return AdminSite()
+
+
+def test_approve_creates_an_active_user_with_no_usable_password(admin_request):
+    from account.admin import CollaborationRequestAdmin
+
+    collab_request = make_collaboration_request()
+    admin_obj = CollaborationRequestAdmin(CollaborationRequest, _admin_site())
+
+    admin_obj.approve_requests(admin_request, CollaborationRequest.objects.filter(pk=collab_request.pk))
+
+    user = User.objects.get(email='aspirante@example.com')
+    assert user.is_active is True
+    assert user.has_usable_password() is False
+    assert user.role == User.CITIZEN
+
+    collab_request.refresh_from_db()
+    assert collab_request.status == CollaborationRequest.APPROVED
+    assert collab_request.reviewed_by == admin_request.user
+
+    assert len(mail.outbox) == 1
+    assert mail.outbox[0].to == ['aspirante@example.com']
+
+    token = AccountToken.objects.get(user=user, purpose=AccountToken.INVITE)
+    assert token.used_at is None
+
+
+def test_approve_skips_a_request_whose_email_already_has_an_account(admin_request, citizen):
+    collab_request = make_collaboration_request(email=citizen.email)
+    from account.admin import CollaborationRequestAdmin
+
+    admin_obj = CollaborationRequestAdmin(CollaborationRequest, _admin_site())
+    admin_obj.approve_requests(admin_request, CollaborationRequest.objects.filter(pk=collab_request.pk))
+
+    collab_request.refresh_from_db()
+    assert collab_request.status == CollaborationRequest.PENDING
+    assert len(mail.outbox) == 0
+
+
+def test_approve_skips_a_non_pending_request(admin_request):
+    collab_request = make_collaboration_request(status=CollaborationRequest.REJECTED)
+    from account.admin import CollaborationRequestAdmin
+
+    admin_obj = CollaborationRequestAdmin(CollaborationRequest, _admin_site())
+    admin_obj.approve_requests(admin_request, CollaborationRequest.objects.filter(pk=collab_request.pk))
+
+    assert not User.objects.filter(email=collab_request.email).exists()
+    assert len(mail.outbox) == 0
+
+
+def test_reject_sets_status_and_sends_no_email(admin_request):
+    collab_request = make_collaboration_request()
+    from account.admin import CollaborationRequestAdmin
+
+    admin_obj = CollaborationRequestAdmin(CollaborationRequest, _admin_site())
+    admin_obj.reject_requests(admin_request, CollaborationRequest.objects.filter(pk=collab_request.pk))
+
+    collab_request.refresh_from_db()
+    assert collab_request.status == CollaborationRequest.REJECTED
+    assert not User.objects.filter(email=collab_request.email).exists()
+    assert len(mail.outbox) == 0
+
+
+# --- A3: accepting an invite ---
+
+
+def make_invited_user():
+    user = User(email='invitato@example.com', name='Invitato')
+    user.set_unusable_password()
+    user.save()
+    _token, raw_token = AccountToken.create_for(user, AccountToken.INVITE)
+    return user, raw_token
+
+
+def test_acceptinvite_sets_the_password_and_consumes_the_token(api_client):
+    user, raw_token = make_invited_user()
+
+    response = api_client.post('/api/users/acceptinvite/', {
+        'token': raw_token, 'password1': PASSWORD, 'password2': PASSWORD,
+    })
+
+    assert response.status_code == 200
+    user.refresh_from_db()
+    assert user.check_password(PASSWORD)
+
+    replay = api_client.post('/api/users/acceptinvite/', {
+        'token': raw_token, 'password1': PASSWORD, 'password2': PASSWORD,
+    })
+    assert replay.status_code == 400
+    assert 'token' in replay.json()['fields']
+
+
+def test_acceptinvite_rejects_an_expired_token(api_client):
+    user, raw_token = make_invited_user()
+    AccountToken.objects.filter(user=user).update(expires_at=timezone.now() - timedelta(seconds=1))
+
+    response = api_client.post('/api/users/acceptinvite/', {
+        'token': raw_token, 'password1': PASSWORD, 'password2': PASSWORD,
+    })
+
+    assert response.status_code == 400
+    assert not user.has_usable_password()
+
+
+def test_acceptinvite_rejects_mismatched_passwords(api_client):
+    user, raw_token = make_invited_user()
+
+    response = api_client.post('/api/users/acceptinvite/', {
+        'token': raw_token, 'password1': PASSWORD, 'password2': PASSWORD + 'x',
+    })
+
+    assert response.status_code == 400
+    assert 'password2' in response.json()['fields']
+    # a failed password check must not burn the single-use token
+    user.refresh_from_db()
+    assert AccountToken.objects.get(user=user).used_at is None
+
+
+def test_acceptinvite_rejects_a_weak_password(api_client):
+    user, raw_token = make_invited_user()
+
+    response = api_client.post('/api/users/acceptinvite/', {
+        'token': raw_token, 'password1': '12345678', 'password2': '12345678',
+    })
+
+    assert response.status_code == 400
+    assert 'password1' in response.json()['fields']
+
+
+def test_acceptinvite_is_throttled(api_client):
+    codes = [
+        api_client.post('/api/users/acceptinvite/', {'token': 'x', 'password1': 'a', 'password2': 'b'}).status_code
+        for _ in range(12)
+    ]
+
+    assert 429 in codes, codes
+
+
+# --- A4: password reset ---
+
+
+def test_requestpasswordreset_always_returns_200(api_client, citizen):
+    for email in (citizen.email, 'non-esiste@example.com'):
+        response = api_client.post('/api/users/requestpasswordreset/', {'email': email})
+        assert response.status_code == 200
+
+
+def test_requestpasswordreset_sends_an_email_only_for_a_real_active_user(api_client, citizen):
+    api_client.post('/api/users/requestpasswordreset/', {'email': 'non-esiste@example.com'})
+    assert len(mail.outbox) == 0
+
+    api_client.post('/api/users/requestpasswordreset/', {'email': citizen.email})
+    assert len(mail.outbox) == 1
+    assert mail.outbox[0].to == [citizen.email]
+
+
+def test_requestpasswordreset_skips_a_user_with_no_usable_password(api_client):
+    user, _raw_token = make_invited_user()  # unusable password, invite not yet accepted
+
+    api_client.post('/api/users/requestpasswordreset/', {'email': user.email})
+
+    assert len(mail.outbox) == 0
+
+
+def test_confirmpasswordreset_sets_password_and_evicts_sessions(api_client, citizen):
+    login = api_client.post('/api/users/login/', {'email': citizen.email, 'password': PASSWORD}).json()
+    _token, raw_token = AccountToken.create_for(citizen, AccountToken.RESET)
+    new_password = 'NuovaPassword2026!'
+
+    response = api_client.post('/api/users/confirmpasswordreset/', {
+        'token': raw_token, 'password1': new_password, 'password2': new_password,
+    })
+
+    assert response.status_code == 200
+    citizen.refresh_from_db()
+    assert citizen.check_password(new_password)
+
+    replay = api_client.post('/api/users/refresh/', {'refresh': login['refresh']})
+    assert replay.status_code == 401
+
+
+def test_confirmpasswordreset_rejects_an_expired_or_used_token(api_client, citizen):
+    _token, raw_token = AccountToken.create_for(citizen, AccountToken.RESET)
+    AccountToken.objects.filter(user=citizen).update(expires_at=timezone.now() - timedelta(seconds=1))
+
+    response = api_client.post('/api/users/confirmpasswordreset/', {
+        'token': raw_token, 'password1': PASSWORD, 'password2': PASSWORD,
+    })
+
+    assert response.status_code == 400
+    assert 'token' in response.json()['fields']
+
+
+def test_requesting_a_new_reset_token_retires_the_old_one(api_client, citizen):
+    _first_token, first_raw = AccountToken.create_for(citizen, AccountToken.RESET)
+    _second_token, _second_raw = AccountToken.create_for(citizen, AccountToken.RESET)
+
+    response = api_client.post('/api/users/confirmpasswordreset/', {
+        'token': first_raw, 'password1': PASSWORD, 'password2': PASSWORD,
+    })
+
+    assert response.status_code == 400
+    assert 'token' in response.json()['fields']
+
+
+def test_requestpasswordreset_is_throttled(api_client, citizen):
+    codes = [
+        api_client.post('/api/users/requestpasswordreset/', {'email': citizen.email}).status_code
+        for _ in range(8)
+    ]
+
+    assert 429 in codes, codes
+
+
+# --- politics.md: the steering flag is never serialized ---
+
+
+def test_is_steering_never_appears_in_me_or_user_serializers(auth_client, citizen):
+    citizen.is_steering = True
+    citizen.save(update_fields=('is_steering',))
+
+    me_body = auth_client.get('/api/users/me/').json()
+    detail_body = auth_client.get(f'/api/users/{citizen.id}/').json()
+
+    assert 'is_steering' not in me_body
+    assert 'is_steering' not in detail_body

@@ -1,4 +1,8 @@
+import time
+
+from django.contrib.auth import password_validation
 from django.contrib.auth.forms import PasswordChangeForm
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.shortcuts import get_object_or_404
 
 from rest_framework.decorators import (
@@ -15,10 +19,34 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from common.pagination import StandardPagination
 
-from .forms import ProfileForm, SignupForm
-from .models import User
+from .forms import CollaborationRequestForm, ProfileForm
+from .models import AccountToken, User
 from .serializers import MeSerializer, UserSerializer
-from .throttling import PasswordChangeRateThrottle, SignupRateThrottle
+from .services import send_password_reset_email
+from .throttling import (
+    CollaborationRequestRateThrottle,
+    InviteRateThrottle,
+    PasswordChangeRateThrottle,
+    PasswordResetRateThrottle,
+)
+
+# A4: the request form is public, so a bot can fill it in well under a human's
+# reaction time — the honeypot catches the ones that autofill every field, this
+# catches the ones that skip the honeypot but still submit instantly (spec A1:
+# "its job is spam, not identity").
+MIN_FORM_FILL_SECONDS = 3
+
+
+def _looks_like_spam(data):
+    if data.get('website'):
+        return True
+
+    try:
+        rendered_at = int(data.get('rendered_at', 0)) / 1000
+    except (TypeError, ValueError):
+        return True
+
+    return (time.time() - rendered_at) < MIN_FORM_FILL_SECONDS
 
 
 def _blacklist_all_tokens(user):
@@ -35,6 +63,24 @@ def _form_errors(form):
     }
 
 
+def _set_new_password(user, data):
+    """Shared by invite-accept and reset-confirm: validate a password1/password2
+    pair against Django's validators and save it on `user`. Raises ValidationError."""
+    password1 = data.get('password1', '')
+    password2 = data.get('password2', '')
+
+    if password1 != password2:
+        raise ValidationError({'password2': ['Le due password non corrispondono.']})
+
+    try:
+        password_validation.validate_password(password1, user=user)
+    except DjangoValidationError as exc:
+        raise ValidationError({'password1': list(exc.messages)}) from exc
+
+    user.set_password(password1)
+    user.save(update_fields=('password',))
+
+
 @api_view(['GET'])
 def me(request):
     return Response(MeSerializer(request.user).data)
@@ -43,22 +89,73 @@ def me(request):
 @api_view(['POST'])
 @authentication_classes([])
 @permission_classes([])
-@throttle_classes([SignupRateThrottle])
-def signup(request):
+@throttle_classes([CollaborationRequestRateThrottle])
+def collaborate(request):
     data = request.data
 
-    form = SignupForm({
-        'email': data.get('email'),
-        'name': data.get('name'),
-        'password1': data.get('password1'),
-        'password2': data.get('password2'),
-    })
+    if not _looks_like_spam(data):
+        form = CollaborationRequestForm({
+            'name': data.get('name'),
+            'email': data.get('email'),
+            'message': data.get('message'),
+        })
+        if not form.is_valid():
+            raise ValidationError(_form_errors(form))
+        form.save()
 
-    if not form.is_valid():
-        raise ValidationError(_form_errors(form))
+    # Same response whether a request was actually stored or silently dropped
+    # as spam — telling a bot its honeypot tripped would teach it not to (A1).
+    return Response({'detail': 'Richiesta inviata.'}, status=201)
 
-    form.save()
-    return Response({'detail': 'Account creato.'}, status=201)
+
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([])
+@throttle_classes([InviteRateThrottle])
+def acceptinvite(request):
+    token = AccountToken.find_valid(request.data.get('token', ''), AccountToken.INVITE)
+    if token is None:
+        raise ValidationError({'token': ['Link non valido o scaduto.']})
+
+    _set_new_password(token.user, request.data)
+    token.mark_used()
+
+    return Response({'detail': 'Password impostata. Ora puoi accedere.'})
+
+
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([])
+@throttle_classes([PasswordResetRateThrottle])
+def requestpasswordreset(request):
+    email = request.data.get('email', '')
+    user = User.objects.filter(email=email, is_active=True).first()
+    if user is not None and user.has_usable_password():
+        token, raw_token = AccountToken.create_for(user, AccountToken.RESET)
+        send_password_reset_email(user, raw_token)
+
+    # Always the same response, whether or not the address is registered —
+    # anything else would let a caller enumerate collaborator e-mails.
+    return Response({'detail': "Se l'indirizzo esiste, riceverai un'e-mail."})
+
+
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([])
+@throttle_classes([PasswordResetRateThrottle])
+def confirmpasswordreset(request):
+    token = AccountToken.find_valid(request.data.get('token', ''), AccountToken.RESET)
+    if token is None:
+        raise ValidationError({'token': ['Link non valido o scaduto.']})
+
+    _set_new_password(token.user, request.data)
+    token.mark_used()
+
+    # Same reasoning as editpassword: a reset is exactly the moment a session
+    # might be compromised, so every existing refresh token dies with it (TD-20).
+    _blacklist_all_tokens(token.user)
+
+    return Response({'detail': 'Password aggiornata. Ora puoi accedere.'})
 
 
 @api_view(['GET'])

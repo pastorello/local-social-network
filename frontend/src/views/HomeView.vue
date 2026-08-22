@@ -29,6 +29,8 @@ const statusFilter = ref('')
 
 const placing = ref(false)
 const draftCoords = ref<{ lat: number; lng: number } | null>(null)
+const manualLat = ref('')
+const manualLng = ref('')
 
 const statusOptions = (Object.keys(STATUS_META) as ReportStatus[]).map((status) => ({
   value: status,
@@ -81,6 +83,17 @@ const onMapClick = (coords: { lat: number; lng: number }) => {
   draftCoords.value = coords
 }
 
+// The map click is the fast path but has no keyboard equivalent — this is
+// the one for anyone who can't (or doesn't want to) use a pointer (WCAG 2.1.1).
+const useManualCoords = () => {
+  const lat = Number(manualLat.value)
+  const lng = Number(manualLng.value)
+  if (!manualLat.value || !manualLng.value || Number.isNaN(lat) || Number.isNaN(lng)) return
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return
+
+  draftCoords.value = { lat, lng }
+}
+
 const onPinClick = (id: string) => {
   router.push(`/reports/${id}`)
 }
@@ -122,14 +135,46 @@ onMounted(() => {
             @saved="onReportSaved"
             @cancel="cancelReporting"
           />
-          <button
-            v-else
-            type="button"
-            class="py-4 px-6 rounded-lg bg-gray-200 text-gray-700 cursor-pointer"
-            @click="cancelReporting"
-          >
-            Annulla
-          </button>
+          <template v-else>
+            <fieldset class="mb-4 border border-gray-200 rounded-lg p-3 space-y-2">
+              <legend class="text-sm font-semibold px-1">Oppure inserisci le coordinate</legend>
+              <p class="text-xs text-gray-500">In alternativa al clic sulla mappa (es. da tastiera).</p>
+              <div class="flex gap-2">
+                <label class="sr-only" for="report-manual-lat">Latitudine</label>
+                <input
+                  id="report-manual-lat"
+                  v-model="manualLat"
+                  type="text"
+                  inputmode="decimal"
+                  placeholder="Latitudine"
+                  class="w-1/2 p-2 border border-gray-200 rounded text-sm"
+                />
+                <label class="sr-only" for="report-manual-lng">Longitudine</label>
+                <input
+                  id="report-manual-lng"
+                  v-model="manualLng"
+                  type="text"
+                  inputmode="decimal"
+                  placeholder="Longitudine"
+                  class="w-1/2 p-2 border border-gray-200 rounded text-sm"
+                />
+              </div>
+              <button
+                type="button"
+                class="text-sm bg-purple-600 text-white rounded px-3 py-2 cursor-pointer"
+                @click="useManualCoords"
+              >
+                Usa queste coordinate
+              </button>
+            </fieldset>
+            <button
+              type="button"
+              class="py-4 px-6 rounded-lg bg-gray-200 text-gray-700 cursor-pointer"
+              @click="cancelReporting"
+            >
+              Annulla
+            </button>
+          </template>
         </template>
       </PanelBox>
 
@@ -142,6 +187,7 @@ onMounted(() => {
           <select
             v-model="categoryFilter"
             class="p-4 w-full bg-gray-100 rounded-lg"
+            aria-label="Filtra per categoria"
             @change="getPins"
           >
             <option value="">Tutte le categorie</option>
@@ -153,6 +199,7 @@ onMounted(() => {
           <select
             v-model="statusFilter"
             class="p-4 w-full bg-gray-100 rounded-lg"
+            aria-label="Filtra per stato"
             @change="getPins"
           >
             <option value="">Tutti gli stati</option>

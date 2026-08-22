@@ -15,15 +15,22 @@ is therefore gone; its accessibility sub-question survives below.
 The spec's build order ([spec/README.md](./spec/README.md#suggested-build-order)),
 one phase per PR, each proven before the next:
 
-1. **C1 — accounts**: "Collabora con noi" request + CAPTCHA, admin approval,
-   invite e-mail with single-use setup link, password reset. Reverses v1's
-   open-signup decision; brings e-mail back as real configuration. The
-   **steering capability** lands here as an admin-set flag (spec
-   [politics.md](./spec/politics.md)); its tooling does not.
-2. **C2 — content core + feste end-to-end**: sanitized rich text (requires
-   the ADR-0001 revision *before* the first card renders), images,
-   translations plumbing, a procession route on the map, a published card
-   readable anonymously. The richest type first, to prove the core.
+1. **C1 — accounts — delivered (2026-08-21).** "Collabora con noi" request
+   (honeypot + timing anti-spam, not a third-party CAPTCHA — see the
+   [accounts.md](./spec/accounts.md) A1 note), admin approval, invite e-mail
+   with single-use setup link, password reset. Reverses v1's open-signup
+   decision; brings e-mail back as real configuration (`FRONTEND_URL` +
+   `EMAIL_BACKEND` in settings.py). The **steering capability** landed here as
+   an admin-set flag (spec [politics.md](./spec/politics.md)) — its tooling
+   does not.
+2. **C2 — content core + feste end-to-end — delivered (2026-08-22)**:
+   sanitized rich text (the ADR-0001 revision landed with it, not after —
+   `content/sanitize.py` is the chokepoint, `RichText.vue` the one `v-html`),
+   images, translations plumbing (`Card.language`/`translation_of`, unused
+   until C4), a procession route on the map, a published card readable
+   anonymously. The richest type first, to prove the core. **Did not** include
+   an accessibility-bar decision at the time — that followed two days later,
+   see item 3 below.
 3. **C3 — the remaining thin type apps**: chiese, ricette, personaggi,
    dialetto — each a small diff over the proven core (ADR-0004).
 4. **C4 — translations** authoring and the reader's language switch.
@@ -44,13 +51,18 @@ changes their weight:
 - **TD-06** (remaining dependency drift) — ordinary maintenance; axios (the
   security-relevant half) was done 2026-08-20.
 
-## 3. Accessibility — decide during C2, not after
+## 3. Accessibility — decided (2026-08-22): WCAG 2.1 AA, whole app
 
-v1 scoped WCAG out (N5). A tourist-facing public site raises the stakes: this
-is now a real audience of strangers on unknown devices. The cheap version —
-semantic markup, contrast, alt text as the card system is *built* — costs
-little in-flight and a rewrite later. Decide the bar when the card templates
-are designed, and record it.
+Recorded in [ADR-0005](./adr/0005-wcag-2.1-aa-accessibility-bar.md), not just
+here: v1 scoped WCAG out (N5); the v2 tourist audience reopened the question at
+C2, and it went unanswered through that phase. Now decided, and a first
+remediation pass landed with the decision — see the ADR's Consequences for
+exactly what was fixed (label/input associations app-wide, icon accessible
+names, duplicate/missing page headings, several color-contrast failures, and
+the two Critical keyboard-only map interactions) versus what's deliberately
+deferred (full map-widget screen-reader operability, error-to-field ARIA
+wiring, a CI accessibility gate). C3's four remaining card types inherit the
+bar from day one.
 
 ## 4. Deploy — **last, on the author's signal** (unchanged)
 

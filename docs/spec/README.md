@@ -57,12 +57,12 @@ not mean).
 
 | Area | File | Status |
 |---|---|---|
-| Accounts & the "Collabora con noi" flow | [accounts.md](./accounts.md) | to build (phase C1) |
-| Content core + typed cards | [content.md](./content.md) | to build (phase C2/C3) |
+| Accounts & the "Collabora con noi" flow | [accounts.md](./accounts.md) | delivered (C1, 2026-08-21) |
+| Content core + typed cards | [content.md](./content.md) | core + feste delivered (C2, 2026-08-22); remaining types to build (C3) |
 | Translations | [translations.md](./translations.md) | to build (phase C4) |
 | The map: layers & overlays | [map.md](./map.md) | to build (phase C5) |
 | Reports & polls (from v1) | [reports-and-polls.md](./reports-and-polls.md) | delivered; reports change author |
-| Steering tier & political tooling | [politics.md](./politics.md) | tier in C1; tooling is future, out of current build |
+| Steering tier & political tooling | [politics.md](./politics.md) | tier delivered (C1, `is_steering` flag, no consumer yet); tooling is future, out of current build |
 
 ## Architecture (shared across areas)
 
@@ -108,11 +108,12 @@ Confirmed explicitly by the author, 2026-08-21:
 
 Dependency-honest, one phase per PR, each proven before the next:
 
-1. **C1** — accounts: request form → admin approval → invite → reset; the
-   steering flag lands here as a capability, its tooling does not.
-2. **C2** — content core + feste end-to-end (the richest type, to prove the
-   core): sanitized rich text, images, a procession route, a card readable
-   anonymously.
+1. **C1 — delivered (2026-08-21).** Accounts: request form → admin approval →
+   invite → reset; the steering flag lands here as a capability, its tooling
+   does not.
+2. **C2 — delivered (2026-08-22).** Content core + feste end-to-end (the
+   richest type, to prove the core): sanitized rich text, images, a procession
+   route, a card readable anonymously.
 3. **C3** — the remaining thin type apps: chiese, ricette, personaggi, dialetto.
 4. **C4** — translations.
 5. **C5** — overlays: quartieri/seggi polygons (seggi confidential by default),

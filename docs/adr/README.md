@@ -18,3 +18,4 @@ records what was decided *then*.
 | [0002](0002-debug-off-secret-key-required.md) | `DJANGO_DEBUG` defaults off; `DJANGO_SECRET_KEY` is required outside debug | Accepted |
 | [0003](0003-media-on-local-filesystem.md) | Uploads go to the local filesystem and are not served in production yet | Accepted |
 | [0004](0004-content-core-thin-type-apps.md) | One content core, thin Django apps per content type (spec v2) | Accepted |
+| [0005](0005-wcag-2.1-aa-accessibility-bar.md) | Vivere Gaeta targets WCAG 2.1 Level AA, whole app, with a remediation plan | Accepted |

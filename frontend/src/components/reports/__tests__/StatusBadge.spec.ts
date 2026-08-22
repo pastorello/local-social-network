@@ -14,7 +14,9 @@ describe('StatusBadge', () => {
     const open = mount(StatusBadge, { props: { status: 'open' } })
     const resolved = mount(StatusBadge, { props: { status: 'resolved' } })
 
-    expect(open.attributes('style')).toContain('rgb(239, 68, 68)')
-    expect(resolved.attributes('style')).toContain('rgb(34, 197, 94)')
+    // ADR-0005: darker shades than the original -500s, needed for >=4.5:1
+    // contrast against the badge's white text.
+    expect(open.attributes('style')).toContain('rgb(185, 28, 28)')
+    expect(resolved.attributes('style')).toContain('rgb(21, 128, 61)')
   })
 })

@@ -1,12 +1,10 @@
 import { describe, it, expect } from 'vitest'
 
-import { parseZodObject, SignupForm } from '../user'
+import { parseZodObject, CollaborateForm, InviteAcceptForm } from '../user'
 
 describe('parseZodObject', () => {
   it('labels the field in Italian instead of printing its raw name', () => {
-    const result = parseZodObject(SignupForm, {
-      email: 'a@example.com',
-      name: 'Mario',
+    const result = parseZodObject(InviteAcceptForm, {
       password1: 'password123',
       password2: 'password456',
     })
@@ -18,11 +16,10 @@ describe('parseZodObject', () => {
   })
 
   it('keeps enough context to tell two failing fields apart', () => {
-    const result = parseZodObject(SignupForm, {
+    const result = parseZodObject(CollaborateForm, {
       email: 'non-una-email',
       name: 'M',
-      password1: 'password123',
-      password2: 'password123',
+      message: 'Vorrei collaborare con voi.',
     })
 
     expect(result.errors.some((e) => e.startsWith('E-mail:'))).toBe(true)
@@ -30,11 +27,10 @@ describe('parseZodObject', () => {
   })
 
   it('returns the parsed data when everything is valid', () => {
-    const result = parseZodObject(SignupForm, {
+    const result = parseZodObject(CollaborateForm, {
       email: 'a@example.com',
       name: 'Mario',
-      password1: 'password123',
-      password2: 'password123',
+      message: 'Vorrei raccontare le feste patronali della città.',
     })
 
     expect(result.errors).toEqual([])

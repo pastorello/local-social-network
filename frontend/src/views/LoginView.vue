@@ -73,8 +73,8 @@ const submitForm = async () => {
         </p>
 
         <p class="font-bold">
-          Non hai un account?
-          <RouterLink :to="{ name: 'signup' }" class="underline">Registrati qui</RouterLink>!
+          Vuoi collaborare?
+          <RouterLink :to="{ name: 'collabora' }" class="underline">Scrivici</RouterLink>!
         </p>
       </PanelBox>
     </div>
@@ -90,6 +90,9 @@ const submitForm = async () => {
           <div>
             <label>Password</label><br />
             <FormInput type="password" v-model="form.password" placeholder="La tua password" />
+            <RouterLink :to="{ name: 'passwordresetrequest' }" class="underline text-sm">
+              Password dimenticata?
+            </RouterLink>
           </div>
 
           <template v-if="formErrors.length > 0">
