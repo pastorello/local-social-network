@@ -48,7 +48,10 @@ const startTranslation = async (language: string) => {
 </script>
 
 <template>
-  <div v-if="missingLanguages.length > 0 || existingTranslations.length > 0" class="flex flex-wrap items-center gap-2">
+  <div
+    v-if="missingLanguages.length > 0 || existingTranslations.length > 0"
+    class="flex flex-wrap items-center gap-2"
+  >
     <ActionButton
       v-for="code in missingLanguages"
       :key="code"
@@ -64,9 +67,8 @@ const startTranslation = async (language: string) => {
       :to="{ name: detailRouteName, params: { id: translation.id } }"
       class="underline text-sm"
     >
-      Vai alla traduzione in {{ LANGUAGE_LABELS[translation.language] }}{{
-        translation.is_published ? '' : ' (bozza)'
-      }}
+      Vai alla traduzione in {{ LANGUAGE_LABELS[translation.language]
+      }}{{ translation.is_published ? '' : ' (bozza)' }}
     </RouterLink>
   </div>
 </template>

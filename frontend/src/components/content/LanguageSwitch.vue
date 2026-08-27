@@ -9,7 +9,11 @@ defineProps<{
 </script>
 
 <template>
-  <nav v-if="translations.length > 0" aria-label="Cambia lingua" class="flex flex-wrap gap-3 text-sm mb-4">
+  <nav
+    v-if="translations.length > 0"
+    aria-label="Cambia lingua"
+    class="flex flex-wrap gap-3 text-sm mb-4"
+  >
     <RouterLink
       v-for="translation in translations"
       :key="translation.id"

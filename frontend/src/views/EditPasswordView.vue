@@ -59,7 +59,7 @@ const submitForm = () => {
 
 <template>
   <ViewContainer class="grid-cols-2">
-    <div >
+    <div>
       <PanelBox>
         <MainTitle>Cambia password</MainTitle>
         <p class="mb-6 text-gray-500">Da qui puoi cambiare la tua password.</p>
@@ -67,7 +67,7 @@ const submitForm = () => {
       </PanelBox>
     </div>
 
-    <div >
+    <div>
       <PanelBox>
         <form class="space-y-6" v-on:submit.prevent="submitForm">
           <div>
@@ -92,7 +92,12 @@ const submitForm = () => {
 
           <div>
             <label for="editpassword-new2">Ripeti password</label><br />
-            <FormInput id="editpassword-new2" type="password" v-model="form.new_password2" placeholder="Ripeti la password" />
+            <FormInput
+              id="editpassword-new2"
+              type="password"
+              v-model="form.new_password2"
+              placeholder="Ripeti la password"
+            />
           </div>
 
           <template v-if="formErrors.length > 0">

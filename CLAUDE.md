@@ -120,10 +120,12 @@ dev server, :5173) and **`frontend-preview`** (:4173, `vite preview` over
 server — the default-import gotcha and TD-02's bundling only show in built
 output, which is also why CI runs Cypress there.
 
-`npm run format` is `prettier --write src/`, i.e. the **whole tree**, and the
-tree is not prettier-clean: running it rewrites ~30 files that have nothing to
-do with your change. The definition of done does not include it. Format the
-files you touched, or don't run it.
+`npm run format` is `prettier --write src/`. The tree **is** prettier-clean as
+of 2026-08-27 (`npx prettier --check .` passes, `eslint.config.ts` included),
+so running it now touches only what you changed — it used to rewrite ~30
+unrelated files, which is why it is still not part of the definition of done.
+Keep it that way: if a formatting sweep ever becomes necessary again, it goes
+in its own commit, never mixed into a feature diff.
 
 ### CI
 

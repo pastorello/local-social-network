@@ -76,7 +76,12 @@ const submitForm = async () => {
   <form class="space-y-4" v-on:submit.prevent="submitForm">
     <div>
       <label class="font-semibold" for="report-title">Titolo</label><br />
-      <FormInput id="report-title" type="text" v-model="title" placeholder="Es. Buca in via Indipendenza" />
+      <FormInput
+        id="report-title"
+        type="text"
+        v-model="title"
+        placeholder="Es. Buca in via Indipendenza"
+      />
     </div>
 
     <div>
@@ -102,7 +107,13 @@ const submitForm = async () => {
 
     <div>
       <label class="font-semibold" for="report-photo">Foto (facoltativa, max 5 MB)</label><br />
-      <input id="report-photo" type="file" ref="fileInput" accept="image/jpeg,image/png,image/webp" @change="onFileChange" />
+      <input
+        id="report-photo"
+        type="file"
+        ref="fileInput"
+        accept="image/jpeg,image/png,image/webp"
+        @change="onFileChange"
+      />
       <div v-if="url" class="mt-2">
         <img :src="url" class="w-32 rounded-lg" alt="Anteprima foto" />
       </div>

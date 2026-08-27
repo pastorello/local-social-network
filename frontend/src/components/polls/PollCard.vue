@@ -147,7 +147,12 @@ const closePoll = async () => {
     </div>
 
     <div v-if="!poll.is_closed" class="mt-4 flex items-center gap-3">
-      <ActionButton v-if="canVote" size="small" :disabled="!selectedOption || submitting" @click="vote">
+      <ActionButton
+        v-if="canVote"
+        size="small"
+        :disabled="!selectedOption || submitting"
+        @click="vote"
+      >
         Vota
       </ActionButton>
       <ActionButton v-else-if="!isAuthenticated" size="small" @click="goToLogin">

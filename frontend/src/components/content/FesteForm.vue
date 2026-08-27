@@ -102,7 +102,12 @@ const submitForm = async () => {
   <form class="space-y-6" v-on:submit.prevent="submitForm">
     <div>
       <label class="font-semibold" for="feste-title">Titolo</label><br />
-      <FormInput id="feste-title" type="text" v-model="title" placeholder="Es. Festa di Sant'Erasmo" />
+      <FormInput
+        id="feste-title"
+        type="text"
+        v-model="title"
+        placeholder="Es. Festa di Sant'Erasmo"
+      />
     </div>
 
     <div>
@@ -112,7 +117,12 @@ const submitForm = async () => {
 
     <div>
       <label class="font-semibold" for="feste-recurrence">Ricorrenza</label><br />
-      <FormInput id="feste-recurrence" type="text" v-model="recurrence" placeholder="Es. Ogni 9 giugno" />
+      <FormInput
+        id="feste-recurrence"
+        type="text"
+        v-model="recurrence"
+        placeholder="Es. Ogni 9 giugno"
+      />
     </div>
 
     <div>
@@ -128,7 +138,13 @@ const submitForm = async () => {
 
     <div>
       <label class="font-semibold" for="feste-images">Immagini</label><br />
-      <input id="feste-images" type="file" accept="image/jpeg,image/png,image/webp" multiple @change="onFilesSelected" />
+      <input
+        id="feste-images"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+        @change="onFilesSelected"
+      />
       <div class="flex flex-wrap gap-2 mt-2">
         <div v-for="image in existingImages" :key="image.id" class="relative">
           <img :src="image.imageURL" class="w-24 h-24 object-cover rounded-lg" alt="" />

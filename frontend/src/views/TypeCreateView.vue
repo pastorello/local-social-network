@@ -22,10 +22,12 @@ const onCreated = (item: ContentItem) => {
     <div class="col-span-2 col-start-2 self-start">
       <PanelBox>
         <MainTitle>Nuova scheda — {{ config.singularLabel }}</MainTitle>
-        <p class="mb-6 text-gray-500">
-          Puoi salvarla come bozza e pubblicarla quando è pronta.
-        </p>
-        <TypeForm :config="config" @saved="onCreated" @cancel="router.push({ name: config.routeNames.list })" />
+        <p class="mb-6 text-gray-500">Puoi salvarla come bozza e pubblicarla quando è pronta.</p>
+        <TypeForm
+          :config="config"
+          @saved="onCreated"
+          @cancel="router.push({ name: config.routeNames.list })"
+        />
       </PanelBox>
     </div>
   </ViewContainer>

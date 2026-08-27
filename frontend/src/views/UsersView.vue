@@ -86,9 +86,7 @@ onMounted(() => {
           </ActionButton>
         </form>
         <div v-if="users.length" class="space-y-6">
-          <p class="text-sm text-gray-500">
-            {{ total }} {{ total === 1 ? 'utente' : 'utenti' }}
-          </p>
+          <p class="text-sm text-gray-500">{{ total }} {{ total === 1 ? 'utente' : 'utenti' }}</p>
 
           <div class="grid grid-cols-4 gap-6">
             <UserCard v-for="user in users" :key="user.id" :user="user" />

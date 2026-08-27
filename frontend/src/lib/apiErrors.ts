@@ -8,8 +8,8 @@ const flatten = (value: unknown): string[] => {
 }
 
 export function extractApiErrors(error: unknown): string[] {
-  const data = (error as { response?: { data?: { detail?: unknown; fields?: unknown } } })
-    .response?.data
+  const data = (error as { response?: { data?: { detail?: unknown; fields?: unknown } } }).response
+    ?.data
 
   if (data?.fields) {
     const messages = flatten(data.fields)

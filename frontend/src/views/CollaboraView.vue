@@ -78,8 +78,8 @@ const submitForm = () => {
 
         <p class="mb-6 text-gray-500">
           Vivere Gaeta è scritto da un piccolo gruppo di collaboratori scelti dall'autore.
-          Raccontaci chi sei e perché vuoi contribuire: ti risponderemo se la tua richiesta
-          viene approvata.
+          Raccontaci chi sei e perché vuoi contribuire: ti risponderemo se la tua richiesta viene
+          approvata.
         </p>
 
         <p class="font-bold">
@@ -94,12 +94,22 @@ const submitForm = () => {
         <form class="space-y-6" v-on:submit.prevent="submitForm">
           <div>
             <label for="collabora-name">Nome</label><br />
-            <FormInput id="collabora-name" type="text" v-model="form.name" placeholder="Il tuo nome completo" />
+            <FormInput
+              id="collabora-name"
+              type="text"
+              v-model="form.name"
+              placeholder="Il tuo nome completo"
+            />
           </div>
 
           <div>
             <label for="collabora-email">E-mail</label><br />
-            <FormInput id="collabora-email" type="email" v-model="form.email" placeholder="La tua e-mail" />
+            <FormInput
+              id="collabora-email"
+              type="email"
+              v-model="form.email"
+              placeholder="La tua e-mail"
+            />
           </div>
 
           <div>

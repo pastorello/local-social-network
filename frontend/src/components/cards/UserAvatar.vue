@@ -21,7 +21,12 @@ const initials = computed(() =>
 
 <template>
   <img v-if="src" :src="src" :alt="label" />
-  <div v-else role="img" :aria-label="label" class="flex items-center justify-center bg-gray-200 text-gray-600 font-semibold select-none">
+  <div
+    v-else
+    role="img"
+    :aria-label="label"
+    class="flex items-center justify-center bg-gray-200 text-gray-600 font-semibold select-none"
+  >
     {{ initials || '?' }}
   </div>
 </template>

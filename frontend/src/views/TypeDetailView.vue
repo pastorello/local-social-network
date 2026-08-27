@@ -103,7 +103,10 @@ watch(
     <div class="col-span-2 col-start-2 space-y-4 self-start">
       <PanelBox v-if="item">
         <template v-if="!editing">
-          <LanguageSwitch :translations="item.translations" :detail-route-name="config.routeNames.detail" />
+          <LanguageSwitch
+            :translations="item.translations"
+            :detail-route-name="config.routeNames.detail"
+          />
 
           <div class="mb-2 flex items-center justify-between gap-4">
             <MainTitle>{{ item.title }}</MainTitle>
@@ -162,11 +165,19 @@ watch(
           </div>
         </template>
 
-        <TypeForm v-else :config="config" :item="item" @saved="onEdited" @cancel="editing = false" />
+        <TypeForm
+          v-else
+          :config="config"
+          :item="item"
+          @saved="onEdited"
+          @cancel="editing = false"
+        />
       </PanelBox>
 
       <PanelBox>
-        <RouterLink :to="{ name: config.routeNames.list }" class="underline">← Torna a {{ config.label.toLowerCase() }}</RouterLink>
+        <RouterLink :to="{ name: config.routeNames.list }" class="underline"
+          >← Torna a {{ config.label.toLowerCase() }}</RouterLink
+        >
       </PanelBox>
     </div>
   </ViewContainer>

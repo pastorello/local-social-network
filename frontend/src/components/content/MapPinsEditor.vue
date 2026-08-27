@@ -115,18 +115,22 @@ const addManualPoint = () => {
     <div class="space-y-2">
       <p v-if="!readonly" class="text-sm text-gray-500">
         <template v-if="max === 1">
-          {{ atCapacity ? 'Un solo punto sulla mappa.' : 'Clicca sulla mappa per aggiungere il punto.' }}
+          {{
+            atCapacity
+              ? 'Un solo punto sulla mappa.'
+              : 'Clicca sulla mappa per aggiungere il punto.'
+          }}
         </template>
         <template v-else>
-          {{ atCapacity ? `Hai raggiunto il limite di ${max} punti.` : 'Clicca sulla mappa per aggiungere un punto.' }}
+          {{
+            atCapacity
+              ? `Hai raggiunto il limite di ${max} punti.`
+              : 'Clicca sulla mappa per aggiungere un punto.'
+          }}
         </template>
       </p>
       <ul class="space-y-2">
-        <li
-          v-for="(point, index) in modelValue"
-          :key="index"
-          class="flex items-center gap-2"
-        >
+        <li v-for="(point, index) in modelValue" :key="index" class="flex items-center gap-2">
           <template v-if="readonly">
             <span>{{ point.label || 'Punto senza nome' }}</span>
           </template>
@@ -134,7 +138,11 @@ const addManualPoint = () => {
             <input
               type="text"
               class="flex-1 p-2 border border-gray-200 rounded"
-              :placeholder="max === 1 ? 'Nome del punto (facoltativo)' : `Nome del punto ${index + 1} (facoltativo)`"
+              :placeholder="
+                max === 1
+                  ? 'Nome del punto (facoltativo)'
+                  : `Nome del punto ${index + 1} (facoltativo)`
+              "
               :aria-label="`Nome del punto ${index + 1}`"
               :value="point.label"
               @input="updateLabel(index, ($event.target as HTMLInputElement).value)"
@@ -151,13 +159,12 @@ const addManualPoint = () => {
         </li>
       </ul>
 
-      <fieldset v-if="!readonly && !atCapacity" class="border border-gray-200 rounded-lg p-3 space-y-2">
-        <legend class="text-sm font-semibold px-1">
-          Aggiungi un punto manualmente
-        </legend>
-        <p class="text-xs text-gray-500">
-          In alternativa al clic sulla mappa (es. da tastiera).
-        </p>
+      <fieldset
+        v-if="!readonly && !atCapacity"
+        class="border border-gray-200 rounded-lg p-3 space-y-2"
+      >
+        <legend class="text-sm font-semibold px-1">Aggiungi un punto manualmente</legend>
+        <p class="text-xs text-gray-500">In alternativa al clic sulla mappa (es. da tastiera).</p>
         <div class="flex gap-2">
           <label class="sr-only" for="map-pins-manual-lat">Latitudine</label>
           <input
