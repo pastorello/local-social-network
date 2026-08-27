@@ -93,6 +93,14 @@ geolocation is a later phase (see Non-goals) rather than the centre of this one.
   researcher.
 
 - **D7 — The palette comes from Gaeta**: stone, sea, terracotta, lime white.
+  **Chosen 2026-08-27: "Pietra e mare"** — warm paper ground (`#faf7f2`), deep
+  Tyrrhenian as the single accent (`#0f5f73`), terracotta secondary
+  (`#9c4221`), ink `#1f2933`. The values live in
+  `frontend/src/assets/main.css`; this file records the direction, not the
+  hexes. Two alternatives were drawn and rejected: a terracotta-accent
+  direction, because its accent and the *feste* layer colour were near-
+  identical and the brand ended up looking like a data value; and a
+  white-and-ink one, correct but anonymous until real photography exists.
   **The purple is retired** — `SiteTitle.vue`'s gradient was a default that
   survived by inertia, and it is also the single most recognisable "generated
   by an AI" tell in the interface (impeccable has flagged it since the plugin
@@ -115,6 +123,13 @@ geolocation is a later phase (see Non-goals) rather than the centre of this one.
   however good it looks. Check with the relative-luminance formula, not by eye —
   `lib/reportStatus.ts` already carries a comment listing the shades this ruled
   out once.
+
+  Checking the first palette turned up a distinction worth keeping: **there are
+  two border tokens, not one.** WCAG 1.4.11 asks 3:1 only of boundaries that
+  *identify a control* — an input's outline qualifies, a decorative hairline
+  between panels does not. A single `border` token cannot honestly be both, so
+  the palette has `hairline` (decorative, exempt) and `field` (control
+  outlines, ≥3:1 against both grounds).
 
 ### Patronage and sponsors
 
@@ -166,8 +181,9 @@ answer is not a redesign.
 
 ## Open questions
 
-1. The palette's actual values — to be produced, then contrast-checked pair by
-   pair against D9 before anything is built on them.
+1. ~~The palette's actual values.~~ **Answered 2026-08-27** — "Pietra e mare"
+   (D7), every pair checked against D9 with the relative-luminance formula
+   before anything was built on it, and landed as tokens.
 2. Typography: which faces, and whether a display face for titles is worth the
    loading cost on a phone.
 3. Whether the collaborator's authoring screens are restyled in the same pass

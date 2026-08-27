@@ -8,7 +8,7 @@ const { buttonType = 'default', size = 'medium' } = defineProps<{
 
 const classObject = computed(() => ({
   'rounded-lg cursor-pointer': true,
-  'bg-purple-600 text-white': buttonType === 'default',
+  'bg-sea text-white': buttonType === 'default',
   'bg-red-600 text-white': buttonType === 'danger',
   // green-600 measures ~3.3:1 against white text, short of WCAG AA's 4.5:1 (ADR-0005)
   'bg-green-700 text-white': buttonType === 'success',

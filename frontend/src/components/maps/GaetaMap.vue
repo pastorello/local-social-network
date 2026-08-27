@@ -30,7 +30,7 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import type { MapCardFeature, Overlay } from '@/definitions/interfaces/MapData'
 import type { ReportPin } from '@/definitions/interfaces/Report'
 import { layerColor } from '@/lib/mapLayers'
-import { STATUS_META } from '@/lib/reportStatus'
+import { statusColor } from '@/lib/reportStatus'
 
 // The one map of Gaeta (spec map.md): the v1 reports layer, every card type
 // that has a footprint, and the overlays — "the same Gaeta, shown
@@ -80,7 +80,7 @@ const renderPins = () => {
       radius: 9,
       color: '#ffffff',
       weight: 2,
-      fillColor: STATUS_META[pin.status].color,
+      fillColor: statusColor(pin.status),
       fillOpacity: 0.9,
     })
     marker.bindTooltip(pin.title)
