@@ -102,26 +102,35 @@ register.
 pinned Python; frontend: vitest + eslint + build on Node 24). Nothing else — no
 deploy step, since there is nothing to deploy to.
 
-### TD-02 · Leaflet is bundled twice (~86 kB gzip wasted)
+### TD-02 · Leaflet is bundled twice (~86 kB gzip wasted) — **FIXED 2026-08-27** ✔
 
-**Evidence:** `npm run build` emits both
-
-```
-dist/assets/leaflet-src.esm-D3NCHgIn.js   148.53 kB │ gzip: 43.19 kB
-dist/assets/leaflet-src-CERmynjB.js       148.79 kB │ gzip: 43.36 kB
-```
-
-**Cause:** `ReportsMap.vue` imports `leaflet` directly (default + named) because
-`leaflet.markercluster` registers `markerClusterGroup` on the CJS/UMD runtime —
-documented on purpose in CLAUDE.md — while `@vue-leaflet/vue-leaflet` resolves
-Leaflet's ESM build. Vite therefore ships both copies of the same library.
-
-**Fix:** a `resolve.alias` in `vite.config.ts` pointing every specifier at one
-build, then **verify in the browser** that clustering still works — that is the
-regression this codebase has already been bitten by, so the fix is not done
-until a real map with clustered pins has been loaded.
-
-**Risk:** medium. Do not land it on the strength of a green build alone.
+> Closed in phase C5, first thing, as the roadmap asked — the map was about to
+> gain layers, routes and rasters. One line in `vite.config.ts`:
+>
+> ```js
+> 'leaflet/dist/leaflet-src.esm': 'leaflet',
+> ```
+>
+> `npm run build` now emits a single `leaflet-src-*.js` (148.79 kB │ gzip:
+> 43.36 kB); the `leaflet-src.esm-*.js` chunk is gone.
+>
+> **The cause was one step off from the finding.** Nothing imported the ESM
+> build statically: `@vue-leaflet/vue-leaflet` reaches for it with
+> `await import("leaflet/dist/leaflet-src.esm")` on the branch it takes when
+> `use-global-leaflet` is false — which is never, in this codebase. So the
+> second copy was emitted as its own chunk and never fetched: dead weight in
+> `dist/`, not 43 kB off the wire. The alias points that specifier at the same
+> package entry every component already imports, so Vite dedupes them into one
+> chunk. It also disarms the footgun the original note was really about — a
+> component that forgets `use-global-leaflet` now gets the instance
+> `leaflet.markercluster` augmented instead of a fresh, unaugmented one.
+>
+> **Verified in the browser, not on a green build** (the register's own
+> condition): production build served by `vite preview` on :4173, home map
+> loaded with 25 seeded reports — clustered pins render and cluster counts are
+> correct — plus card pins, a feste route polyline, a GeoJSON overlay and a
+> raster overlay whose opacity slider works. No console errors. Cypress's
+> production-build job is green.
 
 ### TD-03 · Build tooling sits in `dependencies` — **FIXED 2026-08-20, and the finding's reasoning was wrong** ✔
 
@@ -929,7 +938,8 @@ clustering in built output *only*), then vote in a poll, then upvote.
 7. **TD-19**, **TD-20** — the counter, then the logout gaps.
 8. ~~**TD-05 + TD-23**~~ — **done 2026-08-19.** Then **TD-06** (bumps, now
    watched by CI and by a 3-second suite).
-9. **TD-02** — needs real browser verification, so give it its own session.
+9. ~~**TD-02**~~ — **done 2026-08-27**, at the head of phase C5 and with the
+   browser verification it always needed.
 10. **TD-21**, **TD-25**, **TD-27**, **TD-28**, then the documentation table.
 11. P3 whenever they are in the way.
 

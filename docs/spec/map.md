@@ -1,7 +1,9 @@
 # The map: layers & overlays
 
-> Phase C5. Leaflet, as today (markercluster default-import gotcha still
-> applies; TD-02's double bundle should be fixed before this phase adds weight).
+> **Delivered (C5, 2026-08-27.)** Leaflet, as today (the markercluster
+> default-import gotcha still applies; TD-02's double bundle was paid first, as
+> planned — see [tech-debt.md](../tech-debt.md#td-02)). The visibility gate M4
+> asks for is recorded in [ADR-0006](../adr/0006-overlay-visibility-gate.md).
 
 ## Requirements
 
@@ -22,6 +24,32 @@
   steering tier ([politics.md](./politics.md)). The boundaries are public data,
   but the use is internal; making the layer public is a single explicit admin
   decision, never a side effect.
+
+## What was built
+
+- `backend/maps/` — the `Overlay` model (one model, both kinds) and two public
+  endpoints: `GET /api/map/features/` (every published card that has a place,
+  in one unpaginated payload) and `GET /api/map/overlays/` (per-reader
+  contents, see below). The reports layer keeps its own v1 endpoint and
+  filters. Overlays are authored in Django admin — the author supplies the
+  boundaries and the scans, so there is no collaborator-facing editor.
+- `frontend/src/components/maps/GaetaMap.vue` — the one map, renamed from
+  `ReportsMap.vue` now that it draws more than reports; layer toggles and
+  opacity sliders live in `HomeView.vue`, which owns which layers are on.
+- **The gate (M4)**: `Overlay.objects.visible_to(user)`, default visibility
+  `steering`, and no `visibility` field in any response. Rationale and the
+  alternatives rejected: [ADR-0006](../adr/0006-overlay-visibility-gate.md).
+
+Two decisions worth knowing, both narrower than the requirement:
+
+- **Translated cards are excluded from the map.** A translation is a second
+  `Card` row (C4), so including it would put two pins on one doorstep. The map
+  indexes places; the reader picks a language inside the card.
+- **M1's "minimal top menu" is not a chrome redesign.** The map is the landing
+  view (it already was) and the layer toggles sit in the panel beside it; the
+  nav keeps the C3 `SchedeMenu`. Making the map full-bleed with a floating
+  menu is design work, and design is roadmap item 2 — not something to smuggle
+  into a phase about geometry.
 
 ## Note
 
