@@ -63,7 +63,7 @@ not mean).
 | The map: layers & overlays | [map.md](./map.md) | delivered (C5, 2026-08-27) |
 | Reports & polls (from v1) | [reports-and-polls.md](./reports-and-polls.md) | delivered; reports change author |
 | Steering tier & political tooling | [politics.md](./politics.md) | tier delivered (C1); its first consumer is C5's seggi overlay (2026-08-27); the tooling is future, out of current build |
-| Design & visual direction | `design.md` — **not written yet** | to interview and write; roadmap item 1, active since 2026-08-27 |
+| Design & visual direction | [design.md](./design.md) | interviewed and written 2026-08-27; **to build** (roadmap item 1) |
 
 ## Architecture (shared across areas)
 
@@ -115,11 +115,18 @@ supplies**, not build questions — C5 shipped the mechanism that consumes them
    ([ADR-0005](../adr/0005-wcag-2.1-aa-accessibility-bar.md)), with a first
    remediation pass landed alongside the decision.
 
-**What is not yet written down anywhere: the visual direction.** Nobody has
-styled this product, and the audience it is aimed at is the one that would
-notice first. That is roadmap item 1 and it starts the way v2 did — with an
-interview, whose output belongs here as a `design.md` area file, not in the
-roadmap.
+**The visual direction is now written down** — [design.md](./design.md),
+2026-08-27, from an interview with the author the same way this spec was.
+Nobody has styled this product yet; that file says how it should present
+itself, and it carries four open questions of its own (palette values,
+typography, whether the authoring screens are restyled in the same pass, and
+the desktop counterpart of the mobile bottom sheet).
+
+Two ambitions were named in that interview and deliberately **not** folded into
+the design phase — **geolocation** and a **multi-city superadmin**. Both are
+features rather than styling; they are recorded in design.md's non-goals and
+sequenced in [roadmap item 5](../roadmap.md), and each gets its own spec
+section when its day comes.
 
 ## Suggested build order
 
