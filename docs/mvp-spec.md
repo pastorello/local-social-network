@@ -186,5 +186,5 @@ mean the product is ready for people outside the project to use. Hosting was
 never part of it — `docs/deploy.md` makes the app deployable, but choosing where
 and paying for it is a decision the author takes when the product is worth it,
 and the design work that would make it worth it has not been done yet. That gap
-is item 2 of the [roadmap](./roadmap.md), and it is deliberately named there
-rather than hidden behind "MVP complete".
+is item 1 of the [roadmap](./roadmap.md) — the active one, since 2026-08-27 —
+and it is deliberately named there rather than hidden behind "MVP complete".

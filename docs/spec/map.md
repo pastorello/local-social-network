@@ -48,7 +48,7 @@ Two decisions worth knowing, both narrower than the requirement:
 - **M1's "minimal top menu" is not a chrome redesign.** The map is the landing
   view (it already was) and the layer toggles sit in the panel beside it; the
   nav keeps the C3 `SchedeMenu`. Making the map full-bleed with a floating
-  menu is design work, and design is roadmap item 2 — not something to smuggle
+  menu is design work, and design is roadmap item 1 — not something to smuggle
   into a phase about geometry.
 
 ## Note
