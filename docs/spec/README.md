@@ -63,6 +63,7 @@ not mean).
 | The map: layers & overlays | [map.md](./map.md) | delivered (C5, 2026-08-27) |
 | Reports & polls (from v1) | [reports-and-polls.md](./reports-and-polls.md) | delivered; reports change author |
 | Steering tier & political tooling | [politics.md](./politics.md) | tier delivered (C1); its first consumer is C5's seggi overlay (2026-08-27); the tooling is future, out of current build |
+| Design & visual direction | `design.md` — **not written yet** | to interview and write; roadmap item 1, active since 2026-08-27 |
 
 ## Architecture (shared across areas)
 
@@ -74,7 +75,7 @@ not mean).
   without rebuilding rich text five times.
 - **Map**: Leaflet, as today. Routes are polylines, zone overlays are GeoJSON
   polygons, historical maps are `ImageOverlay` rasters. TD-02 (double bundle)
-  graduates from cosmetic to worth-fixing before the map gains layers.
+  was paid at the head of C5, before the map gained layers, as planned.
 - **Auth**: JWT as today ([../adr/0001-jwt-in-localstorage.md](../adr/0001-jwt-in-localstorage.md),
   to be revised for rich text). The collaboration flow adds models and admin
   UI, not a new auth system.
@@ -95,14 +96,30 @@ Confirmed explicitly by the author, 2026-08-21:
   built on them are future work with their own spec ([politics.md](./politics.md))
 - new work on polls
 
-## Open questions (not blockers to start)
+## Open questions
 
-1. Source and format of quartiere and seggio boundaries — the author supplies.
-2. Georeferencing workflow for historical map images.
-3. SMTP provider and sender domain for invite/reset e-mail (deploy-time;
-   development uses the console backend).
-4. When the accessibility question (v1 N5) gets answered — a tourist-facing
-   public site raises its priority; decide during content-template design.
+Two of the four are answered; the two that remain are **inputs the author
+supplies**, not build questions — C5 shipped the mechanism that consumes them
+(see [map.md](./map.md)).
+
+1. **Open — input.** Source and format of quartiere and seggio boundaries. The
+   `Overlay` model takes GeoJSON and Django admin is the write path; it has no
+   data yet.
+2. **Open — input.** Georeferencing workflow for historical map images: the
+   scan plus its south/west/north/east bounds. Note `common/images.py` caps
+   uploads at 5 MB and 40 Mpx, raster overlays included.
+3. **Still open, deploy-time.** SMTP provider and sender domain for
+   invite/reset e-mail; development uses the console backend.
+4. ~~When the accessibility question (v1 N5) gets answered.~~ **Answered
+   2026-08-22**: WCAG 2.1 AA, whole app
+   ([ADR-0005](../adr/0005-wcag-2.1-aa-accessibility-bar.md)), with a first
+   remediation pass landed alongside the decision.
+
+**What is not yet written down anywhere: the visual direction.** Nobody has
+styled this product, and the audience it is aimed at is the one that would
+notice first. That is roadmap item 1 and it starts the way v2 did — with an
+interview, whose output belongs here as a `design.md` area file, not in the
+roadmap.
 
 ## Suggested build order
 
