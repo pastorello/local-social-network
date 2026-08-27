@@ -1,6 +1,9 @@
 # Roadmap
 
-What is planned and in what order. Ordered by what is **active**. The product
+What is planned and in what order. Ordered by what is **active** — as of
+2026-08-27 that is no longer item 1: the v2 build order finished with C5, and
+what remains below (the residual debt, the deploy prerequisites) is
+maintenance and readiness, not feature work. The product
 authority is [spec (v2)](./spec/README.md) (v2, 2026-08-21); this file only sequences
 the work.
 
@@ -10,7 +13,7 @@ cultural map-archive of Gaeta, written by a small circle of approved
 collaborators, read by everyone, ultimately aimed at tourists. The old item 2
 is therefore gone; its accessibility sub-question survives below.
 
-## 1. Build v2 — **active**
+## 1. Build v2 — **complete (2026-08-27)**
 
 The spec's build order ([spec/README.md](./spec/README.md#suggested-build-order)),
 one phase per PR, each proven before the next:
@@ -50,20 +53,39 @@ one phase per PR, each proven before the next:
    frontend routes: `LanguageSwitch.vue`/`TranslateControl.vue` are shared by
    `TypeDetailView.vue` and `FesteDetailView.vue`, navigating straight to the
    new translation's own detail id.
-5. **C5 — overlays**: quartieri + seggi polygons (**seggi confidential /
-   steering-only by default**), then georeferenced historical rasters.
+5. **C5 — the map: layers & overlays — delivered (2026-08-27)**: one
+   toggleable layer per card type over a single aggregated
+   `/api/map/features/` endpoint (translations excluded — one pin per place,
+   not per language), the v1 reports layer beside them, and overlays in both
+   kinds: quartieri/seggi GeoJSON polygons and georeferenced historical
+   rasters with a live opacity control. The seggi overlay is confidential **by
+   construction**: `Overlay.visibility` defaults to the steering tier,
+   `Overlay.objects.visible_to()` is the single gate, and `visibility` is
+   never serialized — [ADR-0006](./adr/0006-overlay-visibility-gate.md).
+   Overlays are authored in Django admin (the author supplies the boundaries
+   and the scans), so the spec's open questions 1 and 2 (where the
+   boundaries and the georeferenced scans come from) are now *input*
+   questions, not build ones. `ReportsMap.vue` became `GaetaMap.vue` — it draws more than
+   reports now.
+
+**With C5, the v2 build order is complete** — C1 through C5, each proven
+before the next. What stands between this and a public site is not features:
+it is the design pass (nobody has styled this product), the e2e coverage TD-04
+has been deferring, and deployment, which waits on the author's signal.
+Whatever comes next starts by editing the spec, not this file.
 
 ## 2. Residual technical debt — fold into item 1
 
-Three entries remain in [tech-debt.md](./tech-debt.md), and the v2 work
-changes their weight:
+Two entries remain in [tech-debt.md](./tech-debt.md) (TD-02 closed with C5),
+and the v2 work changed their weight:
 
-- **TD-02** (double Leaflet bundle) — *graduates*: the map is about to gain
-  layers, routes and raster overlays, so pay it early in phase C5 work, with
-  the browser-verification session it always needed.
-- **TD-04** (e2e coverage) — still deferred, now with a date attached: the
-  flows to cover are the v2 flows, so write them per phase as each lands, not
-  retroactively for screens about to change.
+- ~~**TD-02**~~ (double Leaflet bundle) — **paid 2026-08-27**, at the head of
+  C5 as planned, and verified in a production build with clustered pins on
+  screen. The finding's cause was one step off; see the entry.
+- **TD-04** (e2e coverage) — still deferred, and now the largest remaining
+  gap: the v2 flows have all landed and the only spec is `login.cy.ts` (its
+  home-map assertions were updated for C5, nothing more). The screens are no
+  longer about to change, so the reason to wait has expired.
 - **TD-06** (remaining dependency drift) — ordinary maintenance; axios (the
   security-relevant half) was done 2026-08-20.
 

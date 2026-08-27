@@ -19,3 +19,4 @@ records what was decided *then*.
 | [0003](0003-media-on-local-filesystem.md) | Uploads go to the local filesystem and are not served in production yet | Accepted |
 | [0004](0004-content-core-thin-type-apps.md) | One content core, thin Django apps per content type (spec v2) | Accepted |
 | [0005](0005-wcag-2.1-aa-accessibility-bar.md) | Vivere Gaeta targets WCAG 2.1 Level AA, whole app, with a remediation plan | Accepted |
+| [0006](0006-overlay-visibility-gate.md) | Overlay visibility is a server-side gate, default-confidential (spec C5) | Accepted |

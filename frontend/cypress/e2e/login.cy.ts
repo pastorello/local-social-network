@@ -1,7 +1,8 @@
 describe('anonymous visitor', () => {
-  it('can open the report map without logging in', () => {
+  it('can open the map without logging in', () => {
     cy.visit('/')
-    cy.contains('h1', 'Segnalazioni')
+    cy.contains('h1', 'La mappa di Gaeta')
+    cy.contains('legend', 'Livelli')
     cy.contains('button', 'Segnala un problema')
   })
 

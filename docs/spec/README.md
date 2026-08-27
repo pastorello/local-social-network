@@ -60,9 +60,9 @@ not mean).
 | Accounts & the "Collabora con noi" flow | [accounts.md](./accounts.md) | delivered (C1, 2026-08-21) |
 | Content core + typed cards | [content.md](./content.md) | delivered (core + feste C2, 2026-08-22; chiese/ricette/personaggi/dialetto C3, 2026-08-22) |
 | Translations | [translations.md](./translations.md) | delivered (C4, 2026-08-22) |
-| The map: layers & overlays | [map.md](./map.md) | to build (phase C5) |
+| The map: layers & overlays | [map.md](./map.md) | delivered (C5, 2026-08-27) |
 | Reports & polls (from v1) | [reports-and-polls.md](./reports-and-polls.md) | delivered; reports change author |
-| Steering tier & political tooling | [politics.md](./politics.md) | tier delivered (C1, `is_steering` flag, no consumer yet); tooling is future, out of current build |
+| Steering tier & political tooling | [politics.md](./politics.md) | tier delivered (C1); its first consumer is C5's seggi overlay (2026-08-27); the tooling is future, out of current build |
 
 ## Architecture (shared across areas)
 
@@ -121,5 +121,11 @@ Dependency-honest, one phase per PR, each proven before the next:
    (English first), the collaborator's "traduci questo articolo in…" control,
    and the reader's language switch — over the `language`/`translation_of`
    plumbing C2 already laid down on `Card`.
-5. **C5** — overlays: quartieri/seggi polygons (seggi confidential by default),
-   then historical rasters.
+5. **C5 — delivered (2026-08-27).** The map: a toggleable layer per card type
+   over one aggregated `/api/map/features/` endpoint, and overlays in both
+   kinds — quartieri/seggi polygons and georeferenced historical rasters with
+   an opacity control. The seggi overlay is confidential by construction: a new
+   overlay defaults to the steering tier and `visibility` is never serialized
+   ([ADR-0006](../adr/0006-overlay-visibility-gate.md)). TD-02 (the double
+   Leaflet bundle) was paid first, as the roadmap asked, and verified in a
+   production build with clustered pins on screen.

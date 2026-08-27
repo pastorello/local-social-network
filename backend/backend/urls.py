@@ -11,6 +11,7 @@ urlpatterns = [
     path('api/ricette/', include('ricette.urls')),
     path('api/personaggi/', include('personaggi.urls')),
     path('api/dialetto/', include('dialetto.urls')),
+    path('api/map/', include('maps.urls')),
     path('api/polls/', include('polls.urls')),
     path('api/', include('reports.urls')),
 ]  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
