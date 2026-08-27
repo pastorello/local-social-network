@@ -5,11 +5,12 @@ authority is [spec (v2)](./spec/README.md) (v2, 2026-08-21); this file only
 sequences the work.
 
 **Where things stand (2026-08-27).** The v2 build order is complete: C1
-through C5, each proven before the next (the record is item 5 below). Every
+through C5, each proven before the next (the record is item 6 below). Every
 feature the spec asks for exists and is tested. Nothing that remains is a
 feature — what stands between this and a site a tourist can use is design,
 coverage, deployment, and content. Those are items 1 to 4, in the order the
-author chose on 2026-08-27.
+author chose on 2026-08-27; item 5 records two phases named that day and not
+scheduled.
 
 The open question that used to sit here — *"decide what publishable means"* —
 was answered on 2026-08-21 by the v2 spec: the product recenters as a curated
@@ -25,11 +26,14 @@ instrument to live the city fully* — and the spec is honest that this is a bet
 not an observed need. The design pass is where that bet is either honored or
 lost, which is why it goes first.
 
-**It starts with an interview, not with CSS.** Same as v2 did: who is the
-person opening this map, what do they need to understand in the first five
-seconds, what do they do next. The output is a spec area file
-(`docs/spec/design.md`) — scope changes start by editing the spec, and a design
-direction is scope.
+**It started with an interview, not with CSS** — same as v2 did. That interview
+happened on **2026-08-27** and its confirmed output is
+[spec/design.md](./spec/design.md): the two audiences and which one wins, the
+mobile home (full-bleed map + bottom sheet), the register, the palette from
+Gaeta with the purple retired, colour in tokens, and the rule that sponsor
+presence is earned rather than bought. **Read it before touching a stylesheet**;
+what remains open there (actual palette values, typography, whether the
+authoring screens are restyled in the same pass) is what the pass decides.
 
 **Why ahead of TD-04 (item 2).** Writing Cypress specs now would pin selectors
 and copy on screens that are about to be redrawn — exactly the mistake that
@@ -116,7 +120,28 @@ build questions into input ones:
   which is also the only way to find out whether the authoring flow is
   pleasant to use for someone who is not its author.
 
-## 5. Build v2 — **complete (2026-08-27)**
+## 5. Named but not scheduled
+
+Two phases the design interview surfaced (2026-08-27). Both are recorded so the
+direction is not lost, neither is scheduled, and **both are non-goals of item
+1** — the design enables them, it does not build them.
+
+- **Geolocation** — "you are here" plus what is around you while walking
+  Gaeta. The author wants it and it fits the product; it is a **feature, not a
+  style**: browser permission, HTTPS (so it depends on item 3), sane handling
+  of a denied permission and of GPS that is 50 m wrong inside the old town,
+  and a spatial endpoint — `/api/map/features/` returns everything, unfiltered.
+  Its own phase, its own spec section.
+- **Multi-city and the superadmin** — the larger ambition: once Gaeta is the
+  worked example, offer the same instrument to other towns, with an admin who
+  can change palette, name and city centre. Item 1's D8 (colour in tokens, never
+  in a component) is what keeps this from costing a second redesign. The other
+  things hard-coded to Gaeta, for whoever picks it up: the map centre in
+  `composables/useLeafletMap.ts` and `GaetaMap.vue`, the product name, and an
+  Italian-only UI (which the v2 spec still lists as a non-goal until translated
+  content exists).
+
+## 6. Build v2 — **complete (2026-08-27)**
 
 The spec's build order ([spec/README.md](./spec/README.md#suggested-build-order)),
 one phase per PR, each proven before the next:
@@ -136,7 +161,7 @@ one phase per PR, each proven before the next:
    until C4), a procession route on the map, a published card readable
    anonymously. The richest type first, to prove the core. **Did not** include
    an accessibility-bar decision at the time — that followed two days later,
-   see item 6 below.
+   see item 7 below.
 3. **C3 — the remaining thin type apps — delivered (2026-08-22)**: chiese,
    ricette, personaggi, dialetto, each a small diff over the proven core
    (ADR-0004). Extracted `content/api_helpers.py`/`content/serializers.py`
@@ -181,7 +206,7 @@ The debt register that ran alongside this build order —
 its own, was paid at the head of C5 and verified in a production build with
 clustered pins on screen.
 
-## 6. Accessibility — decided (2026-08-22): WCAG 2.1 AA, whole app
+## 7. Accessibility — decided (2026-08-22): WCAG 2.1 AA, whole app
 
 Recorded in [ADR-0005](./adr/0005-wcag-2.1-aa-accessibility-bar.md), not just
 here: v1 scoped WCAG out (N5); the v2 tourist audience reopened the question at
@@ -194,7 +219,7 @@ deferred (full map-widget screen-reader operability, error-to-field ARIA
 wiring, a CI accessibility gate). C3's four remaining card types inherit the
 bar from day one.
 
-## 7. Explicitly not planned
+## 8. Explicitly not planned
 
 The spec's non-goals (§10): mass signup, reader comments, notifications,
 machine translation, multilingual UI (until translated content exists),
