@@ -4,6 +4,7 @@ from io import BytesIO
 import pytest
 from PIL import Image
 from django.core.files.uploadedfile import SimpleUploadedFile
+from rest_framework.test import APIClient
 
 from common.testing import PASSWORD
 from content.models import Card, CardImage
@@ -230,3 +231,54 @@ def test_patch_removes_named_images(auth_client, citizen, make_termine):
 
     assert response.status_code == 200
     assert response.json()['images'] == []
+
+
+# --- translations (spec translations.md T1/T2) ---
+
+
+def test_translate_requires_author_or_admin(make_client, other_citizen, make_termine):
+    termine = make_termine(is_published=True)
+
+    response = make_client(other_citizen).post(f'/api/dialetto/{termine.pk}/traduci/', {'language': 'en'})
+
+    assert response.status_code == 403
+
+
+def test_translate_creates_an_empty_draft_linked_to_the_source(auth_client, citizen, make_termine):
+    termine = make_termine(author=citizen, is_published=True)
+
+    response = auth_client.post(f'/api/dialetto/{termine.pk}/traduci/', {'language': 'en'})
+
+    assert response.status_code == 201
+    data = response.json()
+    assert data['title'] == ''
+    assert data['term'] == ''
+    assert data['language'] == 'en'
+    assert data['translation_of'] == str(termine.pk)
+
+
+def test_translate_rejects_a_second_translation_in_the_same_language(auth_client, citizen, make_termine):
+    termine = make_termine(author=citizen)
+    auth_client.post(f'/api/dialetto/{termine.pk}/traduci/', {'language': 'en'})
+
+    response = auth_client.post(f'/api/dialetto/{termine.pk}/traduci/', {'language': 'en'})
+
+    assert response.status_code == 400
+
+
+def test_translate_rejects_translating_a_translation(auth_client, citizen, make_termine):
+    termine = make_termine(author=citizen)
+    translation_id = auth_client.post(f'/api/dialetto/{termine.pk}/traduci/', {'language': 'en'}).json()['id']
+
+    response = auth_client.post(f'/api/dialetto/{translation_id}/traduci/', {'language': 'it'})
+
+    assert response.status_code == 400
+
+
+def test_translations_list_hides_draft_translations_from_the_public(auth_client, citizen, make_termine):
+    termine = make_termine(author=citizen, is_published=True)
+    auth_client.post(f'/api/dialetto/{termine.pk}/traduci/', {'language': 'en'})
+
+    response = APIClient().get(f'/api/dialetto/{termine.pk}/')
+
+    assert response.json()['translations'] == []

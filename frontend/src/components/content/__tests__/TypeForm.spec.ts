@@ -20,6 +20,9 @@ const baseItem: ContentItem = {
   author: { id: 'u1', name: 'Autore', avatarURL: null },
   is_published: true,
   images: [],
+  language: 'it',
+  translation_of: null,
+  translations: [],
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-01T00:00:00Z',
 }

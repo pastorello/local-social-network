@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from account.serializers import UserSerializer
-from content.serializers import CardImageSerializer
+from content.serializers import CardImageSerializer, TranslationSerializer, visible_translations
 from content.sanitize import sanitize_html
 
 from .models import Termine
@@ -15,16 +15,24 @@ class TermineReadSerializer(serializers.ModelSerializer):
     is_published = serializers.BooleanField(source='card.is_published')
     created_at = serializers.DateTimeField(source='card.created_at', read_only=True)
     updated_at = serializers.DateTimeField(source='card.updated_at', read_only=True)
+    language = serializers.CharField(source='card.language', read_only=True)
+    translation_of = serializers.PrimaryKeyRelatedField(source='card.translation_of', read_only=True)
     images = serializers.SerializerMethodField()
+    translations = serializers.SerializerMethodField()
 
     def get_images(self, obj):
         return CardImageSerializer(obj.card.images.all(), many=True).data
+
+    def get_translations(self, obj):
+        request = self.context.get('request')
+        return TranslationSerializer(visible_translations(obj.card, request), many=True).data
 
     class Meta:
         model = Termine
         fields = (
             'id', 'title', 'body_html', 'author', 'is_published',
             'term', 'meaning', 'example_usage', 'images',
+            'language', 'translation_of', 'translations',
             'created_at', 'updated_at',
         )
 

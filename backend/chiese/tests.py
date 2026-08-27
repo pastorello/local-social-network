@@ -4,6 +4,7 @@ from io import BytesIO
 import pytest
 from PIL import Image
 from django.core.files.uploadedfile import SimpleUploadedFile
+from rest_framework.test import APIClient
 
 from chiese.models import Chiesa
 from common.testing import PASSWORD
@@ -291,3 +292,53 @@ def test_patch_without_a_pins_field_leaves_the_existing_pin_alone(auth_client, c
 
     assert response.status_code == 200
     assert len(response.json()['pins']) == 1
+
+
+# --- translations (spec translations.md T1/T2) ---
+
+
+def test_translate_requires_author_or_admin(make_client, other_citizen, make_chiesa):
+    chiesa = make_chiesa(is_published=True)
+
+    response = make_client(other_citizen).post(f'/api/chiese/{chiesa.pk}/traduci/', {'language': 'en'})
+
+    assert response.status_code == 403
+
+
+def test_translate_creates_an_empty_draft_linked_to_the_source(auth_client, citizen, make_chiesa):
+    chiesa = make_chiesa(author=citizen, is_published=True)
+
+    response = auth_client.post(f'/api/chiese/{chiesa.pk}/traduci/', {'language': 'en'})
+
+    assert response.status_code == 201
+    data = response.json()
+    assert data['title'] == ''
+    assert data['language'] == 'en'
+    assert data['translation_of'] == str(chiesa.pk)
+
+
+def test_translate_rejects_a_second_translation_in_the_same_language(auth_client, citizen, make_chiesa):
+    chiesa = make_chiesa(author=citizen)
+    auth_client.post(f'/api/chiese/{chiesa.pk}/traduci/', {'language': 'en'})
+
+    response = auth_client.post(f'/api/chiese/{chiesa.pk}/traduci/', {'language': 'en'})
+
+    assert response.status_code == 400
+
+
+def test_translate_rejects_translating_a_translation(auth_client, citizen, make_chiesa):
+    chiesa = make_chiesa(author=citizen)
+    translation_id = auth_client.post(f'/api/chiese/{chiesa.pk}/traduci/', {'language': 'en'}).json()['id']
+
+    response = auth_client.post(f'/api/chiese/{translation_id}/traduci/', {'language': 'it'})
+
+    assert response.status_code == 400
+
+
+def test_translations_list_hides_draft_translations_from_the_public(auth_client, citizen, make_chiesa):
+    chiesa = make_chiesa(author=citizen, is_published=True)
+    auth_client.post(f'/api/chiese/{chiesa.pk}/traduci/', {'language': 'en'})
+
+    response = APIClient().get(f'/api/chiese/{chiesa.pk}/')
+
+    assert response.json()['translations'] == []

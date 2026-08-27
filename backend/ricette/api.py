@@ -14,6 +14,7 @@ from content.api_helpers import (
     require_authenticated,
     require_author_or_admin,
     save_images,
+    start_translation,
 )
 from content.models import Card
 
@@ -51,12 +52,14 @@ def ricetta_list(request):
             replace_points(card, pins)
 
         ricetta = _base_queryset().get(pk=ricetta.pk)
-        return Response(RicettaReadSerializer(ricetta).data, status=201)
+        return Response(RicettaReadSerializer(ricetta, context={'request': request}).data, status=201)
 
     paginator = StandardPagination()
     queryset = _base_queryset().filter(card__is_published=True)
     page = paginator.paginate_queryset(queryset, request)
-    return paginator.get_paginated_response(RicettaReadSerializer(page, many=True).data)
+    return paginator.get_paginated_response(
+        RicettaReadSerializer(page, many=True, context={'request': request}).data
+    )
 
 
 @api_view(['GET'])
@@ -66,7 +69,9 @@ def ricetta_mine(request):
     paginator = StandardPagination()
     queryset = _base_queryset().filter(card__author=request.user)
     page = paginator.paginate_queryset(queryset, request)
-    return paginator.get_paginated_response(RicettaReadSerializer(page, many=True).data)
+    return paginator.get_paginated_response(
+        RicettaReadSerializer(page, many=True, context={'request': request}).data
+    )
 
 
 @api_view(['GET', 'PATCH', 'DELETE'])
@@ -82,7 +87,7 @@ def ricetta_detail(request, pk):
             # A draft is invisible to anyone but its author/admin, same
             # reasoning as feste_detail.
             raise Http404
-        return Response(RicettaReadSerializer(ricetta).data)
+        return Response(RicettaReadSerializer(ricetta, context={'request': request}).data)
 
     require_author_or_admin(request, ricetta)
 
@@ -112,4 +117,16 @@ def ricetta_detail(request, pk):
         replace_points(card, pins)
 
     ricetta = _base_queryset().get(pk=ricetta.pk)
-    return Response(RicettaReadSerializer(ricetta).data)
+    return Response(RicettaReadSerializer(ricetta, context={'request': request}).data)
+
+
+@api_view(['POST'])
+def ricetta_translate(request, pk):
+    ricetta = get_object_or_404(_base_queryset(), pk=pk)
+    language = request.data.get('language')
+    new_card = start_translation(
+        request, ricetta.card, Ricetta, language,
+        extra_defaults={'ingredients': '', 'servings': '', 'procedure': ''},
+    )
+    translation = _base_queryset().get(pk=new_card.pk)
+    return Response(RicettaReadSerializer(translation, context={'request': request}).data, status=201)

@@ -13,6 +13,7 @@ from content.api_helpers import (
     require_authenticated,
     require_author_or_admin,
     save_images,
+    start_translation,
 )
 from content.models import Card
 
@@ -51,12 +52,16 @@ def personaggio_list(request):
             replace_points(card, pins)
 
         personaggio = _base_queryset().get(pk=personaggio.pk)
-        return Response(PersonaggioReadSerializer(personaggio).data, status=201)
+        return Response(
+            PersonaggioReadSerializer(personaggio, context={'request': request}).data, status=201
+        )
 
     paginator = StandardPagination()
     queryset = _base_queryset().filter(card__is_published=True)
     page = paginator.paginate_queryset(queryset, request)
-    return paginator.get_paginated_response(PersonaggioReadSerializer(page, many=True).data)
+    return paginator.get_paginated_response(
+        PersonaggioReadSerializer(page, many=True, context={'request': request}).data
+    )
 
 
 @api_view(['GET'])
@@ -66,7 +71,9 @@ def personaggio_mine(request):
     paginator = StandardPagination()
     queryset = _base_queryset().filter(card__author=request.user)
     page = paginator.paginate_queryset(queryset, request)
-    return paginator.get_paginated_response(PersonaggioReadSerializer(page, many=True).data)
+    return paginator.get_paginated_response(
+        PersonaggioReadSerializer(page, many=True, context={'request': request}).data
+    )
 
 
 @api_view(['GET', 'PATCH', 'DELETE'])
@@ -82,7 +89,7 @@ def personaggio_detail(request, pk):
             # A draft is invisible to anyone but its author/admin, same
             # reasoning as feste_detail.
             raise Http404
-        return Response(PersonaggioReadSerializer(personaggio).data)
+        return Response(PersonaggioReadSerializer(personaggio, context={'request': request}).data)
 
     require_author_or_admin(request, personaggio)
 
@@ -111,4 +118,17 @@ def personaggio_detail(request, pk):
         replace_points(card, pins)
 
     personaggio = _base_queryset().get(pk=personaggio.pk)
-    return Response(PersonaggioReadSerializer(personaggio).data)
+    return Response(PersonaggioReadSerializer(personaggio, context={'request': request}).data)
+
+
+@api_view(['POST'])
+def personaggio_translate(request, pk):
+    personaggio = get_object_or_404(_base_queryset(), pk=pk)
+    language = request.data.get('language')
+    new_card = start_translation(
+        request, personaggio.card, Personaggio, language, extra_defaults={'life_dates': ''}
+    )
+    translation = _base_queryset().get(pk=new_card.pk)
+    return Response(
+        PersonaggioReadSerializer(translation, context={'request': request}).data, status=201
+    )

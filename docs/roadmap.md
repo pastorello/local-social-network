@@ -39,7 +39,17 @@ one phase per PR, each proven before the next:
    `TypeForm`/`TypeListView`/`TypeDetailView`/`TypeCreateView` set instead of
    four more `Feste*.vue` copies — both extend the "days not weeks" bar to
    the frontend, not just the backend.
-4. **C4 — translations** authoring and the reader's language switch.
+4. **C4 — translations — delivered (2026-08-22)**: per-card translations
+   (English first) over the `Card.language`/`translation_of` plumbing C2 left
+   unused, a collaborator's "traduci questo articolo in…" control
+   (`content/api_helpers.py::start_translation` — one write path every type
+   app's new `<type>_translate` endpoint calls; translating a translation is
+   refused, so the group is always original-plus-translations, never a tree),
+   and the reader's language switch (`content/serializers.py::visible_translations`,
+   published-only unless you're the card group's author/admin). No new
+   frontend routes: `LanguageSwitch.vue`/`TranslateControl.vue` are shared by
+   `TypeDetailView.vue` and `FesteDetailView.vue`, navigating straight to the
+   new translation's own detail id.
 5. **C5 — overlays**: quartieri + seggi polygons (**seggi confidential /
    steering-only by default**), then georeferenced historical rasters.
 

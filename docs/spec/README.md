@@ -59,7 +59,7 @@ not mean).
 |---|---|---|
 | Accounts & the "Collabora con noi" flow | [accounts.md](./accounts.md) | delivered (C1, 2026-08-21) |
 | Content core + typed cards | [content.md](./content.md) | delivered (core + feste C2, 2026-08-22; chiese/ricette/personaggi/dialetto C3, 2026-08-22) |
-| Translations | [translations.md](./translations.md) | to build (phase C4) |
+| Translations | [translations.md](./translations.md) | delivered (C4, 2026-08-22) |
 | The map: layers & overlays | [map.md](./map.md) | to build (phase C5) |
 | Reports & polls (from v1) | [reports-and-polls.md](./reports-and-polls.md) | delivered; reports change author |
 | Steering tier & political tooling | [politics.md](./politics.md) | tier delivered (C1, `is_steering` flag, no consumer yet); tooling is future, out of current build |
@@ -117,6 +117,9 @@ Dependency-honest, one phase per PR, each proven before the next:
 3. **C3 — delivered (2026-08-22).** The remaining thin type apps: chiese,
    ricette, personaggi, dialetto — each over the same `content` core, proving
    ADR-0004's "days not weeks" bar with four types at once.
-4. **C4** — translations.
+4. **C4 — delivered (2026-08-22).** Translations: per-card translations
+   (English first), the collaborator's "traduci questo articolo in…" control,
+   and the reader's language switch — over the `language`/`translation_of`
+   plumbing C2 already laid down on `Card`.
 5. **C5** — overlays: quartieri/seggi polygons (seggi confidential by default),
    then historical rasters.

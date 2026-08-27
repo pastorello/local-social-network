@@ -15,6 +15,18 @@ export interface CardImage {
   caption: string
 }
 
+// One entry of a card's `translations` list (spec translations.md T1) — the
+// other language versions a reader's language switch or a collaborator's
+// "traduci" control can link to. Draft translations only appear here for
+// their own author/an admin; everyone else sees published ones only (the
+// API enforces this, not the frontend).
+export interface TranslationRef {
+  id: string
+  language: string
+  title: string
+  is_published: boolean
+}
+
 export interface CardBase {
   id: string
   title: string
@@ -22,6 +34,9 @@ export interface CardBase {
   author: User
   is_published: boolean
   images: CardImage[]
+  language: string
+  translation_of: string | null
+  translations: TranslationRef[]
   created_at: string
   updated_at: string
 }
