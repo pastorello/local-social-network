@@ -59,7 +59,7 @@ onBeforeUnmount(() => {
         class="px-3 py-2 rounded"
         aria-label="Grassetto"
         :aria-pressed="editor.isActive('bold')"
-        :class="editor.isActive('bold') ? 'bg-purple-600 text-white' : 'bg-white'"
+        :class="editor.isActive('bold') ? 'bg-sea text-white' : 'bg-white'"
         @click="editor.chain().focus().toggleBold().run()"
       >
         <strong>B</strong>
@@ -69,7 +69,7 @@ onBeforeUnmount(() => {
         class="px-3 py-2 rounded"
         aria-label="Corsivo"
         :aria-pressed="editor.isActive('italic')"
-        :class="editor.isActive('italic') ? 'bg-purple-600 text-white' : 'bg-white'"
+        :class="editor.isActive('italic') ? 'bg-sea text-white' : 'bg-white'"
         @click="editor.chain().focus().toggleItalic().run()"
       >
         <em>I</em>
@@ -79,7 +79,7 @@ onBeforeUnmount(() => {
         class="px-3 py-2 rounded"
         aria-label="Barrato"
         :aria-pressed="editor.isActive('strike')"
-        :class="editor.isActive('strike') ? 'bg-purple-600 text-white' : 'bg-white'"
+        :class="editor.isActive('strike') ? 'bg-sea text-white' : 'bg-white'"
         @click="editor.chain().focus().toggleStrike().run()"
       >
         <s>S</s>
@@ -89,7 +89,7 @@ onBeforeUnmount(() => {
         class="px-3 py-2 rounded"
         aria-label="Titolo di livello 2"
         :aria-pressed="editor.isActive('heading', { level: 2 })"
-        :class="editor.isActive('heading', { level: 2 }) ? 'bg-purple-600 text-white' : 'bg-white'"
+        :class="editor.isActive('heading', { level: 2 }) ? 'bg-sea text-white' : 'bg-white'"
         @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
       >
         H2
@@ -99,7 +99,7 @@ onBeforeUnmount(() => {
         class="px-3 py-2 rounded"
         aria-label="Titolo di livello 3"
         :aria-pressed="editor.isActive('heading', { level: 3 })"
-        :class="editor.isActive('heading', { level: 3 }) ? 'bg-purple-600 text-white' : 'bg-white'"
+        :class="editor.isActive('heading', { level: 3 }) ? 'bg-sea text-white' : 'bg-white'"
         @click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
       >
         H3
@@ -109,7 +109,7 @@ onBeforeUnmount(() => {
         class="px-3 py-2 rounded"
         aria-label="Elenco puntato"
         :aria-pressed="editor.isActive('bulletList')"
-        :class="editor.isActive('bulletList') ? 'bg-purple-600 text-white' : 'bg-white'"
+        :class="editor.isActive('bulletList') ? 'bg-sea text-white' : 'bg-white'"
         @click="editor.chain().focus().toggleBulletList().run()"
       >
         • Lista
@@ -119,7 +119,7 @@ onBeforeUnmount(() => {
         class="px-3 py-2 rounded"
         aria-label="Elenco numerato"
         :aria-pressed="editor.isActive('orderedList')"
-        :class="editor.isActive('orderedList') ? 'bg-purple-600 text-white' : 'bg-white'"
+        :class="editor.isActive('orderedList') ? 'bg-sea text-white' : 'bg-white'"
         @click="editor.chain().focus().toggleOrderedList().run()"
       >
         1. Lista
@@ -129,7 +129,7 @@ onBeforeUnmount(() => {
         class="px-3 py-2 rounded"
         aria-label="Citazione"
         :aria-pressed="editor.isActive('blockquote')"
-        :class="editor.isActive('blockquote') ? 'bg-purple-600 text-white' : 'bg-white'"
+        :class="editor.isActive('blockquote') ? 'bg-sea text-white' : 'bg-white'"
         @click="editor.chain().focus().toggleBlockquote().run()"
       >
         Citazione
@@ -139,7 +139,7 @@ onBeforeUnmount(() => {
         class="px-3 py-2 rounded"
         aria-label="Link"
         :aria-pressed="editor.isActive('link')"
-        :class="editor.isActive('link') ? 'bg-purple-600 text-white' : 'bg-white'"
+        :class="editor.isActive('link') ? 'bg-sea text-white' : 'bg-white'"
         @click="setLink"
       >
         Link

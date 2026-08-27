@@ -98,7 +98,7 @@ const submitForm = async () => {
       <button
         v-if="options.length < MAX_OPTIONS"
         type="button"
-        class="mt-2 cursor-pointer text-sm text-purple-700 underline"
+        class="mt-2 cursor-pointer text-sm text-sea underline"
         @click="addOption"
       >
         + Aggiungi opzione

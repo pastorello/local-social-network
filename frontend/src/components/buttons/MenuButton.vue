@@ -20,7 +20,7 @@ const { to } = defineProps<{
     :to="to"
     :class="[
       'w-26 rounded-lg p-4 bg-gray-200 grid place-items-center',
-      { 'text-purple-700 border border-purple-700 shadow-md': route.path === to },
+      { 'text-sea border border-sea shadow-md': route.path === to },
     ]"
   >
     <span class="mb-1">

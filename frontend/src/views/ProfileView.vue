@@ -69,7 +69,7 @@ watch(
 
         <div class="mt-6">
           <RouterLink
-            class="inline-block mr-2 py-4 px-3 bg-purple-600 text-xs text-white rounded-lg"
+            class="inline-block mr-2 py-4 px-3 bg-sea text-xs text-white rounded-lg"
             to="/profile/edit"
             v-if="isMyProfile"
           >
@@ -88,7 +88,7 @@ watch(
             v-for="report in reports"
             :key="report.id"
             :to="`/reports/${report.id}`"
-            class="block p-4 bg-white border border-gray-200 rounded-lg hover:border-purple-400"
+            class="block p-4 bg-white border border-gray-200 rounded-lg hover:border-sea"
           >
             <div class="flex items-center justify-between gap-4">
               <strong>{{ report.title }}</strong>

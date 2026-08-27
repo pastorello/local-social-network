@@ -58,7 +58,7 @@ onBeforeUnmount(() => {
     <button
       type="button"
       class="w-26 rounded-lg p-4 bg-gray-200 grid place-items-center cursor-pointer"
-      :class="{ 'text-purple-700 border border-purple-700 shadow-md': isActive }"
+      :class="{ 'text-sea border border-sea shadow-md': isActive }"
       aria-haspopup="menu"
       :aria-expanded="open"
       @click="toggle"

@@ -116,7 +116,7 @@ const closePoll = async () => {
           />
           <span class="flex-1">
             {{ option.text }}
-            <span v-if="option.id === poll.my_vote" class="ml-1 font-semibold text-purple-700">
+            <span v-if="option.id === poll.my_vote" class="ml-1 font-semibold text-sea">
               · il tuo voto
             </span>
           </span>
@@ -131,7 +131,7 @@ const closePoll = async () => {
         </label>
         <div v-if="poll.results_visible" class="mt-1 h-2 overflow-hidden rounded-full bg-gray-200">
           <div
-            class="h-full rounded-full bg-purple-600"
+            class="h-full rounded-full bg-sea"
             :style="{ width: `${percentage(option)}%` }"
           ></div>
         </div>

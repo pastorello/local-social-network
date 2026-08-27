@@ -195,7 +195,7 @@ const addManualPoint = () => {
         />
         <button
           type="button"
-          class="text-sm bg-purple-600 text-white rounded px-3 py-2 cursor-pointer"
+          class="text-sm bg-sea text-white rounded px-3 py-2 cursor-pointer"
           @click="addManualPoint"
         >
           Aggiungi punto

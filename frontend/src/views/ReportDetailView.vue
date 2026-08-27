@@ -164,7 +164,7 @@ onMounted(() => {
             <button
               type="button"
               class="flex items-center gap-2 py-2 px-4 rounded-lg cursor-pointer"
-              :class="report.upvoted_by_me ? 'bg-purple-600 text-white' : 'bg-gray-100'"
+              :class="report.upvoted_by_me ? 'bg-sea text-white' : 'bg-gray-100'"
               @click="toggleUpvote"
             >
               <svg

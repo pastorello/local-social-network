@@ -15,8 +15,8 @@ import { useToastStore } from '@/stores/toast'
 import type Category from '@/definitions/interfaces/Category'
 import type { MapCardFeature, Overlay } from '@/definitions/interfaces/MapData'
 import type { ReportPin, ReportStatus } from '@/definitions/interfaces/Report'
-import { CARD_LAYERS, REPORTS_LAYER_KEY, layerRoute } from '@/lib/mapLayers'
-import { STATUS_META } from '@/lib/reportStatus'
+import { CARD_LAYERS, REPORTS_LAYER_KEY, layerColor, layerRoute } from '@/lib/mapLayers'
+import { STATUS_META, statusColor } from '@/lib/reportStatus'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -197,7 +197,7 @@ onMounted(() => {
             />
             <span
               class="inline-block w-3 h-3 rounded-full"
-              :style="{ backgroundColor: layer.color }"
+              :style="{ backgroundColor: layerColor(layer.key) }"
               aria-hidden="true"
             ></span>
             <label :for="`layer-${layer.key}`" class="text-sm text-gray-700">
@@ -214,7 +214,7 @@ onMounted(() => {
             />
             <span
               class="inline-block w-3 h-3 rounded-full"
-              :style="{ backgroundColor: STATUS_META.open.color }"
+              :style="{ backgroundColor: statusColor('open') }"
               aria-hidden="true"
             ></span>
             <label for="layer-segnalazioni" class="text-sm text-gray-700">
@@ -265,7 +265,7 @@ onMounted(() => {
           <li v-for="feature in visibleFeatures" :key="feature.id">
             <RouterLink
               :to="layerRoute(feature.type, feature.id)"
-              class="text-sm text-purple-700 underline"
+              class="text-sm text-sea underline"
             >
               {{ feature.title }}
             </RouterLink>
@@ -321,7 +321,7 @@ onMounted(() => {
               </div>
               <button
                 type="button"
-                class="text-sm bg-purple-600 text-white rounded px-3 py-2 cursor-pointer"
+                class="text-sm bg-sea text-white rounded px-3 py-2 cursor-pointer"
                 @click="useManualCoords"
               >
                 Usa queste coordinate
@@ -376,7 +376,7 @@ onMounted(() => {
             >
               <span
                 class="inline-block w-3 h-3 rounded-full"
-                :style="{ backgroundColor: STATUS_META[option.value].color }"
+                :style="{ backgroundColor: statusColor(option.value) }"
               ></span>
               {{ option.label }}
             </p>

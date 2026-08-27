@@ -1,7 +1,55 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
 
-@theme {
+/* `static`, not a plain `@theme`: Tailwind only emits the custom properties
+   its generated utilities actually reference, so a token nothing has used yet
+   (the grounds, until the layout pass reaches them) would vanish from the
+   document — and `lib/tokens.ts` would silently read its fallback forever.
+   The palette is a contract, not a by-product of which classes exist today. */
+@theme static {
+  /* --------------------------------------------------------------------
+     The palette — "Pietra e mare" (spec/design.md D7), chosen 2026-08-27.
+     Taken from Gaeta: the stone of Monte Orlando, the deep Tyrrhenian, the
+     terracotta of the roofs.
+
+     D8: colour lives here and nowhere else. No component writes a hex value,
+     and neither does TypeScript — `lib/tokens.ts` reads these back at runtime
+     for the few places that hand a colour to Leaflet, which cannot take a
+     `var()`. That is also what makes the multi-city ambition (roadmap item 5)
+     a change of values rather than a second redesign.
+
+     Every pair below was checked with the WCAG relative-luminance formula
+     before anything was built on it (D9), never by eye. Ratios in comments.
+     -------------------------------------------------------------------- */
+  --color-page: #faf7f2; /* warm paper — the ground */
+  --color-surface: #ffffff; /* cards, panels, sheets */
+  --color-ink: #1f2933; /* body text: 13.81 on page, 14.76 on surface */
+  --color-muted: #5c6670; /* secondary text: 5.47 on page, 5.85 on surface */
+
+  --color-sea: #0f5f73; /* the accent: 6.77 on page, 7.23 on surface; white on it 7.23 */
+  --color-sea-deep: #0a4655; /* hover/pressed — darker, so white only gains */
+  --color-terracotta: #9c4221; /* secondary: 6.53 on surface; white on it 6.53 */
+  --color-terracotta-deep: #7d3419;
+
+  --color-hairline: #e6e0d6; /* decorative rules only — exempt from 1.4.11 */
+  --color-field: #8a8279; /* control outlines: 3.54 on page, 3.78 on surface */
+
+  /* Report status (spec F2.4). Unchanged shades: ADR-0005 already picked them
+     for >=4.5:1 against the white badge text, and their meaning is semantic,
+     not decorative — see lib/reportStatus.ts. */
+  --color-status-open: #b91c1c;
+  --color-status-acknowledged: #1d4ed8;
+  --color-status-resolved: #15803d;
+  --color-status-rejected: #6b7280;
+
+  /* Map layers (spec map.md M2). D7 keeps these the one saturated register in
+     the product, because there colour does a job: it distinguishes. */
+  --color-layer-chiese: #1d4ed8;
+  --color-layer-feste: #b45309;
+  --color-layer-ricette: #15803d;
+  --color-layer-personaggi: #7e22ce;
+  --color-layer-unknown: #6b7280;
+
   @keyframes fadeInUp {
     0% {
       opacity: 0;
