@@ -15,9 +15,7 @@ const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
 // (Tiptap v3) — a separate @tiptap/extension-link would just duplicate it.
 const editor = useEditor({
   content: props.modelValue,
-  extensions: [
-    StarterKit.configure({ heading: { levels: [2, 3] }, link: { openOnClick: false } }),
-  ],
+  extensions: [StarterKit.configure({ heading: { levels: [2, 3] }, link: { openOnClick: false } })],
   // `label` fallthrough as a plain attribute would land on this component's
   // wrapper <div>, not the actual contenteditable region ProseMirror renders
   // deep inside <editor-content> — this is the only way to name that element.

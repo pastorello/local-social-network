@@ -121,11 +121,7 @@ const addManualStop = () => {
         Clicca sulla mappa per aggiungere una tappa.
       </p>
       <ol class="space-y-2">
-        <li
-          v-for="(point, index) in modelValue"
-          :key="index"
-          class="flex items-center gap-2"
-        >
+        <li v-for="(point, index) in modelValue" :key="index" class="flex items-center gap-2">
           <span class="font-semibold">{{ index + 1 }}.</span>
           <template v-if="readonly">
             <span>{{ point.label || 'Tappa senza nome' }}</span>
@@ -160,12 +156,8 @@ const addManualStop = () => {
       </button>
 
       <fieldset v-if="!readonly" class="border border-gray-200 rounded-lg p-3 space-y-2">
-        <legend class="text-sm font-semibold px-1">
-          Aggiungi tappa manualmente
-        </legend>
-        <p class="text-xs text-gray-500">
-          In alternativa al clic sulla mappa (es. da tastiera).
-        </p>
+        <legend class="text-sm font-semibold px-1">Aggiungi tappa manualmente</legend>
+        <p class="text-xs text-gray-500">In alternativa al clic sulla mappa (es. da tastiera).</p>
         <div class="flex gap-2">
           <label class="sr-only" for="feste-route-manual-lat">Latitudine</label>
           <input

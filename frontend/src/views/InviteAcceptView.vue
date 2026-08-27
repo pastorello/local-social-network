@@ -53,8 +53,8 @@ const submitForm = () => {
       <PanelBox>
         <MainTitle>Attiva il tuo account</MainTitle>
         <p class="text-gray-500">
-          La tua richiesta di collaborazione è stata approvata. Scegli una password per
-          completare l'attivazione.
+          La tua richiesta di collaborazione è stata approvata. Scegli una password per completare
+          l'attivazione.
         </p>
       </PanelBox>
     </div>
@@ -64,7 +64,12 @@ const submitForm = () => {
         <form class="space-y-6" v-on:submit.prevent="submitForm">
           <div>
             <label for="invite-password1">Password</label><br />
-            <FormInput id="invite-password1" type="password" v-model="form.password1" placeholder="La tua password" />
+            <FormInput
+              id="invite-password1"
+              type="password"
+              v-model="form.password1"
+              placeholder="La tua password"
+            />
           </div>
 
           <div>

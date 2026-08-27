@@ -46,8 +46,8 @@ const submitForm = () => {
       <PanelBox>
         <MainTitle>Password dimenticata</MainTitle>
         <p class="text-gray-500">
-          Inserisci la tua e-mail: se corrisponde a un account, riceverai un link per
-          reimpostare la password.
+          Inserisci la tua e-mail: se corrisponde a un account, riceverai un link per reimpostare la
+          password.
         </p>
       </PanelBox>
     </div>
@@ -60,7 +60,12 @@ const submitForm = () => {
         <form v-else class="space-y-6" v-on:submit.prevent="submitForm">
           <div>
             <label for="reset-request-email">E-mail</label><br />
-            <FormInput id="reset-request-email" type="email" v-model="form.email" placeholder="La tua e-mail" />
+            <FormInput
+              id="reset-request-email"
+              type="email"
+              v-model="form.email"
+              placeholder="La tua e-mail"
+            />
           </div>
 
           <template v-if="formErrors.length > 0">

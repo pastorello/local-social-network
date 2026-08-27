@@ -110,7 +110,12 @@ const submitForm = async () => {
   <form class="space-y-6" v-on:submit.prevent="submitForm">
     <div>
       <label class="font-semibold" for="type-form-title">Titolo</label><br />
-      <FormInput id="type-form-title" type="text" v-model="title" :placeholder="`Es. ${config.singularLabel}`" />
+      <FormInput
+        id="type-form-title"
+        type="text"
+        v-model="title"
+        :placeholder="`Es. ${config.singularLabel}`"
+      />
     </div>
 
     <div>
@@ -119,7 +124,8 @@ const submitForm = async () => {
     </div>
 
     <div v-for="field in config.extraFields" :key="field.key">
-      <label class="font-semibold" :for="`type-form-${field.key}`">{{ field.label }}</label><br />
+      <label class="font-semibold" :for="`type-form-${field.key}`">{{ field.label }}</label
+      ><br />
       <FormInput
         v-if="field.kind === 'input'"
         :id="`type-form-${field.key}`"
@@ -139,7 +145,13 @@ const submitForm = async () => {
 
     <div>
       <label class="font-semibold" for="type-form-images">Immagini</label><br />
-      <input id="type-form-images" type="file" accept="image/jpeg,image/png,image/webp" multiple @change="onFilesSelected" />
+      <input
+        id="type-form-images"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+        @change="onFilesSelected"
+      />
       <div class="flex flex-wrap gap-2 mt-2">
         <div v-for="image in existingImages" :key="image.id" class="relative">
           <img :src="image.imageURL" class="w-24 h-24 object-cover rounded-lg" alt="" />
@@ -167,7 +179,9 @@ const submitForm = async () => {
     </div>
 
     <div v-if="config.mapMode === 'pins'">
-      <label class="font-semibold">{{ config.maxPoints === 1 ? 'Punto sulla mappa' : 'Punti sulla mappa' }}</label>
+      <label class="font-semibold">{{
+        config.maxPoints === 1 ? 'Punto sulla mappa' : 'Punti sulla mappa'
+      }}</label>
       <MapPinsEditor v-model="pins" :max="config.maxPoints ?? 1" />
     </div>
 

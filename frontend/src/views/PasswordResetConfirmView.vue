@@ -61,7 +61,12 @@ const submitForm = () => {
         <form class="space-y-6" v-on:submit.prevent="submitForm">
           <div>
             <label for="reset-confirm-password1">Nuova password</label><br />
-            <FormInput id="reset-confirm-password1" type="password" v-model="form.password1" placeholder="La nuova password" />
+            <FormInput
+              id="reset-confirm-password1"
+              type="password"
+              v-model="form.password1"
+              placeholder="La nuova password"
+            />
           </div>
 
           <div>

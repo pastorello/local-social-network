@@ -72,7 +72,7 @@ const submitForm = () => {
 
 <template>
   <ViewContainer class="grid-cols-2">
-    <div >
+    <div>
       <PanelBox>
         <MainTitle>Modifica profilo</MainTitle>
 
@@ -85,17 +85,27 @@ const submitForm = () => {
       </PanelBox>
     </div>
 
-    <div >
+    <div>
       <PanelBox>
         <form class="space-y-6" v-on:submit.prevent="submitForm">
           <div>
             <label for="editprofile-name">Nome</label><br />
-            <FormInput id="editprofile-name" type="text" v-model="form.name" placeholder="Il tuo nome completo" />
+            <FormInput
+              id="editprofile-name"
+              type="text"
+              v-model="form.name"
+              placeholder="Il tuo nome completo"
+            />
           </div>
 
           <div>
             <label for="editprofile-email">E-mail</label><br />
-            <FormInput id="editprofile-email" type="email" v-model="form.email" placeholder="La tua e-mail" />
+            <FormInput
+              id="editprofile-email"
+              type="email"
+              v-model="form.email"
+              placeholder="La tua e-mail"
+            />
           </div>
 
           <div>

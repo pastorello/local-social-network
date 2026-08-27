@@ -26,7 +26,9 @@ const nextPage = ref<string | null>(null)
 const loading = ref(true)
 const mineOnly = ref(false)
 
-const endpoint = computed(() => (mineOnly.value ? `${props.config.endpoint}mine/` : props.config.endpoint))
+const endpoint = computed(() =>
+  mineOnly.value ? `${props.config.endpoint}mine/` : props.config.endpoint,
+)
 
 const getItems = async () => {
   loading.value = true
@@ -63,7 +65,10 @@ onMounted(getItems)
       <PanelBox>
         <div class="flex items-center justify-between gap-4 mb-4">
           <MainTitle>{{ config.label }}</MainTitle>
-          <RouterLink v-if="userStore.user.isAuthenticated" :to="{ name: config.routeNames.create }">
+          <RouterLink
+            v-if="userStore.user.isAuthenticated"
+            :to="{ name: config.routeNames.create }"
+          >
             <ActionButton size="small">Nuova scheda</ActionButton>
           </RouterLink>
         </div>

@@ -34,9 +34,19 @@ export const ricettaConfig: TypeConfig = {
   endpoint: '/api/ricette/',
   routeNames: { list: 'ricettelist', detail: 'ricettedetail', create: 'ricettecreate' },
   extraFields: [
-    { key: 'ingredients', label: 'Ingredienti', kind: 'textarea', placeholder: 'Un ingrediente per riga...' },
-    { key: 'servings', label: 'Dosi', kind: 'input', placeholder: "Es. Per 8 persone" },
-    { key: 'procedure', label: 'Procedimento', kind: 'textarea', placeholder: 'Il procedimento...' },
+    {
+      key: 'ingredients',
+      label: 'Ingredienti',
+      kind: 'textarea',
+      placeholder: 'Un ingrediente per riga...',
+    },
+    { key: 'servings', label: 'Dosi', kind: 'input', placeholder: 'Es. Per 8 persone' },
+    {
+      key: 'procedure',
+      label: 'Procedimento',
+      kind: 'textarea',
+      placeholder: 'Il procedimento...',
+    },
   ],
   mapMode: 'pins',
   maxPoints: 50,
@@ -64,9 +74,19 @@ export const dialettoConfig: TypeConfig = {
   extraFields: [
     { key: 'term', label: 'Termine', kind: 'input', placeholder: 'Es. Muffato' },
     { key: 'meaning', label: 'Significato', kind: 'textarea', placeholder: 'Il significato...' },
-    { key: 'example_usage', label: 'Esempio d’uso', kind: 'textarea', placeholder: 'Una frase di esempio...' },
+    {
+      key: 'example_usage',
+      label: 'Esempio d’uso',
+      kind: 'textarea',
+      placeholder: 'Una frase di esempio...',
+    },
   ],
   mapMode: 'none',
 }
 
-export const typeConfigs: TypeConfig[] = [chiesaConfig, ricettaConfig, personaggioConfig, dialettoConfig]
+export const typeConfigs: TypeConfig[] = [
+  chiesaConfig,
+  ricettaConfig,
+  personaggioConfig,
+  dialettoConfig,
+]

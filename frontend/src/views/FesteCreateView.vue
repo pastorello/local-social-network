@@ -19,9 +19,7 @@ const onCreated = (feste: Feste) => {
     <div class="col-span-2 col-start-2 self-start">
       <PanelBox>
         <MainTitle>Nuova festa</MainTitle>
-        <p class="mb-6 text-gray-500">
-          Puoi salvarla come bozza e pubblicarla quando è pronta.
-        </p>
+        <p class="mb-6 text-gray-500">Puoi salvarla come bozza e pubblicarla quando è pronta.</p>
         <FesteForm @saved="onCreated" @cancel="router.push('/feste')" />
       </PanelBox>
     </div>

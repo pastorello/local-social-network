@@ -38,11 +38,11 @@ describe('toast store', () => {
     expect(store.classes).not.toContain('-translate-y-28')
   })
 
-  it('a second toast is not cut short by the first one\'s timers', () => {
+  it("a second toast is not cut short by the first one's timers", () => {
     const store = useToastStore()
 
     store.showToast(5000, 'Primo', 'bg-emerald-500')
-    vi.advanceTimersByTime(4600)   // past the first toast's fade-out timer
+    vi.advanceTimersByTime(4600) // past the first toast's fade-out timer
     store.showToast(5000, 'Secondo', 'bg-red-300')
 
     // The first toast's remaining timers used to fire against the second one,

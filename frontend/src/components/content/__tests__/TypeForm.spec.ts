@@ -3,7 +3,12 @@ import { mount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 
 import TypeForm from '../TypeForm.vue'
-import { chiesaConfig, dialettoConfig, personaggioConfig, ricettaConfig } from '@/definitions/typeConfigs'
+import {
+  chiesaConfig,
+  dialettoConfig,
+  personaggioConfig,
+  ricettaConfig,
+} from '@/definitions/typeConfigs'
 import type { ContentItem } from '@/definitions/interfaces/Content'
 
 // MapPinsEditor mounts a real Leaflet map, which isn't viable under
