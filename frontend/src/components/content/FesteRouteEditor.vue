@@ -5,6 +5,7 @@ import L from 'leaflet'
 import type { LayerGroup, LeafletMouseEvent, Map as LeafletMap, Polyline } from 'leaflet'
 
 import { useLeafletMap } from '@/composables/useLeafletMap'
+import { readToken } from '@/lib/tokens'
 import type { RoutePoint } from '@/definitions/interfaces/Feste'
 
 const props = defineProps<{
@@ -30,9 +31,9 @@ const render = () => {
   props.modelValue.forEach((point, index) => {
     const marker = L.circleMarker([point.lat, point.lng], {
       radius: 8,
-      color: '#ffffff',
+      color: readToken('--color-surface', '#ffffff'),
       weight: 2,
-      fillColor: '#7c3aed',
+      fillColor: readToken('--color-sea', '#0f5f73'),
       fillOpacity: 0.9,
     })
     marker.bindTooltip(point.label ? `${index + 1}. ${point.label}` : `${index + 1}`)
@@ -43,7 +44,7 @@ const render = () => {
   if (props.modelValue.length > 1) {
     polyline = L.polyline(
       props.modelValue.map((p) => [p.lat, p.lng]),
-      { color: '#7c3aed', weight: 4 },
+      { color: readToken('--color-sea', '#0f5f73'), weight: 4 },
     ).addTo(map)
   }
 }

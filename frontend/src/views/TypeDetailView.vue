@@ -5,13 +5,10 @@ import { useRoute, useRouter } from 'vue-router'
 
 import PanelBox from '@/components/boxes/PanelBox.vue'
 import ViewContainer from '@/components/boxes/ViewContainer.vue'
-import MainTitle from '@/components/typography/MainTitle.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
-import UserAvatar from '@/components/cards/UserAvatar.vue'
-import RichText from '@/components/content/RichText.vue'
+import CardArticle from '@/components/content/CardArticle.vue'
 import MapPinsEditor from '@/components/content/MapPinsEditor.vue'
 import TypeForm from '@/components/content/TypeForm.vue'
-import LanguageSwitch from '@/components/content/LanguageSwitch.vue'
 import TranslateControl from '@/components/content/TranslateControl.vue'
 import { useUserStore } from '@/stores/user'
 import { useToastStore } from '@/stores/toast'
@@ -37,16 +34,11 @@ const canEdit = computed(
     (userStore.user.id === item.value.author.id || userStore.user.role === 'admin'),
 )
 
-const createdAtFormatted = computed(() => {
-  if (!item.value) return ''
-  return new Date(item.value.created_at).toLocaleDateString('it-IT', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
-})
-
 const pins = computed(() => (item.value?.pins as MapPoint[] | undefined) ?? [])
+
+const filledFields = computed(() =>
+  props.config.extraFields.filter((field) => Boolean(item.value?.[field.key])),
+)
 
 const getItem = async () => {
   await axios
@@ -99,85 +91,66 @@ watch(
 </script>
 
 <template>
-  <ViewContainer class="grid-cols-4">
-    <div class="col-span-2 col-start-2 space-y-4 self-start">
-      <PanelBox v-if="item">
-        <template v-if="!editing">
-          <LanguageSwitch
-            :translations="item.translations"
-            :detail-route-name="config.routeNames.detail"
-          />
-
-          <div class="mb-2 flex items-center justify-between gap-4">
-            <MainTitle>{{ item.title }}</MainTitle>
-            <span v-if="!item.is_published" class="text-xs text-gray-500">Bozza</span>
-          </div>
-
-          <p class="mb-4 flex items-center gap-2 text-sm text-gray-500">
-            <UserAvatar
-              :src="item.author.avatarURL"
-              :name="item.author.name"
-              class="w-6 h-6 rounded-full inline-block object-cover"
-            />
-            <strong>{{ item.author.name }}</strong> · {{ createdAtFormatted }}
-          </p>
-
-          <div v-if="item.images.length > 0" class="flex flex-wrap gap-2 mb-4">
-            <img
-              v-for="image in item.images"
-              :key="image.id"
-              :src="image.imageURL"
-              class="w-32 h-32 object-cover rounded-xl"
-              :alt="image.caption || item.title"
-            />
-          </div>
-
-          <RichText :html="item.body_html" class="mb-6" />
-
-          <div v-for="field in config.extraFields" :key="field.key">
-            <p v-if="item[field.key] && field.kind === 'input'" class="mb-4">
-              <strong>{{ field.label }}:</strong> {{ item[field.key] }}
-            </p>
-            <p v-else-if="item[field.key]" class="mb-4 whitespace-pre-line">
-              <strong>{{ field.label }}:</strong><br />{{ item[field.key] }}
-            </p>
-          </div>
-
-          <MapPinsEditor
-            v-if="config.mapMode === 'pins' && pins.length > 0"
-            :model-value="pins"
-            :max="config.maxPoints ?? 1"
-            readonly
-            class="mb-6"
-          />
-
-          <div class="flex flex-wrap items-center gap-2" v-if="canEdit">
-            <ActionButton size="small" @click="editing = true">Modifica</ActionButton>
-            <ActionButton size="small" button-type="danger" @click="deleteItem">
-              Elimina
-            </ActionButton>
-            <TranslateControl
-              v-if="!item.translation_of"
-              :translate-endpoint="`${config.endpoint}${item.id}/traduci/`"
-              :translations="item.translations"
-              :detail-route-name="config.routeNames.detail"
-            />
-          </div>
-        </template>
-
-        <TypeForm
-          v-else
-          :config="config"
-          :item="item"
-          @saved="onEdited"
-          @cancel="editing = false"
-        />
-      </PanelBox>
-
-      <PanelBox>
-        <RouterLink :to="{ name: config.routeNames.list }" class="underline"
-          >← Torna a {{ config.label.toLowerCase() }}</RouterLink
+  <ViewContainer class="grid-cols-1">
+    <div>
+      <template v-if="item && !editing">
+        <CardArticle
+          :title="item.title"
+          :body-html="item.body_html"
+          :author="item.author"
+          :created-at="item.created_at"
+          :is-published="item.is_published"
+          :images="item.images"
+          :translations="item.translations"
+          :type-label="config.singularLabel"
+          :detail-route-name="config.routeNames.detail"
+          :back-to="{ name: config.routeNames.list, label: config.label.toLowerCase() }"
         >
+          <!-- A type's own fields are a small table of facts, not sentences
+          with a bold word in front of them: "Dosi: per 8 persone" reads as a
+          label and a value, so it is marked up as one. -->
+          <template #fields>
+            <dl
+              v-if="filledFields.length"
+              class="mb-10 divide-y divide-hairline border-y border-hairline"
+            >
+              <div v-for="field in filledFields" :key="field.key" class="py-3 sm:flex sm:gap-6">
+                <dt
+                  class="text-xs font-semibold tracking-[0.1em] text-muted uppercase sm:w-40 sm:flex-none sm:pt-1"
+                >
+                  {{ field.label }}
+                </dt>
+                <dd class="whitespace-pre-line text-ink">{{ item![field.key] }}</dd>
+              </div>
+            </dl>
+          </template>
+
+          <template #map>
+            <section v-if="config.mapMode === 'pins' && pins.length > 0" class="mb-10">
+              <h2 class="mb-3 font-display text-title text-ink">Dove si trova</h2>
+              <MapPinsEditor :model-value="pins" :max="config.maxPoints ?? 1" readonly />
+            </section>
+          </template>
+
+          <template #actions>
+            <div v-if="canEdit" class="flex flex-wrap items-center gap-2">
+              <ActionButton size="small" @click="editing = true">Modifica</ActionButton>
+              <ActionButton size="small" button-type="danger" @click="deleteItem">
+                Elimina
+              </ActionButton>
+              <TranslateControl
+                v-if="!item.translation_of"
+                :translate-endpoint="`${config.endpoint}${item.id}/traduci/`"
+                :translations="item.translations"
+                :detail-route-name="config.routeNames.detail"
+              />
+            </div>
+          </template>
+        </CardArticle>
+      </template>
+
+      <PanelBox v-else-if="item" class="mx-auto w-full max-w-3xl">
+        <TypeForm :config="config" :item="item" @saved="onEdited" @cancel="editing = false" />
       </PanelBox>
     </div>
   </ViewContainer>

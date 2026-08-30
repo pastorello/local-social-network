@@ -30,6 +30,7 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import type { MapCardFeature, Overlay } from '@/definitions/interfaces/MapData'
 import type { ReportPin } from '@/definitions/interfaces/Report'
 import { layerColor } from '@/lib/mapLayers'
+import { readToken } from '@/lib/tokens'
 import { statusColor } from '@/lib/reportStatus'
 
 // The one map of Gaeta (spec map.md): the v1 reports layer, every card type
@@ -78,7 +79,7 @@ const renderPins = () => {
   for (const pin of props.pins) {
     const marker = L.circleMarker([pin.lat, pin.lng], {
       radius: 9,
-      color: '#ffffff',
+      color: readToken('--color-surface', '#ffffff'),
       weight: 2,
       fillColor: statusColor(pin.status),
       fillOpacity: 0.9,
@@ -104,7 +105,7 @@ const renderFeatures = () => {
     for (const point of feature.points) {
       const marker = L.circleMarker([point.lat, point.lng], {
         radius: 8,
-        color: '#ffffff',
+        color: readToken('--color-surface', '#ffffff'),
         weight: 2,
         fillColor: color,
         fillOpacity: 0.9,
@@ -128,7 +129,7 @@ const renderFeatures = () => {
     for (const point of feature.route) {
       const stop = L.circleMarker([point.lat, point.lng], {
         radius: 5,
-        color: '#ffffff',
+        color: readToken('--color-surface', '#ffffff'),
         weight: 2,
         fillColor: color,
         fillOpacity: 1,
@@ -228,9 +229,9 @@ const onReady = (leafletMap: LeafletMap) => {
     }
     draftMarker = L.circleMarker([lat, lng], {
       radius: 11,
-      color: '#7c3aed',
+      color: readToken('--color-sea-deep', '#0a4655'),
       weight: 3,
-      fillColor: '#a78bfa',
+      fillColor: readToken('--color-sea', '#0f5f73'),
       fillOpacity: 0.7,
     }).addTo(map)
 
