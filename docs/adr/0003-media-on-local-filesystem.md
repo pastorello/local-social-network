@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted for now — revisit before anything is hosted publicly.
+Accepted, and **amended by [ADR-0007](0007-serving-media-from-the-app.md)
+(2026-08-30)**, which decides the serving question this one left open. The
+storage decision below — local filesystem — is unchanged.
 
 ## Date
 

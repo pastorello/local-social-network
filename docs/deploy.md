@@ -54,13 +54,19 @@ gunicorn backend.wsgi --bind 0.0.0.0:8000 --workers 2
 Static files (Django admin) are served by **whitenoise** — no web server needed
 in front for them.
 
-**Media uploads are still broken on a real deployment, and a disk does not fix
-it.** `MEDIA_URL` is mounted with `django.conf.urls.static.static()`, which is a
-documented no-op when `DEBUG` is false, so every photo, card cover and overlay
-raster 404s no matter where the files live. A persistent disk (or object
-storage) is necessary and *not sufficient* — something has to serve them. That
-decision is [ADR-0003](./adr/0003-media-on-local-filesystem.md)'s open question
-and the one deliberate blocker left in roadmap item 3.
+**Media uploads** (report photos, card images and covers, overlay rasters) are
+served by the app itself — `common/media.py`, decided in
+[ADR-0007](./adr/0007-serving-media-from-the-app.md). No object storage and no
+web server in front are required, on any host. Only `.jpg`, `.png` and `.webp`
+are served, with the `Content-Type` taken from that allowlist rather than
+guessed, plus `nosniff` and a sandboxing CSP — which is what makes it
+acceptable to serve uploads from the origin that holds the admin session
+cookie.
+
+**Give the service a persistent disk** (`MEDIA_ROOT`). That part of
+[ADR-0003](./adr/0003-media-on-local-filesystem.md) stands: an ephemeral disk
+loses every upload on redeploy. The difference is that a disk is now
+sufficient — before, nothing served the files at all.
 
 Create the first admin (spec F1.3 — promotion happens via Django admin):
 
