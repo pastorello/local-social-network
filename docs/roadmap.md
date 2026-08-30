@@ -76,12 +76,15 @@ keyboard findings now land against a bar this project has accepted.
 Two things that were deferred for the same reason (the screens kept changing)
 and are unblocked by the same event (they will have stopped):
 
-- **TD-04 (e2e).** The suite is still one spec, `login.cy.ts`, whose home-map
-  assertions were updated for C5 and nothing more. The v2 flows now worth
-  covering: the "Collabora con noi" request → invite → first login, authoring
-  and publishing a card, translating it, and the map with its layers and
-  overlays. Note the CI e2e job runs **no backend** — a spec that talks to the
-  API needs a service added to `.github/workflows/ci.yml` first.
+- ~~**TD-04 (e2e).**~~ **Largely paid 2026-08-30**: four spec files, 17 tests,
+  against a real API that CI now starts beside the production build. Covered:
+  the map and its layers, a draft staying invisible, the confidential overlay
+  staying *absent*, reading a card on desktop and through the mobile sheet,
+  and the collaborator's whole loop — log in, write, publish, draft, translate.
+  **Named gaps, on purpose:** the leg after an admin approves a collaboration
+  request (accepting an invite needs the token out of an e-mail — a test hook
+  worth adding deliberately), and the v1 flows this register first pointed at:
+  filing a report, upvoting, voting in a poll.
 - **The three items ADR-0005 deferred:** full map-widget operability for
   screen-reader and keyboard users (C5 added layer toggles and an opacity
   slider, plus the "Luoghi sulla mappa" list as the keyboard path a pin does

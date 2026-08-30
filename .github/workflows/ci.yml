@@ -104,6 +104,38 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
+      # The specs drive the real SPA against the real API (TD-04): stubbing it
+      # would only test the stubs, and half of what is worth covering — a draft
+      # staying invisible, a confidential overlay staying absent — is exactly
+      # where the two sides could disagree.
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: python -m pip install -r requirements-dev.txt
+
+      # DJANGO_DEBUG=true is required by seed_e2e, which refuses to run
+      # otherwise — it creates accounts whose password is written down in a
+      # spec file. SQLite, same as the backend job.
+      - name: Start the API
+        working-directory: backend
+        env:
+          DJANGO_DEBUG: 'true'
+          CORS_ALLOWED_ORIGINS: 'http://localhost:4173,http://127.0.0.1:4173'
+        run: |
+          python manage.py migrate --noinput
+          python manage.py seed_e2e
+          nohup python manage.py runserver 127.0.0.1:8000 --noreload > api.log 2>&1 &
+          for _ in $(seq 1 60); do
+            curl -sf http://127.0.0.1:8000/api/categories/ > /dev/null && exit 0
+            sleep 1
+          done
+          echo "the API never came up:" && cat api.log && exit 1
+
       # `npm ci` downloads the binary through the `prepare` script; without this
       # that is ~100 MB on every run.
       - name: Cache the Cypress binary
@@ -121,9 +153,9 @@ jobs:
       - name: Build
         run: npm run build
 
-      # No backend service: today's specs exercise the SPA shell only — the map
-      # view, the auth redirect and the login form. A spec that talks to the API
-      # will need one added here.
+      # The SPA's API base URL defaults to http://127.0.0.1:8000 (main.ts), which
+      # is where the step above put it — so the production build needs no extra
+      # environment here. It would if the API ever moved.
       - name: Run Cypress
         run: npm run test:e2e
 
@@ -135,5 +167,6 @@ jobs:
           path: |
             frontend/cypress/screenshots
             frontend/cypress/videos
+            backend/api.log
           if-no-files-found: ignore
           retention-days: 7

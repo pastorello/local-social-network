@@ -138,8 +138,11 @@ Cypress against a **production build** (`npm run test:e2e`, vite preview on
 default-import gotcha only appear in built output. It must stay green. Two
 things to know before editing it: the linters run **check-only** there, because
 `npm run lint` applies `--fix` and would let CI pass by rewriting files; and the
-e2e job runs no backend, since today's specs exercise the SPA shell only — a
-spec that talks to the API needs a service added.
+e2e job **starts a real Django API on :8000** (TD-04, 2026-08-30) seeded by
+`python manage.py seed_e2e` — a DEBUG-only management command, since it creates
+accounts whose password is written down in a spec file. The SPA's API base URL
+defaults to `http://127.0.0.1:8000`, which is why the build needs no extra
+environment there; it would if the API ever moved.
 
 Definition of done for a feature (spec §9): the spec section it implements is referenced, pytest + Vitest green, ruff + eslint clean, `npm run build` green. CI runs all of it on every push and pull request.
 
