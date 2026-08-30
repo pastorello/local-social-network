@@ -15,11 +15,11 @@ const onCreated = (feste: Feste) => {
 </script>
 
 <template>
-  <ViewContainer class="grid-cols-4">
-    <div class="col-span-2 col-start-2 self-start">
+  <ViewContainer class="grid-cols-1">
+    <div class="mx-auto w-full max-w-3xl">
       <PanelBox>
         <MainTitle>Nuova festa</MainTitle>
-        <p class="mb-6 text-gray-500">Puoi salvarla come bozza e pubblicarla quando è pronta.</p>
+        <p class="mb-8 text-muted">Puoi salvarla come bozza e pubblicarla quando è pronta.</p>
         <FesteForm @saved="onCreated" @cancel="router.push('/feste')" />
       </PanelBox>
     </div>

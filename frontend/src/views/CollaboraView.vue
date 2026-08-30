@@ -94,7 +94,7 @@ const submitForm = () => {
         <form class="space-y-6" v-on:submit.prevent="submitForm">
           <div>
             <label for="collabora-name">Nome</label><br />
-            <FormInput
+            <FormInput class="mt-2"
               id="collabora-name"
               type="text"
               v-model="form.name"
@@ -104,7 +104,7 @@ const submitForm = () => {
 
           <div>
             <label for="collabora-email">E-mail</label><br />
-            <FormInput
+            <FormInput class="mt-2"
               id="collabora-email"
               type="email"
               v-model="form.email"

@@ -83,12 +83,12 @@ const submitForm = async () => {
         <form class="space-y-6" v-on:submit.prevent="submitForm">
           <div>
             <label>E-mail</label><br />
-            <FormInput type="email" v-model="form.email" placeholder="La tua e-mail" />
+            <FormInput class="mt-2" type="email" v-model="form.email" placeholder="La tua e-mail" />
           </div>
 
           <div>
             <label>Password</label><br />
-            <FormInput type="password" v-model="form.password" placeholder="La tua password" />
+            <FormInput class="mt-2" type="password" v-model="form.password" placeholder="La tua password" />
             <RouterLink :to="{ name: 'passwordresetrequest' }" class="underline text-sm">
               Password dimenticata?
             </RouterLink>

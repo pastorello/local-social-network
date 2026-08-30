@@ -213,9 +213,15 @@ answer is not a redesign.
    the loading cost on a phone.~~ **Answered 2026-08-30** — no display face;
    one sans (Archivo, 34 KB, self-hosted) and a type scale that does the work
    a serif would have done. See D6/D6b.
-3. Whether the collaborator's authoring screens are restyled in the same pass
-   or the one after. They are the secondary audience, and the reader's surfaces
-   are where the bet is won.
+3. ~~Whether the collaborator's authoring screens are restyled in the same pass
+   or the one after.~~ **Answered 2026-08-30: in this pass**, after the
+   reader's surfaces. Desktop-first, per D2: the forms are grouped into
+   sections (Contenuto / Immagini / Mappa / Pubblicazione) rather than one
+   long stack, because writing a card and giving it a place are different
+   jobs and a wide screen has room to say so. The restyle also carried two of
+   ADR-0005's deferred items — see its 2026-08-30 update. The auth and profile
+   forms are *not* included: they are neither reading nor authoring, and they
+   still use the older label pattern.
 4. ~~Whether the bottom sheet (D3) has a desktop counterpart or the wide
    layout keeps a side panel.~~ **Answered 2026-08-30**: the wide layout keeps
    the side panel. The two are switched in JS at 1024px rather than with

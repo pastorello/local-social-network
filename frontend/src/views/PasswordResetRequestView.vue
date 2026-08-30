@@ -60,7 +60,7 @@ const submitForm = () => {
         <form v-else class="space-y-6" v-on:submit.prevent="submitForm">
           <div>
             <label for="reset-request-email">E-mail</label><br />
-            <FormInput
+            <FormInput class="mt-2"
               id="reset-request-email"
               type="email"
               v-model="form.email"

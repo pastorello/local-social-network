@@ -3,9 +3,17 @@ import { onBeforeUnmount, watch } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 
-const props = withDefaults(defineProps<{ modelValue: string; label?: string }>(), {
-  label: 'Testo',
-})
+const props = withDefaults(
+  defineProps<{
+    modelValue: string
+    label?: string
+    // Handed down by the FormField around it, so the editor participates in
+    // the same label/description wiring as a plain input (ADR-0005).
+    inputId?: string
+    describedBy?: string
+  }>(),
+  { label: 'Testo' },
+)
 const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
 
 // The allowed tag set here is deliberately exactly what content/sanitize.py
@@ -20,7 +28,15 @@ const editor = useEditor({
   // wrapper <div>, not the actual contenteditable region ProseMirror renders
   // deep inside <editor-content> — this is the only way to name that element.
   editorProps: {
-    attributes: { role: 'textbox', 'aria-label': props.label, 'aria-multiline': 'true' },
+    attributes: {
+      role: 'textbox',
+      'aria-label': props.label,
+      'aria-multiline': 'true',
+      // Same reason as the label: an id or a description put on this component
+      // would land on the wrapper, not on the region a screen reader lands in.
+      ...(props.inputId ? { id: props.inputId } : {}),
+      ...(props.describedBy ? { 'aria-describedby': props.describedBy } : {}),
+    },
   },
   onUpdate: ({ editor }) => {
     emit('update:modelValue', editor.getHTML())
@@ -52,99 +68,111 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="border border-gray-200 rounded-lg overflow-hidden">
-    <div v-if="editor" class="flex flex-wrap gap-1 p-2 bg-gray-50 border-b border-gray-200">
+  <div class="overflow-hidden rounded-lg border border-field bg-surface">
+    <div
+      v-if="editor"
+      class="flex flex-wrap gap-1 border-b border-hairline bg-page p-2"
+      role="toolbar"
+      aria-label="Formattazione"
+    >
       <button
         type="button"
-        class="px-3 py-2 rounded"
+        class="cursor-pointer rounded px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
         aria-label="Grassetto"
         :aria-pressed="editor.isActive('bold')"
-        :class="editor.isActive('bold') ? 'bg-sea text-white' : 'bg-white'"
+        :class="editor.isActive('bold') ? 'bg-sea text-white' : 'bg-surface text-ink'"
         @click="editor.chain().focus().toggleBold().run()"
       >
         <strong>B</strong>
       </button>
       <button
         type="button"
-        class="px-3 py-2 rounded"
+        class="cursor-pointer rounded px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
         aria-label="Corsivo"
         :aria-pressed="editor.isActive('italic')"
-        :class="editor.isActive('italic') ? 'bg-sea text-white' : 'bg-white'"
+        :class="editor.isActive('italic') ? 'bg-sea text-white' : 'bg-surface text-ink'"
         @click="editor.chain().focus().toggleItalic().run()"
       >
         <em>I</em>
       </button>
       <button
         type="button"
-        class="px-3 py-2 rounded"
+        class="cursor-pointer rounded px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
         aria-label="Barrato"
         :aria-pressed="editor.isActive('strike')"
-        :class="editor.isActive('strike') ? 'bg-sea text-white' : 'bg-white'"
+        :class="editor.isActive('strike') ? 'bg-sea text-white' : 'bg-surface text-ink'"
         @click="editor.chain().focus().toggleStrike().run()"
       >
         <s>S</s>
       </button>
       <button
         type="button"
-        class="px-3 py-2 rounded"
+        class="cursor-pointer rounded px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
         aria-label="Titolo di livello 2"
         :aria-pressed="editor.isActive('heading', { level: 2 })"
-        :class="editor.isActive('heading', { level: 2 }) ? 'bg-sea text-white' : 'bg-white'"
+        :class="
+          editor.isActive('heading', { level: 2 }) ? 'bg-sea text-white' : 'bg-surface text-ink'
+        "
         @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
       >
         H2
       </button>
       <button
         type="button"
-        class="px-3 py-2 rounded"
+        class="cursor-pointer rounded px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
         aria-label="Titolo di livello 3"
         :aria-pressed="editor.isActive('heading', { level: 3 })"
-        :class="editor.isActive('heading', { level: 3 }) ? 'bg-sea text-white' : 'bg-white'"
+        :class="
+          editor.isActive('heading', { level: 3 }) ? 'bg-sea text-white' : 'bg-surface text-ink'
+        "
         @click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
       >
         H3
       </button>
       <button
         type="button"
-        class="px-3 py-2 rounded"
+        class="cursor-pointer rounded px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
         aria-label="Elenco puntato"
         :aria-pressed="editor.isActive('bulletList')"
-        :class="editor.isActive('bulletList') ? 'bg-sea text-white' : 'bg-white'"
+        :class="editor.isActive('bulletList') ? 'bg-sea text-white' : 'bg-surface text-ink'"
         @click="editor.chain().focus().toggleBulletList().run()"
       >
         • Lista
       </button>
       <button
         type="button"
-        class="px-3 py-2 rounded"
+        class="cursor-pointer rounded px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
         aria-label="Elenco numerato"
         :aria-pressed="editor.isActive('orderedList')"
-        :class="editor.isActive('orderedList') ? 'bg-sea text-white' : 'bg-white'"
+        :class="editor.isActive('orderedList') ? 'bg-sea text-white' : 'bg-surface text-ink'"
         @click="editor.chain().focus().toggleOrderedList().run()"
       >
         1. Lista
       </button>
       <button
         type="button"
-        class="px-3 py-2 rounded"
+        class="cursor-pointer rounded px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
         aria-label="Citazione"
         :aria-pressed="editor.isActive('blockquote')"
-        :class="editor.isActive('blockquote') ? 'bg-sea text-white' : 'bg-white'"
+        :class="editor.isActive('blockquote') ? 'bg-sea text-white' : 'bg-surface text-ink'"
         @click="editor.chain().focus().toggleBlockquote().run()"
       >
         Citazione
       </button>
       <button
         type="button"
-        class="px-3 py-2 rounded"
+        class="cursor-pointer rounded px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
         aria-label="Link"
         :aria-pressed="editor.isActive('link')"
-        :class="editor.isActive('link') ? 'bg-sea text-white' : 'bg-white'"
+        :class="editor.isActive('link') ? 'bg-sea text-white' : 'bg-surface text-ink'"
         @click="setLink"
       >
         Link
       </button>
     </div>
-    <editor-content :editor="editor" class="prose max-w-none p-4 min-h-40" />
+    <editor-content
+      :editor="editor"
+      class="prose max-w-none min-h-48 p-4 text-ink prose-headings:font-display prose-a:text-sea"
+    />
   </div>
 </template>

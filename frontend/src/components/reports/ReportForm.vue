@@ -76,7 +76,7 @@ const submitForm = async () => {
   <form class="space-y-4" v-on:submit.prevent="submitForm">
     <div>
       <label class="font-semibold" for="report-title">Titolo</label><br />
-      <FormInput
+      <FormInput class="mt-2"
         id="report-title"
         type="text"
         v-model="title"

@@ -61,7 +61,7 @@ const submitForm = () => {
         <form class="space-y-6" v-on:submit.prevent="submitForm">
           <div>
             <label for="reset-confirm-password1">Nuova password</label><br />
-            <FormInput
+            <FormInput class="mt-2"
               id="reset-confirm-password1"
               type="password"
               v-model="form.password1"
@@ -71,7 +71,7 @@ const submitForm = () => {
 
           <div>
             <label for="reset-confirm-password2">Ripeti password</label><br />
-            <FormInput
+            <FormInput class="mt-2"
               id="reset-confirm-password2"
               type="password"
               v-model="form.password2"

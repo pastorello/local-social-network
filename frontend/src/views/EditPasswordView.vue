@@ -72,7 +72,7 @@ const submitForm = () => {
         <form class="space-y-6" v-on:submit.prevent="submitForm">
           <div>
             <label for="editpassword-old">Password attuale</label><br />
-            <FormInput
+            <FormInput class="mt-2"
               id="editpassword-old"
               type="password"
               v-model="form.old_password"
@@ -82,7 +82,7 @@ const submitForm = () => {
 
           <div>
             <label for="editpassword-new1">Nuova password</label><br />
-            <FormInput
+            <FormInput class="mt-2"
               id="editpassword-new1"
               type="password"
               v-model="form.new_password1"
@@ -92,7 +92,7 @@ const submitForm = () => {
 
           <div>
             <label for="editpassword-new2">Ripeti password</label><br />
-            <FormInput
+            <FormInput class="mt-2"
               id="editpassword-new2"
               type="password"
               v-model="form.new_password2"

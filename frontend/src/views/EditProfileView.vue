@@ -90,7 +90,7 @@ const submitForm = () => {
         <form class="space-y-6" v-on:submit.prevent="submitForm">
           <div>
             <label for="editprofile-name">Nome</label><br />
-            <FormInput
+            <FormInput class="mt-2"
               id="editprofile-name"
               type="text"
               v-model="form.name"
@@ -100,7 +100,7 @@ const submitForm = () => {
 
           <div>
             <label for="editprofile-email">E-mail</label><br />
-            <FormInput
+            <FormInput class="mt-2"
               id="editprofile-email"
               type="email"
               v-model="form.email"
