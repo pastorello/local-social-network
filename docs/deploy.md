@@ -32,24 +32,35 @@ Environment (see `.env.example`):
   links, spec A3/A4 — these routes are in the frontend, not the API)
 - `POSTGRES_HOST/PORT/DB/USER/PASSWORD`
 
-Rate limiting (TD-18) counts through the Django cache. `settings.py` configures
-no `CACHES`, so it is `LocMemCache` — **per process**. Behind several gunicorn
-workers each worker keeps its own tally and the effective limit is multiplied by
-the worker count. Configure a shared cache (Redis or Memcached) before relying
-on the login and signup limits.
+Rate limiting (TD-18) counts through the Django cache. Outside dev and tests
+`settings.py` now configures the **database cache**, which is shared by every
+worker and every container — verified by three separate processes counting 1,
+2, 3 through it, where `LocMemCache` gave each of them 1. Swap in Redis by
+pointing `CACHES` at one when there is a Redis to point at; the throttles do
+not care which backend counts for them.
+
+**`createcachetable` is part of the release, not optional.** Without the table
+the first throttled request errors instead of throttling.
 
 Release commands:
 
 ```sh
 python manage.py migrate
+python manage.py createcachetable          # the shared cache the throttles count in
 python manage.py collectstatic --noinput   # whitenoise serves the result
 gunicorn backend.wsgi --bind 0.0.0.0:8000 --workers 2
 ```
 
 Static files (Django admin) are served by **whitenoise** — no web server needed
-in front for them. **Media uploads** (report photos, avatars) land on the local
-filesystem (`MEDIA_ROOT`): give the service a persistent disk, or move media to
-S3-compatible storage if the platform has no disks (spec §6 anticipates this).
+in front for them.
+
+**Media uploads are still broken on a real deployment, and a disk does not fix
+it.** `MEDIA_URL` is mounted with `django.conf.urls.static.static()`, which is a
+documented no-op when `DEBUG` is false, so every photo, card cover and overlay
+raster 404s no matter where the files live. A persistent disk (or object
+storage) is necessary and *not sufficient* — something has to serve them. That
+decision is [ADR-0003](./adr/0003-media-on-local-filesystem.md)'s open question
+and the one deliberate blocker left in roadmap item 3.
 
 Create the first admin (spec F1.3 — promotion happens via Django admin):
 

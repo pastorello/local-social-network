@@ -1015,10 +1015,18 @@ runs on, and `settings.py` gates it three ways (locmem under pytest, console in
 dev, real SMTP otherwise) — so the migration is a settings-shape change that
 also touches `.env.example` and `docs/deploy.md`.
 
-**Not urgent** (Django 7.0 is not out) and **not free** (it moves the same
-configuration the deploy work has to design anyway), so it belongs with the
-SMTP prerequisite in [roadmap](./roadmap.md) item 3 rather than in a dependency
-bump. The suite currently passes with the warning; it would fail on Django 7.
+**Done 2026-08-30**, with the first slice of roadmap item 3 — which is where it
+said it belonged. `settings.py` now defines `MAILERS` with the same
+`TESTING`/`DEBUG` gating, and the environment variables keep their names so a
+deployment's configuration does not move. The migration is all-or-nothing by
+Django's design: with `MAILERS` defined it *raises* on a leftover `EMAIL_*`
+setting rather than ignoring it, which is a good failure mode and worth knowing
+before someone re-adds one. The suite no longer emits the warning.
+
+> Original text: **Not urgent** (Django 7.0 is not out) and **not free** (it
+> moves the same configuration the deploy work has to design anyway), so it
+> belongs with the SMTP prerequisite in [roadmap](./roadmap.md) item 3 rather
+> than in a dependency bump.
 
 **Found:** 2026-08-30, by the Django 6.1 upgrade — which is the argument for
 doing minors regularly: a deprecation you meet at 6.1 is a warning, the same
