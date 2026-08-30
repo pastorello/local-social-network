@@ -274,19 +274,54 @@ if TESTING:
 # Invite and password-reset e-mails (spec A3/A4). TESTING is checked first —
 # CI runs with DJANGO_DEBUG=false, so without this the suite would try to
 # reach a real SMTP server; locmem also lets tests assert on mail.outbox.
+#
+# MAILERS, not EMAIL_BACKEND (TD-34): Django 6.1 deprecates the whole EMAIL_*
+# family and removes it in 7.0. The migration is all-or-nothing — with MAILERS
+# defined, Django *raises* on any leftover EMAIL_* setting rather than quietly
+# ignoring it — so it is done in one place here and the environment variables
+# keep their names, since those are what a deployment already sets.
 if TESTING:
-    EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+    MAILERS = {'default': {'BACKEND': 'django.core.mail.backends.locmem.EmailBackend'}}
 elif DEBUG:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    MAILERS = {'default': {'BACKEND': 'django.core.mail.backends.console.EmailBackend'}}
 else:
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
-    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
-    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-    EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'true').lower() == 'true'
+    MAILERS = {
+        'default': {
+            'BACKEND': 'django.core.mail.backends.smtp.EmailBackend',
+            'OPTIONS': {
+                'host': os.environ.get('EMAIL_HOST', ''),
+                'port': int(os.environ.get('EMAIL_PORT', '587')),
+                'username': os.environ.get('EMAIL_HOST_USER', ''),
+                'password': os.environ.get('EMAIL_HOST_PASSWORD', ''),
+                'use_tls': os.environ.get('EMAIL_USE_TLS', 'true').lower() == 'true',
+            },
+        }
+    }
 
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@viveregaeta.it')
+
+# The credential rate limits (TD-18) count through the Django cache, and the
+# default cache is LocMemCache — *per process*. Behind two gunicorn workers
+# each keeps its own tally, so the effective limit is doubled; behind four,
+# quadrupled. That is not a limit, it is a suggestion.
+#
+# The database cache is used rather than Redis on purpose: it is shared across
+# every worker and every container, it needs no service the deployment does not
+# already have, and no host has been chosen yet (ADR-0003's own argument). Swap
+# in Redis by setting CACHE_URL when there is one to point at — the throttles
+# do not care which backend counts for them.
+#
+# **It needs its table**: `python manage.py createcachetable` is part of the
+# release commands, and without it the first throttled request errors instead
+# of throttling. Dev and tests stay on LocMem — conftest.py clears it between
+# tests, which is what stops the rate-limit tests poisoning each other.
+if not (DEBUG or TESTING):
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+            'LOCATION': 'django_cache',
+        }
+    }
 
 # `DEBUG and not TESTING`, not `not TESTING`: this used to install the app and
 # put its middleware first in the chain on every production request, with only
