@@ -1,0 +1,95 @@
+# Production stack for a single VPS (docs/deploy.md).
+#
+# Differs from the repo-root compose file in every way that matters: no bind
+# mounts, no dev servers, gunicorn instead of runserver, and one container in
+# front that terminates TLS and serves the built SPA.
+#
+#   docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
+
+name: vivere-gaeta
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: ../backend
+    restart: unless-stopped
+    # The release commands, run on every start because every one of them is
+    # idempotent and skipping one is the failure mode. createcachetable is not
+    # optional: the rate limits count in that table, and without it the first
+    # throttled request errors instead of throttling.
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py createcachetable &&
+             python manage.py collectstatic --noinput &&
+             gunicorn backend.wsgi --bind 0.0.0.0:8000 --workers 3 --access-logfile -"
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      DJANGO_DEBUG: 'false'
+      DJANGO_ALLOWED_HOSTS: ${DOMAIN}
+      # One origin for both halves, so there is no cross-origin request to
+      # allow in the first place. CSRF still needs the origin named.
+      CSRF_TRUSTED_ORIGINS: https://${DOMAIN}
+      CORS_ALLOWED_ORIGINS: https://${DOMAIN}
+      WEBSITE_URL: https://${DOMAIN}
+      FRONTEND_URL: https://${DOMAIN}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: '5432'
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_PORT: ${EMAIL_PORT}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
+      EMAIL_USE_TLS: ${EMAIL_USE_TLS}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL}
+      # Caddy terminates TLS and forwards X-Forwarded-Proto, which settings.py
+      # trusts via SECURE_PROXY_SSL_HEADER — so Django's own redirect is
+      # correct here and stays on.
+      DJANGO_SSL_REDIRECT: 'true'
+    volumes:
+      # Uploads must outlive the container. This is the volume to back up
+      # alongside the database; losing it loses every photo (ADR-0003).
+      - media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.web
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      DOMAIN: ${DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      # Caddy's certificates live here. Losing this volume means re-issuing on
+      # every restart, and Let's Encrypt rate-limits that.
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+  media:
+  caddy_data:
+  caddy_config:

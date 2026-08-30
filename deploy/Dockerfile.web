@@ -1,0 +1,29 @@
+# The public face of the deployment: one container that terminates TLS, serves
+# the SPA's static build, and proxies everything the API owns.
+#
+# Built from the repo root (`context: ..`), because stage one needs frontend/.
+
+# --- stage 1: build the SPA -------------------------------------------------
+FROM node:22-alpine AS build
+
+WORKDIR /app
+ENV CYPRESS_INSTALL_BINARY=0
+
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+
+COPY frontend/ ./
+
+# Empty on purpose, and not an oversight: the SPA and the API share one origin
+# behind this container, so axios resolves relative URLs and there is no CORS
+# to configure. Override it only if the API ever moves to its own hostname —
+# it is baked in here, so that would mean rebuilding the image.
+ARG VITE_API_BASE_URL=""
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+RUN npm run build
+
+# --- stage 2: serve ---------------------------------------------------------
+FROM caddy:2-alpine
+
+COPY deploy/Caddyfile /etc/caddy/Caddyfile
+COPY --from=build /app/dist /srv

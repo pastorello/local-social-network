@@ -1,0 +1,46 @@
+{
+	# Let's Encrypt needs a contact address. Set ACME_EMAIL in .env.
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	# `handle` blocks, not a matcher on reverse_proxy, and the difference is not
+	# cosmetic: `try_files` is a *rewrite*, and Caddy runs rewrites before
+	# reverse_proxy regardless of the order written here. With a plain matcher,
+	# /media/foto.jpg was rewritten to /index.html before the proxy ever saw it
+	# — so every image answered 200 with the SPA's HTML. Verified, not guessed.
+	# `handle` blocks are mutually exclusive and settle it.
+
+	# Everything the API owns. /media/ is here because the app serves its own
+	# uploads (ADR-0007) rather than handing them to a file server, and
+	# /static/ because whitenoise serves the Django admin's assets.
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+	handle /admin/* {
+		reverse_proxy api:8000
+	}
+	handle /media/* {
+		reverse_proxy api:8000
+	}
+	handle /static/* {
+		reverse_proxy api:8000
+	}
+
+	# The SPA: a real file if there is one, index.html otherwise, because the
+	# router uses HTML5 history mode and a deep link is not a file on disk.
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+
+		header {
+			# For the SPA's own responses. The API sets its own (Django's
+			# SECURE_* settings) and reverse_proxy does not overwrite them.
+			X-Content-Type-Options nosniff
+			Referrer-Policy strict-origin-when-cross-origin
+		}
+	}
+}
