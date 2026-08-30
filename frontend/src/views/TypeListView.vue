@@ -2,10 +2,11 @@
 import axios from 'axios'
 import { computed, onMounted, ref, watch } from 'vue'
 
-import PanelBox from '@/components/boxes/PanelBox.vue'
 import ViewContainer from '@/components/boxes/ViewContainer.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
+import CardGrid from '@/components/content/CardGrid.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
+import { layerColor } from '@/lib/mapLayers'
 import { useUserStore } from '@/stores/user'
 import type { TypeConfig } from '@/definitions/typeConfigs'
 import type { ContentItem } from '@/definitions/interfaces/Content'
@@ -50,9 +51,18 @@ const loadMore = async () => {
   nextPage.value = response.data.next
 }
 
-const firstImage = (item: ContentItem) => item.images[0]?.imageURL ?? null
-const summary = (item: ContentItem) =>
-  props.config.extraFields.length > 0 ? (item[props.config.extraFields[0]!.key] as string) : ''
+// The grid takes one normalised shape and knows nothing about card types.
+const entries = computed(() =>
+  items.value.map((item) => ({
+    id: item.id,
+    title: item.title,
+    summary:
+      props.config.extraFields.length > 0 ? (item[props.config.extraFields[0]!.key] as string) : '',
+    cover: item.images[0]?.imageURL ?? null,
+    isPublished: item.is_published,
+    to: { name: props.config.routeNames.detail, params: { id: item.id } },
+  })),
+)
 
 watch(mineOnly, getItems)
 watch(() => props.config, getItems)
@@ -60,55 +70,36 @@ onMounted(getItems)
 </script>
 
 <template>
-  <ViewContainer class="grid-cols-4">
-    <div class="col-span-2 col-start-2 space-y-4">
-      <PanelBox>
-        <div class="flex items-center justify-between gap-4 mb-4">
+  <ViewContainer class="grid-cols-1">
+    <div class="mx-auto w-full max-w-6xl">
+      <header class="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div>
           <MainTitle>{{ config.label }}</MainTitle>
-          <RouterLink
-            v-if="userStore.user.isAuthenticated"
-            :to="{ name: config.routeNames.create }"
-          >
+          <p v-if="!loading" class="text-muted">
+            {{ entries.length }} {{ entries.length === 1 ? 'scheda' : 'schede' }}
+          </p>
+        </div>
+
+        <div v-if="userStore.user.isAuthenticated" class="flex items-center gap-4">
+          <label class="flex items-center gap-2 text-sm text-ink" :for="`mine-${config.key}`">
+            <input :id="`mine-${config.key}`" v-model="mineOnly" type="checkbox" class="h-4 w-4" />
+            Le mie
+          </label>
+          <RouterLink :to="{ name: config.routeNames.create }">
             <ActionButton size="small">Nuova scheda</ActionButton>
           </RouterLink>
         </div>
+      </header>
 
-        <label v-if="userStore.user.isAuthenticated" class="flex items-center gap-2 mb-4">
-          <input type="checkbox" v-model="mineOnly" />
-          Le mie
-        </label>
+      <p v-if="!loading && entries.length === 0" class="text-muted">
+        {{ mineOnly ? 'Non hai ancora creato nessuna scheda.' : 'Nessuna scheda pubblicata.' }}
+      </p>
 
-        <p v-if="!loading && items.length === 0" class="text-gray-500">
-          {{ mineOnly ? 'Non hai ancora creato nessuna scheda.' : 'Nessuna scheda pubblicata.' }}
-        </p>
+      <CardGrid :entries="entries" :placeholder="layerColor(config.key)" />
 
-        <ul class="space-y-4">
-          <li v-for="item in items" :key="item.id">
-            <RouterLink
-              :to="{ name: config.routeNames.detail, params: { id: item.id } }"
-              class="flex items-center gap-4 hover:bg-gray-50 rounded-lg p-2"
-            >
-              <img
-                v-if="firstImage(item)"
-                :src="firstImage(item) ?? undefined"
-                class="w-16 h-16 object-cover rounded-lg"
-                alt=""
-              />
-              <div>
-                <p class="font-semibold">
-                  {{ item.title }}
-                  <span v-if="!item.is_published" class="text-xs text-gray-500">(bozza)</span>
-                </p>
-                <p v-if="summary(item)" class="text-sm text-gray-500">{{ summary(item) }}</p>
-              </div>
-            </RouterLink>
-          </li>
-        </ul>
-
-        <ActionButton v-if="nextPage" size="small" class="mt-4" @click="loadMore">
-          Carica altre
-        </ActionButton>
-      </PanelBox>
+      <ActionButton v-if="nextPage" size="small" class="mt-8" @click="loadMore">
+        Carica altre
+      </ActionButton>
     </div>
   </ViewContainer>
 </template>
