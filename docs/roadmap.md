@@ -97,16 +97,28 @@ Unchanged in substance, restated as a checklist because it is now the only
 thing between a finished build and a public URL:
 
 - **Media serving** ([ADR-0003](./adr/0003-media-on-local-filesystem.md)) —
-  photos, card images and the overlay rasters 404 on any deploy made today.
-  This is the one that must be *designed*, not configured.
-- A durable disk for uploads, and a shared cache so the credential rate limits
-  (TD-18) actually hold across processes.
-- **SMTP** — invites and password resets need a real sender and a sender
-  domain (spec §11.3); development uses the console backend.
+  photos, card images and the overlay rasters 404 on any deploy made today, and
+  **a persistent disk does not fix it**: `MEDIA_URL` is mounted with
+  `static()`, a documented no-op when `DEBUG` is false. This is the one that
+  must be *designed*, not configured, and it is now the only blocker left in
+  this item. A durable disk for the uploads is part of that decision rather
+  than separate from it.
+- ~~A shared cache so the credential rate limits (TD-18) hold across
+  processes.~~ **Done 2026-08-30**: the database cache outside dev and tests —
+  shared by every worker and container, and needing no service the deployment
+  does not already have, which matters while no host is chosen. Verified by
+  three processes counting 1, 2, 3 through it where `LocMemCache` gave each of
+  them 1. `createcachetable` joined the release commands.
+- ~~**SMTP** settings shape.~~ **Half done 2026-08-30**: the `MAILERS`
+  migration (TD-34) landed, so the configuration is in its final shape. What
+  remains is genuinely an input rather than code — a provider and a sender
+  domain (spec §11.3).
 - `VITE_API_BASE_URL` is baked at build time, so the SPA build is
   environment-specific.
-- **TD-06** (remaining dependency drift) rides along here as ordinary
-  maintenance; axios, the security-relevant half, was done 2026-08-20.
+- ~~**TD-06** (remaining dependency drift)~~ — **minors done 2026-08-30**,
+  backend and frontend, each in its own PR. What is left is the majors and
+  **TD-33** (pin the ruff rule set, so a linter bump stops being a way to
+  change the lint policy by accident).
 
 ## 4. Content and input — the author's own, in parallel
 
