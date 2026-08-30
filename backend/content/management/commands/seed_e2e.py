@@ -63,6 +63,7 @@ class Command(BaseCommand):
             )
 
         collaborator = self._user(COLLABORATOR_EMAIL, 'Collaboratore E2E')
+        removed = self._clear_previous_runs(collaborator)
         admin = self._user(ADMIN_EMAIL, 'Amministratore E2E', role=User.ADMIN)
 
         published = self._card(PUBLISHED_CHIESA, collaborator, is_published=True)
@@ -101,8 +102,31 @@ class Command(BaseCommand):
         )
 
         self.stdout.write(self.style.SUCCESS(
-            f'Seeded: {collaborator.email}, {admin.email}, 2 published cards, 1 draft, 2 overlays.'
+            f'Seeded: {collaborator.email}, {admin.email}, 2 published cards, 1 draft, '
+            f'2 overlays; cleared {removed} card(s) left by previous runs.'
         ))
+
+    def _clear_previous_runs(self, collaborator):
+        """Delete what earlier runs of the suite wrote, keeping the fixtures.
+
+        `collaborator.cy.ts` creates a card per run and cannot clean up after
+        itself — deleting through the UI would be a second flow riding on the
+        one under test. Left alone, those cards accumulate: on a database that
+        survives (a laptop, or any long-lived environment) they eventually push
+        the fixtures off the first page of a 20-per-page list, and
+        `reader.cy.ts` starts failing for a reason that has nothing to do with
+        the code. CI never sees it, which makes it worse rather than better —
+        a suite that is green there and red here is a suite nobody trusts.
+
+        Everything this account owns is a test artefact by construction, so the
+        rule is simply: keep the fixtures, drop the rest.
+        """
+        leftovers = Card.objects.filter(author=collaborator).exclude(
+            title__in=(PUBLISHED_CHIESA, DRAFT_CHIESA, PUBLISHED_FESTA)
+        )
+        count = leftovers.count()
+        leftovers.delete()
+        return count
 
     def _user(self, email, name, role=User.CITIZEN):
         user, _ = User.objects.get_or_create(email=email, defaults={'name': name})
