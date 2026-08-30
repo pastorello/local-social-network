@@ -246,6 +246,12 @@ and the `if not TESTING:` insertion point already exists. Do it with TD-23.
 > output**, checked by grepping `dist/` rather than assumed. (The `nanoid` string
 > that does appear there is zod's format-validator name, not the package.)
 >
+> **Guarded automatically since 2026-08-30:** `cypress/e2e/session.cy.ts`
+> forges an expired access token and asserts the 401 → refresh → replay cycle
+> against a real API, so the next axios upgrade cannot pass on a green suite
+> that never exercised it. Writing that spec is what turned up the double
+> refresh `stores/user.ts` now de-duplicates.
+>
 > **Verified by running the app, because the test suite cannot see this.**
 > `lib/__tests__/auth.spec.ts` mocks axios entirely and the e2e job runs no
 > backend, so a green suite says nothing about a real library upgrade. Against a

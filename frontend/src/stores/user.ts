@@ -27,6 +27,10 @@ interface UserInfo {
   avatarURL: string | null
 }
 
+// Deliberately module scope rather than store state: it is not data anyone
+// renders, and it has to be shared by every caller of refreshToken().
+let inFlightRefresh: Promise<boolean> | null = null
+
 export const useUserStore = defineStore('user', {
   state: (): { user: UserState } => ({
     user: {
@@ -122,6 +126,23 @@ export const useUserStore = defineStore('user', {
     async refreshToken(): Promise<boolean> {
       if (!this.user.refresh) return false
 
+      // Single flight lives *here*, not in the response interceptor, because
+      // the interceptor is not the only caller: `initStore` refreshes on app
+      // start too, and a guard inside the interceptor cannot see that one. A
+      // page load therefore fired two refreshes with the same token — and M4
+      // rotates and blacklists on use, so whichever landed second could be
+      // presenting a token the first had just invalidated, whose failure path
+      // clears the session. A logout for no reason, decided by a race.
+      inFlightRefresh =
+        inFlightRefresh ??
+        this.performRefresh().finally(() => {
+          inFlightRefresh = null
+        })
+
+      return inFlightRefresh
+    },
+
+    async performRefresh(): Promise<boolean> {
       try {
         const response = await axios.post('/api/users/refresh/', {
           refresh: this.user.refresh,
