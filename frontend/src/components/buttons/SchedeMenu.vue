@@ -57,14 +57,14 @@ onBeforeUnmount(() => {
   <div ref="menuRef" class="relative">
     <button
       type="button"
-      class="w-26 rounded-lg p-4 bg-gray-200 grid place-items-center cursor-pointer"
+      class="flex w-auto cursor-pointer items-center gap-2 rounded-lg bg-gray-200 px-3 py-2 text-sm lg:grid lg:w-26 lg:place-items-center lg:gap-0 lg:p-4 lg:text-base"
       :class="{ 'text-sea border border-sea shadow-md': isActive }"
       aria-haspopup="menu"
       :aria-expanded="open"
       @click="toggle"
     >
-      <span class="mb-1" aria-hidden="true">
-        <FesteIcon class="w-6 h-6" />
+      <span class="lg:mb-1" aria-hidden="true">
+        <FesteIcon class="h-5 w-5 lg:h-6 lg:w-6" />
       </span>
       <span>Schede</span>
     </button>

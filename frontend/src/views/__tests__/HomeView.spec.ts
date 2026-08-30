@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 import { createRouter, createMemoryHistory } from 'vue-router'
@@ -33,6 +33,7 @@ const FEATURES = [
     id: 'c1',
     type: 'chiese',
     title: 'Chiesa di Sant’Erasmo',
+    cover: 'https://example.test/cover.jpg',
     points: [{ lat: 41.2, lng: 13.5, label: '' }],
     route: [],
   },
@@ -40,6 +41,7 @@ const FEATURES = [
     id: 'f1',
     type: 'feste',
     title: 'Processione di San Marciano',
+    cover: null,
     points: [],
     route: [{ lat: 41.2, lng: 13.5, label: '' }],
   },
@@ -74,6 +76,21 @@ const mountHome = async () => {
   })
   await flushPromises()
   return wrapper
+}
+
+// jsdom has no matchMedia, and `useIsDesktop` deliberately defaults to the
+// wide layout without it — which is what every test above relies on. This
+// installs one so the small-first home can be mounted too.
+const stubViewport = (isDesktop: boolean) => {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    configurable: true,
+    value: () => ({
+      matches: isDesktop,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }),
+  })
 }
 
 describe('HomeView (the map, spec map.md M1/M2/M3)', () => {
@@ -135,5 +152,72 @@ describe('HomeView (the map, spec map.md M1/M2/M3)', () => {
     // hidden overlay exists (spec politics.md) — including from an empty
     // section header where one would be listed.
     expect(wrapper.text()).not.toContain('Sovrapposizioni')
+  })
+})
+
+describe('HomeView on a phone (spec/design.md D3/D4/D5)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockApi()
+    stubViewport(false)
+  })
+
+  afterEach(() => {
+    // @ts-expect-error — putting jsdom back the way it was found
+    delete window.matchMedia
+  })
+
+  it('leads with the map and puts the places in a sheet, not a side panel', async () => {
+    const wrapper = await mountHome()
+
+    expect(wrapper.find('section[aria-label="Luoghi sulla mappa"]').exists()).toBe(true)
+    // The wide layout's own furniture must not come along for the ride.
+    expect(wrapper.findComponent({ name: 'ViewContainer' }).exists()).toBe(false)
+  })
+
+  it('keeps the layer controls behind a floating button instead of beside the map (D4)', async () => {
+    const wrapper = await mountHome()
+
+    const button = wrapper.get('button[aria-controls="map-chrome-panel"]')
+    expect(button.attributes('aria-expanded')).toBe('false')
+    expect(wrapper.find('#layer-chiese').exists()).toBe(false)
+
+    await button.trigger('click')
+
+    expect(button.attributes('aria-expanded')).toBe('true')
+    expect(wrapper.find('#layer-chiese').exists()).toBe(true)
+  })
+
+  it('renders exactly one set of layer controls, so no id is duplicated', async () => {
+    const wrapper = await mountHome()
+    await wrapper.get('button[aria-controls="map-chrome-panel"]').trigger('click')
+
+    // Two copies of the toggles would mean two elements with id="layer-chiese",
+    // which silently breaks the for/id pairing ADR-0005 requires — the reason
+    // the two layouts are switched in JS rather than with `lg:hidden` on both.
+    expect(wrapper.findAll('#layer-chiese')).toHaveLength(1)
+  })
+
+  it('lists the visible places in the sheet, with covers where a card has one (D5)', async () => {
+    const wrapper = await mountHome()
+
+    const links = wrapper.findAll('section[aria-label="Luoghi sulla mappa"] a')
+    expect(links.map((link) => link.attributes('href'))).toEqual(['/chiese/c1', '/feste/f1'])
+    // c1 has a cover; f1 has none and falls back to a coloured block.
+    expect(wrapper.findAll('section[aria-label="Luoghi sulla mappa"] img')).toHaveLength(1)
+  })
+
+  it('offers the sheet as a keyboard control, not only as a drag', async () => {
+    const wrapper = await mountHome()
+
+    // The drag has no keyboard equivalent, so the handle is a real button that
+    // cycles the stops (WCAG 2.1.1), same pattern as every map editor here.
+    const handle = wrapper.get('section[aria-label="Luoghi sulla mappa"] button')
+    expect(handle.attributes('aria-expanded')).toBe('true')
+
+    await handle.trigger('click')
+    await handle.trigger('click')
+
+    expect(handle.attributes('aria-expanded')).toBe('false')
   })
 })

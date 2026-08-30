@@ -7,6 +7,9 @@ export interface MapCardFeature {
   id: string
   type: string
   title: string
+  // The card's first image (spec/design.md D5) — `null` when it has none, in
+  // which case the SPA draws a type-coloured placeholder rather than nothing.
+  cover: string | null
   points: MapPoint[]
   route: MapPoint[]
 }

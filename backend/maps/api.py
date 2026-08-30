@@ -30,11 +30,18 @@ def map_features(request):
     Translations are excluded: a translated card is a second `Card` row, so
     including it would put two pins on the same doorstep. The map indexes
     places, and the reader picks a language once inside the card (C4).
+
+    Each entry carries its `cover` — the card's first image (spec/design.md
+    D5), which is what the mobile home's sheet lists cards with. It is a
+    prefetch rather than a second round trip per card, and it is `null` for a
+    card with no images at all; the SPA draws a type-coloured placeholder
+    then, because a list of bare titles is dreary.
     """
     features = (
         MapFeature.objects
         .filter(card__is_published=True, card__translation_of__isnull=True)
         .select_related('card', *(f'card__{type_key}' for type_key in CARD_TYPES))
+        .prefetch_related('card__images')
         .order_by('card_id', 'position', 'id')
     )
 
@@ -46,8 +53,12 @@ def map_features(request):
             type_key = _card_type(card)
             if type_key is None:
                 continue
+            # `.all()[:1]` rather than `.first()`: the prefetch is already in
+            # memory, and .first() would hit the database once per card.
+            cover = next(iter(card.images.all()), None)
             entry = cards[card.id] = {
                 'id': str(card.id), 'type': type_key, 'title': card.title,
+                'cover': cover.get_image_url() if cover else None,
                 'points': [], 'route': [],
             }
         target = 'route' if feature.kind == MapFeature.ROUTE else 'points'

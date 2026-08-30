@@ -1,9 +1,30 @@
 describe('anonymous visitor', () => {
-  it('can open the map without logging in', () => {
+  it('can open the map without logging in, on a wide screen', () => {
+    // Cypress' default viewport is 1000px wide, i.e. below the 1024px line
+    // where the reader's small-first home takes over (spec/design.md D2) —
+    // so the wide layout has to be asked for explicitly.
+    cy.viewport(1280, 800)
     cy.visit('/')
     cy.contains('h1', 'La mappa di Gaeta')
     cy.contains('legend', 'Livelli')
     cy.contains('button', 'Segnala un problema')
+  })
+
+  it('gets the map and a sheet of places on a phone', () => {
+    cy.viewport(375, 812)
+    cy.visit('/')
+
+    // The page keeps exactly one h1 in both layouts (ADR-0005) — on a phone
+    // it is visually hidden, because the map is the title.
+    cy.get('h1').should('have.length', 1).and('not.be.visible')
+    // D3: the map fills the screen and the places sit in a sheet over it.
+    cy.get('section[aria-label="Luoghi sulla mappa"]').should('exist')
+    // D4: the layer controls float over the map rather than beside it, and
+    // stay behind a button until asked for.
+    cy.get('button[aria-controls="map-chrome-panel"]').should('have.attr', 'aria-expanded', 'false')
+    cy.get('#layer-chiese').should('not.exist')
+    cy.get('button[aria-controls="map-chrome-panel"]').click()
+    cy.get('#layer-chiese').should('exist')
   })
 
   it('is redirected to /login for auth-only pages', () => {
