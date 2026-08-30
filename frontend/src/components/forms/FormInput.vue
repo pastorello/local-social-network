@@ -1,5 +1,9 @@
 <script setup lang="ts">
-const { type, placeholder, modelValue } = defineProps({
+const { type, placeholder, modelValue, invalid } = defineProps({
+  invalid: {
+    type: Boolean,
+    default: false,
+  },
   type: {
     type: String,
     default: 'text',
@@ -21,6 +25,8 @@ const { type, placeholder, modelValue } = defineProps({
     :placeholder="placeholder"
     :value="modelValue"
     @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
-    class="w-full mt-2 py-4 px-6 border border-gray-200 rounded-lg"
+    :aria-invalid="invalid || undefined"
+    class="w-full rounded-lg border bg-surface px-4 py-3 text-ink placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+    :class="invalid ? 'border-status-open' : 'border-field'"
   />
 </template>

@@ -5,6 +5,11 @@
 // That leg needs the invite token out of an e-mail, which means either reading
 // the outbox or a test-only endpoint — a hook worth adding on purpose, not as
 // a side effect of writing this spec.
+// Re-running this file locally more than five times in an hour will fail with
+// "Troppi tentativi": `collaborate` is throttled at 10/hour per IP (TD-18), and
+// it posts twice. That is the endpoint working, not a flake. The throttle
+// history lives in the API process's own LocMemCache, so restarting the API
+// clears it; CI starts a fresh process each run and never sees it.
 describe('collabora con noi', () => {
   beforeEach(() => cy.viewport(1280, 800))
 
