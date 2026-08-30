@@ -163,11 +163,46 @@ genuine runtime advisory lands, it will be buried in dev-server noise.
 
 **Fix:** move both to `devDependencies`, then `npm audit fix` (patch-level vite).
 
-### TD-04 · End-to-end coverage is one file
+### TD-04 · End-to-end coverage is one file — **largely paid 2026-08-30**, gaps named below
 
-`frontend/cypress/e2e/` contains **only `login.cy.ts`**. The three flows that
-*are* the product — filing a report on the map, upvoting, voting in a poll — have
-unit tests but no end-to-end proof that the SPA and the API agree.
+> **What changed.** Four spec files, **17 tests** (was one file, 5). The v2
+> flows now have end-to-end proof that the SPA and the API agree:
+>
+> - `reader.cy.ts` — the map and its layer toggles; **a draft stays invisible**;
+>   **the confidential overlay is absent, not hidden** (ADR-0006 seen from
+>   outside); a card reached from the list and read; a feste route as its list
+>   of stops; and the same on a 375px viewport, through the sheet.
+> - `collaborator.cy.ts` — log in, write a card, publish it, find it in the
+>   list; create a draft and confirm a logged-out visitor gets the list rather
+>   than a 403; start an English translation and land in its empty form.
+> - `collabora.cy.ts` — the request form at human speed, and the anti-spam
+>   timing check *as the client sees it*.
+> - `login.cy.ts` — unchanged apart from covering both layouts.
+>
+> **The e2e job now runs a real API.** `python manage.py seed_e2e` (a new
+> management command that refuses to run outside `DEBUG`, because it creates
+> accounts whose password is written down in a spec file) seeds deterministic
+> fixtures, and CI starts Django on :8000 beside the production build.
+> Stubbing the API with `cy.intercept` was the cheaper option and the wrong
+> one: half of what is worth covering here is precisely where the two sides
+> could disagree.
+>
+> **One assertion was wrong and the code was right**, which is worth recording:
+> the spec first expected an instant submission to be *refused*. The API
+> deliberately drops it and answers as though it had stored it, so a bot cannot
+> tune itself past the check. The spec now pins that indistinguishability; that
+> nothing was stored stays a backend test, where the database is in reach.
+>
+> **Still not covered, deliberately:** the leg *after* an admin approves a
+> collaboration request — accepting the invite and setting a password needs the
+> token out of an e-mail, which means reading the outbox or adding a test-only
+> hook. That is a decision to take on purpose, not a thing to bolt onto this
+> pass. Also still unproven end to end: filing a report on the map, upvoting,
+> and voting in a poll — the v1 flows this register originally named.
+
+Original text: `frontend/cypress/e2e/` contains **only `login.cy.ts`**. The three
+flows that *are* the product — filing a report on the map, upvoting, voting in a
+poll — have unit tests but no end-to-end proof that the SPA and the API agree.
 
 **Partially addressed 2026-08-19:** TD-16 fixed the red spec and Cypress now runs
 in CI, so the harness is trustworthy. The *coverage* is still one file — filing a
