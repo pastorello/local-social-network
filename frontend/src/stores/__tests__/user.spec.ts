@@ -106,6 +106,44 @@ describe('user store', () => {
     expect(localStorage.getItem('user.refresh')).toBe('new-refresh')
   })
 
+  it('refreshToken makes one request when several callers ask at once', async () => {
+    // `initStore` refreshes on app start and the 401 interceptor refreshes on
+    // rejection, so a single page load has two callers. The guard used to live
+    // in the interceptor, which could not see the store's own call — and the
+    // backend rotates and blacklists on use (M4), so the second request could
+    // be presenting a token the first had just invalidated, whose failure path
+    // clears the session. A logout decided by a race.
+    const store = useUserStore()
+    store.setToken({ access: 'old-access', refresh: 'old-refresh' })
+    vi.mocked(axios.post).mockResolvedValue({
+      data: { access: 'new-access', refresh: 'new-refresh' },
+    })
+
+    const results = await Promise.all([
+      store.refreshToken(),
+      store.refreshToken(),
+      store.refreshToken(),
+    ])
+
+    expect(results).toEqual([true, true, true])
+    expect(axios.post).toHaveBeenCalledTimes(1)
+  })
+
+  it('refreshToken starts a fresh request once the previous one has settled', async () => {
+    // The de-duplication must not turn into a cache: a later refresh, after
+    // the first has finished, has to actually go out.
+    const store = useUserStore()
+    store.setToken({ access: 'old-access', refresh: 'old-refresh' })
+    vi.mocked(axios.post).mockResolvedValue({
+      data: { access: 'new-access', refresh: 'new-refresh' },
+    })
+
+    await store.refreshToken()
+    await store.refreshToken()
+
+    expect(axios.post).toHaveBeenCalledTimes(2)
+  })
+
   it('refreshToken clears the session when the refresh token is rejected', async () => {
     const store = useUserStore()
     store.setToken({ access: 'old-access', refresh: 'expired-refresh' })

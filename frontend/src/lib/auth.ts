@@ -9,8 +9,6 @@ type RetriableConfig = InternalAxiosRequestConfig & { _retried?: boolean }
 // expired one. On a 401 this interceptor refreshes the token once (single
 // flight across concurrent requests) and replays the original request.
 export function setupAuthInterceptor() {
-  let refreshing: Promise<boolean> | null = null
-
   // The header used to be assigned in three places with three spellings
   // (App.vue, LoginView, the store's refreshToken), which is how a logged-out
   // tab kept sending a stale token. One request interceptor reading the store
@@ -45,13 +43,9 @@ export function setupAuthInterceptor() {
         return Promise.reject(error)
       }
 
-      refreshing =
-        refreshing ??
-        userStore.refreshToken().finally(() => {
-          refreshing = null
-        })
-
-      if (!(await refreshing)) {
+      // Single flight now lives in the store, which is what every caller goes
+      // through — including `initStore`, which this guard could never see.
+      if (!(await userStore.refreshToken())) {
         return Promise.reject(error)
       }
 
