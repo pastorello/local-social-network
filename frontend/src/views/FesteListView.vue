@@ -2,9 +2,10 @@
 import axios from 'axios'
 import { computed, onMounted, ref, watch } from 'vue'
 
-import PanelBox from '@/components/boxes/PanelBox.vue'
 import ViewContainer from '@/components/boxes/ViewContainer.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
+import CardGrid from '@/components/content/CardGrid.vue'
+import { layerColor } from '@/lib/mapLayers'
 import MainTitle from '@/components/typography/MainTitle.vue'
 import { useUserStore } from '@/stores/user'
 import type Feste from '@/definitions/interfaces/Feste'
@@ -45,59 +46,52 @@ const loadMore = async () => {
   nextPage.value = response.data.next
 }
 
-const firstImage = (item: Feste) => item.images[0]?.imageURL ?? null
+const entries = computed(() =>
+  feste.value.map((item) => ({
+    id: item.id,
+    title: item.title,
+    summary: item.recurrence,
+    cover: item.images[0]?.imageURL ?? null,
+    isPublished: item.is_published,
+    to: { name: 'festedetail', params: { id: item.id } },
+  })),
+)
 
 watch(mineOnly, getFeste)
 onMounted(getFeste)
 </script>
 
 <template>
-  <ViewContainer class="grid-cols-4">
-    <div class="col-span-2 col-start-2 space-y-4">
-      <PanelBox>
-        <div class="flex items-center justify-between gap-4 mb-4">
+  <ViewContainer class="grid-cols-1">
+    <div class="mx-auto w-full max-w-6xl">
+      <header class="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div>
           <MainTitle>Feste</MainTitle>
-          <RouterLink v-if="userStore.user.isAuthenticated" :to="{ name: 'festecreate' }">
+          <p v-if="!loading" class="text-muted">
+            {{ entries.length }} {{ entries.length === 1 ? 'scheda' : 'schede' }}
+          </p>
+        </div>
+
+        <div v-if="userStore.user.isAuthenticated" class="flex items-center gap-4">
+          <label class="flex items-center gap-2 text-sm text-ink" for="mine-feste">
+            <input id="mine-feste" v-model="mineOnly" type="checkbox" class="h-4 w-4" />
+            Le mie
+          </label>
+          <RouterLink :to="{ name: 'festecreate' }">
             <ActionButton size="small">Nuova festa</ActionButton>
           </RouterLink>
         </div>
+      </header>
 
-        <label v-if="userStore.user.isAuthenticated" class="flex items-center gap-2 mb-4">
-          <input type="checkbox" v-model="mineOnly" />
-          Le mie
-        </label>
+      <p v-if="!loading && entries.length === 0" class="text-muted">
+        {{ mineOnly ? 'Non hai ancora creato nessuna festa.' : 'Nessuna festa pubblicata.' }}
+      </p>
 
-        <p v-if="!loading && feste.length === 0" class="text-gray-500">
-          {{ mineOnly ? 'Non hai ancora creato nessuna festa.' : 'Nessuna festa pubblicata.' }}
-        </p>
+      <CardGrid :entries="entries" :placeholder="layerColor('feste')" />
 
-        <ul class="space-y-4">
-          <li v-for="item in feste" :key="item.id">
-            <RouterLink
-              :to="{ name: 'festedetail', params: { id: item.id } }"
-              class="flex items-center gap-4 hover:bg-gray-50 rounded-lg p-2"
-            >
-              <img
-                v-if="firstImage(item)"
-                :src="firstImage(item) ?? undefined"
-                class="w-16 h-16 object-cover rounded-lg"
-                alt=""
-              />
-              <div>
-                <p class="font-semibold">
-                  {{ item.title }}
-                  <span v-if="!item.is_published" class="text-xs text-gray-500">(bozza)</span>
-                </p>
-                <p v-if="item.recurrence" class="text-sm text-gray-500">{{ item.recurrence }}</p>
-              </div>
-            </RouterLink>
-          </li>
-        </ul>
-
-        <ActionButton v-if="nextPage" size="small" class="mt-4" @click="loadMore">
-          Carica altre
-        </ActionButton>
-      </PanelBox>
+      <ActionButton v-if="nextPage" size="small" class="mt-8" @click="loadMore">
+        Carica altre
+      </ActionButton>
     </div>
   </ViewContainer>
 </template>
