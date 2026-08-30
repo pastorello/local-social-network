@@ -257,10 +257,32 @@ and the `if not TESTING:` insertion point already exists. Do it with TD-23.
 > That last one matters because 1.19 changed interceptor dispatch on synchronous
 > request-interceptor failure, which is exactly where this app now lives.
 >
-> **Still open:** the backend pins (Django 6.0.3 → 6.1, DRF 3.17.1 → 3.18.0,
-> pillow, PyJWT, ruff, gunicorn) and the frontend's remaining minors, plus the
-> three majors held back on purpose (pinia 3 → 4, typescript 6 → 7, oxlint).
-> None of those carry a known advisory; they are ordinary maintenance.
+> **Backend minors done 2026-08-30.** Django 6.0.3 → 6.1, DRF 3.17.1 → 3.18.0,
+> asgiref, gunicorn, nh3 0.3.6 → 0.3.7, pillow 12.2 → 12.3, PyJWT, pytest-django.
+> Two of those are security-relevant code, so the question was whether a green
+> suite would *see* them break — and here it would: `content/tests.py` drives
+> the sanitizer with script tags, event handlers, iframes and `javascript:`
+> URLs rather than only happy paths, and `common/tests.py` asserts both that
+> EXIF is emptied *and* that the orientation was applied first (its own comment
+> explains why the second assertion exists: without it, deleting
+> `exif_transpose` still passes). Nothing to add on those two paths.
+>
+> **Held back, each for a stated reason:**
+> - **ruff 0.15.22 → 0.16.5** — not a dependency question but a policy one. 0.16
+>   changes the *default rule set*: 81 findings appear, 42 of them RUF012
+>   (`mutable-class-default`) on Django/DRF `Meta` classes, which want
+>   `ClassVar` annotations to silence, plus 36 import-sorting fixes. Adopting it
+>   is a lint sweep with an opinion in it, and it does not belong in a
+>   dependency bump. See **TD-33**.
+> - **django-debug-toolbar 6.3 → 7.1.1** (major) and **sqlparse 0.5.5 → 0.6.0**
+>   (0.x minor, i.e. a major in practice).
+> - The frontend's minors, and the three majors held back on purpose (pinia
+>   3 → 4, typescript 6 → 7, oxlint). None carry a known advisory.
+>
+> **Django 6.1 surfaced a dated deprecation:** `EMAIL_BACKEND` is deprecated in
+> favour of `MAILERS` and goes away in Django 7.0. It is the setting C1's invite
+> and reset e-mail runs on, so the migration belongs with the SMTP work in
+> roadmap item 3 rather than here. See **TD-34**.
 
 Backend (pinned exactly, which is why this is safe to defer): Django
 6.0.3 → 6.1, DRF 3.17.1 → 3.18.0, django-debug-toolbar 6.3 → 7.1.1,
@@ -955,6 +977,46 @@ Test-quality defects: selectors coupled to Tailwind classes
 **E2E order once TD-16 is green:** file a report on the map (must run against
 `test:e2e`, not `:dev` — the Leaflet default-import gotcha and TD-02 break
 clustering in built output *only*), then vote in a poll, then upvote.
+
+---
+
+## Added later
+
+Items found after the two audit passes, kept in the same register so there is
+one place to look.
+
+### TD-33 · The lint policy is whatever ruff's defaults happen to be
+
+`pyproject.toml` sets `line-length = 100` and nothing else, so the rule set is
+ruff's default — which means **a version bump silently redefines what "clean"
+means**. Upgrading 0.15.22 → 0.16.5 produces 81 findings on unchanged code
+(42 × RUF012 `mutable-class-default` on Django/DRF `Meta` classes, 36 ×
+import sorting, and 3 others). None of them is a bug; all of them would have to
+be answered before CI could go green again.
+
+**Fix:** pin the rule set explicitly (`[tool.ruff.lint] select = [...]`,
+plus a `RUF012` decision for Django `Meta` classes), so upgrading ruff becomes
+a dependency change again rather than a policy change wearing its clothes.
+Then take 0.16 as its own PR, with the import sort as its own commit.
+
+**Found:** 2026-08-30, doing TD-06's backend minors.
+
+### TD-34 · `EMAIL_BACKEND` is deprecated and goes away in Django 7.0
+
+Django 6.1 warns: *"The EMAIL_BACKEND setting is deprecated. Migrate to MAILERS
+before Django 7.0."* It is the setting C1's invite and password-reset e-mail
+runs on, and `settings.py` gates it three ways (locmem under pytest, console in
+dev, real SMTP otherwise) — so the migration is a settings-shape change that
+also touches `.env.example` and `docs/deploy.md`.
+
+**Not urgent** (Django 7.0 is not out) and **not free** (it moves the same
+configuration the deploy work has to design anyway), so it belongs with the
+SMTP prerequisite in [roadmap](./roadmap.md) item 3 rather than in a dependency
+bump. The suite currently passes with the warning; it would fail on Django 7.
+
+**Found:** 2026-08-30, by the Django 6.1 upgrade — which is the argument for
+doing minors regularly: a deprecation you meet at 6.1 is a warning, the same
+one met at 7.0 is an outage.
 
 ---
 
