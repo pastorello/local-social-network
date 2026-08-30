@@ -1,0 +1,111 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+
+import UserAvatar from '@/components/cards/UserAvatar.vue'
+import RichText from '@/components/content/RichText.vue'
+import LanguageSwitch from '@/components/content/LanguageSwitch.vue'
+import type { CardImage, TranslationRef } from '@/definitions/interfaces/Content'
+import type User from '@/definitions/interfaces/User'
+
+// The reading surface (spec/design.md D6). Both detail views wear it —
+// feste has its own view for its route editor and recurrence, but a feast
+// and a church are the same *article* to a reader, and restyling that twice
+// is how the two drift apart. Same reasoning as C3's generic type views.
+const props = defineProps<{
+  title: string
+  bodyHtml: string
+  author: User
+  createdAt: string
+  isPublished: boolean
+  images: CardImage[]
+  translations: TranslationRef[]
+  typeLabel: string
+  detailRouteName: string
+  backTo: { name: string; label: string }
+}>()
+
+// D5: the first image is the cover. The rest stay a gallery below the text,
+// so the article opens on a picture instead of on a wall of words.
+const cover = computed(() => props.images[0] ?? null)
+const gallery = computed(() => props.images.slice(1))
+
+const createdAtFormatted = computed(() =>
+  new Date(props.createdAt).toLocaleDateString('it-IT', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }),
+)
+</script>
+
+<template>
+  <article class="mx-auto w-full max-w-3xl">
+    <!-- Full-bleed on a phone, contained above it: the cover is the first
+    thing a reader who arrived from a pin sees. -->
+    <!-- The wrapper carries the bleed, not the image: a negative margin plus
+    `calc(100% + 2rem)` on the <img> itself overflows to one side once the
+    article is centred. -->
+    <div v-if="cover" class="-mx-4 mb-6 sm:mx-0">
+      <img
+        :src="cover.imageURL"
+        :alt="cover.caption || title"
+        class="aspect-[3/2] w-full object-cover sm:rounded-lg lg:aspect-[21/9]"
+      />
+    </div>
+
+    <header class="mb-8">
+      <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <p class="text-xs font-semibold tracking-[0.12em] text-terracotta uppercase">
+          {{ typeLabel }}
+          <span v-if="!isPublished" class="ml-2 text-muted normal-case">· bozza</span>
+        </p>
+        <LanguageSwitch :translations="translations" :detail-route-name="detailRouteName" />
+      </div>
+
+      <h1 class="mb-4 font-display text-display text-balance text-ink">{{ title }}</h1>
+
+      <p class="flex items-center gap-2 text-sm text-muted">
+        <UserAvatar
+          :src="author.avatarURL"
+          :name="author.name"
+          class="inline-block h-7 w-7 rounded-full object-cover"
+        />
+        <span
+          ><strong class="font-semibold text-ink">{{ author.name }}</strong> ·
+          {{ createdAtFormatted }}</span
+        >
+      </p>
+    </header>
+
+    <!-- The measure is the point: reading text kept near 65 characters is
+    half of what makes a sans read as an article rather than an interface. -->
+    <RichText
+      :html="bodyHtml"
+      class="prose prose-stone mb-10 max-w-[65ch] text-reading text-ink prose-headings:font-display prose-headings:text-ink prose-a:text-sea"
+    />
+
+    <slot name="fields"></slot>
+
+    <section v-if="gallery.length" class="mb-10">
+      <h2 class="mb-3 font-display text-title text-ink">Immagini</h2>
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <img
+          v-for="image in gallery"
+          :key="image.id"
+          :src="image.imageURL"
+          :alt="image.caption || title"
+          class="aspect-square w-full rounded-lg object-cover"
+        />
+      </div>
+    </section>
+
+    <slot name="map"></slot>
+
+    <footer class="mt-10 border-t border-hairline pt-6">
+      <slot name="actions"></slot>
+      <RouterLink :to="{ name: backTo.name }" class="mt-4 inline-block text-sm text-sea underline">
+        ← Torna a {{ backTo.label }}
+      </RouterLink>
+    </footer>
+  </article>
+</template>

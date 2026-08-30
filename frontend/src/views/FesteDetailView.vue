@@ -5,13 +5,10 @@ import { useRoute, useRouter } from 'vue-router'
 
 import PanelBox from '@/components/boxes/PanelBox.vue'
 import ViewContainer from '@/components/boxes/ViewContainer.vue'
-import MainTitle from '@/components/typography/MainTitle.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
-import UserAvatar from '@/components/cards/UserAvatar.vue'
-import RichText from '@/components/content/RichText.vue'
+import CardArticle from '@/components/content/CardArticle.vue'
 import FesteRouteEditor from '@/components/content/FesteRouteEditor.vue'
 import FesteForm from '@/components/content/FesteForm.vue'
-import LanguageSwitch from '@/components/content/LanguageSwitch.vue'
 import TranslateControl from '@/components/content/TranslateControl.vue'
 import { useUserStore } from '@/stores/user'
 import { useToastStore } from '@/stores/toast'
@@ -33,15 +30,6 @@ const canEdit = computed(
     feste.value !== null &&
     (userStore.user.id === feste.value.author.id || userStore.user.role === 'admin'),
 )
-
-const createdAtFormatted = computed(() => {
-  if (!feste.value) return ''
-  return new Date(feste.value.created_at).toLocaleDateString('it-IT', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
-})
 
 const getFeste = async () => {
   await axios
@@ -95,70 +83,71 @@ watch(
 </script>
 
 <template>
-  <ViewContainer class="grid-cols-4">
-    <div class="col-span-2 col-start-2 space-y-4 self-start">
-      <PanelBox v-if="feste">
-        <template v-if="!editing">
-          <LanguageSwitch :translations="feste.translations" detail-route-name="festedetail" />
+  <ViewContainer class="grid-cols-1">
+    <div>
+      <template v-if="feste && !editing">
+        <CardArticle
+          :title="feste.title"
+          :body-html="feste.body_html"
+          :author="feste.author"
+          :created-at="feste.created_at"
+          :is-published="feste.is_published"
+          :images="feste.images"
+          :translations="feste.translations"
+          type-label="festa"
+          detail-route-name="festedetail"
+          :back-to="{ name: 'festelist', label: 'le feste' }"
+        >
+          <template #fields>
+            <dl
+              v-if="feste.recurrence || feste.programme"
+              class="mb-10 divide-y divide-hairline border-y border-hairline"
+            >
+              <div v-if="feste.recurrence" class="py-3 sm:flex sm:gap-6">
+                <dt
+                  class="text-xs font-semibold tracking-[0.1em] text-muted uppercase sm:w-40 sm:flex-none sm:pt-1"
+                >
+                  Quando
+                </dt>
+                <dd class="text-ink">{{ feste.recurrence }}</dd>
+              </div>
+              <div v-if="feste.programme" class="py-3 sm:flex sm:gap-6">
+                <dt
+                  class="text-xs font-semibold tracking-[0.1em] text-muted uppercase sm:w-40 sm:flex-none sm:pt-1"
+                >
+                  Programma
+                </dt>
+                <dd class="whitespace-pre-line text-ink">{{ feste.programme }}</dd>
+              </div>
+            </dl>
+          </template>
 
-          <div class="mb-2 flex items-center justify-between gap-4">
-            <MainTitle>{{ feste.title }}</MainTitle>
-            <span v-if="!feste.is_published" class="text-xs text-gray-500">Bozza</span>
-          </div>
+          <template #map>
+            <section v-if="feste.route.length > 0" class="mb-10">
+              <h2 class="mb-3 font-display text-title text-ink">Il percorso</h2>
+              <FesteRouteEditor :model-value="feste.route" readonly />
+            </section>
+          </template>
 
-          <p class="mb-4 flex items-center gap-2 text-sm text-gray-500">
-            <UserAvatar
-              :src="feste.author.avatarURL"
-              :name="feste.author.name"
-              class="w-6 h-6 rounded-full inline-block object-cover"
-            />
-            <strong>{{ feste.author.name }}</strong> · {{ createdAtFormatted }}
-          </p>
+          <template #actions>
+            <div v-if="canEdit" class="flex flex-wrap items-center gap-2">
+              <ActionButton size="small" @click="editing = true">Modifica</ActionButton>
+              <ActionButton size="small" button-type="danger" @click="deleteFeste">
+                Elimina
+              </ActionButton>
+              <TranslateControl
+                v-if="!feste.translation_of"
+                :translate-endpoint="`/api/feste/${feste.id}/traduci/`"
+                :translations="feste.translations"
+                detail-route-name="festedetail"
+              />
+            </div>
+          </template>
+        </CardArticle>
+      </template>
 
-          <p v-if="feste.recurrence" class="mb-4 font-semibold">{{ feste.recurrence }}</p>
-
-          <div v-if="feste.images.length > 0" class="flex flex-wrap gap-2 mb-4">
-            <img
-              v-for="image in feste.images"
-              :key="image.id"
-              :src="image.imageURL"
-              class="w-32 h-32 object-cover rounded-xl"
-              :alt="image.caption || feste.title"
-            />
-          </div>
-
-          <RichText :html="feste.body_html" class="mb-6" />
-
-          <p v-if="feste.programme" class="mb-6 whitespace-pre-line">
-            <strong>Programma:</strong><br />{{ feste.programme }}
-          </p>
-
-          <FesteRouteEditor
-            v-if="feste.route.length > 0"
-            :model-value="feste.route"
-            readonly
-            class="mb-6"
-          />
-
-          <div class="flex flex-wrap items-center gap-2" v-if="canEdit">
-            <ActionButton size="small" @click="editing = true">Modifica</ActionButton>
-            <ActionButton size="small" button-type="danger" @click="deleteFeste">
-              Elimina
-            </ActionButton>
-            <TranslateControl
-              v-if="!feste.translation_of"
-              :translate-endpoint="`/api/feste/${feste.id}/traduci/`"
-              :translations="feste.translations"
-              detail-route-name="festedetail"
-            />
-          </div>
-        </template>
-
-        <FesteForm v-else :feste="feste" @saved="onEdited" @cancel="editing = false" />
-      </PanelBox>
-
-      <PanelBox>
-        <RouterLink to="/feste" class="underline">← Torna alle feste</RouterLink>
+      <PanelBox v-else-if="feste" class="mx-auto w-full max-w-3xl">
+        <FesteForm :feste="feste" @saved="onEdited" @cancel="editing = false" />
       </PanelBox>
     </div>
   </ViewContainer>

@@ -50,7 +50,7 @@ const logout = async () => {
 <template>
   <nav
     ref="nav"
-    class="fixed z-1100 w-full border-gray-200 bg-white px-4 py-3 shadow-md lg:px-8 lg:py-6"
+    class="fixed z-1100 w-full border-hairline bg-surface px-4 py-3 shadow-md lg:px-8 lg:py-6"
   >
     <div class="max-w-7xl mx-auto">
       <div

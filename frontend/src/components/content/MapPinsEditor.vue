@@ -5,6 +5,7 @@ import L from 'leaflet'
 import type { LayerGroup, LeafletMouseEvent, Map as LeafletMap } from 'leaflet'
 
 import { useLeafletMap } from '@/composables/useLeafletMap'
+import { readToken } from '@/lib/tokens'
 import type { MapPoint } from '@/definitions/interfaces/Content'
 
 // An unordered, capped bag of points — no numbering, no connecting polyline.
@@ -34,9 +35,9 @@ const render = () => {
   props.modelValue.forEach((point) => {
     const marker = L.circleMarker([point.lat, point.lng], {
       radius: 8,
-      color: '#ffffff',
+      color: readToken('--color-surface', '#ffffff'),
       weight: 2,
-      fillColor: '#7c3aed',
+      fillColor: readToken('--color-sea', '#0f5f73'),
       fillOpacity: 0.9,
     })
     if (point.label) marker.bindTooltip(point.label)

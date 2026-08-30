@@ -8,7 +8,7 @@ const { size } = defineProps({
 })
 
 const classObject = {
-  'bg-white border border-gray-200 rounded-lg h-full': true,
+  'bg-surface border border-hairline rounded-lg h-full': true,
   'p-4': size === 'small',
   'p-8': size === 'medium',
   'p-12': size === 'large',
