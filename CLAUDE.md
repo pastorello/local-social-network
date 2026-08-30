@@ -55,11 +55,19 @@ Vue 3 + Composition API, Vite, Pinia, Vue Router, Tailwind v4 (+ `@tailwindcss/t
 
 ## Commands
 
-### Docker (repo root)
+### Running the whole app (repo root)
 
 ```sh
+scripts/dev                   # backend :8000 + frontend :5173, bare metal, one Ctrl-C
 docker compose up --build     # Postgres + backend :8000 + frontend :5173
 ```
+
+`scripts/dev` is the fast path: SQLite, `DJANGO_DEBUG=true` exported for you
+(TD-11), pending migrations applied first, and it refuses to start when either
+port is taken rather than half-starting (`API_PORT=8001 WEB_PORT=5174` moves
+them). It kills the whole process tree on exit — `runserver` forks the real
+server as its own child and vite runs under npx, so killing only what the
+script launched leaves the port held. Use compose when you want Postgres.
 
 ### Backend (venv at REPO ROOT: `.venv`)
 

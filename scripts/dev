@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+#
+# Start the whole app bare metal: Django on :8000, Vite on :5173, one command,
+# one Ctrl-C. `docker compose up --build` remains the other way to run it — use
+# that one when you want Postgres; this one is the fast path on SQLite.
+#
+# Ports can be moved out of the way: API_PORT=8001 WEB_PORT=5174 scripts/dev
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+API_PORT="${API_PORT:-8000}"
+WEB_PORT="${WEB_PORT:-5173}"
+PYTHON="$ROOT/.venv/bin/python"
+
+fail() { printf '\n\033[31m%s\033[0m\n' "$1" >&2; exit 1; }
+
+[ -x "$PYTHON" ] || fail "No virtualenv at .venv — create it first:
+  python3 -m venv .venv && .venv/bin/python -m pip install -r backend/requirements-dev.txt"
+
+[ -d "$ROOT/frontend/node_modules" ] || fail "Frontend dependencies are missing:
+  npm install --prefix frontend"
+
+port_busy() { lsof -nP -iTCP:"$1" -sTCP:LISTEN >/dev/null 2>&1; }
+
+port_busy "$API_PORT" && fail "Port $API_PORT is already taken (another API? a docker compose still up?).
+Free it, or move this one: API_PORT=8001 scripts/dev"
+port_busy "$WEB_PORT" && fail "Port $WEB_PORT is already taken (a vite dev server, or docker compose).
+Free it, or move this one: WEB_PORT=5174 scripts/dev"
+
+# TD-11: DJANGO_DEBUG defaults to false so a forgotten variable fails safe, and
+# outside debug the app refuses to start without DJANGO_SECRET_KEY. Development
+# opts in — this is that opt-in, in one place instead of in everyone's shell.
+export DJANGO_DEBUG=true
+export CORS_ALLOWED_ORIGINS="http://localhost:$WEB_PORT,http://127.0.0.1:$WEB_PORT"
+export CSRF_TRUSTED_ORIGINS="$CORS_ALLOWED_ORIGINS"
+
+# The bare-metal SQLite database is a separate database from the one in the
+# compose stack, and it drifts behind whenever a migration lands on a branch.
+# Applying them here is idempotent and removes the classic half-hour of "the
+# API 500s and nobody knows why".
+printf '\033[2mApplying migrations…\033[0m\n'
+"$PYTHON" "$ROOT/backend/manage.py" migrate --noinput
+
+pids=()
+
+# Depth matters here: `runserver` without --noreload forks the actual server as
+# a child of itself, and vite is a child of npx. Killing what we launched
+# leaves the grandchild holding the port — which is exactly what the port
+# check above then refuses to start over on the next run.
+kill_tree() {
+  local pid="$1" signal="$2" child
+  for child in $(pgrep -P "$pid" 2>/dev/null); do
+    kill_tree "$child" "$signal"
+  done
+  kill "-$signal" "$pid" 2>/dev/null || true
+}
+
+cleanup() {
+  trap - INT TERM EXIT
+  for pid in "${pids[@]:-}"; do
+    [ -n "$pid" ] && kill_tree "$pid" TERM
+  done
+  sleep 1
+  for pid in "${pids[@]:-}"; do
+    [ -n "$pid" ] && kill_tree "$pid" KILL
+  done
+}
+
+trap 'cleanup; exit 130' INT TERM
+trap cleanup EXIT
+
+printf '\n  \033[36mAPI\033[0m   http://127.0.0.1:%s\n  \033[36mSPA\033[0m   http://localhost:%s\n\n  Ctrl-C stops both.\n\n' \
+  "$API_PORT" "$WEB_PORT"
+
+"$PYTHON" "$ROOT/backend/manage.py" runserver "$API_PORT" &
+pids+=("$!")
+# vite directly rather than `npm run dev`: that script already carries
+# `--port 5173`, and appending another one leaves two on the command line.
+# `exec` so this pid is npx itself rather than a subshell wrapping it — one
+# less level for kill_tree to walk.
+(cd "$ROOT/frontend" && exec npx vite --port "$WEB_PORT") &
+pids+=("$!")
+
+# Exit as soon as *either* half dies, rather than leaving a half-running app
+# that looks fine until the first request. `wait -n` would say this in one
+# line — and does not exist in the bash 3.2 that ships with macOS.
+while :; do
+  for pid in "${pids[@]}"; do
+    kill -0 "$pid" 2>/dev/null || exit 1
+  done
+  sleep 1
+done
