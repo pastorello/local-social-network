@@ -20,3 +20,4 @@ records what was decided *then*.
 | [0004](0004-content-core-thin-type-apps.md) | One content core, thin Django apps per content type (spec v2) | Accepted |
 | [0005](0005-wcag-2.1-aa-accessibility-bar.md) | Vivere Gaeta targets WCAG 2.1 Level AA, whole app, with a remediation plan | Accepted |
 | [0006](0006-overlay-visibility-gate.md) | Overlay visibility is a server-side gate, default-confidential (spec C5) | Accepted |
+| [0007](0007-serving-media-from-the-app.md) | Media is served by the app, hardened, on any host (amends 0003) | Accepted |

@@ -96,13 +96,16 @@ and are unblocked by the same event (they will have stopped):
 Unchanged in substance, restated as a checklist because it is now the only
 thing between a finished build and a public URL:
 
-- **Media serving** ([ADR-0003](./adr/0003-media-on-local-filesystem.md)) —
-  photos, card images and the overlay rasters 404 on any deploy made today, and
-  **a persistent disk does not fix it**: `MEDIA_URL` is mounted with
-  `static()`, a documented no-op when `DEBUG` is false. This is the one that
-  must be *designed*, not configured, and it is now the only blocker left in
-  this item. A durable disk for the uploads is part of that decision rather
-  than separate from it.
+- ~~**Media serving**~~ — **decided and built 2026-08-30**,
+  [ADR-0007](./adr/0007-serving-media-from-the-app.md), which amends ADR-0003.
+  The app serves its own media through one hardened view, on any host, with no
+  object storage and no web server in front: an extension allowlist that the
+  `Content-Type` comes from, `nosniff`, and a sandboxing CSP. Decided this way
+  *because* the host is unknown — the author confirmed on 2026-08-30 that he
+  has only Docker locally — so waiting for a provider was not deferring a
+  configuration step, it was leaving the product undeployable behind a decision
+  nobody was close to taking. **A persistent disk is still required** so
+  uploads survive a redeploy; what changed is that a disk is now sufficient.
 - ~~A shared cache so the credential rate limits (TD-18) hold across
   processes.~~ **Done 2026-08-30**: the database cache outside dev and tests —
   shared by every worker and container, and needing no service the deployment
