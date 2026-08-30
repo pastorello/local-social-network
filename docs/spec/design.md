@@ -216,5 +216,9 @@ answer is not a redesign.
 3. Whether the collaborator's authoring screens are restyled in the same pass
    or the one after. They are the secondary audience, and the reader's surfaces
    are where the bet is won.
-4. Whether the bottom sheet (D3) has a desktop counterpart or the wide layout
-   keeps a side panel.
+4. ~~Whether the bottom sheet (D3) has a desktop counterpart or the wide
+   layout keeps a side panel.~~ **Answered 2026-08-30**: the wide layout keeps
+   the side panel. The two are switched in JS at 1024px rather than with
+   `lg:hidden` on both, so only one is ever in the DOM — two copies of the
+   layer controls would mean two elements with the same `id`, which breaks the
+   `for`/`id` pairing ADR-0005 requires, and would mount two Leaflet maps.

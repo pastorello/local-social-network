@@ -19,11 +19,11 @@ const { to } = defineProps<{
   <RouterLink
     :to="to"
     :class="[
-      'w-26 rounded-lg p-4 bg-gray-200 grid place-items-center',
+      'flex w-auto items-center gap-2 rounded-lg bg-gray-200 px-3 py-2 text-sm lg:grid lg:w-26 lg:place-items-center lg:gap-0 lg:p-4 lg:text-base',
       { 'text-sea border border-sea shadow-md': route.path === to },
     ]"
   >
-    <span class="mb-1">
+    <span class="lg:mb-1">
       <slot name="icon"></slot>
     </span>
     <span>

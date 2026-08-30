@@ -14,7 +14,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from chiese.models import Chiesa
-from content.models import Card, MapFeature
+from content.models import Card, CardImage, MapFeature
 from dialetto.models import Termine
 from feste.models import Feste
 from maps.models import Overlay
@@ -92,6 +92,7 @@ def test_map_features_is_public_and_groups_points_by_card(api_client, make_card)
     assert response.status_code == 200
     assert response.json() == [{
         'id': str(card.id), 'type': 'chiese', 'title': 'Chiesa di Sant’Erasmo',
+        'cover': None,
         'points': [{'lat': GAETA_LAT, 'lng': GAETA_LNG, 'label': 'Ingresso'}],
         'route': [],
     }]
@@ -142,6 +143,35 @@ def test_map_features_skips_a_card_with_no_type_row(api_client, make_card):
     Termine.objects.create(card=termine, term='Muffato', meaning='Ammuffito')
 
     assert api_client.get('/api/map/features/').json() == []
+
+
+def test_map_features_carries_the_first_image_as_the_cover(api_client, make_card):
+    # spec/design.md D5: the first image of a card is its cover — no new field,
+    # no migration; the mobile sheet lists cards with it.
+    card = make_card()
+    Chiesa.objects.create(card=card)
+    add_point(card)
+    CardImage.objects.create(card=card, image=image_upload(name='seconda.jpg'), position=1)
+    CardImage.objects.create(card=card, image=image_upload(name='prima.jpg'), position=0)
+
+    entry = api_client.get('/api/map/features/').json()[0]
+
+    assert entry['cover'] is not None
+    assert entry['cover'].endswith(card.images.order_by('position').first().image.url)
+
+
+def test_map_features_stays_one_query(api_client, make_card, django_assert_num_queries):
+    # The map is the landing view: it must not scale its query count with the
+    # number of cards on it. The cover prefetch is why `.first()` is not used
+    # per card.
+    for index in range(4):
+        card = make_card(title=f'Chiesa {index}')
+        Chiesa.objects.create(card=card)
+        add_point(card)
+        CardImage.objects.create(card=card, image=image_upload(), position=0)
+
+    with django_assert_num_queries(2):  # the features, plus the image prefetch
+        assert len(api_client.get('/api/map/features/').json()) == 4
 
 
 # --- M3/M4: the overlays and the gate ---------------------------------------
