@@ -1,6 +1,37 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
 
+/* --------------------------------------------------------------------------
+   The type — "Contemporaneo" (spec/design.md D6, chosen 2026-08-30): one
+   family, Archivo, for everything. No display serif.
+
+   Served from our own origin, never from Google. That is not a preference:
+   this project has twice decided not to send visitor data to third parties —
+   TD-30 removed the picsum avatar because it "leaks visitor IPs and referrers
+   to a third party on every page view", and accounts.md A1 declined a
+   third-party CAPTCHA "consistent with TD-30". A webfont linked from Google
+   would put back exactly what those two decisions took out.
+
+   One @font-face, not @fontsource's own stylesheet: that ships three subsets
+   (vietnamese, latin-ext, latin) of which a browser rendering Italian fetches
+   only the last. The other two would sit in dist/ forever, downloaded by
+   nobody. The content is Italian — every accented vowel it needs is in the
+   latin subset — so we ship the latin file and nothing else: 34 KB, measured.
+   Anything outside that range falls back down the stack below rather than
+   rendering blank.
+   -------------------------------------------------------------------------- */
+@font-face {
+  font-family: 'Archivo Variable';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('@fontsource-variable/archivo/files/archivo-latin-wght-normal.woff2')
+    format('woff2-variations');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 /* `static`, not a plain `@theme`: Tailwind only emits the custom properties
    its generated utilities actually reference, so a token nothing has used yet
    (the grounds, until the layout pass reaches them) would vanish from the
@@ -21,6 +52,41 @@
      Every pair below was checked with the WCAG relative-luminance formula
      before anything was built on it (D9), never by eye. Ratios in comments.
      -------------------------------------------------------------------- */
+  /* ------------------------------------------------------------------
+     Type tokens (spec/design.md D6). Choosing a single sans means the
+     "cultural magazine, not tourist brochure" register cannot come from a
+     serif — it has to come from the scale, the weights and the measure. So
+     those are tokens too, not values sprinkled per component, for the same
+     reason colours are: the day another town wants its own voice, or a
+     display face is added, it is a change of values.
+
+     `--font-sans` is what Tailwind's preflight puts on <body>, so setting it
+     dresses the whole app; `--font-display` is a seam that points at the same
+     family today and would be the one thing to change if headings ever get a
+     face of their own.
+     ------------------------------------------------------------------ */
+  --font-sans:
+    'Archivo Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display:
+    'Archivo Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* Titles are set tight and heavy: with no serif to carry the voice, the
+     size jump and the negative tracking are the voice. */
+  --text-display: clamp(1.75rem, 1.2rem + 2.2vw, 2.5rem);
+  --text-display--line-height: 1.1;
+  --text-display--letter-spacing: -0.025em;
+  --text-display--font-weight: 700;
+
+  --text-title: clamp(1.35rem, 1.1rem + 1vw, 1.6rem);
+  --text-title--line-height: 1.2;
+  --text-title--letter-spacing: -0.015em;
+  --text-title--font-weight: 700;
+
+  /* Body copy stays at a comfortable reading measure; 1.65 is the line-height
+     a sans needs at this size to not read as an interface. */
+  --text-reading: 1.0625rem;
+  --text-reading--line-height: 1.65;
+
   --color-page: #faf7f2; /* warm paper — the ground */
   --color-surface: #ffffff; /* cards, panels, sheets */
   --color-ink: #1f2933; /* body text: 13.81 on page, 14.76 on surface */

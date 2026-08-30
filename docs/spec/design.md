@@ -92,6 +92,31 @@ geolocation is a later phase (see Non-goals) rather than the centre of this one.
   unimpeachable, and opened by nobody. The primary reader is a tourist, not a
   researcher.
 
+  **The type, chosen 2026-08-30: one family, Archivo, and no display serif.**
+  Three systems were drawn on the same card and weighed — literally: an
+  all-serif reading direction at 118 KB, a serif-headline magazine split at
+  157 KB, and this one at **34 KB**, a third of the lightest alternative. The
+  primary reader is on a phone, and the phone won.
+
+  That choice moves a load-bearing requirement rather than removing it: with
+  no serif to carry the voice, **the register has to come from the scale, the
+  weights and the measure** — a tight, heavy display step, a real size jump
+  between it and body copy, and reading text kept near 65 characters at a
+  line-height a sans needs (1.65) so it does not read as an interface. Those
+  are tokens (`--text-display`, `--text-title`, `--text-reading`), not values
+  per component, for the same reason colours are. If the result ever reads as
+  "an app" rather than an archive, that is the knob to turn — not the font.
+
+- **D6b — Fonts are served from our own origin, never from a third party.**
+  Not a preference: TD-30 removed the picsum avatar because it "leaks visitor
+  IPs and referrers to a third party on every page view", and
+  [accounts.md](./accounts.md) A1 declined a third-party CAPTCHA "consistent
+  with TD-30". A webfont linked from Google Fonts would put back exactly what
+  those two decisions took out. The app ships one `@font-face` and one file —
+  the latin subset, because the content is Italian — rather than
+  `@fontsource`'s own stylesheet, which carries three subsets of which a
+  browser rendering Italian fetches one and leaves two in `dist/` forever.
+
 - **D7 — The palette comes from Gaeta**: stone, sea, terracotta, lime white.
   **Chosen 2026-08-27: "Pietra e mare"** — warm paper ground (`#faf7f2`), deep
   Tyrrhenian as the single accent (`#0f5f73`), terracotta secondary
@@ -184,8 +209,10 @@ answer is not a redesign.
 1. ~~The palette's actual values.~~ **Answered 2026-08-27** — "Pietra e mare"
    (D7), every pair checked against D9 with the relative-luminance formula
    before anything was built on it, and landed as tokens.
-2. Typography: which faces, and whether a display face for titles is worth the
-   loading cost on a phone.
+2. ~~Typography: which faces, and whether a display face for titles is worth
+   the loading cost on a phone.~~ **Answered 2026-08-30** — no display face;
+   one sans (Archivo, 34 KB, self-hosted) and a type scale that does the work
+   a serif would have done. See D6/D6b.
 3. Whether the collaborator's authoring screens are restyled in the same pass
    or the one after. They are the secondary audience, and the reader's surfaces
    are where the bet is won.
