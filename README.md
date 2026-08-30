@@ -44,7 +44,18 @@ docker compose up --build
 - Django admin: http://127.0.0.1:8000/admin/
 
 The compose stack runs PostgreSQL 17. `.env` is optional — the defaults are
-development-safe. For bare-metal runs (SQLite fallback) see
+development-safe.
+
+**Without Docker**, once the venv and `node_modules` exist, one command starts
+both halves and one Ctrl-C stops them:
+
+```sh
+scripts/dev
+```
+
+It runs on the SQLite fallback, applies pending migrations first, and refuses
+to start if either port is already taken — move them with
+`API_PORT=8001 WEB_PORT=5174 scripts/dev`. Per-half detail is in
 [backend/README.md](./backend/README.md) and
 [frontend/README.md](./frontend/README.md).
 
@@ -62,12 +73,13 @@ fails safe (see [ADR-0002](./docs/adr/0002-debug-off-secret-key-required.md)).
 
 | Command | What it does |
 |---|---|
+| `scripts/dev` | API :8000 + SPA :5173 bare metal, one Ctrl-C stops both |
 | `docker compose up --build` | Postgres + API :8000 + SPA :5173 |
-| `python -m pytest` | Backend tests — **128**, ~3s (from `backend/`) |
+| `python -m pytest` | Backend tests — **315**, ~5s (from `backend/`) |
 | `python -m ruff check .` | Backend lint |
 | `npm run dev` | Vite dev server on :5173 (from `frontend/`) |
-| `npm run test:unit -- run` | Frontend unit tests — **32** |
-| `npm run test:e2e` | Cypress against a production build — **3** |
+| `npm run test:unit -- run` | Frontend unit tests — **88** |
+| `npm run test:e2e` | Cypress against a production build — **17** (needs the API running) |
 | `npm run lint` | oxlint then eslint, both with `--fix` |
 | `npm run build` | Type-check (`vue-tsc`) + production build |
 
