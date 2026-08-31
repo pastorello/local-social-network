@@ -4,6 +4,10 @@ What is planned and in what order. Ordered by what is **active**. The product
 authority is [spec (v2)](./spec/README.md) (v2, 2026-08-21); this file only
 sequences the work.
 
+**Where things stand (2026-08-31).** Item 1 is complete; item 2 is active.
+The paragraph below is the standing picture, written when the v2 build order
+closed.
+
 **Where things stand (2026-08-27).** The v2 build order is complete: C1
 through C5, each proven before the next (the record is item 6 below). Every
 feature the spec asks for exists and is tested. Nothing that remains is a
@@ -17,7 +21,20 @@ was answered on 2026-08-21 by the v2 spec: the product recenters as a curated
 cultural map-archive of Gaeta, written by a small circle of approved
 collaborators, read by everyone, ultimately aimed at tourists.
 
-## 1. Design — **active** (chosen 2026-08-27)
+## 1. Design — **complete (2026-08-31)**
+
+**Done, 2026-08-27 to 2026-08-31**, in the order the spec set: the palette and
+the type as tokens, the reader's home small-first, the card as an article, the
+lists as a grid of covers, the collaborator's authoring forms, and last the two
+pieces that closed it — the site footer D11 asks for, and `ReportDetailView`,
+the one v1 screen a reader reaches from a pin on the redesigned home.
+`spec/design.md`'s four open questions are all answered, and its foot records
+what the pass deliberately left in v1 clothes (`/polls`, `/users`, `/profile`,
+the auth forms and `ReportForm`) with the reason for each. **Item 2 is now
+active.**
+
+The requirements the pass was measured against, and the reasoning behind them,
+stay below — they are what the next person checks a change against.
 
 **Nobody has styled this product.** Every view is default Tailwind panels in a
 two-column grid; it looks like what it is, a working app nobody has designed.
@@ -32,8 +49,9 @@ happened on **2026-08-27** and its confirmed output is
 mobile home (full-bleed map + bottom sheet), the register, the palette from
 Gaeta with the purple retired, colour in tokens, and the rule that sponsor
 presence is earned rather than bought. **Read it before touching a stylesheet**;
-what remains open there (actual palette values, typography, whether the
-authoring screens are restyled in the same pass) is what the pass decides.
+what was open there when this was written (actual palette values, typography,
+whether the authoring screens are restyled in the same pass) is what the pass
+decided — all four questions are answered in that file, dated.
 
 **Why ahead of TD-04 (item 2).** Writing Cypress specs now would pin selectors
 and copy on screens that are about to be redrawn — exactly the mistake that
@@ -71,7 +89,7 @@ WCAG findings as advisory — was written when the accessibility question was
 open. **It is no longer open** (ADR-0005), so their contrast and
 keyboard findings now land against a bar this project has accepted.
 
-## 2. Coverage: TD-04 and the deferred accessibility work — after item 1
+## 2. Coverage: TD-04 and the deferred accessibility work — **active (2026-08-31)**
 
 Two things that were deferred for the same reason (the screens kept changing)
 and are unblocked by the same event (they will have stopped):
