@@ -14,7 +14,11 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: () => import('../views/HomeView.vue'),
-      meta: { requiresAuth: false },
+      // fullBleed: the home is viewport-height in both its layouts — the map
+      // filling the screen small-first (spec/design.md D3), the panel column
+      // large-first — so the site footer is not appended under it. It would
+      // make the one screen that must not scroll, scroll.
+      meta: { requiresAuth: false, fullBleed: true },
     },
     {
       path: '/reports/:id',

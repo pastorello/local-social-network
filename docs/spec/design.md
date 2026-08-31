@@ -1,6 +1,8 @@
 # Design — visual and experiential direction
 
-> **To build.** Roadmap item 1, active since 2026-08-27.
+> **Built.** Roadmap item 1, 2026-08-27 to 2026-08-31. What the pass
+> covered and what it deliberately left in its v1 clothes is recorded at the
+> foot of this file; the requirements below are what it was measured against.
 >
 > Provenance: the confirmed output of an intent interview with the author on
 > 2026-08-27, the same way the v2 spec itself was produced. Where a section
@@ -172,6 +174,17 @@ rule, stated by the author and load-bearing for the design:
   the reader the opposite of the truth about how this archive works.
 - **D11 — Institutional endorsement gets a dignified, fixed place** (a footer
   or credits surface), not a banner.
+
+  **Built 2026-08-31**: `components/AppFooter.vue`, mounted by the shell on
+  every route whose `meta.fullBleed` is not set. The map home is the one
+  exception, and it is a layout fact rather than an oversight — D3 says that
+  screen is the map filling the viewport, and a footer appended under it would
+  make the one page that must not scroll, scroll. The credits region carries
+  the editorial rule in the reader's own words ("nessuna presenza è
+  acquistata") and reserves the place a patrocinio goes when one exists. It
+  does **not** carry an invented endorsement: there is no municipal patronage
+  today, and a placeholder logo would be the product claiming something that
+  is not true.
 - **D12 — No ad slots.** Nothing in the layout is a rectangle waiting to be
   sold.
 
@@ -228,3 +241,30 @@ answer is not a redesign.
    `lg:hidden` on both, so only one is ever in the DOM — two copies of the
    layer controls would mean two elements with the same `id`, which breaks the
    `for`/`id` pairing ADR-0005 requires, and would mount two Leaflet maps.
+
+## What the pass covered, and what it left — 2026-08-31
+
+Recorded here rather than in a commit message, because "is this screen
+designed?" is a question the next person will ask of a file, not of a log.
+
+**Covered:** the palette and the type as tokens (D6-D9); the reader's home in
+both layouts (D3/D4); the card as an article and the lists as a grid of covers
+(D5/D6); the collaborator's authoring forms (D2, open question 3); the site
+footer (D11); and `ReportDetailView` — a v1 screen, redrawn because a pin on
+the redesigned home pushes straight to it, so leaving it would have handed the
+reader a designed page and then a 2026-M1 one in a single click.
+
+**Left in its v1 clothes, on purpose:**
+
+- **`/polls`, `/users`, `/profile`.** They took the colour sweep and nothing
+  more. None is on the reader's path: no pin leads to them, and the v2 spec's
+  non-goals already say there is no new work on polls. The tourist the bet is
+  about never sees them.
+- **The auth and profile forms** (open question 3's answer, unchanged), and
+  **`ReportForm`** with them. The report form is shared with the home's filing
+  flow, so restyling it is a change to the map home rather than to a form —
+  a bigger blast radius than this pass's last commit should carry.
+
+Both are deliberate scope, not debt to be paid quietly by whoever passes next:
+redrawing them is a decision to take, and the reason to take it would be a new
+one (they became part of the reader's path), not tidiness.

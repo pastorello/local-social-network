@@ -132,95 +132,129 @@ onMounted(() => {
 </script>
 
 <template>
-  <ViewContainer class="grid-cols-4">
-    <!-- self-start: PanelBox is h-full; a stacked column must not stretch to row height -->
-    <div class="col-span-2 col-start-2 space-y-4 self-start">
-      <PanelBox v-if="report">
-        <div class="mb-2 flex items-center justify-between gap-4">
-          <MainTitle>{{ report.title }}</MainTitle>
-          <StatusBadge :status="report.status" />
-        </div>
-
-        <p class="mb-4 flex items-center gap-2 text-sm text-gray-500">
-          <span
-            class="inline-block w-3 h-3 rounded-full"
-            :style="{ backgroundColor: report.category.color }"
-          ></span>
-          {{ report.category.name }}
-          · segnalata da <strong>{{ report.author.name }}</strong> il {{ createdAtFormatted }}
-        </p>
-
-        <template v-if="!editing">
+  <ViewContainer class="grid-cols-1">
+    <div>
+      <!-- A report is not a card: no rich text, no translations, no cover
+      gallery. But it is the one v1 surface a reader reaches from the
+      redesigned home (a pin pushes here), so it wears the article's skeleton —
+      same measure, same meta line, same footer — with the status and the
+      support count in place of a type label. -->
+      <article v-if="report && !editing" class="mx-auto w-full max-w-3xl">
+        <!-- Not cropped to an aspect ratio the way a card cover is (D5): this
+        photo is the evidence, and a pothole cut to 21/9 can lose the point. -->
+        <div v-if="report.photoURL" class="-mx-4 mb-6 sm:mx-0">
           <img
-            v-if="report.photoURL"
             :src="report.photoURL"
-            class="w-full mb-4 rounded-xl"
+            class="w-full sm:rounded-lg"
             :alt="`Foto della segnalazione: ${report.title}`"
           />
+        </div>
 
-          <p class="mb-6 whitespace-pre-line">{{ report.description }}</p>
-
-          <div class="flex items-center justify-between">
-            <button
-              type="button"
-              class="flex items-center gap-2 py-2 px-4 rounded-lg cursor-pointer"
-              :class="report.upvoted_by_me ? 'bg-sea text-white' : 'bg-gray-100'"
-              @click="toggleUpvote"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                :fill="report.upvoted_by_me ? 'currentColor' : 'none'"
-                viewBox="0 0 24 24"
-                stroke-width="1.5"
-                stroke="currentColor"
-                class="w-5 h-5"
-                aria-hidden="true"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M6.633 10.25c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75A2.25 2.25 0 0116.5 4.5c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H13.48c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 00-1.423-.23H5.904M14.25 9h2.25M5.904 18.5c.083.205.173.405.27.602.197.4-.078.898-.523.898h-.908c-.889 0-1.713-.518-1.972-1.368a12 12 0 01-.521-3.507c0-1.553.295-3.036.831-4.398C3.387 9.953 4.167 9.5 5 9.5h1.053c.472 0 .745.556.5.96a8.958 8.958 0 00-1.302 4.665c0 1.194.232 2.333.654 3.375z"
-                />
-              </svg>
-              {{ report.upvotes_count }} {{ report.upvotes_count === 1 ? 'sostegno' : 'sostegni' }}
-            </button>
-
-            <div class="flex gap-2" v-if="canEditOwn">
-              <ActionButton size="small" @click="editing = true">Modifica</ActionButton>
-              <ActionButton size="small" button-type="danger" @click="deleteReport">
-                Elimina
-              </ActionButton>
-            </div>
+        <header class="mb-8">
+          <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <p class="text-xs font-semibold tracking-[0.12em] text-terracotta uppercase">
+              Segnalazione
+            </p>
+            <StatusBadge :status="report.status" />
           </div>
-        </template>
 
+          <MainTitle>{{ report.title }}</MainTitle>
+
+          <p class="flex items-start gap-2 text-sm text-muted">
+            <!-- The category colour comes from the database, not the palette:
+            it is data an admin sets, in the same saturated register D7 keeps
+            for the map, where colour distinguishes rather than decorates. -->
+            <span
+              class="mt-1.5 inline-block h-3 w-3 shrink-0 rounded-full"
+              :style="{ backgroundColor: report.category.color }"
+            ></span>
+            <span
+              >{{ report.category.name }} · segnalata da
+              <strong class="font-semibold text-ink">{{ report.author.name }}</strong> il
+              {{ createdAtFormatted }}</span
+            >
+          </p>
+        </header>
+
+        <p class="mb-10 max-w-[65ch] text-reading whitespace-pre-line text-ink">
+          {{ report.description }}
+        </p>
+
+        <div
+          class="flex flex-wrap items-center justify-between gap-3 border-t border-hairline pt-6"
+        >
+          <button
+            type="button"
+            class="inline-flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-3 text-sm transition-colors"
+            :class="
+              report.upvoted_by_me
+                ? 'border-sea bg-sea text-white hover:bg-sea-deep'
+                : 'border-field bg-surface text-ink hover:border-sea hover:text-sea'
+            "
+            :aria-pressed="report.upvoted_by_me"
+            @click="toggleUpvote"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              :fill="report.upvoted_by_me ? 'currentColor' : 'none'"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="w-5 h-5"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6.633 10.25c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75A2.25 2.25 0 0116.5 4.5c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H13.48c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 00-1.423-.23H5.904M14.25 9h2.25M5.904 18.5c.083.205.173.405.27.602.197.4-.078.898-.523.898h-.908c-.889 0-1.713-.518-1.972-1.368a12 12 0 01-.521-3.507c0-1.553.295-3.036.831-4.398C3.387 9.953 4.167 9.5 5 9.5h1.053c.472 0 .745.556.5.96a8.958 8.958 0 00-1.302 4.665c0 1.194.232 2.333.654 3.375z"
+              />
+            </svg>
+            {{ report.upvotes_count }} {{ report.upvotes_count === 1 ? 'sostegno' : 'sostegni' }}
+          </button>
+
+          <div class="flex gap-2" v-if="canEditOwn">
+            <ActionButton size="small" @click="editing = true">Modifica</ActionButton>
+            <ActionButton size="small" button-type="danger" @click="deleteReport">
+              Elimina
+            </ActionButton>
+          </div>
+        </div>
+
+        <section
+          v-if="isAdmin && adminTransitions.length > 0"
+          class="mt-10 border-t border-hairline pt-6"
+        >
+          <h2 class="mb-4 font-display text-title text-ink">Moderazione</h2>
+          <div class="flex flex-wrap gap-2">
+            <ActionButton
+              v-for="status in adminTransitions"
+              :key="status"
+              size="small"
+              :button-type="status === 'rejected' ? 'danger' : 'success'"
+              @click="changeStatus(status)"
+            >
+              {{ STATUS_META[status].label }}
+            </ActionButton>
+          </div>
+        </section>
+
+        <footer class="mt-10 border-t border-hairline pt-6">
+          <RouterLink to="/" class="inline-block text-sm text-sea underline"
+            >← Torna alla mappa</RouterLink
+          >
+        </footer>
+      </article>
+
+      <!-- The edit form keeps its panel, exactly as TypeDetailView's does:
+      authoring is a surface with edges, reading is not. -->
+      <PanelBox v-else-if="report" class="mx-auto w-full max-w-3xl">
         <ReportForm
-          v-else
           :categories="categories"
           :coords="{ lat: report.lat, lng: report.lng }"
           :report="report"
           @saved="onEdited"
           @cancel="editing = false"
         />
-      </PanelBox>
-
-      <PanelBox v-if="report && isAdmin && adminTransitions.length > 0">
-        <h2 class="mb-4 text-lg font-semibold">Moderazione</h2>
-        <div class="flex flex-wrap gap-2">
-          <ActionButton
-            v-for="status in adminTransitions"
-            :key="status"
-            size="small"
-            :button-type="status === 'rejected' ? 'danger' : 'success'"
-            @click="changeStatus(status)"
-          >
-            {{ STATUS_META[status].label }}
-          </ActionButton>
-        </div>
-      </PanelBox>
-
-      <PanelBox>
-        <RouterLink to="/" class="underline">← Torna alla mappa</RouterLink>
       </PanelBox>
     </div>
   </ViewContainer>
