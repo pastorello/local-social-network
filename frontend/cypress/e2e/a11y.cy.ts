@@ -98,6 +98,27 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
     check('/login')
   })
 
+  // The reader-facing counterpart of the authoring-form error case below.
+  // Deliberately a *client-side* rejection: it never reaches the API, so this
+  // case costs the suite nothing against the login rate limit while
+  // exercising exactly the wiring it is here to check.
+  //
+  // It has to be the password, not the address: the browser's own constraint
+  // validation refuses to submit a malformed `type="email"` at all, so our
+  // validation — and everything wired to it — never runs on that field in a
+  // real browser. A password is a field the browser does not police.
+  it('the login form showing a rejected field', () => {
+    cy.viewport(1280, 800)
+    cy.visit('/login')
+
+    cy.get('#login-email').type('collaboratore@e2e.test')
+    cy.get('#login-password').type('corta')
+    cy.contains('button', 'Accedi').click()
+    cy.get('#login-password').should('have.attr', 'aria-invalid', 'true')
+
+    check('/login (in errore)')
+  })
+
   // The design pass left /polls in its v1 clothes on purpose (design.md's
   // closing note), and that changes nothing here: ADR-0005's bar is the whole
   // app, not the redesigned part of it. Style and accessibility are different

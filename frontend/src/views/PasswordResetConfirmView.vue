@@ -6,11 +6,13 @@ import { useRoute, useRouter } from 'vue-router'
 import { useToastStore } from '@/stores/toast'
 import { parseZodObject, PasswordResetConfirmForm } from '@/forms/user'
 import ActionButton from '@/components/buttons/ActionButton.vue'
+import FormErrors from '@/components/forms/FormErrors.vue'
+import FormField from '@/components/forms/FormField.vue'
 import FormInput from '@/components/forms/FormInput.vue'
 import PanelBox from '@/components/boxes/PanelBox.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
 import ViewContainer from '@/components/boxes/ViewContainer.vue'
-import { extractApiErrors } from '@/lib/apiErrors'
+import { extractFieldErrors, extractFormErrors } from '@/lib/apiErrors'
 
 const route = useRoute()
 const router = useRouter()
@@ -21,14 +23,15 @@ const form = ref({
   password2: '',
 })
 const formErrors = ref<string[]>([])
+const fieldErrors = ref<Record<string, string[]>>({})
 
 const submitForm = () => {
   const parsedData = parseZodObject(PasswordResetConfirmForm, form.value)
 
-  formErrors.value = []
+  formErrors.value = parsedData.errors
+  fieldErrors.value = parsedData.fieldErrors
 
-  if (parsedData.errors.length > 0) {
-    formErrors.value = [...parsedData.errors, ...formErrors.value]
+  if (parsedData.errors.length > 0 || Object.keys(parsedData.fieldErrors).length > 0) {
     return
   }
 
@@ -42,7 +45,10 @@ const submitForm = () => {
       router.push('/login')
     })
     .catch((error) => {
-      formErrors.value = extractApiErrors(error)
+      // Django's own password validators answer per field ("questa password
+      // è troppo comune"), so the message lands under the box that caused it.
+      fieldErrors.value = extractFieldErrors(error)
+      formErrors.value = extractFormErrors(error)
     })
 }
 </script>
@@ -52,38 +58,48 @@ const submitForm = () => {
     <div>
       <PanelBox>
         <MainTitle>Reimposta password</MainTitle>
-        <p class="text-gray-500">Scegli una nuova password per il tuo account.</p>
+        <p class="text-muted">Scegli una nuova password per il tuo account.</p>
       </PanelBox>
     </div>
 
     <div>
       <PanelBox>
         <form class="space-y-6" v-on:submit.prevent="submitForm">
-          <div>
-            <label for="reset-confirm-password1">Nuova password</label><br />
-            <FormInput class="mt-2"
-              id="reset-confirm-password1"
-              type="password"
-              v-model="form.password1"
-              placeholder="La nuova password"
-            />
-          </div>
+          <FormField
+            field-id="reset-confirm-password1"
+            label="Nuova password"
+            :errors="fieldErrors.password1"
+          >
+            <template #default="{ describedBy, invalid }">
+              <FormInput
+                id="reset-confirm-password1"
+                type="password"
+                v-model="form.password1"
+                :invalid="invalid"
+                :aria-describedby="describedBy"
+                placeholder="La nuova password"
+              />
+            </template>
+          </FormField>
 
-          <div>
-            <label for="reset-confirm-password2">Ripeti password</label><br />
-            <FormInput class="mt-2"
-              id="reset-confirm-password2"
-              type="password"
-              v-model="form.password2"
-              placeholder="Ripeti la password"
-            />
-          </div>
+          <FormField
+            field-id="reset-confirm-password2"
+            label="Ripeti password"
+            :errors="fieldErrors.password2"
+          >
+            <template #default="{ describedBy, invalid }">
+              <FormInput
+                id="reset-confirm-password2"
+                type="password"
+                v-model="form.password2"
+                :invalid="invalid"
+                :aria-describedby="describedBy"
+                placeholder="Ripeti la password"
+              />
+            </template>
+          </FormField>
 
-          <template v-if="formErrors.length > 0">
-            <div class="bg-red-50 text-red-800 rounded-lg p-6">
-              <p v-for="error in formErrors" v-bind:key="error">{{ error }}</p>
-            </div>
-          </template>
+          <FormErrors :errors="formErrors" />
 
           <div>
             <ActionButton>Salva password</ActionButton>

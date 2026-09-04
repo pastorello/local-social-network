@@ -5,11 +5,13 @@ import { useToastStore } from '@/stores/toast'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { parseZodObject, CollaborateForm } from '@/forms/user'
+import FormErrors from '@/components/forms/FormErrors.vue'
+import FormField from '@/components/forms/FormField.vue'
 import FormInput from '@/components/forms/FormInput.vue'
 import PanelBox from '@/components/boxes/PanelBox.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
-import { extractApiErrors } from '@/lib/apiErrors'
+import { extractFieldErrors, extractFormErrors } from '@/lib/apiErrors'
 
 const toastStore = useToastStore()
 const router = useRouter()
@@ -27,6 +29,7 @@ const website = ref('')
 const renderedAt = Date.now()
 
 const formErrors = ref<string[]>([])
+const fieldErrors = ref<Record<string, string[]>>({})
 
 const resetForm = () => {
   form.value.name = ''
@@ -34,15 +37,16 @@ const resetForm = () => {
   form.value.message = ''
   website.value = ''
   formErrors.value = []
+  fieldErrors.value = {}
 }
 
 const submitForm = () => {
   const parsedData = parseZodObject(CollaborateForm, form.value)
 
-  formErrors.value = []
+  formErrors.value = parsedData.errors
+  fieldErrors.value = parsedData.fieldErrors
 
-  if (parsedData.errors.length > 0) {
-    formErrors.value = [...parsedData.errors, ...formErrors.value]
+  if (parsedData.errors.length > 0 || Object.keys(parsedData.fieldErrors).length > 0) {
     return
   }
 
@@ -63,7 +67,11 @@ const submitForm = () => {
       router.push('/')
     })
     .catch((error) => {
-      formErrors.value = extractApiErrors(error)
+      // Per field where the API named one — "questa e-mail ha già una
+      // richiesta aperta" belongs under the e-mail box, not at the foot of the
+      // form with nothing connecting the two.
+      fieldErrors.value = extractFieldErrors(error)
+      formErrors.value = extractFormErrors(error)
 
       toastStore.showToast(5000, 'Qualcosa è andato storto. Riprova.', 'bg-red-300')
     })
@@ -76,7 +84,7 @@ const submitForm = () => {
       <PanelBox>
         <MainTitle>Collabora con noi</MainTitle>
 
-        <p class="mb-6 text-gray-500">
+        <p class="mb-6 text-muted">
           Vivere Gaeta è scritto da un piccolo gruppo di collaboratori scelti dall'autore.
           Raccontaci chi sei e perché vuoi contribuire: ti risponderemo se la tua richiesta viene
           approvata.
@@ -92,47 +100,59 @@ const submitForm = () => {
     <div>
       <PanelBox>
         <form class="space-y-6" v-on:submit.prevent="submitForm">
-          <div>
-            <label for="collabora-name">Nome</label><br />
-            <FormInput class="mt-2"
-              id="collabora-name"
-              type="text"
-              v-model="form.name"
-              placeholder="Il tuo nome completo"
-            />
-          </div>
+          <FormField field-id="collabora-name" label="Nome" :errors="fieldErrors.name">
+            <template #default="{ describedBy, invalid }">
+              <FormInput
+                id="collabora-name"
+                type="text"
+                v-model="form.name"
+                :invalid="invalid"
+                :aria-describedby="describedBy"
+                placeholder="Il tuo nome completo"
+              />
+            </template>
+          </FormField>
 
-          <div>
-            <label for="collabora-email">E-mail</label><br />
-            <FormInput class="mt-2"
-              id="collabora-email"
-              type="email"
-              v-model="form.email"
-              placeholder="La tua e-mail"
-            />
-          </div>
+          <FormField field-id="collabora-email" label="E-mail" :errors="fieldErrors.email">
+            <template #default="{ describedBy, invalid }">
+              <FormInput
+                id="collabora-email"
+                type="email"
+                v-model="form.email"
+                :invalid="invalid"
+                :aria-describedby="describedBy"
+                placeholder="La tua e-mail"
+              />
+            </template>
+          </FormField>
 
-          <div>
-            <label for="collabora-message">Messaggio</label><br />
-            <textarea
-              id="collabora-message"
-              v-model="form.message"
-              placeholder="Chi sei e perché vuoi collaborare"
-              rows="5"
-              class="w-full mt-2 py-4 px-6 border border-gray-200 rounded-lg"
-            ></textarea>
-          </div>
+          <FormField field-id="collabora-message" label="Messaggio" :errors="fieldErrors.message">
+            <template #default="{ describedBy, invalid }">
+              <textarea
+                id="collabora-message"
+                v-model="form.message"
+                placeholder="Chi sei e perché vuoi collaborare"
+                rows="5"
+                :aria-describedby="describedBy"
+                :aria-invalid="invalid || undefined"
+                class="w-full rounded-lg border bg-surface px-4 py-3 text-ink placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+                :class="invalid ? 'border-status-open' : 'border-field'"
+              ></textarea>
+            </template>
+          </FormField>
 
           <div class="sr-only" aria-hidden="true">
-            <label>Non compilare questo campo</label>
-            <input type="text" v-model="website" tabindex="-1" autocomplete="off" />
+            <label for="collabora-website">Non compilare questo campo</label>
+            <input
+              id="collabora-website"
+              type="text"
+              v-model="website"
+              tabindex="-1"
+              autocomplete="off"
+            />
           </div>
 
-          <template v-if="formErrors.length > 0">
-            <div class="bg-red-50 text-red-800 rounded-lg p-6">
-              <p v-for="error in formErrors" v-bind:key="error">{{ error }}</p>
-            </div>
-          </template>
+          <FormErrors :errors="formErrors" />
 
           <div>
             <ActionButton>Invia richiesta</ActionButton>

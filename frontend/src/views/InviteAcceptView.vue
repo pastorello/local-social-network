@@ -6,11 +6,13 @@ import { useRoute, useRouter } from 'vue-router'
 import { useToastStore } from '@/stores/toast'
 import { parseZodObject, InviteAcceptForm } from '@/forms/user'
 import ActionButton from '@/components/buttons/ActionButton.vue'
+import FormErrors from '@/components/forms/FormErrors.vue'
+import FormField from '@/components/forms/FormField.vue'
 import FormInput from '@/components/forms/FormInput.vue'
 import PanelBox from '@/components/boxes/PanelBox.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
 import ViewContainer from '@/components/boxes/ViewContainer.vue'
-import { extractApiErrors } from '@/lib/apiErrors'
+import { extractFieldErrors, extractFormErrors } from '@/lib/apiErrors'
 
 const route = useRoute()
 const router = useRouter()
@@ -21,14 +23,15 @@ const form = ref({
   password2: '',
 })
 const formErrors = ref<string[]>([])
+const fieldErrors = ref<Record<string, string[]>>({})
 
 const submitForm = () => {
   const parsedData = parseZodObject(InviteAcceptForm, form.value)
 
-  formErrors.value = []
+  formErrors.value = parsedData.errors
+  fieldErrors.value = parsedData.fieldErrors
 
-  if (parsedData.errors.length > 0) {
-    formErrors.value = [...parsedData.errors, ...formErrors.value]
+  if (parsedData.errors.length > 0 || Object.keys(parsedData.fieldErrors).length > 0) {
     return
   }
 
@@ -42,7 +45,10 @@ const submitForm = () => {
       router.push('/login')
     })
     .catch((error) => {
-      formErrors.value = extractApiErrors(error)
+      // Django's own password validators answer per field ("questa password
+      // è troppo comune"), so the message lands under the box that caused it.
+      fieldErrors.value = extractFieldErrors(error)
+      formErrors.value = extractFormErrors(error)
     })
 }
 </script>
@@ -52,7 +58,7 @@ const submitForm = () => {
     <div>
       <PanelBox>
         <MainTitle>Attiva il tuo account</MainTitle>
-        <p class="text-gray-500">
+        <p class="text-muted">
           La tua richiesta di collaborazione è stata approvata. Scegli una password per completare
           l'attivazione.
         </p>
@@ -62,31 +68,37 @@ const submitForm = () => {
     <div>
       <PanelBox>
         <form class="space-y-6" v-on:submit.prevent="submitForm">
-          <div>
-            <label for="invite-password1">Password</label><br />
-            <FormInput class="mt-2"
-              id="invite-password1"
-              type="password"
-              v-model="form.password1"
-              placeholder="La tua password"
-            />
-          </div>
+          <FormField field-id="invite-password1" label="Password" :errors="fieldErrors.password1">
+            <template #default="{ describedBy, invalid }">
+              <FormInput
+                id="invite-password1"
+                type="password"
+                v-model="form.password1"
+                :invalid="invalid"
+                :aria-describedby="describedBy"
+                placeholder="La tua password"
+              />
+            </template>
+          </FormField>
 
-          <div>
-            <label for="invite-password2">Ripeti password</label><br />
-            <FormInput class="mt-2"
-              id="invite-password2"
-              type="password"
-              v-model="form.password2"
-              placeholder="Ripeti la password"
-            />
-          </div>
+          <FormField
+            field-id="invite-password2"
+            label="Ripeti password"
+            :errors="fieldErrors.password2"
+          >
+            <template #default="{ describedBy, invalid }">
+              <FormInput
+                id="invite-password2"
+                type="password"
+                v-model="form.password2"
+                :invalid="invalid"
+                :aria-describedby="describedBy"
+                placeholder="Ripeti la password"
+              />
+            </template>
+          </FormField>
 
-          <template v-if="formErrors.length > 0">
-            <div class="bg-red-50 text-red-800 rounded-lg p-6">
-              <p v-for="error in formErrors" v-bind:key="error">{{ error }}</p>
-            </div>
-          </template>
+          <FormErrors :errors="formErrors" />
 
           <div>
             <ActionButton>Attiva account</ActionButton>

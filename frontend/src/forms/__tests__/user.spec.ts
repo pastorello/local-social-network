@@ -3,27 +3,35 @@ import { describe, it, expect } from 'vitest'
 import { parseZodObject, CollaborateForm, InviteAcceptForm } from '../user'
 
 describe('parseZodObject', () => {
-  it('labels the field in Italian instead of printing its raw name', () => {
+  it('attributes a mismatch to the box that has to be corrected', () => {
     const result = parseZodObject(InviteAcceptForm, {
       password1: 'password123',
       password2: 'password456',
     })
 
-    // This used to render literally "password2 Le due password non corrispondono"
-    // — a raw field name in the middle of Italian UI copy (TD-31, spec N4).
-    expect(result.errors).toEqual(['Conferma password: Le due password non corrispondono'])
-    expect(result.errors.join()).not.toContain('password2')
+    // The message belongs to the confirmation field, which is where it is now
+    // rendered — under that input, and announced with it (ADR-0005). It used
+    // to be one line in a list at the foot of the form, carrying the field's
+    // label as a prefix because nothing else said which box it meant.
+    expect(result.fieldErrors).toEqual({
+      password2: ['Le due password non corrispondono.'],
+    })
+    // Nothing without a field of its own: the form-level list stays empty.
+    expect(result.errors).toEqual([])
+    // TD-31 and spec N4, unchanged: a raw field name never reaches the reader.
+    expect(JSON.stringify(result.fieldErrors)).not.toContain('password2 ')
   })
 
-  it('keeps enough context to tell two failing fields apart', () => {
+  it('keeps two failing fields apart', () => {
     const result = parseZodObject(CollaborateForm, {
       email: 'non-una-email',
       name: 'M',
       message: 'Vorrei collaborare con voi.',
     })
 
-    expect(result.errors.some((e) => e.startsWith('E-mail:'))).toBe(true)
-    expect(result.errors.some((e) => e.startsWith('Nome:'))).toBe(true)
+    expect(Object.keys(result.fieldErrors).sort()).toEqual(['email', 'name'])
+    expect(result.fieldErrors.email?.length).toBeGreaterThan(0)
+    expect(result.fieldErrors.name?.length).toBeGreaterThan(0)
   })
 
   it('returns the parsed data when everything is valid', () => {
@@ -34,6 +42,7 @@ describe('parseZodObject', () => {
     })
 
     expect(result.errors).toEqual([])
+    expect(result.fieldErrors).toEqual({})
     expect(result.data?.email).toBe('a@example.com')
   })
 })

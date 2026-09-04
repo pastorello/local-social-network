@@ -103,7 +103,7 @@ and are unblocked by the same event (they will have stopped):
   request (accepting an invite needs the token out of an e-mail — a test hook
   worth adding deliberately), and the v1 flows this register first pointed at:
   filing a report, upvoting, voting in a poll.
-- **The three items ADR-0005 deferred**, of which one is now paid:
+- **The three items ADR-0005 deferred**, of which two are now paid:
   - ~~an accessibility gate in CI~~ — **done 2026-08-31**:
     `frontend/cypress/e2e/a11y.cy.ts` runs axe-core over eleven surfaces at
     ADR-0005's own four WCAG tags, inside the existing e2e job, against the
@@ -114,11 +114,15 @@ and are unblocked by the same event (they will have stopped):
     layer toggles and an opacity slider, plus the "Luoghi sulla mappa" list as
     the keyboard path a pin does not have — the widget itself is still the
     gap, and the gate excludes `.leaflet-container` to say so honestly).
-  - error-to-field ARIA wiring on the **auth and profile forms**. The authoring
-    forms got it with the design pass; these still use the older
-    `<label>…</label><br />` pattern, and the gate does *not* catch them: their
-    inputs take an accessible name from `placeholder`, which axe accepts. A
-    machine cannot be the reason to fix this — the ADR is.
+  - ~~error-to-field ARIA wiring on the **auth and profile forms**~~ —
+    **done 2026-08-31**, which closes this item outright: all seven moved onto
+    `FormField`, validation is attributed to the field that failed rather than
+    prefixed with its label, and API errors are kept per field so Django's
+    password validators land under the box they are about. Worth noting that
+    the gate could not have prompted any of it — an input takes an accessible
+    name from its `placeholder`, so axe passed those forms while their labels
+    were unassociated. The ADR was the reason; the gate is not a substitute
+    for it.
 
 ## 3. Deploy readiness — prerequisites now, deploy on the author's signal
 

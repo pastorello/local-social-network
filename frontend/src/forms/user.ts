@@ -3,24 +3,27 @@ import { it } from 'zod/locales'
 
 z.config(it())
 
-// Zod's built-in messages are generic ("almeno 8 caratteri"), so the field has
-// to be named — but naming it with the raw path leaked "password2" into the UI.
-const FIELD_LABELS: Record<string, string> = {
-  email: 'E-mail',
-  name: 'Nome',
-  message: 'Messaggio',
-  password: 'Password',
-  password1: 'Password',
-  password2: 'Conferma password',
-  old_password: 'Password attuale',
-  new_password1: 'Nuova password',
-  new_password2: 'Conferma nuova password',
-}
-
+/**
+ * Validation split the way a form has to show it: `fieldErrors` keyed by the
+ * field that caused each issue, `errors` for anything that names no field.
+ *
+ * It used to return one flat list with the field's label glued to the front
+ * ("E-mail: e-mail non valida"), because the messages were shown together at
+ * the foot of the form and zod's own text ("almeno 8 caratteri") says nothing
+ * about *which* input it means. With each message rendered under its own
+ * label by `FormField`, that prefix would repeat the label back at the reader
+ * — and a screen-reader user would hear it twice, since the label is already
+ * announced with the field. So the labels are gone rather than moved.
+ */
 export const parseZodObject = <Schema extends z.ZodType>(schema: Schema, data: unknown) => {
-  const result: { data: z.output<Schema> | null; errors: string[] } = {
+  const result: {
+    data: z.output<Schema> | null
+    errors: string[]
+    fieldErrors: Record<string, string[]>
+  } = {
     data: null,
     errors: [],
+    fieldErrors: {},
   }
 
   try {
@@ -28,8 +31,18 @@ export const parseZodObject = <Schema extends z.ZodType>(schema: Schema, data: u
   } catch (error) {
     if (error instanceof z.ZodError) {
       error.issues.forEach((issue) => {
-        const label = FIELD_LABELS[String(issue.path[0] ?? '')]
-        result.errors.push(label ? `${label}: ${issue.message}` : issue.message)
+        const field = String(issue.path[0] ?? '')
+
+        // A schema-level refinement can raise an issue with no path at all.
+        // Those keep the flat list rather than disappearing quietly.
+        if (!field) {
+          result.errors.push(issue.message)
+          return
+        }
+
+        const messages = result.fieldErrors[field] ?? []
+        messages.push(issue.message)
+        result.fieldErrors[field] = messages
       })
     }
   }
@@ -37,11 +50,20 @@ export const parseZodObject = <Schema extends z.ZodType>(schema: Schema, data: u
   return result
 }
 
+// The messages are written out rather than left to zod's Italian locale,
+// which renders its own type names into the copy: a reader was told "Troppo
+// piccolo: string deve avere >=8 caratteri". That was tolerable-ish while
+// these sentences sat in a list at the foot of the form; under the field they
+// belong to, they are the whole of what the reader is given to act on (N4,
+// and the same complaint as TD-31).
 const useDataValidator = {
-  email: z.email(),
-  name: z.string().min(2).max(200),
-  password1: z.string().min(8),
-  password2: z.string().min(8),
+  email: z.email('Inserisci un indirizzo e-mail valido.'),
+  name: z
+    .string()
+    .min(2, 'Il nome deve avere almeno 2 caratteri.')
+    .max(200, 'Il nome non può superare i 200 caratteri.'),
+  password1: z.string().min(8, 'La password deve avere almeno 8 caratteri.'),
+  password2: z.string().min(8, 'La password deve avere almeno 8 caratteri.'),
 }
 
 const passwordPairRefinement = (
@@ -51,7 +73,7 @@ const passwordPairRefinement = (
   if (password1 !== password2) {
     ctx.addIssue({
       code: 'custom',
-      message: 'Le due password non corrispondono',
+      message: 'Le due password non corrispondono.',
       path: ['password2'],
     })
   }
@@ -60,7 +82,10 @@ const passwordPairRefinement = (
 export const CollaborateForm = z.object({
   email: useDataValidator.email,
   name: useDataValidator.name,
-  message: z.string().min(10).max(2000),
+  message: z
+    .string()
+    .min(10, 'Scrivi almeno 10 caratteri.')
+    .max(2000, 'Il messaggio non può superare i 2000 caratteri.'),
 })
 
 export const InviteAcceptForm = z
@@ -96,7 +121,7 @@ export const EditPasswordForm = z
     if (new_password1 !== new_password2) {
       ctx.addIssue({
         code: 'custom',
-        message: 'Le due password non corrispondono',
+        message: 'Le due password non corrispondono.',
         path: ['new_password2'],
       })
     }

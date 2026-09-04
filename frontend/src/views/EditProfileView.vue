@@ -8,10 +8,12 @@ import { useUserStore } from '@/stores/user'
 
 import PanelBox from '@/components/boxes/PanelBox.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
+import FormErrors from '@/components/forms/FormErrors.vue'
+import FormField from '@/components/forms/FormField.vue'
 import FormInput from '@/components/forms/FormInput.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
 import ViewContainer from '@/components/boxes/ViewContainer.vue'
-import { extractApiErrors } from '@/lib/apiErrors'
+import { extractFieldErrors, extractFormErrors } from '@/lib/apiErrors'
 
 const router = useRouter()
 const toastStore = useToastStore()
@@ -23,19 +25,23 @@ const form = ref({
 })
 const fileInput = ref<HTMLInputElement | null>(null)
 const errors = ref<string[]>([])
+const fieldErrors = ref<Record<string, string[]>>({})
 
 const submitForm = () => {
   errors.value = []
+  fieldErrors.value = {}
 
+  // Each of these names a field, so each is shown under that field rather
+  // than in a list at the foot of the form (ADR-0005).
   if (form.value.email === '') {
-    errors.value.push('Inserisci la tua e-mail.')
+    fieldErrors.value.email = ['Inserisci la tua e-mail.']
   }
 
   if (form.value.name === '') {
-    errors.value.push('Inserisci il tuo nome.')
+    fieldErrors.value.name = ['Inserisci il tuo nome.']
   }
 
-  if (errors.value.length === 0) {
+  if (Object.keys(fieldErrors.value).length === 0) {
     const formData = new FormData()
     const avatarFile = fileInput.value?.files?.[0]
     if (avatarFile) {
@@ -64,7 +70,8 @@ const submitForm = () => {
         router.back()
       })
       .catch((error) => {
-        errors.value = extractApiErrors(error)
+        fieldErrors.value = extractFieldErrors(error)
+        errors.value = extractFormErrors(error)
       })
   }
 }
@@ -76,7 +83,7 @@ const submitForm = () => {
       <PanelBox>
         <MainTitle>Modifica profilo</MainTitle>
 
-        <p class="mb-6 text-gray-500">
+        <p class="mb-6 text-muted">
           Da qui puoi editare il tuo profilo. Puoi cambiare il tuo nome, la tua e-mail e la tua
           immagine del profilo. Per cambiare la password, clicca sul link qui sotto.
         </p>
@@ -88,36 +95,51 @@ const submitForm = () => {
     <div>
       <PanelBox>
         <form class="space-y-6" v-on:submit.prevent="submitForm">
-          <div>
-            <label for="editprofile-name">Nome</label><br />
-            <FormInput class="mt-2"
-              id="editprofile-name"
-              type="text"
-              v-model="form.name"
-              placeholder="Il tuo nome completo"
-            />
-          </div>
+          <FormField field-id="editprofile-name" label="Nome" :errors="fieldErrors.name">
+            <template #default="{ describedBy, invalid }">
+              <FormInput
+                id="editprofile-name"
+                type="text"
+                v-model="form.name"
+                :invalid="invalid"
+                :aria-describedby="describedBy"
+                placeholder="Il tuo nome completo"
+              />
+            </template>
+          </FormField>
 
-          <div>
-            <label for="editprofile-email">E-mail</label><br />
-            <FormInput class="mt-2"
-              id="editprofile-email"
-              type="email"
-              v-model="form.email"
-              placeholder="La tua e-mail"
-            />
-          </div>
+          <FormField field-id="editprofile-email" label="E-mail" :errors="fieldErrors.email">
+            <template #default="{ describedBy, invalid }">
+              <FormInput
+                id="editprofile-email"
+                type="email"
+                v-model="form.email"
+                :invalid="invalid"
+                :aria-describedby="describedBy"
+                placeholder="La tua e-mail"
+              />
+            </template>
+          </FormField>
 
-          <div>
-            <label for="editprofile-avatar">Avatar</label><br />
-            <input id="editprofile-avatar" type="file" ref="fileInput" accept="image/*" />
-          </div>
+          <FormField
+            field-id="editprofile-avatar"
+            label="Avatar"
+            hint="JPEG, PNG o WEBP, massimo 5 MB."
+            :errors="fieldErrors.avatar"
+          >
+            <template #default="{ describedBy, invalid }">
+              <input
+                id="editprofile-avatar"
+                type="file"
+                ref="fileInput"
+                accept="image/jpeg,image/png,image/webp"
+                :aria-describedby="describedBy"
+                :aria-invalid="invalid || undefined"
+              />
+            </template>
+          </FormField>
 
-          <template v-if="errors.length > 0">
-            <div class="bg-red-50 text-red-800 rounded-lg p-6">
-              <p v-for="error in errors" v-bind:key="error">{{ error }}</p>
-            </div>
-          </template>
+          <FormErrors :errors="errors" />
 
           <div>
             <ActionButton>Salva modifiche</ActionButton>

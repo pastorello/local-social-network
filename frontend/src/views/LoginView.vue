@@ -7,6 +7,8 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { LoginForm, parseZodObject } from '@/forms/user'
 import ActionButton from '@/components/buttons/ActionButton.vue'
+import FormErrors from '@/components/forms/FormErrors.vue'
+import FormField from '@/components/forms/FormField.vue'
 import FormInput from '@/components/forms/FormInput.vue'
 import PanelBox from '@/components/boxes/PanelBox.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
@@ -21,14 +23,16 @@ const form = ref({
 })
 
 const formErrors = ref<string[]>([])
+const fieldErrors = ref<Record<string, string[]>>({})
 
 const submitForm = async () => {
   const parsedData = parseZodObject(LoginForm, form.value)
 
   formErrors.value = []
+  fieldErrors.value = parsedData.fieldErrors
 
-  if (parsedData.errors.length > 0) {
-    formErrors.value = [...parsedData.errors, ...formErrors.value]
+  if (parsedData.errors.length > 0 || Object.keys(parsedData.fieldErrors).length > 0) {
+    formErrors.value = parsedData.errors
     return
   }
 
@@ -40,6 +44,9 @@ const submitForm = async () => {
     .catch((error) => {
       console.log('error', error)
 
+      // Deliberately form-level and deliberately vague: saying *which* of the
+      // two was wrong would tell a stranger whether an address has an account
+      // here — the same reasoning that makes a reset request always answer 200.
       formErrors.value.push('E-mail o password non corretti.')
     })
 
@@ -67,7 +74,7 @@ const submitForm = async () => {
       <PanelBox>
         <MainTitle>Accedi</MainTitle>
 
-        <p class="mb-6 text-gray-500">
+        <p class="mb-6 text-muted">
           Bentornato! Inserisci i tuoi dati per accedere al tuo account.
         </p>
 
@@ -81,24 +88,42 @@ const submitForm = async () => {
     <div>
       <PanelBox>
         <form class="space-y-6" v-on:submit.prevent="submitForm">
-          <div>
-            <label>E-mail</label><br />
-            <FormInput class="mt-2" type="email" v-model="form.email" placeholder="La tua e-mail" />
-          </div>
+          <FormField field-id="login-email" label="E-mail" :errors="fieldErrors.email">
+            <template #default="{ describedBy, invalid }">
+              <FormInput
+                id="login-email"
+                type="email"
+                v-model="form.email"
+                :invalid="invalid"
+                :aria-describedby="describedBy"
+                placeholder="La tua e-mail"
+              />
+            </template>
+          </FormField>
 
+          <FormField field-id="login-password" label="Password" :errors="fieldErrors.password">
+            <template #default="{ describedBy, invalid }">
+              <FormInput
+                id="login-password"
+                type="password"
+                v-model="form.password"
+                :invalid="invalid"
+                :aria-describedby="describedBy"
+                placeholder="La tua password"
+              />
+            </template>
+          </FormField>
+
+          <!-- In a block of its own: the form spaces its children with
+          `space-y-6`, which sets a top margin — and a margin-top does nothing
+          to an inline <a>. -->
           <div>
-            <label>Password</label><br />
-            <FormInput class="mt-2" type="password" v-model="form.password" placeholder="La tua password" />
-            <RouterLink :to="{ name: 'passwordresetrequest' }" class="underline text-sm">
+            <RouterLink :to="{ name: 'passwordresetrequest' }" class="text-sm text-sea underline">
               Password dimenticata?
             </RouterLink>
           </div>
 
-          <template v-if="formErrors.length > 0">
-            <div class="bg-red-300 text-white rounded-lg p-6">
-              <p v-for="error in formErrors" v-bind:key="error">{{ error }}</p>
-            </div>
-          </template>
+          <FormErrors :errors="formErrors" />
 
           <div>
             <ActionButton>Accedi</ActionButton>
