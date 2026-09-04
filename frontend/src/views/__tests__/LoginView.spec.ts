@@ -29,4 +29,39 @@ describe('LoginView', () => {
     expect(wrapper.find('input[type="password"]').exists()).toBe(true)
     expect(wrapper.find('form').exists()).toBe(true)
   })
+
+  it('pairs every label with its input', () => {
+    const wrapper = mount(LoginView, {
+      global: { plugins: [createPinia(), makeRouter()] },
+    })
+
+    for (const label of wrapper.findAll('label')) {
+      const forAttr = label.attributes('for')
+      expect(forAttr).toBeTruthy()
+      expect(wrapper.find(`#${forAttr}`).exists()).toBe(true)
+    }
+  })
+
+  it('points a rejected field at its own message instead of a list at the foot', async () => {
+    const wrapper = mount(LoginView, {
+      global: { plugins: [createPinia(), makeRouter()] },
+    })
+
+    await wrapper.find('input[type="email"]').setValue('non-una-email')
+    await wrapper.find('input[type="password"]').setValue('password123')
+    await wrapper.find('form').trigger('submit')
+
+    const email = wrapper.find('input[type="email"]')
+    expect(email.attributes('aria-invalid')).toBe('true')
+
+    // The description has to resolve to the element carrying the message —
+    // half-wiring it (an id that points at nothing) is the failure mode this
+    // test exists for.
+    const describedBy = email.attributes('aria-describedby')
+    expect(describedBy).toBeTruthy()
+    expect(wrapper.find(`#${describedBy}`).text()).not.toBe('')
+
+    // And the password, which was fine, says nothing.
+    expect(wrapper.find('input[type="password"]').attributes('aria-invalid')).toBeUndefined()
+  })
 })

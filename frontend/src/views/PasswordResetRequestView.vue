@@ -5,6 +5,8 @@ import { ref } from 'vue'
 import { useToastStore } from '@/stores/toast'
 import { parseZodObject, PasswordResetRequestForm } from '@/forms/user'
 import ActionButton from '@/components/buttons/ActionButton.vue'
+import FormErrors from '@/components/forms/FormErrors.vue'
+import FormField from '@/components/forms/FormField.vue'
 import FormInput from '@/components/forms/FormInput.vue'
 import PanelBox from '@/components/boxes/PanelBox.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
@@ -14,15 +16,16 @@ const toastStore = useToastStore()
 
 const form = ref({ email: '' })
 const formErrors = ref<string[]>([])
+const fieldErrors = ref<Record<string, string[]>>({})
 const sent = ref(false)
 
 const submitForm = () => {
   const parsedData = parseZodObject(PasswordResetRequestForm, form.value)
 
-  formErrors.value = []
+  formErrors.value = parsedData.errors
+  fieldErrors.value = parsedData.fieldErrors
 
-  if (parsedData.errors.length > 0) {
-    formErrors.value = [...parsedData.errors, ...formErrors.value]
+  if (parsedData.errors.length > 0 || Object.keys(parsedData.fieldErrors).length > 0) {
     return
   }
 
@@ -45,7 +48,7 @@ const submitForm = () => {
     <div>
       <PanelBox>
         <MainTitle>Password dimenticata</MainTitle>
-        <p class="text-gray-500">
+        <p class="text-muted">
           Inserisci la tua e-mail: se corrisponde a un account, riceverai un link per reimpostare la
           password.
         </p>
@@ -58,21 +61,20 @@ const submitForm = () => {
           <p>Se l'indirizzo esiste, riceverai un'e-mail a breve.</p>
         </template>
         <form v-else class="space-y-6" v-on:submit.prevent="submitForm">
-          <div>
-            <label for="reset-request-email">E-mail</label><br />
-            <FormInput class="mt-2"
-              id="reset-request-email"
-              type="email"
-              v-model="form.email"
-              placeholder="La tua e-mail"
-            />
-          </div>
+          <FormField field-id="reset-request-email" label="E-mail" :errors="fieldErrors.email">
+            <template #default="{ describedBy, invalid }">
+              <FormInput
+                id="reset-request-email"
+                type="email"
+                v-model="form.email"
+                :invalid="invalid"
+                :aria-describedby="describedBy"
+                placeholder="La tua e-mail"
+              />
+            </template>
+          </FormField>
 
-          <template v-if="formErrors.length > 0">
-            <div class="bg-red-50 text-red-800 rounded-lg p-6">
-              <p v-for="error in formErrors" v-bind:key="error">{{ error }}</p>
-            </div>
-          </template>
+          <FormErrors :errors="formErrors" />
 
           <div>
             <ActionButton>Invia link</ActionButton>
