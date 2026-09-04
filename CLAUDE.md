@@ -150,7 +150,35 @@ e2e job **starts a real Django API on :8000** (TD-04, 2026-08-30) seeded by
 `python manage.py seed_e2e` — a DEBUG-only management command, since it creates
 accounts whose password is written down in a spec file. The SPA's API base URL
 defaults to `http://127.0.0.1:8000`, which is why the build needs no extra
-environment there; it would if the API ever moved.
+environment there; it would if the API ever moved. **Running the e2e suite
+locally needs the same API *and* `CORS_ALLOWED_ORIGINS` pointed at the preview
+origin** — the default is `:5173`, so without it every request from `:4173` is
+blocked by the browser while the server cheerfully logs a 200, and the specs
+fail as if the data were missing:
+
+```sh
+cd backend && DJANGO_DEBUG=true CORS_ALLOWED_ORIGINS='http://localhost:4173,http://127.0.0.1:4173' \
+  python manage.py seed_e2e && python manage.py runserver 127.0.0.1:8000 --noreload
+```
+
+**The WCAG 2.1 AA gate lives in that same job** (`cypress/e2e/a11y.cy.ts`,
+2026-08-31): axe-core through `cypress-axe`, ADR-0005's four WCAG tags and no
+`best-practice` rules, over eleven surfaces including an authoring form
+*showing a real validation error*. Two things it will teach you the hard way if
+you extend it: it excludes `.leaflet-container`, which is ADR-0005's deferral
+rather than a new one; and it waits for the wordmark's fade-in to finish before
+measuring, because axe samples whatever colour the compositor is showing and
+mid-animation that is a real reading of a meaningless value. A green run is a
+floor, not a conformance claim — the auth forms' unassociated labels pass it,
+because `placeholder` gives their inputs an accessible name. **Watch the login
+count when adding specs:** the endpoint is rate limited to 10/min per IP
+(TD-18) and a whole run spends six of those, so a new suite that signs in per test
+turns the whole run intermittently red with a 429 the SPA reports as a wrong
+password. The a11y spec's collaborator block uses `testIsolation: false` and
+one `before` login for that reason. **`cy.session` is not the answer here**:
+refresh rotation with a blacklist means a cached snapshot replays a token the
+previous test already spent, and the app correctly logs itself out — tried,
+and it fails as 401s on every write.
 
 Definition of done for a feature (spec §9): the spec section it implements is referenced, pytest + Vitest green, ruff + eslint clean, `npm run build` green. CI runs all of it on every push and pull request.
 

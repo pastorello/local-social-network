@@ -103,11 +103,22 @@ and are unblocked by the same event (they will have stopped):
   request (accepting an invite needs the token out of an e-mail — a test hook
   worth adding deliberately), and the v1 flows this register first pointed at:
   filing a report, upvoting, voting in a poll.
-- **The three items ADR-0005 deferred:** full map-widget operability for
-  screen-reader and keyboard users (C5 added layer toggles and an opacity
-  slider, plus the "Luoghi sulla mappa" list as the keyboard path a pin does
-  not have — the widget itself is still the gap), error-to-field ARIA wiring
-  on forms, and an accessibility gate in CI.
+- **The three items ADR-0005 deferred**, of which one is now paid:
+  - ~~an accessibility gate in CI~~ — **done 2026-08-31**:
+    `frontend/cypress/e2e/a11y.cy.ts` runs axe-core over eleven surfaces at
+    ADR-0005's own four WCAG tags, inside the existing e2e job, against the
+    production build. It found no violation on any of them at the time it
+    landed, which is a floor and not a certificate — see the ADR for what it
+    deliberately does not check.
+  - full map-widget operability for screen-reader and keyboard users (C5 added
+    layer toggles and an opacity slider, plus the "Luoghi sulla mappa" list as
+    the keyboard path a pin does not have — the widget itself is still the
+    gap, and the gate excludes `.leaflet-container` to say so honestly).
+  - error-to-field ARIA wiring on the **auth and profile forms**. The authoring
+    forms got it with the design pass; these still use the older
+    `<label>…</label><br />` pattern, and the gate does *not* catch them: their
+    inputs take an accessible name from `placeholder`, which axe accepts. A
+    machine cannot be the reason to fix this — the ADR is.
 
 ## 3. Deploy readiness — prerequisites now, deploy on the author's signal
 
