@@ -20,6 +20,8 @@ from chiese.models import Chiesa
 from content.models import Card, MapFeature
 from feste.models import Feste
 from maps.models import Overlay
+from polls.models import Poll, PollOption, Vote
+from reports.models import Category, IssueReport, Upvote
 
 PASSWORD = 'E2ePassw0rd!'
 COLLABORATOR_EMAIL = 'collaboratore@e2e.test'
@@ -35,6 +37,12 @@ DRAFT_CHIESA = 'Chiesa E2E in bozza'
 PUBLISHED_FESTA = 'Festa E2E pubblicata'
 PUBLIC_OVERLAY = 'Quartieri E2E'
 STEERING_OVERLAY = 'Seggi E2E'
+# The v1 flows (TD-04): a report somebody *else* filed, so supporting one is
+# the ordinary act it is meant to be rather than a citizen upvoting himself,
+# and an open poll to vote in.
+OTHER_REPORT = 'Segnalazione E2E di un altro cittadino'
+OPEN_POLL = 'Sondaggio E2E aperto'
+POLL_OPTIONS = ('Lungomare Caboto', 'Monte Orlando')
 
 QUARTIERI_GEOJSON = {
     'type': 'FeatureCollection',
@@ -101,9 +109,43 @@ class Command(BaseCommand):
                       'geojson': QUARTIERI_GEOJSON, 'position': 1},
         )
 
+        # A report the collaborator did not write, so `v1-flows.cy.ts` can
+        # support one without the flow becoming "upvote your own".
+        report, _ = IssueReport.objects.get_or_create(
+            title=OTHER_REPORT,
+            defaults={
+                'author': admin,
+                'category': Category.objects.order_by('name').first(),
+                'description': 'Una segnalazione di prova, scritta da un altro cittadino.',
+                'lat': GAETA_LAT,
+                'lng': GAETA_LNG,
+            },
+        )
+        # `upvotes_count` is denormalized (TD-19) and the clean-up above deletes
+        # rows without going through the endpoint that maintains it, so the
+        # counter is recomputed rather than assumed: a spec that asserts "1
+        # sostegno" must mean it on every run, not on the first.
+        IssueReport.objects.filter(pk=report.pk).update(upvotes_count=report.upvotes.count())
+
+        poll, _ = Poll.objects.get_or_create(
+            question=OPEN_POLL,
+            defaults={'created_by': admin},
+        )
+        # `is_closed` is reset explicitly: a previous run may have closed it
+        # through the admin flow, and a fixture that only exists the first time
+        # is not a fixture.
+        poll.is_closed = False
+        poll.closes_at = None
+        poll.save(update_fields=('is_closed', 'closes_at'))
+        for position, text in enumerate(POLL_OPTIONS):
+            PollOption.objects.get_or_create(
+                poll=poll, text=text, defaults={'position': position}
+            )
+
         self.stdout.write(self.style.SUCCESS(
             f'Seeded: {collaborator.email}, {admin.email}, 2 published cards, 1 draft, '
-            f'2 overlays; cleared {removed} card(s) left by previous runs.'
+            f'2 overlays, 1 report ({report.upvotes_count} upvotes), 1 open poll; '
+            f'cleared {removed} card(s) and every trace of previous v1 runs.'
         ))
 
     def _clear_previous_runs(self, collaborator):
@@ -126,6 +168,15 @@ class Command(BaseCommand):
         )
         count = leftovers.count()
         leftovers.delete()
+
+        # The v1 flows leave their own traces, and two of them are not merely
+        # untidy: a vote is final by design (spec F3.2) and an upvote is a
+        # toggle, so a second run would find the poll already voted and the
+        # report already supported, and fail on the app behaving correctly.
+        IssueReport.objects.filter(author=collaborator).delete()
+        Vote.objects.filter(user=collaborator).delete()
+        Upvote.objects.filter(user=collaborator).delete()
+
         return count
 
     def _user(self, email, name, role=User.CITIZEN):
