@@ -8,6 +8,7 @@ import LayerToggles from '@/components/maps/LayerToggles.vue'
 import MapChrome from '@/components/maps/MapChrome.vue'
 import MapSheet from '@/components/maps/MapSheet.vue'
 import PlacesList from '@/components/maps/PlacesList.vue'
+import ReportsList from '@/components/maps/ReportsList.vue'
 import ReportForm from '@/components/reports/ReportForm.vue'
 import PanelBox from '@/components/boxes/PanelBox.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
@@ -240,6 +241,8 @@ onMounted(() => {
             Esplora i problemi segnalati dai cittadini di Gaeta o invia la tua segnalazione.
           </p>
           <ActionButton @click="startReporting">Segnala un problema</ActionButton>
+
+          <ReportsList v-if="visiblePins.length" :pins="visiblePins" class="mt-4" />
         </template>
         <template v-else>
           <p class="mb-3 text-sm font-semibold text-ink">Tocca la mappa nel punto del problema.</p>
@@ -297,6 +300,20 @@ onMounted(() => {
             Esplora i problemi segnalati dai cittadini di Gaeta o invia la tua segnalazione.
           </p>
           <ActionButton @click="startReporting">Segnala un problema</ActionButton>
+
+          <!-- The same reports the map is drawing, as links: the keyboard path
+          a clickable pin does not have (ADR-0005, closed 2026-09-05).
+
+          Bounded in height, not in length: the map endpoint is unpaginated on
+          purpose, so this list is as long as the map is busy — 28 rows on a
+          working database, more later. The cap is on the box; every row stays
+          in the DOM and in the tab order, and the browser scrolls a focused
+          link into view. Narrowing it is what the filters above are for. -->
+          <ReportsList
+            v-if="visiblePins.length"
+            :pins="visiblePins"
+            class="mt-4 max-h-80 overflow-y-auto"
+          />
         </template>
 
         <template v-else>

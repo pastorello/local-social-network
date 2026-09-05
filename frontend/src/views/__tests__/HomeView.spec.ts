@@ -61,11 +61,32 @@ const OVERLAYS = [
   },
 ]
 
+// Two pins, because the reports layer's own text list is the keyboard path to
+// them (ADR-0005, closed 2026-09-05) and a list of one proves less.
+const PINS = [
+  {
+    id: 'r1',
+    title: 'Lampione spento in via Indipendenza',
+    lat: 41.21,
+    lng: 13.56,
+    status: 'open',
+    category_id: 'cat-1',
+  },
+  {
+    id: 'r2',
+    title: 'Panchina rotta al parco',
+    lat: 41.22,
+    lng: 13.57,
+    status: 'resolved',
+    category_id: 'cat-2',
+  },
+]
+
 const mockApi = (overlays: unknown[] = OVERLAYS) => {
   vi.mocked(axios.get).mockImplementation((url: string) => {
     if (url === '/api/map/features/') return Promise.resolve({ data: FEATURES })
     if (url === '/api/map/overlays/') return Promise.resolve({ data: overlays })
-    if (url === '/api/reports/map/') return Promise.resolve({ data: [] })
+    if (url === '/api/reports/map/') return Promise.resolve({ data: PINS })
     return Promise.resolve({ data: [] })
   })
 }
@@ -130,6 +151,33 @@ describe('HomeView (the map, spec map.md M1/M2/M3)', () => {
     const links = wrapper.findAll('a')
     expect(links.some((link) => link.attributes('href') === '/chiese/c1')).toBe(true)
     expect(links.some((link) => link.attributes('href') === '/feste/f1')).toBe(true)
+  })
+
+  // The map's data reaches a keyboard user as links, not as pins. This is the
+  // "equivalent path" ADR-0005 closed its map-widget deferral on, so it is
+  // pinned by a test rather than left to a reviewer's memory.
+  it('lists every report on the map as a link, with its status in words', async () => {
+    const wrapper = await mountHome()
+
+    for (const pin of PINS) {
+      const link = wrapper.find(
+        `ul[aria-label="Segnalazioni sulla mappa"] a[href="/reports/${pin.id}"]`,
+      )
+      expect(link.exists()).toBe(true)
+      expect(link.text()).toContain(pin.title)
+    }
+
+    // 1.4.1: on the map the pin's colour is the only thing that says
+    // "resolved", so the list has to say it in words.
+    expect(wrapper.find('a[href="/reports/r2"]').text()).toContain('Risolta')
+  })
+
+  it('takes reports out of the list when their layer is off, exactly as the map does', async () => {
+    const wrapper = await mountHome()
+
+    await wrapper.find('#layer-segnalazioni').setValue(false)
+
+    expect(wrapper.find('a[href="/reports/r1"]').exists()).toBe(false)
   })
 
   it('draws an overlay only once it is switched on, with its opacity control', async () => {
@@ -201,10 +249,19 @@ describe('HomeView on a phone (spec/design.md D3/D4/D5)', () => {
   it('lists the visible places in the sheet, with covers where a card has one (D5)', async () => {
     const wrapper = await mountHome()
 
-    const links = wrapper.findAll('section[aria-label="Luoghi sulla mappa"] a')
+    // Scoped to the places list rather than to the whole sheet: the sheet also
+    // carries the reports list, which is a different list with its own label.
+    const links = wrapper.findAll('ul[aria-label="Luoghi sulla mappa"] a')
     expect(links.map((link) => link.attributes('href'))).toEqual(['/chiese/c1', '/feste/f1'])
     // c1 has a cover; f1 has none and falls back to a coloured block.
-    expect(wrapper.findAll('section[aria-label="Luoghi sulla mappa"] img')).toHaveLength(1)
+    expect(wrapper.findAll('ul[aria-label="Luoghi sulla mappa"] img')).toHaveLength(1)
+  })
+
+  it("carries the reports list in the sheet too — the phone is the reader's layout", async () => {
+    const wrapper = await mountHome()
+
+    const links = wrapper.findAll('ul[aria-label="Segnalazioni sulla mappa"] a')
+    expect(links.map((link) => link.attributes('href'))).toEqual(['/reports/r1', '/reports/r2'])
   })
 
   it('offers the sheet as a keyboard control, not only as a drag', async () => {

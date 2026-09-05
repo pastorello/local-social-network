@@ -107,17 +107,24 @@ and are unblocked by the same event (they will have stopped):
   on purpose:** the leg after an admin approves a collaboration request —
   accepting an invite needs the token out of an e-mail, so it wants a test hook
   chosen deliberately rather than bolted on.
-- **The three items ADR-0005 deferred**, of which two are now paid:
+- ~~**The three items ADR-0005 deferred**~~ — **all three settled**: two
+  built, the third decided. What is left of this item is the focus-order and
+  skip-link pass the ADR lists separately, and TD-04's one named gap.
   - ~~an accessibility gate in CI~~ — **done 2026-08-31**:
     `frontend/cypress/e2e/a11y.cy.ts` runs axe-core over eleven surfaces at
     ADR-0005's own four WCAG tags, inside the existing e2e job, against the
     production build. It found no violation on any of them at the time it
     landed, which is a floor and not a certificate — see the ADR for what it
     deliberately does not check.
-  - full map-widget operability for screen-reader and keyboard users (C5 added
-    layer toggles and an opacity slider, plus the "Luoghi sulla mappa" list as
-    the keyboard path a pin does not have — the widget itself is still the
-    gap, and the gate excludes `.leaflet-container` to say so honestly).
+  - ~~full map-widget operability for screen-reader and keyboard users~~ —
+    **decided and closed 2026-09-05**, by declaring the text lists the
+    equivalent path and making that true: the reports layer had no list at all,
+    so a report was reachable only by clicking its pin. `ReportsList.vue` is
+    the missing half. The markers themselves stay unfocusable on purpose —
+    clustering means "every marker is in the tab order" is not a state this
+    widget has — and the ADR names what that costs (spatial relationships reach
+    a sighted reader and not a screen-reader one). The gate keeps excluding
+    `.leaflet-container`, now as a statement rather than a deferral.
   - ~~error-to-field ARIA wiring on the **auth and profile forms**~~ —
     **done 2026-08-31**, which closes this item outright: all seven moved onto
     `FormField`, validation is attributed to the field that failed rather than

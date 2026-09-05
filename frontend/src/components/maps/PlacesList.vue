@@ -12,7 +12,7 @@ const typeLabel = (key: string) => CARD_LAYERS.find((layer) => layer.key === key
 </script>
 
 <template>
-  <ul class="divide-y divide-hairline">
+  <ul aria-label="Luoghi sulla mappa" class="divide-y divide-hairline">
     <li v-for="feature in features" :key="feature.id">
       <RouterLink
         :to="layerRoute(feature.type, feature.id)"
