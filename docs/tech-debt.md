@@ -259,7 +259,43 @@ inference from the hashing count, not a profile.
 **Now measured — see Corrections above:** 0.296s per hash, ≈38% of the runtime,
 and the `if not TESTING:` insertion point already exists. Do it with TD-23.
 
-### TD-06 · Dependencies have drifted — **axios done 2026-08-20, the rest still open** ✔
+### TD-06 · Dependencies have drifted — **the majors done 2026-09-05, two held back** ✔
+
+> **2026-09-05 — the majors.** Backend: Django 6.1 → 6.1.1, psycopg 3.3.4 →
+> 3.3.5, sqlparse 0.5.5 → 0.6.0, **django-debug-toolbar 6.3 → 8.0** (two
+> majors) and **ruff 0.15.22 → 0.16.6** (behind TD-33's pinned rule set).
+> The toolbar is the one the suite cannot see — it is installed only when
+> `DEBUG and not TESTING`, so a green pytest run says nothing about it — and it
+> was checked against a running dev server instead: `/admin/login/` 200 with
+> the toolbar injected, `/api/categories/` 200.
+>
+> Frontend: **pinia 3 → 4**, **vitest 4 → 5**, **jsdom 29 → 30**, **oxlint and
+> its eslint plugin 1.57 → 1.81**, eslint-plugin-cypress 6 → 7, npm-run-all2
+> 8 → 9, start-server-and-test 2 → 3, @types/node 24 → 26, @types/jsdom 28 →
+> 30, prettier 3.8 → 3.9 (checked first: it reformats nothing in this tree),
+> plus the minors that had drifted again — tiptap 3.30 → 3.31, vue-router
+> 5.3.1, eslint 10.10, eslint-plugin-vue 10.10.
+>
+> **Held back, each for a reason that is now known rather than assumed:**
+>
+> - **cypress 15 → 16**, for two independent reasons. `cypress-axe@1.7.0`
+>   declares `peer cypress@"^10 || … || ^15"`, so the a11y gate's plugin does
+>   not support 16 and the tree goes to an invalid peer state — which is how it
+>   was found: the *next* `npm install` failed with ERESOLVE. And 16 changes
+>   what `:visible` means for a visually-hidden element: `login.cy.ts` asserts
+>   the small-first home's `h1.sr-only` is `not.be.visible`, and under 16 it is
+>   visible. Arguably 16 is right — an `sr-only` element is deliberately
+>   rendered — so that spec needs a better assertion (it is testing "not
+>   perceivable", not "not in the layout"), and that is a test-semantics
+>   decision, not a bump.
+> - **typescript 6 → 7**, because `vue-tsc` cannot run on it:
+>   `ERR_PACKAGE_PATH_NOT_EXPORTED` out of `vue-tsc/index.js`, TS 7's native
+>   port no longer exporting the internals it reaches for. `npm run build` is
+>   the type-check gate, so this waits on vue-tsc, not on us.
+>
+> ---
+>
+> ### The original entry follows
 
 > **axios 1.15.0 → 1.19.0.** Not routine drift: it is a runtime dependency that
 > ships in the bundle, and it carried a long list of open high-severity
@@ -1014,7 +1050,30 @@ clustering in built output *only*), then vote in a poll, then upvote.
 Items found after the two audit passes, kept in the same register so there is
 one place to look.
 
-### TD-33 · The lint policy is whatever ruff's defaults happen to be
+### TD-33 · The lint policy is whatever ruff's defaults happen to be — **FIXED 2026-09-05** ✔
+
+> `backend/pyproject.toml` now carries `[tool.ruff.lint] select = ["E4", "E7",
+> "E9", "F"]` — ruff 0.15's defaults, written down. **Proved to be a no-op
+> rather than asserted:** `ruff check --show-settings` lists the same 59 rule
+> codes before and after the change, and the same 59 again under 0.16.6, where
+> the register predicted 81 new findings. The bump that used to be a policy
+> change is a dependency change now.
+>
+> Widening the set stays a separate, deliberate edit: adopting import sorting
+> (`I`) or the `RUF` family is a lint sweep with an opinion in it, and the
+> RUF012 question about Django `Meta` classes never comes up until someone
+> selects `RUF` on purpose.
+>
+> **The same lesson arrived from the frontend on the same day.** `oxlint`'s
+> config selects `categories: { correctness: "error" }`, so 1.81 brought 20 new
+> findings with it. Thirteen were `vitest/require-mock-type-parameters`
+> (`vi.fn()` without a type parameter — an opinion, now `off` with the reason
+> in the config), and **seven were the vitest plugin reading the Cypress specs**,
+> where `expect(x).to.equal(y)` is Chai and every one of them was reported as
+> an "unknown modifier". That second group was a real config bug the bump
+> exposed: vitest's rules now apply to `src/**/__tests__/**` and nowhere else,
+> which was verified by re-enabling the disabled rule against the scoped config
+> and watching the 13 findings come back.
 
 `pyproject.toml` sets `line-length = 100` and nothing else, so the rule set is
 ruff's default — which means **a version bump silently redefines what "clean"

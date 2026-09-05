@@ -4,3 +4,16 @@ python_files = ["tests.py", "test_*.py"]
 
 [tool.ruff]
 line-length = 100
+
+[tool.ruff.lint]
+# Ruff's default rule set as of 0.15, written down rather than inherited
+# (TD-33). With `select` implicit, a version bump redefines what "clean" means:
+# 0.16 turns on 81 findings across unchanged code — 42 of them RUF012 on
+# Django/DRF `Meta` classes — none of which is a bug, and all of which would
+# have had to be answered before CI could go green again.
+#
+# So the policy lives here now, and upgrading ruff is a dependency change
+# again. Widening this list is a separate, deliberate edit with its own diff:
+# adopting import sorting (`I`) or the `RUF` set is a lint sweep with an
+# opinion in it, and it does not belong in a bump.
+select = ["E4", "E7", "E9", "F"]
