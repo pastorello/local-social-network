@@ -186,6 +186,10 @@ refresh rotation with a blacklist means a cached snapshot replays a token the
 previous test already spent, and the app correctly logs itself out — tried,
 and it fails as 401s on every write.
 
+**The lint policy is pinned, in both languages, and that is deliberate** (TD-33, 2026-09-05). `backend/pyproject.toml` selects ruff's rules explicitly (`select = ["E4", "E7", "E9", "F"]` — 0.15's defaults, written down) because with `select` implicit a version bump redefines what "clean" means: 0.16 would have arrived with 81 findings on unchanged code. `frontend/.oxlintrc.json` still selects the `correctness` *category* — new correctness rules are closer to bug reports than to opinions, and pinning rule ids there would be unmaintainable — but its `overrides` now scope the **vitest** plugin to `src/**/__tests__/**`, because applied repo-wide it reads the Cypress specs and reports every Chai `expect(x).to.equal(y)` as an "unknown modifier". Widening either set is a separate PR from bumping either tool: a lint sweep has an opinion in it, and a bump should not.
+
+Two upgrades are **held back on purpose**, with the reasons in TD-06 rather than in a lockfile nobody reads: **cypress 16** (`cypress-axe@1.7.0` peers only up to 15, so the a11y gate's plugin would go to an invalid peer state — and 16 counts a `.sr-only` element as visible, which `login.cy.ts` asserts against) and **typescript 7** (`vue-tsc` cannot load it: `ERR_PACKAGE_PATH_NOT_EXPORTED`).
+
 Definition of done for a feature (spec §9): the spec section it implements is referenced, pytest + Vitest green, ruff + eslint clean, `npm run build` green. CI runs all of it on every push and pull request.
 
 ## External agent skills (agent-skills + impeccable)
