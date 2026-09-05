@@ -163,7 +163,7 @@ genuine runtime advisory lands, it will be buried in dev-server noise.
 
 **Fix:** move both to `devDependencies`, then `npm audit fix` (patch-level vite).
 
-### TD-04 · End-to-end coverage is one file — **largely paid 2026-08-30**, gaps named below
+### TD-04 · End-to-end coverage is one file — **paid 2026-08-30 and 2026-09-04**, one gap left
 
 > **What changed.** Four spec files, **17 tests** (was one file, 5). The v2
 > flows now have end-to-end proof that the SPA and the API agree:
@@ -193,12 +193,35 @@ genuine runtime advisory lands, it will be buried in dev-server noise.
 > tune itself past the check. The spec now pins that indistinguishability; that
 > nothing was stored stays a backend test, where the database is in reach.
 >
+> **Update, 2026-09-04 — the v1 flows are covered.** `v1-flows.cy.ts`, three
+> tests, one login for the file (`testIsolation: false`, for the rate-limit
+> reason the a11y spec gives): a report filed from the home and then found in
+> the pins the map redraws itself from; somebody else's report supported and
+> the support taken back, with a reload in the middle to prove the server kept
+> it; and a poll voted in, where the results are absent before the vote and
+> present after, with no second vote on offer (F3.2/F3.3).
+>
+> Two things it needed, both in `seed_e2e`. **A report authored by the admin
+> fixture**, so supporting one is the ordinary act it is meant to be rather
+> than a citizen upvoting himself — which the API does allow, deliberately, and
+> which would have proved less. And **clearing the collaborator's votes and
+> upvotes between runs**: a vote is final by design and an upvote is a toggle,
+> so a second run would otherwise fail on the app behaving correctly. The
+> denormalized `upvotes_count` (TD-19) is recomputed there too — deleting rows
+> does not go through the endpoint that maintains it, and a spec that asserts
+> "1 sostegno" has to mean it on every run, not the first.
+>
+> The report is filed through the **manual-coordinate path**, not a synthetic
+> click on the Leaflet canvas. That is not the test taking the easy road: the
+> coordinate boxes are the keyboard alternative HomeView offers because a
+> clickable pin has none (WCAG 2.1.1), so this covers something a reader
+> actually depends on and does not pretend to cover the widget itself.
+>
 > **Still not covered, deliberately:** the leg *after* an admin approves a
 > collaboration request — accepting the invite and setting a password needs the
 > token out of an e-mail, which means reading the outbox or adding a test-only
-> hook. That is a decision to take on purpose, not a thing to bolt onto this
-> pass. Also still unproven end to end: filing a report on the map, upvoting,
-> and voting in a poll — the v1 flows this register originally named.
+> hook. That is a decision to take on purpose, not a thing to bolt onto a
+> coverage pass.
 
 Original text: `frontend/cypress/e2e/` contains **only `login.cy.ts`**. The three
 flows that *are* the product — filing a report on the map, upvoting, voting in a

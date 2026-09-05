@@ -148,7 +148,12 @@ things to know before editing it: the linters run **check-only** there, because
 `npm run lint` applies `--fix` and would let CI pass by rewriting files; and the
 e2e job **starts a real Django API on :8000** (TD-04, 2026-08-30) seeded by
 `python manage.py seed_e2e` — a DEBUG-only management command, since it creates
-accounts whose password is written down in a spec file. The SPA's API base URL
+accounts whose password is written down in a spec file — and, since
+2026-09-04, **clears what the v1 flows leave behind**: a vote is final by
+design (F3.2) and an upvote is a toggle, so a suite re-run against a database
+nobody re-seeded fails on the app behaving correctly. Re-seed between runs; the
+first assertion to go red is the poll's "results are hidden before you vote".
+The SPA's API base URL
 defaults to `http://127.0.0.1:8000`, which is why the build needs no extra
 environment there; it would if the API ever moved. **Running the e2e suite
 locally needs the same API *and* `CORS_ALLOWED_ORIGINS` pointed at the preview
@@ -173,7 +178,7 @@ floor, not a conformance claim: while the auth forms' labels were unassociated
 the gate passed them anyway, because an input takes an accessible name from its
 `placeholder` — ADR-0005 is what got them fixed, not a red build. **Watch the login
 count when adding specs:** the endpoint is rate limited to 10/min per IP
-(TD-18) and a whole run spends six of those, so a new suite that signs in per test
+(TD-18) and a whole run spends seven of those, so a new suite that signs in per test
 turns the whole run intermittently red with a 429 the SPA reports as a wrong
 password. The a11y spec's collaborator block uses `testIsolation: false` and
 one `before` login for that reason. **`cy.session` is not the answer here**:

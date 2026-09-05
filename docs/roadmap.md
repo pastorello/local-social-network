@@ -99,10 +99,14 @@ and are unblocked by the same event (they will have stopped):
   the map and its layers, a draft staying invisible, the confidential overlay
   staying *absent*, reading a card on desktop and through the mobile sheet,
   and the collaborator's whole loop — log in, write, publish, draft, translate.
-  **Named gaps, on purpose:** the leg after an admin approves a collaboration
-  request (accepting an invite needs the token out of an e-mail — a test hook
-  worth adding deliberately), and the v1 flows this register first pointed at:
-  filing a report, upvoting, voting in a poll.
+  **The v1 flows this register first pointed at — filing a report, upvoting,
+  voting in a poll — landed 2026-09-04** in `v1-flows.cy.ts`, which needed two
+  fixtures and a clean-up rule in `seed_e2e` (a report someone else wrote, an
+  open poll, and the collaborator's votes and upvotes cleared between runs,
+  since a vote is final and an upvote is a toggle). **One named gap is left,
+  on purpose:** the leg after an admin approves a collaboration request —
+  accepting an invite needs the token out of an e-mail, so it wants a test hook
+  chosen deliberately rather than bolted on.
 - **The three items ADR-0005 deferred**, of which two are now paid:
   - ~~an accessibility gate in CI~~ — **done 2026-08-31**:
     `frontend/cypress/e2e/a11y.cy.ts` runs axe-core over eleven surfaces at
