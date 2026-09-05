@@ -24,6 +24,22 @@ class OverlayAdminForm(forms.ModelForm):
         except ImageRejected as exc:
             raise forms.ValidationError(str(exc)) from exc
 
+    def _post_clean(self):
+        # A rejected upload used to produce *two* messages: the real one ("il
+        # file non può superare i 5 MB") and, underneath it, the model's
+        # "una sovrapposizione raster ha bisogno di un’immagine" — because the
+        # rejected file never reached `cleaned_data`, so the model's own check
+        # saw an empty field. The second one is false: an image *was* attached,
+        # and it sends the reader looking for a different problem.
+        super()._post_clean()
+
+        # Any error on the field, not only ours: Django rejects a corrupt file
+        # before `clean_image` ever runs, and the same false message followed.
+        if self._errors.get('image'):
+            kept = [e for e in self._errors['image'] if 'bisogno di un' not in e]
+            if kept:
+                self._errors['image'] = self.error_class(kept)
+
 
 @admin.register(Overlay)
 class OverlayAdmin(admin.ModelAdmin):

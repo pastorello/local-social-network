@@ -12,6 +12,48 @@ MAX_GEOJSON_BYTES = 2 * 1024 * 1024
 GEOJSON_TYPES = ('FeatureCollection', 'Feature', 'Polygon', 'MultiPolygon', 'GeometryCollection')
 
 
+def geojson_positions(node):
+    """Every [lng, lat] pair in a GeoJSON document, whatever wraps it.
+
+    Deliberately structural rather than schema-aware: the point is to reach the
+    numbers, and a document that nests them differently than expected simply
+    yields nothing rather than raising.
+    """
+    if isinstance(node, dict):
+        for key in ('features', 'geometries', 'geometry', 'coordinates'):
+            if key in node:
+                yield from geojson_positions(node[key])
+    elif isinstance(node, (list, tuple)):
+        if (
+            len(node) >= 2
+            and isinstance(node[0], (int, float))
+            and isinstance(node[1], (int, float))
+            and not isinstance(node[0], bool)
+        ):
+            yield node[0], node[1]
+        else:
+            for item in node:
+                yield from geojson_positions(item)
+
+
+def implausible_position(geojson):
+    """The first coordinate that cannot be this town, or None.
+
+    GeoJSON is **[longitude, latitude]**. A file written the other way round is
+    structurally valid, so nothing here used to object: it saved, and the layer
+    was simply invisible — Gaeta's own boundaries, swapped, land off the coast
+    of Somalia. That is a bad way to find out, and the error message below is
+    most of the value of this check.
+    """
+    lat0, lng0 = settings.MAP_CENTER_LAT, settings.MAP_CENTER_LNG
+    span = settings.MAP_PLAUSIBLE_DEGREES
+
+    for lng, lat in geojson_positions(geojson):
+        if abs(lat - lat0) > span or abs(lng - lng0) > span:
+            return lng, lat
+    return None
+
+
 class OverlayQuerySet(models.QuerySet):
     def visible_to(self, user):
         """The whole enforcement of spec politics.md, in one place.
@@ -92,6 +134,11 @@ class Overlay(models.Model):
 
     class Meta:
         ordering = ('position', 'name')
+        # The admin is a surface the author reads (N4). Without these Django
+        # builds its own messages from the class name — "Il overlay ... è stato
+        # aggiunto", which is not Italian.
+        verbose_name = 'sovrapposizione'
+        verbose_name_plural = 'sovrapposizioni'
 
     def __str__(self):
         return self.name
@@ -119,7 +166,20 @@ class Overlay(models.Model):
             if not isinstance(self.geojson, dict) or self.geojson.get('type') not in GEOJSON_TYPES:
                 errors['geojson'] = 'Serve un documento GeoJSON valido (FeatureCollection, Feature, Polygon…).'
             elif len(str(self.geojson)) > MAX_GEOJSON_BYTES:
-                errors['geojson'] = 'Il GeoJSON è troppo grande.'
+                errors['geojson'] = (
+                    f'Il GeoJSON è troppo grande (massimo '
+                    f'{MAX_GEOJSON_BYTES // (1024 * 1024)} MB). Semplifica la geometria '
+                    f'— in QGIS, «Semplifica» — o riduci i decimali delle coordinate: '
+                    f'sei ne bastano, sono circa 10 cm.'
+                )
+            elif (outlier := implausible_position(self.geojson)) is not None:
+                lng, lat = outlier
+                errors['geojson'] = (
+                    f'Le coordinate non sono da queste parti: il primo punto fuori '
+                    f'zona è longitudine {lng}, latitudine {lat}. Il GeoJSON vuole '
+                    f'l’ordine [longitudine, latitudine] — se il file le ha invertite, '
+                    f'è questo il problema.'
+                )
         elif self.kind == self.RASTER:
             if not self.image:
                 errors['image'] = 'Una sovrapposizione raster ha bisogno di un’immagine.'
