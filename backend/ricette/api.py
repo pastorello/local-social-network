@@ -48,7 +48,7 @@ def ricetta_list(request):
                 card=card, ingredients=data['ingredients'],
                 servings=data['servings'], procedure=data['procedure'],
             )
-            save_images(card, request.FILES.getlist('images'))
+            save_images(card, request.FILES.getlist('images'), request.data.get('image_order'))
             replace_points(card, pins)
 
         ricetta = _base_queryset().get(pk=ricetta.pk)
@@ -113,7 +113,7 @@ def ricetta_detail(request, pk):
         ricetta.save()
 
         remove_images(card, request.data.get('remove_image_ids'))
-        save_images(card, request.FILES.getlist('images'))
+        save_images(card, request.FILES.getlist('images'), request.data.get('image_order'))
         replace_points(card, pins)
 
     ricetta = _base_queryset().get(pk=ricetta.pk)

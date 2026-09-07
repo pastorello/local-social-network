@@ -82,16 +82,69 @@ def start_translation(request, card, type_model, language, extra_defaults=None):
     return new_card
 
 
-def save_images(card, files):
-    if not files:
-        return
-    next_position = card.images.count()
-    for offset, upload in enumerate(files):
-        try:
-            cleaned = validate_image(upload)
-        except ImageRejected as exc:
-            raise ValidationError({'images': [str(exc)]}) from exc
-        CardImage.objects.create(card=card, image=cleaned, position=next_position + offset)
+def save_images(card, files, raw_order=None):
+    """Store the uploads, then put every image of this card in the order the
+    author arranged (`image_order`).
+
+    Order is editorial, not incidental: D5 makes the **first** image the card's
+    cover, so "which one is first" is a decision the author takes while writing
+    — and until 2026-09-07 the only way to change it was to remove every image
+    and pick them again in the right sequence.
+
+    `image_order` is a list of tokens: an existing image's id, or `new:<n>` for
+    the n-th file in this request's `images`. Mixing the two is the point —
+    a photograph being uploaded now can be made the cover in the same save,
+    without a round trip.
+    """
+    created = []
+    if files:
+        next_position = card.images.count()
+        for offset, upload in enumerate(files):
+            try:
+                cleaned = validate_image(upload)
+            except ImageRejected as exc:
+                raise ValidationError({'images': [str(exc)]}) from exc
+            created.append(
+                CardImage.objects.create(
+                    card=card, image=cleaned, position=next_position + offset
+                )
+            )
+
+    if raw_order is not None:
+        _apply_image_order(card, raw_order, created)
+
+    return created
+
+
+def _apply_image_order(card, raw_order, created):
+    try:
+        order = json.loads(raw_order)
+    except (TypeError, ValueError):
+        raise ValidationError({'image_order': ['Valore non valido.']}) from None
+    if not isinstance(order, list):
+        raise ValidationError({'image_order': ['Valore non valido.']})
+
+    images = list(card.images.all())
+    by_token = {str(image.id): image for image in images}
+    for index, image in enumerate(created):
+        by_token[f'new:{index}'] = image
+
+    ordered, taken = [], set()
+    for token in order:
+        image = by_token.get(str(token))
+        if image is not None and image.id not in taken:
+            ordered.append(image)
+            taken.add(image.id)
+
+    # An image the client did not mention is not an error — it keeps its
+    # previous relative order, after the ones that were arranged. A form that
+    # sends a partial order is arranging what it knows about, not deleting.
+    ordered += [image for image in images if image.id not in taken]
+
+    for position, image in enumerate(ordered):
+        if image.position != position:
+            image.position = position
+            image.save(update_fields=('position',))
 
 
 def remove_images(card, raw_ids):
