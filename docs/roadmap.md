@@ -174,7 +174,10 @@ that. Two of these are the spec's own open questions, and C5 turned them from
 build questions into input ones:
 
 - The **quartieri and seggi boundaries** (GeoJSON) — the overlay mechanism
-  exists and is gated; it has no data.
+  exists and is gated; it has no data. **The path itself was rehearsed on
+  2026-09-05** with files shaped like the real ones, and what it taught is
+  written down in [overlays-howto.md](./overlays-howto.md) — read that before
+  the first upload rather than after it.
 - The **georeferenced historical scans** (1820, 1600…) and their bounding
   boxes. Note `common/images.py` caps uploads at 5 MB and 40 Mpx, raster
   overlays included — a large scan wants downsampling before georeferencing.

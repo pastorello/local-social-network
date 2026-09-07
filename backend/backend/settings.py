@@ -219,6 +219,20 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
+# Where the city is. Used only to sanity-check overlay geometry (maps/models.py):
+# GeoJSON is [longitude, latitude], and a file written the other way round is
+# structurally valid, saves without complaint and lands in the Indian Ocean —
+# an invisible layer with no error to explain it.
+#
+# **This is the second place that knows where Gaeta is**; the other is the map
+# centre in the SPA (`composables/useLeafletMap.ts` and `GaetaMap.vue`). The
+# multi-city phase moves both, and they must move together.
+MAP_CENTER_LAT = float(os.environ.get('MAP_CENTER_LAT', 41.2172608))
+MAP_CENTER_LNG = float(os.environ.get('MAP_CENTER_LNG', 13.5625165))
+# Generous on purpose: it is here to catch a swapped file or the wrong town,
+# not to police where a boundary may reach.
+MAP_PLAUSIBLE_DEGREES = float(os.environ.get('MAP_PLAUSIBLE_DEGREES', 1.0))
+
 LANGUAGE_CODE = 'it-it'
 
 TIME_ZONE = 'UTC'

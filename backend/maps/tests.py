@@ -299,3 +299,118 @@ def test_admin_form_rejects_a_non_image_upload():
 
     assert not form.is_valid()
     assert 'image' in form.errors
+
+
+# --- The author's own path: the boundaries and the scans (roadmap item 4) ---
+#
+# These were written after walking that path through Django admin with files
+# shaped like the real ones, which is where each of them came from.
+
+GAETA_QUARTIERE = {
+    'type': 'FeatureCollection',
+    'features': [{
+        'type': 'Feature',
+        'properties': {'name': 'Sant’Erasmo'},
+        'geometry': {'type': 'Polygon', 'coordinates': [[
+            [13.5720, 41.2100], [13.5760, 41.2100], [13.5760, 41.2140], [13.5720, 41.2100],
+        ]]},
+    }],
+}
+
+
+def noisy_jpeg_over(size):
+    """A JPEG that will not compress below `size` — a stand-in for a scan."""
+    import random
+
+    random.seed(1)
+    for side in (2600, 3200, 4000, 5000):
+        image = Image.new('RGB', (side, side))
+        image.putdata([
+            (random.randrange(256), random.randrange(256), random.randrange(256))
+            for _ in range(side * side // 400)
+        ] * 400)
+        buffer = BytesIO()
+        image.save(buffer, format='JPEG', quality=100, subsampling=0)
+        if buffer.tell() > size:
+            return buffer.getvalue()
+    raise AssertionError('could not build a JPEG over the cap')
+
+
+def swap(geojson):
+    """The same file with latitude first — the mistake this is all about."""
+    ring = geojson['features'][0]['geometry']['coordinates'][0]
+    swapped = json.loads(json.dumps(geojson))
+    swapped['features'][0]['geometry']['coordinates'] = [[[p[1], p[0]] for p in ring]]
+    return swapped
+
+
+def test_a_boundary_file_for_gaeta_is_accepted():
+    Overlay(name='Quartieri', kind=Overlay.VECTOR, geojson=GAETA_QUARTIERE).full_clean()
+
+
+def test_a_swapped_boundary_file_is_refused_and_says_why():
+    with pytest.raises(ValidationError) as excinfo:
+        Overlay(
+            name='Quartieri', kind=Overlay.VECTOR, geojson=swap(GAETA_QUARTIERE)
+        ).full_clean()
+
+    message = ' '.join(excinfo.value.message_dict['geojson'])
+    # The message has to name the order, because the file is not "invalid" in
+    # any way the author can see — it saved happily until this check existed,
+    # and the only symptom was a layer that drew nothing.
+    assert '[longitudine, latitudine]' in message
+
+
+def test_a_multipolygon_is_read_too():
+    """A real municipal export splits an area cut by a road or a bay."""
+    geojson = json.loads(json.dumps(GAETA_QUARTIERE))
+    ring = geojson['features'][0]['geometry']['coordinates']
+    geojson['features'][0]['geometry'] = {'type': 'MultiPolygon', 'coordinates': [ring, ring]}
+    Overlay(name='Serapo', kind=Overlay.VECTOR, geojson=geojson).full_clean()
+
+    geojson['features'][0]['geometry']['coordinates'] = [
+        [[[p[1], p[0]] for p in ring[0]]], ring,
+    ]
+    with pytest.raises(ValidationError):
+        Overlay(name='Serapo', kind=Overlay.VECTOR, geojson=geojson).full_clean()
+
+
+def test_the_too_big_message_says_the_limit_and_what_to_do():
+    huge = {'type': 'Polygon', 'coordinates': [[[13.561234, 41.211234]] * 90_000]}
+
+    with pytest.raises(ValidationError) as excinfo:
+        Overlay(name='Quartieri', kind=Overlay.VECTOR, geojson=huge).full_clean()
+
+    message = ' '.join(excinfo.value.message_dict['geojson'])
+    assert '2 MB' in message and 'Semplifica' in message
+
+
+def test_an_oversized_scan_is_refused_once_not_twice():
+    """The second message used to be false, and pointed somewhere else.
+
+    A rejected upload never reaches `cleaned_data`, so the model's own check
+    saw an empty image field and added "una sovrapposizione raster ha bisogno
+    di un’immagine" underneath the real reason — telling the author to attach
+    the file he had just attached.
+    """
+    from maps.admin import OverlayAdminForm
+
+    # A *real* JPEG over the cap, not random bytes: with those, Django's own
+    # "not a valid image" fires first and the case under test never happens —
+    # which is how the first version of this test passed for the wrong reason.
+    oversized = SimpleUploadedFile(
+        'scan-1820.jpg', noisy_jpeg_over(5 * 1024 * 1024), content_type='image/jpeg'
+    )
+    form = OverlayAdminForm(
+        data={
+            'name': 'Gaeta 1820', 'kind': Overlay.RASTER, 'visibility': Overlay.PUBLIC,
+            'position': 0, 'opacity': 0.6, 'color': '#7c3aed',
+            'south': 41.20, 'west': 13.55, 'north': 41.23, 'east': 13.58,
+        },
+        files={'image': oversized},
+    )
+
+    assert not form.is_valid()
+    assert len(form.errors['image']) == 1
+    assert '5 MB' in form.errors['image'][0]
+
