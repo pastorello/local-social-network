@@ -326,3 +326,29 @@ def test_translations_list_hides_draft_translations_from_the_public(auth_client,
     response = APIClient().get(f'/api/ricette/{ricetta.pk}/')
 
     assert response.json()['translations'] == []
+
+
+def test_a_textarea_s_line_endings_are_stored_as_the_author_typed_them(auth_client, citizen):
+    """TD-36: the browser normalises a textarea to CRLF; the archive should not.
+
+    Found by writing a real recipe rather than by reading the code — nothing
+    looks wrong, because `white-space: pre-line` renders either form as one
+    break.
+    """
+    response = auth_client.post(
+        '/api/ricette/',
+        {
+            'title': 'Tiella di Gaeta', 'body_html': '<p>Testo.</p>',
+            'ingredients': '500 g di farina\r\n1 kg di scarola\r\n100 g di olive',
+            'procedure': 'Impastare.\r\nStendere.\r\nCuocere.',
+        },
+        format='multipart',
+    )
+
+    assert response.status_code == 201
+    ricetta = Ricetta.objects.get(card__title='Tiella di Gaeta')
+    assert '\r' not in ricetta.ingredients
+    assert '\r' not in ricetta.procedure
+    # The breaks themselves survive: this is a normalisation, not a strip.
+    assert ricetta.ingredients.count('\n') == 2
+

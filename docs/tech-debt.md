@@ -1149,7 +1149,7 @@ should go in with step 2.
 > ignored too. It was left alone at the time on purpose: a formatting sweep
 > goes in its own commit, never mixed into a feature diff (CLAUDE.md), and
 > every PR since would have carried it. This is that commit.
-### TD-36 · Plain-text card fields are stored with CRLF line endings
+### TD-36 · Plain-text card fields are stored with CRLF line endings — **FIXED 2026-09-08** ✔
 
 > Found by writing a real recipe (2026-09-08). A `<textarea>`'s submitted value
 > is normalised to `\r\n` by the browser, per the HTML spec, so `ingredients`,
@@ -1159,10 +1159,12 @@ should go in with step 2.
 > nothing today and it is the sort of thing that turns up later as a diff that
 > will not settle, or a line count that is off by the number of lines.
 >
-> The fix is one normalisation on the way in, at the same chokepoint the fields
-> already pass through, plus a test. The reason to do it at all is that stored
-> text is the one thing in this app that outlives every rewrite of the code
-> around it.
+> Fixed the same day: `content/fields.py::PlainTextField` normalises on the way
+> in, and the four type serializers use it for their plain-text fields —
+> `ingredients`, `procedure`, `programme`, `meaning` and the rest. Not for
+> `body_html`, which is HTML and goes through the sanitizer, nor for `title`.
+> The reason to do it at all is that stored text is the one thing in this app
+> that outlives every rewrite of the code around it.
 ### TD-37 · The e2e job spends eight of its nine minutes on setup
 
 > Observed 2026-09-04, not measured further. The Cypress run itself takes ~40

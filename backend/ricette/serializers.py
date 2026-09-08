@@ -3,6 +3,7 @@ from rest_framework import serializers
 from account.serializers import UserSerializer
 from content.models import MapFeature
 from content.serializers import CardImageSerializer, TranslationSerializer, visible_translations
+from content.fields import PlainTextField
 from content.sanitize import sanitize_html
 
 from .models import Ricetta
@@ -50,9 +51,9 @@ class RicettaReadSerializer(serializers.ModelSerializer):
 class RicettaWriteSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=200)
     body_html = serializers.CharField(allow_blank=True)
-    ingredients = serializers.CharField(required=False, allow_blank=True, default='')
-    servings = serializers.CharField(max_length=50, required=False, allow_blank=True, default='')
-    procedure = serializers.CharField(required=False, allow_blank=True, default='')
+    ingredients = PlainTextField(required=False, allow_blank=True, default='')
+    servings = PlainTextField(max_length=50, required=False, allow_blank=True, default='')
+    procedure = PlainTextField(required=False, allow_blank=True, default='')
     is_published = serializers.BooleanField(required=False, default=False)
 
     def validate_body_html(self, value):

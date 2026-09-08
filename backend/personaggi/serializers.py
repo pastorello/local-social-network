@@ -3,6 +3,7 @@ from rest_framework import serializers
 from account.serializers import UserSerializer
 from content.models import MapFeature
 from content.serializers import CardImageSerializer, TranslationSerializer, visible_translations
+from content.fields import PlainTextField
 from content.sanitize import sanitize_html
 
 from .models import Personaggio
@@ -49,7 +50,7 @@ class PersonaggioReadSerializer(serializers.ModelSerializer):
 class PersonaggioWriteSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=200)
     body_html = serializers.CharField(allow_blank=True)
-    life_dates = serializers.CharField(max_length=200, required=False, allow_blank=True, default='')
+    life_dates = PlainTextField(max_length=200, required=False, allow_blank=True, default='')
     is_published = serializers.BooleanField(required=False, default=False)
 
     def validate_body_html(self, value):
