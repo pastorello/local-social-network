@@ -77,9 +77,7 @@ onMounted(getFeste)
             <input id="mine-feste" v-model="mineOnly" type="checkbox" class="h-4 w-4" />
             Le mie
           </label>
-          <RouterLink :to="{ name: 'festecreate' }">
-            <ActionButton size="small">Nuova festa</ActionButton>
-          </RouterLink>
+          <ActionButton size="small" :to="{ name: 'festecreate' }">Nuova festa</ActionButton>
         </div>
       </header>
 

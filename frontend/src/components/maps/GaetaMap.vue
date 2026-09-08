@@ -30,6 +30,7 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import type { MapCardFeature, Overlay } from '@/definitions/interfaces/MapData'
 import type { ReportPin } from '@/definitions/interfaces/Report'
 import { layerColor } from '@/lib/mapLayers'
+import { keepMarkersOutOfTabOrder } from '@/lib/leafletKeyboard'
 import { readToken } from '@/lib/tokens'
 import { statusColor } from '@/lib/reportStatus'
 
@@ -206,6 +207,14 @@ const applyOverlayOpacity = () => {
 
 const onReady = (leafletMap: LeafletMap) => {
   map = leafletMap
+
+  keepMarkersOutOfTabOrder()
+  // The container stays focusable — that is what arrow-key panning needs — but
+  // an unnamed focusable box announces its own text content, which here is the
+  // cluster counts and the zoom buttons: "2 3 4 5 6 + −". A name instead.
+  leafletMap
+    .getContainer()
+    .setAttribute('aria-label', 'Mappa di Gaeta. Usa le frecce per spostarti, + e − per lo zoom.')
 
   leafletMap.createPane(RASTER_PANE).style.zIndex = '350'
   leafletMap.createPane(VECTOR_PANE).style.zIndex = '380'

@@ -65,6 +65,45 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
     check('/ (mobile)')
   })
 
+  // WCAG 2.4.1. Seven chrome stops precede the page on every route, and on the
+  // home the map's own container follows them; this is the way past all of it.
+  // A skip link nobody can reach or see is the usual way this is got wrong, so
+  // the test is about reaching it, seeing it, and where it lands.
+  it('the skip link is first, visible when focused, and lands on the content', () => {
+    cy.viewport(1280, 800)
+    cy.visit('/')
+
+    // Cypress cannot press Tab without a plugin, so this asserts the two
+    // things a Tab would have shown instead of pretending to press it: the
+    // tab order *is* DOM order here — nothing in this app raises tabindex
+    // above zero — and the skip link is the first focusable thing in it.
+    cy.get('[tabindex]').each(($el) => {
+      expect(Number($el.attr('tabindex'))).to.be.at.most(0)
+    })
+    cy.get('a[href], button, input, select, textarea, [tabindex="0"]')
+      .first()
+      .should('have.attr', 'href', '#contenuto')
+
+    // Invisible until focused, and useless if it stays invisible after.
+    cy.contains('a', 'Salta al contenuto').focus()
+    cy.focused().should('be.visible')
+    cy.focused().click()
+
+    cy.focused().should('have.id', 'contenuto').and('match', 'main')
+  })
+
+  // The decision of 2026-09-05 — the text lists are the conforming path and
+  // the map's pins are not in the tab order — measured rather than asserted in
+  // prose. It was not true when it was written: cluster icons are markers, and
+  // Leaflet makes every marker focusable by default.
+  it('the map puts its pins out of the tab order, and names itself', () => {
+    cy.viewport(1280, 800)
+    cy.visit('/')
+
+    cy.get('.leaflet-container').should('have.attr', 'aria-label').and('contain', 'Mappa di Gaeta')
+    cy.get('.leaflet-marker-icon[tabindex="0"]').should('not.exist')
+  })
+
   it('a card list', () => {
     cy.viewport(1280, 800)
     cy.visit('/chiese')

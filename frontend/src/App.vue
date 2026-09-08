@@ -16,10 +16,25 @@ const showFooter = computed(() => route.name !== undefined && !route.meta.fullBl
 </script>
 
 <template>
+  <!-- WCAG 2.4.1. The header is seven tab stops — wordmark, four nav items,
+  avatar, logout — and they come before the page on every route; on the map
+  home the map's own container follows them. This is the way past all of it,
+  and it is the first focusable thing in the document because that is the only
+  position from which it helps. Visible only when focused: it is for the
+  reader who is tabbing, and it would otherwise sit over the header. -->
+  <a
+    href="#contenuto"
+    class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-2000 focus:rounded-lg focus:bg-sea focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
+  >
+    Salta al contenuto
+  </a>
+
   <AppHeader />
 
   <main
-    class="h-screen overflow-auto bg-page px-4 py-4 pt-[calc(var(--header-h,10rem)+1rem)] lg:px-8 lg:py-6 lg:pt-[calc(var(--header-h,10rem)+1.5rem)]"
+    id="contenuto"
+    tabindex="-1"
+    class="h-screen overflow-auto bg-page px-4 py-4 pt-[calc(var(--header-h,10rem)+1rem)] focus:outline-none lg:px-8 lg:py-6 lg:pt-[calc(var(--header-h,10rem)+1.5rem)]"
   >
     <RouterView />
 
