@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from account.serializers import UserSerializer
 from content.serializers import CardImageSerializer, TranslationSerializer, visible_translations
+from content.fields import PlainTextField
 from content.sanitize import sanitize_html
 
 from .models import Termine
@@ -43,9 +44,9 @@ class TermineWriteSerializer(serializers.Serializer):
 
     title = serializers.CharField(max_length=200)
     body_html = serializers.CharField(allow_blank=True)
-    term = serializers.CharField(max_length=200)
-    meaning = serializers.CharField()
-    example_usage = serializers.CharField(required=False, allow_blank=True, default='')
+    term = PlainTextField(max_length=200)
+    meaning = PlainTextField()
+    example_usage = PlainTextField(required=False, allow_blank=True, default='')
     is_published = serializers.BooleanField(required=False, default=False)
 
     def validate_body_html(self, value):

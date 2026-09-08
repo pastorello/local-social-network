@@ -104,9 +104,18 @@ and are unblocked by the same event (they will have stopped):
   fixtures and a clean-up rule in `seed_e2e` (a report someone else wrote, an
   open poll, and the collaborator's votes and upvotes cleared between runs,
   since a vote is final and an upvote is a toggle). **One named gap is left,
-  on purpose:** the leg after an admin approves a collaboration request —
-  accepting an invite needs the token out of an e-mail, so it wants a test hook
-  chosen deliberately rather than bolted on.
+  on purpose:** the leg after an admin approves a collaboration request. Two
+  different things lived under that one sentence and were conflated until
+  2026-09-08:
+  - **Automating it** needs a decision — the invite token arrives by e-mail, so
+    either a spec reads an outbox or a test-only endpoint has to exist. That is
+    the half waiting on the author.
+  - **Walking it once, by hand, needs nothing from anybody** — and nobody has:
+    approve a request in the admin, read the mail the console backend prints,
+    follow the link, choose a password, sign in. It is the path by which every
+    collaborator after the author gets an account, so if it is broken the
+    author finds out the first time he tries to add somebody. Worth doing
+    before that day, the way the overlay admin and the five card types were.
 - ~~**The three items ADR-0005 deferred**~~ — **all three settled**: two
   built, the third decided. **The focus-order and skip-link pass the ADR lists
   separately is done too (2026-09-08)**, which empties that list entirely: a
@@ -166,6 +175,13 @@ thing between a finished build and a public URL:
   migration (TD-34) landed, so the configuration is in its final shape. What
   remains is genuinely an input rather than code — a provider and a sender
   domain (spec §11.3).
+- **The compose path wants re-walking.** `docs/deploy.md` part 1 was written by
+  running it on 2026-08-30, and the three things that landed after are exactly
+  deploy-shaped: the database cache for the rate limits, the `MAILERS`
+  migration, and the app serving its own media ([ADR-0007](./adr/0007-serving-media-from-the-app.md)).
+  None of that depends on which host is chosen, so it can be checked now rather
+  than on the day — and a guide that was true last week is the kind that fails
+  quietly. Needs nothing from the author.
 - `VITE_API_BASE_URL` is baked at build time, so the SPA build is
   environment-specific.
 - ~~**TD-06** (remaining dependency drift)~~ — **minors done 2026-08-30**,
