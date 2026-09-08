@@ -5,6 +5,7 @@ import L from 'leaflet'
 import type { LayerGroup, LeafletMouseEvent, Map as LeafletMap, Polyline } from 'leaflet'
 
 import { useLeafletMap } from '@/composables/useLeafletMap'
+import { moveItem } from '@/lib/reorder'
 import { readToken } from '@/lib/tokens'
 import type { RoutePoint } from '@/definitions/interfaces/Feste'
 
@@ -69,6 +70,15 @@ const removeStop = (index: number) => {
     'update:modelValue',
     props.modelValue.filter((_, i) => i !== index),
   )
+}
+
+// The stops are the procession's order, not a set: consecutive points are what
+// the polyline joins, so a stop entered out of sequence draws the route going
+// the wrong way. Until 2026-09-08 the only remedy was removing every stop after
+// it and adding them again — the same defect the images row had, on the one
+// list where the order *is* the data rather than an editorial choice.
+const moveStop = (index: number, delta: number) => {
+  emit('update:modelValue', moveItem(props.modelValue, index, delta))
 }
 
 const clearRoute = () => {
@@ -136,6 +146,24 @@ const addManualStop = () => {
               :value="point.label"
               @input="updateLabel(index, ($event.target as HTMLInputElement).value)"
             />
+            <button
+              type="button"
+              class="cursor-pointer px-1 text-sea disabled:cursor-default disabled:text-muted"
+              :disabled="index === 0"
+              :aria-label="`Sposta la tappa ${index + 1} prima della ${index}`"
+              @click="moveStop(index, -1)"
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              class="cursor-pointer px-1 text-sea disabled:cursor-default disabled:text-muted"
+              :disabled="index === modelValue.length - 1"
+              :aria-label="`Sposta la tappa ${index + 1} dopo la ${index + 2}`"
+              @click="moveStop(index, 1)"
+            >
+              ↓
+            </button>
             <button
               type="button"
               class="text-red-500 cursor-pointer"

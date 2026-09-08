@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import FormField from '@/components/forms/FormField.vue'
 import type { CardImageEntry } from '@/lib/cardImages'
+import { moveItem } from '@/lib/reorder'
 
 // The card's images, as one ordered strip. Shared by `TypeForm` and
 // `FesteForm` rather than copied into both: this block is about to be the
@@ -34,12 +35,7 @@ const remove = (index: number) => {
 }
 
 const move = (index: number, delta: number) => {
-  const target = index + delta
-  if (target < 0 || target >= entries.value.length) return
-  const next = [...entries.value]
-  const [entry] = next.splice(index, 1)
-  if (entry) next.splice(target, 0, entry)
-  entries.value = next
+  entries.value = moveItem(entries.value, index, delta)
 }
 
 const source = (entry: CardImageEntry) => (entry.kind === 'new' ? entry.preview : entry.url)
