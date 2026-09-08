@@ -108,8 +108,14 @@ and are unblocked by the same event (they will have stopped):
   accepting an invite needs the token out of an e-mail, so it wants a test hook
   chosen deliberately rather than bolted on.
 - ~~**The three items ADR-0005 deferred**~~ — **all three settled**: two
-  built, the third decided. What is left of this item is the focus-order and
-  skip-link pass the ADR lists separately, and TD-04's one named gap.
+  built, the third decided. **The focus-order and skip-link pass the ADR lists
+  separately is done too (2026-09-08)**, which empties that list entirely: a
+  skip link past the seven chrome stops that precede every page, the map's pins
+  actually out of the tab order (the 2026-09-05 decision said they were;
+  Leaflet's defaults said otherwise), one element instead of a `<button>`
+  inside an `<a>` on both list views, and focus returning from the mobile layer
+  panel to the button that opened it. What is left of this item is TD-04's one
+  named gap.
   - ~~an accessibility gate in CI~~ — **done 2026-08-31**:
     `frontend/cypress/e2e/a11y.cy.ts` runs axe-core over eleven surfaces at
     ADR-0005's own four WCAG tags, inside the existing e2e job, against the

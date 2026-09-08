@@ -1,10 +1,13 @@
 import { onBeforeUnmount, ref } from 'vue'
+
 // Default import on purpose, same reasoning as ReportsMap.vue: a namespace
 // import can be snapshotted by the bundler before a plugin mutates leaflet's
 // exports at runtime, losing the mutation in production builds (TD-02).
 import L from 'leaflet'
 import type { Map as LeafletMap } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+
+import { keepMarkersOutOfTabOrder } from '@/lib/leafletKeyboard'
 
 // vue-leaflet must build the map from THIS leaflet instance — see
 // ReportsMap.vue's comment on `use-global-leaflet`.
@@ -22,6 +25,7 @@ export function useLeafletMap() {
   let resizeObserver: ResizeObserver | null = null
 
   const onReady = (leafletMap: LeafletMap) => {
+    keepMarkersOutOfTabOrder()
     map = leafletMap
 
     // Same reasoning as ReportsMap.vue: the grid layout may not have settled

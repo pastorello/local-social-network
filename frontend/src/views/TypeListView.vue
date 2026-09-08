@@ -85,9 +85,9 @@ onMounted(getItems)
             <input :id="`mine-${config.key}`" v-model="mineOnly" type="checkbox" class="h-4 w-4" />
             Le mie
           </label>
-          <RouterLink :to="{ name: config.routeNames.create }">
-            <ActionButton size="small">Nuova scheda</ActionButton>
-          </RouterLink>
+          <ActionButton size="small" :to="{ name: config.routeNames.create }">
+            Nuova scheda
+          </ActionButton>
         </div>
       </header>
 
