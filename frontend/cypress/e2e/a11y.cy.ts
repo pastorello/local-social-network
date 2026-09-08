@@ -160,6 +160,20 @@ describe("the collaborator's surfaces meet WCAG 2.1 AA", { testIsolation: false 
     check('/chiese/nuova')
   })
 
+  // The images strip only exists once there are images, so the gate never saw
+  // it until this case attached one: new controls that no run measures are
+  // exactly what a gate is supposed to stop happening (2026-09-07).
+  it('the authoring form with images attached, where the cover is chosen', () => {
+    cy.visit('/chiese/nuova')
+    cy.get('#type-form-images').selectFile([
+      'cypress/fixtures/foto.jpg',
+      'cypress/fixtures/foto.jpg',
+    ])
+    cy.contains('li', 'Copertina').should('exist')
+
+    check('/chiese/nuova (con immagini)')
+  })
+
   it('the user directory and a profile, both login-only', () => {
     cy.visit('/users')
     cy.contains('h1', 'Utenti del network')

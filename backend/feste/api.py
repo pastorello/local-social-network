@@ -79,7 +79,7 @@ def feste_list(request):
             feste = Feste.objects.create(
                 card=card, recurrence=data['recurrence'], programme=data['programme'],
             )
-            save_images(card, request.FILES.getlist('images'))
+            save_images(card, request.FILES.getlist('images'), request.data.get('image_order'))
             _replace_route(card, route)
 
         feste = _base_queryset().get(pk=feste.pk)
@@ -142,7 +142,7 @@ def feste_detail(request, pk):
         feste.save()
 
         remove_images(card, request.data.get('remove_image_ids'))
-        save_images(card, request.FILES.getlist('images'))
+        save_images(card, request.FILES.getlist('images'), request.data.get('image_order'))
         _replace_route(card, route)
 
     feste = _base_queryset().get(pk=feste.pk)

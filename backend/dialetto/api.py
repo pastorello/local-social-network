@@ -42,7 +42,7 @@ def termine_list(request):
                 card=card, term=data['term'], meaning=data['meaning'],
                 example_usage=data['example_usage'],
             )
-            save_images(card, request.FILES.getlist('images'))
+            save_images(card, request.FILES.getlist('images'), request.data.get('image_order'))
 
         termine = _base_queryset().get(pk=termine.pk)
         return Response(TermineReadSerializer(termine, context={'request': request}).data, status=201)
@@ -105,7 +105,7 @@ def termine_detail(request, pk):
         termine.save()
 
         remove_images(card, request.data.get('remove_image_ids'))
-        save_images(card, request.FILES.getlist('images'))
+        save_images(card, request.FILES.getlist('images'), request.data.get('image_order'))
 
     termine = _base_queryset().get(pk=termine.pk)
     return Response(TermineReadSerializer(termine, context={'request': request}).data)

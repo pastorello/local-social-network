@@ -4,13 +4,15 @@ import { reactive, ref } from 'vue'
 
 import { useToastStore } from '@/stores/toast'
 import type { TypeConfig } from '@/definitions/typeConfigs'
-import type { CardImage, ContentItem, MapPoint } from '@/definitions/interfaces/Content'
+import type { ContentItem, MapPoint } from '@/definitions/interfaces/Content'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import FormInput from '@/components/forms/FormInput.vue'
 import RichTextEditor from '@/components/content/RichTextEditor.vue'
 import MapPinsEditor from '@/components/content/MapPinsEditor.vue'
+import CardImagesField from '@/components/forms/CardImagesField.vue'
 import FormField from '@/components/forms/FormField.vue'
 import { extractFieldErrors, extractFormErrors } from '@/lib/apiErrors'
+import { appendImages, toEntries, type CardImageEntry } from '@/lib/cardImages'
 
 const props = defineProps<{
   config: TypeConfig
@@ -29,10 +31,8 @@ const title = ref((props.item?.title as string) ?? '')
 const bodyHtml = ref((props.item?.body_html as string) ?? '')
 const isPublished = ref((props.item?.is_published as boolean) ?? false)
 const pins = ref<MapPoint[]>((props.item?.pins as MapPoint[]) ?? [])
-const existingImages = ref<CardImage[]>(props.item?.images ?? [])
-const removedImageIds = ref<string[]>([])
-const newFiles = ref<File[]>([])
-const newPreviews = ref<string[]>([])
+const imageEntries = ref<CardImageEntry[]>(toEntries(props.item?.images))
+const removedImageIds = ref<(string | number)[]>([])
 
 const extraValues = reactive<Record<string, string>>(
   Object.fromEntries(
@@ -45,28 +45,6 @@ const formErrors = ref<string[]>([])
 // about (ADR-0005) instead of only at the bottom of the form.
 const fieldErrors = ref<Record<string, string[]>>({})
 const submitting = ref(false)
-
-const onFilesSelected = (event: Event) => {
-  const input = event.target as HTMLInputElement
-  const files = Array.from(input.files ?? [])
-  newFiles.value.push(...files)
-  files.forEach((file) => {
-    const reader = new FileReader()
-    reader.onload = (e) => newPreviews.value.push(e.target?.result as string)
-    reader.readAsDataURL(file)
-  })
-  input.value = ''
-}
-
-const removeExistingImage = (id: string) => {
-  existingImages.value = existingImages.value.filter((image) => image.id !== id)
-  removedImageIds.value.push(id)
-}
-
-const removeNewFile = (index: number) => {
-  newFiles.value.splice(index, 1)
-  newPreviews.value.splice(index, 1)
-}
 
 const submitForm = async () => {
   formErrors.value = []
@@ -84,10 +62,7 @@ const submitForm = async () => {
   if (props.config.mapMode === 'pins') {
     formData.append('pins', JSON.stringify(pins.value))
   }
-  newFiles.value.forEach((file) => formData.append('images', file))
-  if (props.item && removedImageIds.value.length > 0) {
-    formData.append('remove_image_ids', JSON.stringify(removedImageIds.value))
-  }
+  appendImages(formData, imageEntries.value, removedImageIds.value)
 
   submitting.value = true
   try {
@@ -182,49 +157,12 @@ const submitForm = async () => {
 
     <fieldset class="space-y-4">
       <legend class="mb-4 font-display text-title text-ink">Immagini</legend>
-      <FormField
+      <CardImagesField
         field-id="type-form-images"
-        label="Aggiungi immagini"
-        hint="La prima diventa la copertina della scheda. JPG, PNG o WebP, fino a 5 MB l’una."
+        v-model:entries="imageEntries"
+        v-model:removed-ids="removedImageIds"
         :errors="fieldErrors.images"
-      >
-        <template #default="{ describedBy }">
-          <input
-            id="type-form-images"
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            multiple
-            :aria-describedby="describedBy"
-            class="w-full rounded-lg border border-field bg-surface px-4 py-3 text-sm text-ink file:mr-4 file:rounded file:border-0 file:bg-sea file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
-            @change="onFilesSelected"
-          />
-        </template>
-      </FormField>
-
-      <div v-if="existingImages.length || newPreviews.length" class="flex flex-wrap gap-3">
-        <div v-for="image in existingImages" :key="image.id" class="relative">
-          <img :src="image.imageURL" class="h-24 w-24 rounded-lg object-cover" alt="" />
-          <button
-            type="button"
-            class="absolute -top-2 -right-2 h-6 w-6 cursor-pointer rounded-full bg-status-open text-xs text-white"
-            aria-label="Rimuovi immagine"
-            @click="removeExistingImage(image.id)"
-          >
-            ✕
-          </button>
-        </div>
-        <div v-for="(preview, index) in newPreviews" :key="`new-${index}`" class="relative">
-          <img :src="preview" class="h-24 w-24 rounded-lg object-cover" alt="" />
-          <button
-            type="button"
-            class="absolute -top-2 -right-2 h-6 w-6 cursor-pointer rounded-full bg-status-open text-xs text-white"
-            aria-label="Rimuovi immagine"
-            @click="removeNewFile(index)"
-          >
-            ✕
-          </button>
-        </div>
-      </div>
+      />
     </fieldset>
 
     <fieldset v-if="config.mapMode === 'pins'" class="space-y-4">

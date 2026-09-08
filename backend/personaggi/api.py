@@ -48,7 +48,7 @@ def personaggio_list(request):
                 author=request.user, is_published=data['is_published'],
             )
             personaggio = Personaggio.objects.create(card=card, life_dates=data['life_dates'])
-            save_images(card, request.FILES.getlist('images'))
+            save_images(card, request.FILES.getlist('images'), request.data.get('image_order'))
             replace_points(card, pins)
 
         personaggio = _base_queryset().get(pk=personaggio.pk)
@@ -114,7 +114,7 @@ def personaggio_detail(request, pk):
         personaggio.save()
 
         remove_images(card, request.data.get('remove_image_ids'))
-        save_images(card, request.FILES.getlist('images'))
+        save_images(card, request.FILES.getlist('images'), request.data.get('image_order'))
         replace_points(card, pins)
 
     personaggio = _base_queryset().get(pk=personaggio.pk)

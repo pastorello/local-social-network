@@ -266,6 +266,106 @@ def test_patch_removes_named_images(auth_client, citizen, make_chiesa):
     assert response.json()['images'] == []
 
 
+# --- images: the order is the cover (D5) ---
+
+
+def test_the_upload_order_is_the_stored_order(auth_client, citizen):
+    """Which image is first is an editorial decision, so it has to survive."""
+    response = auth_client.post(
+        '/api/chiese/',
+        {
+            'title': 'Chiesa di Sant’Erasmo', 'body_html': '<p>Testo.</p>',
+            'images': [
+                make_image_upload(name='facciata.jpg'),
+                make_image_upload(name='interno.jpg'),
+                make_image_upload(name='dettaglio.jpg'),
+            ],
+            'image_order': json.dumps(['new:2', 'new:0', 'new:1']),
+        },
+        format='multipart',
+    )
+
+    assert response.status_code == 201
+    names = [image['imageURL'].split('/')[-1] for image in response.json()['images']]
+    assert names[0].startswith('dettaglio')
+    assert names[1].startswith('facciata')
+    assert names[2].startswith('interno')
+
+
+def test_an_upload_can_become_the_cover_of_an_existing_card(auth_client, citizen, make_chiesa):
+    """The whole point of tokens: arrange old and new together, in one save."""
+    chiesa = make_chiesa(author=citizen)
+    existing = CardImage.objects.create(
+        card=chiesa.card, image=make_image_upload(name='vecchia.jpg'), position=0
+    )
+
+    response = auth_client.patch(
+        f'/api/chiese/{chiesa.pk}/',
+        {
+            'images': [make_image_upload(name='nuova.jpg')],
+            'image_order': json.dumps(['new:0', str(existing.id)]),
+        },
+        format='multipart',
+    )
+
+    assert response.status_code == 200
+    names = [image['imageURL'].split('/')[-1] for image in response.json()['images']]
+    assert names[0].startswith('nuova')
+    assert names[1].startswith('vecchia')
+
+
+def test_an_image_the_order_does_not_mention_keeps_its_place_at_the_end(
+    auth_client, citizen, make_chiesa
+):
+    chiesa = make_chiesa(author=citizen)
+    first = CardImage.objects.create(
+        card=chiesa.card, image=make_image_upload(name='prima.jpg'), position=0
+    )
+    second = CardImage.objects.create(
+        card=chiesa.card, image=make_image_upload(name='seconda.jpg'), position=1
+    )
+
+    # Only the second is named — a partial order arranges, it does not delete.
+    response = auth_client.patch(
+        f'/api/chiese/{chiesa.pk}/',
+        {'image_order': json.dumps([str(second.id)])},
+        format='multipart',
+    )
+
+    assert response.status_code == 200
+    # `CardImage`'s pk is an integer, unlike the UUID pks elsewhere — the
+    # token protocol stringifies both ends, so the ids come back as numbers.
+    ids = [image['id'] for image in response.json()['images']]
+    assert ids == [second.id, first.id]
+
+
+def test_a_malformed_order_is_a_400_not_a_500(auth_client, citizen, make_chiesa):
+    chiesa = make_chiesa(author=citizen)
+
+    response = auth_client.patch(
+        f'/api/chiese/{chiesa.pk}/', {'image_order': 'non-json'}, format='multipart',
+    )
+
+    assert response.status_code == 400
+    assert 'image_order' in response.json()['fields']
+
+
+def test_an_unknown_token_is_ignored_rather_than_fatal(auth_client, citizen, make_chiesa):
+    chiesa = make_chiesa(author=citizen)
+    image = CardImage.objects.create(
+        card=chiesa.card, image=make_image_upload(), position=0
+    )
+
+    response = auth_client.patch(
+        f'/api/chiese/{chiesa.pk}/',
+        {'image_order': json.dumps(['new:9', 'ffffffff-ffff-4fff-8fff-ffffffffffff', str(image.id)])},
+        format='multipart',
+    )
+
+    assert response.status_code == 200
+    assert [i['id'] for i in response.json()['images']] == [image.id]
+
+
 # --- pins: replace on edit ---
 
 

@@ -85,6 +85,15 @@ geolocation is a later phase (see Non-goals) rather than the centre of this one.
   new field, no migration. A mobile list of bare titles is dreary, and every
   card type already has an ordered image gallery.
 
+  **Made operable 2026-09-07.** "First" was a rule the author could not act on:
+  the form showed the images in whatever order the file picker returned them,
+  with nothing saying which one the reader would meet first and no way to
+  change it short of removing them all and starting again — found by writing a
+  real card rather than by reading the code. The images row is now one ordered
+  strip, the first thumbnail says *Copertina*, and each can be moved with
+  buttons (not only by dragging, which ADR-0005 would not accept as the sole
+  gesture).
+
 ### The register
 
 - **D6 — A cultural magazine: warm, but sober.** Typography-led, large

@@ -49,7 +49,7 @@ def chiesa_list(request):
                 author=request.user, is_published=data['is_published'],
             )
             chiesa = Chiesa.objects.create(card=card)
-            save_images(card, request.FILES.getlist('images'))
+            save_images(card, request.FILES.getlist('images'), request.data.get('image_order'))
             replace_points(card, pins)
 
         chiesa = _base_queryset().get(pk=chiesa.pk)
@@ -109,7 +109,7 @@ def chiesa_detail(request, pk):
         card.save()
 
         remove_images(card, request.data.get('remove_image_ids'))
-        save_images(card, request.FILES.getlist('images'))
+        save_images(card, request.FILES.getlist('images'), request.data.get('image_order'))
         replace_points(card, pins)
 
     chiesa = _base_queryset().get(pk=chiesa.pk)
