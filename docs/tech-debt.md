@@ -1144,11 +1144,34 @@ should go in with step 2.
 
 > `PollForm.vue` and `ReportForm.vue` came out of the design pass (#34, the
 > `FormInput` margin move) not matching prettier, so `npx prettier --check .`
-> in `frontend/` has failed ever since — a gate that is red for a known reason
+> in `frontend/` has failed ever since. A check that is red for a known reason
 > teaches everyone to ignore it, which is how the next real finding gets
 > ignored too. It was left alone at the time on purpose: a formatting sweep
 > goes in its own commit, never mixed into a feature diff (CLAUDE.md), and
 > every PR since would have carried it. This is that commit.
+>
+> **A check, not a gate — and that distinction is the question this leaves
+> open.** CI runs oxlint, eslint, vitest and build; prettier is not among them,
+> which is why nothing caught this for nine days and why the frontend job was
+> green throughout. Should `prettier --check` join them?
+>
+> - **For.** Formatting drift is invisible until somebody runs a command
+>   nobody runs — exactly how this happened. And the tree is clean *right now*,
+>   which is the only moment when turning it on is one line in the workflow
+>   rather than a sweep somebody has to schedule first.
+> - **Against.** CLAUDE.md's standing argument is that `npm run format`
+>   rewrites files beyond the ones you touched — though that was about the
+>   sweep, which is now done; `--check` only fails on files a change actually
+>   made unclean. The honest costs are smaller: a third linter in the chain,
+>   and one more way for a build to be red for a cosmetic reason.
+> - **If adopted**, the definition of done (spec §9, repeated in CLAUDE.md)
+>   gains a gate, so both would need the line.
+>
+> **Recommendation: adopt it** — cheap today, expensive later, and a rule this
+> project already believes in ("the tree *is* prettier-clean") is worth
+> enforcing rather than hoping for. Not taken here: turning a convention into a
+> gate changes what "done" means for everyone who works on this, which is the
+> author's call and not a maintenance decision.
 ### TD-36 · Plain-text card fields are stored with CRLF line endings — **FIXED 2026-09-08** ✔
 
 > Found by writing a real recipe (2026-09-08). A `<textarea>`'s submitted value
