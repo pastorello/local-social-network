@@ -1089,6 +1089,7 @@ Then take 0.16 as its own PR, with the import sort as its own commit.
 
 **Found:** 2026-08-30, doing TD-06's backend minors.
 
+
 ### TD-34 · `EMAIL_BACKEND` is deprecated and goes away in Django 7.0
 
 Django 6.1 warns: *"The EMAIL_BACKEND setting is deprecated. Migrate to MAILERS
@@ -1139,3 +1140,40 @@ one met at 7.0 is an outage.
 The DOC-* items are cheap enough to fold into whichever session touches the same
 file — except **DOC-01, DOC-02 and DOC-04**, which actively mislead an agent and
 should go in with step 2.
+### TD-35 · Two files have been prettier-unclean since 2026-08-30 — **FIXED 2026-09-08** ✔
+
+> `PollForm.vue` and `ReportForm.vue` came out of the design pass (#34, the
+> `FormInput` margin move) not matching prettier, so `npx prettier --check .`
+> in `frontend/` has failed ever since — a gate that is red for a known reason
+> teaches everyone to ignore it, which is how the next real finding gets
+> ignored too. It was left alone at the time on purpose: a formatting sweep
+> goes in its own commit, never mixed into a feature diff (CLAUDE.md), and
+> every PR since would have carried it. This is that commit.
+### TD-36 · Plain-text card fields are stored with CRLF line endings
+
+> Found by writing a real recipe (2026-09-08). A `<textarea>`'s submitted value
+> is normalised to `\r\n` by the browser, per the HTML spec, so `ingredients`,
+> `procedure` and `programme` are stored with carriage returns the author never
+> typed. **Nothing is visibly wrong** — `white-space: pre-line` renders them as
+> one break — which is why it is a small item rather than a bug: it costs
+> nothing today and it is the sort of thing that turns up later as a diff that
+> will not settle, or a line count that is off by the number of lines.
+>
+> The fix is one normalisation on the way in, at the same chokepoint the fields
+> already pass through, plus a test. The reason to do it at all is that stored
+> text is the one thing in this app that outlives every rewrite of the code
+> around it.
+### TD-37 · The e2e job spends eight of its nine minutes on setup
+
+> Observed 2026-09-04, not measured further. The Cypress run itself takes ~40
+> seconds; the job takes **9m21s**, against 1m10s for the frontend job and 26s
+> for the backend. The difference is setup — Python, backend dependencies,
+> Node, the Cypress binary, and a production build — not the specs, so adding
+> specs is close to free and speeding the job up means caching or reordering
+> that setup.
+>
+> Left alone deliberately: nothing waits on it, and a CI change made for
+> tidiness is a change to the one thing that guards every other change. Worth
+> doing if it ever becomes the reason somebody skips running the suite.
+
+
