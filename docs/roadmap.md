@@ -191,6 +191,23 @@ thing between a finished build and a public URL:
 
 ## 4. Content and input — the author's own, in parallel
 
+> **Three product questions are open in the specs and are not visible from this
+> file** — recorded here as pointers on 2026-09-08, because a reader who plans
+> from the roadmap would otherwise never meet them. All three were raised by
+> writing real content rather than by reading code:
+>
+> - [translations.md](./spec/translations.md) — whether a translation should
+>   **copy, share or do without** the original's images and map point (today it
+>   has none, so the English archive has no pictures until every photograph is
+>   uploaded twice), and whether translations should keep appearing as
+>   **separate rows in every list** while the map deliberately excludes them.
+> - [content.md](./spec/content.md) — whether `Termine` should **drop `term`**,
+>   which duplicates the card's title on every dialect entry, both visible to
+>   the reader.
+>
+> Each changes what a reader sees, which is why they are the author's and not
+> maintenance.
+
 Not engineering, but the archive is empty and no amount of building fixes
 that. Two of these are the spec's own open questions, and C5 turned them from
 build questions into input ones:
@@ -224,9 +241,14 @@ direction is not lost, neither is scheduled, and **both are non-goals of item
   can change palette, name and city centre. Item 1's D8 (colour in tokens, never
   in a component) is what keeps this from costing a second redesign. The other
   things hard-coded to Gaeta, for whoever picks it up: the map centre in
-  `composables/useLeafletMap.ts` and `GaetaMap.vue`, the product name, and an
-  Italian-only UI (which the v2 spec still lists as a non-goal until translated
-  content exists).
+  `composables/useLeafletMap.ts` and `GaetaMap.vue`, **`MAP_CENTER_LAT` /
+  `MAP_CENTER_LNG` in `backend/backend/settings.py`** (added 2026-09-05 to
+  refuse overlay geometry that cannot be this town — the *second* place that
+  knows where Gaeta is, and the one a move would most easily miss: the symptom
+  would be the new town's boundaries rejected as "non sono da queste parti",
+  with a message about coordinate order sending the reader somewhere else
+  entirely), the product name, and an Italian-only UI (which the v2 spec still
+  lists as a non-goal until translated content exists).
 
 ## 6. Build v2 — **complete (2026-08-27)**
 

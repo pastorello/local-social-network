@@ -104,10 +104,15 @@ supplies**, not build questions — C5 shipped the mechanism that consumes them
 
 1. **Open — input.** Source and format of quartiere and seggio boundaries. The
    `Overlay` model takes GeoJSON and Django admin is the write path; it has no
-   data yet.
+   data yet. **The format-and-workflow half is answered**:
+   [overlays-howto.md](../overlays-howto.md), written on 2026-09-05 by walking
+   the admin with files shaped like the real ones. What remains open is the
+   source — where the boundaries come from.
 2. **Open — input.** Georeferencing workflow for historical map images: the
    scan plus its south/west/north/east bounds. Note `common/images.py` caps
-   uploads at 5 MB and 40 Mpx, raster overlays included.
+   uploads at 5 MB and 40 Mpx, raster overlays included — so a scanner's output
+   of a large sheet needs downsampling first, which the how-to above says how to
+   check.
 3. **Still open, deploy-time.** SMTP provider and sender domain for
    invite/reset e-mail; development uses the console backend.
 4. ~~When the accessibility question (v1 N5) gets answered.~~ **Answered
@@ -115,12 +120,12 @@ supplies**, not build questions — C5 shipped the mechanism that consumes them
    ([ADR-0005](../adr/0005-wcag-2.1-aa-accessibility-bar.md)), with a first
    remediation pass landed alongside the decision.
 
-**The visual direction is now written down** — [design.md](./design.md),
-2026-08-27, from an interview with the author the same way this spec was.
-Nobody has styled this product yet; that file says how it should present
-itself, and it carries four open questions of its own (palette values,
-typography, whether the authoring screens are restyled in the same pass, and
-the desktop counterpart of the mobile bottom sheet).
+**The visual direction is written down and built** — [design.md](./design.md),
+interviewed 2026-08-27, delivered 2026-08-31. Its four open questions (palette
+values, typography, whether the authoring screens were restyled in the same
+pass, and the desktop counterpart of the mobile bottom sheet) are **all
+answered and dated in that file**, and its closing note records which surfaces
+the pass deliberately left in v1 clothes.
 
 Two ambitions were named in that interview and deliberately **not** folded into
 the design phase — **geolocation** and a **multi-city superadmin**. Both are

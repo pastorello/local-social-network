@@ -217,6 +217,15 @@ genuine runtime advisory lands, it will be buried in dev-server noise.
 > clickable pin has none (WCAG 2.1.1), so this covers something a reader
 > actually depends on and does not pretend to cover the widget itself.
 >
+> **Also uncovered end to end, and cheaply fixable if the budget allows:** the
+> two reorder controls added on 2026-09-07/08 — the images strip's cover order
+> and a feste route's stops. Both have unit tests and both were watched working
+> in a browser, but no Cypress case exercises them, because
+> `collaborator.cy.ts` signs in per test and the suite already spends seven of
+> the ten logins a minute the endpoint allows (TD-18). Adopting `cy.login()`
+> there, or `testIsolation: false`, would buy the room — that is the actual
+> prerequisite, not the case itself.
+>
 > **Still not covered, deliberately:** the leg *after* an admin approves a
 > collaboration request — accepting the invite and setting a password needs the
 > token out of an e-mail, which means reading the outbox or adding a test-only
