@@ -47,3 +47,30 @@ mid-interview; more will come.
 
 Build **feste first, end to end** — it is the richest (recurrence *and* a
 route), so it exercises the core hardest before four thinner types lean on it.
+
+## What writing one of each turned up — 2026-09-08
+
+The four remaining types were written through the collaborator's own editor,
+with real content: a recipe with a multi-line ingredient list and three "sold
+here" pins, a procession with a route and a programme, a dialect entry, a
+historical figure with uncertain dates. Three of the four were fine. What the
+exercise was for:
+
+- **A feste's route had no way to reorder its stops.** For a route the order is
+  not a preference, it is the data — consecutive stops are what the polyline
+  joins — so a stop entered out of sequence drew the procession going the wrong
+  way, and the only remedy was removing every stop after it. Fixed the same day,
+  with the same buttons the images strip got: `lib/reorder.ts::moveItem` is now
+  the one implementation behind both.
+- **`Termine` duplicates the card's title on every entry.** A dialect card is
+  titled "Sciuscià" and then its first field says *Termine: Sciuscià*. The two
+  are the same word every time, and the reader sees both. Whether the type
+  should drop `term` and let the title carry it — or whether the title is meant
+  to be something else, like the term plus a gloss — is a modelling question
+  this file should answer before the archive fills with the redundancy.
+- Worth recording as *working*, since nobody had checked: plain-text fields
+  keep their line breaks for the reader (`white-space: pre-line`), free-text
+  dates take "sec. XI — 1119" as intended, dialetto has no map anywhere (form
+  or article, as the table above says), and the create routes follow each
+  type's gender — `/personaggi/nuovo`, `/ricette/nuova`.
+
