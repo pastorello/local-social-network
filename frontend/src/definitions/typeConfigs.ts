@@ -16,6 +16,9 @@ export interface TypeConfig {
   // card" — dialetto's title *is* the dialect word since 2026-09-09, and
   // "Es. termine" is a poor hint for that.
   titlePlaceholder?: string
+  // Appended to the images field's hint, where a type has a rule of its own
+  // about what may be uploaded.
+  imagesHint?: string
   mapMode: 'none' | 'pins'
   maxPoints?: number
 }
@@ -99,6 +102,7 @@ export const libroConfig: TypeConfig = {
     { key: 'year', label: 'Anno', kind: 'input', placeholder: 'Es. 1987, rist. 2004' },
     { key: 'publisher', label: 'Editore', kind: 'input', placeholder: 'Es. Edizioni del Golfo' },
   ],
+  imagesHint: 'Usa la copertina fornita dall’editore, non una scansione.',
   mapMode: 'none',
 }
 

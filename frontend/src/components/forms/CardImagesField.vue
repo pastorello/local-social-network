@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import FormField from '@/components/forms/FormField.vue'
 import type { CardImageEntry } from '@/lib/cardImages'
 import { moveItem } from '@/lib/reorder'
@@ -12,7 +14,20 @@ import { moveItem } from '@/lib/reorder'
 // them is an editorial act, not housekeeping — and it has to be possible with
 // a keyboard, which rules out drag-and-drop as the only way (ADR-0005). Two
 // buttons per image, each with a label that says where it goes.
-const props = defineProps<{ fieldId: string; errors?: string[] }>()
+const props = defineProps<{
+  fieldId: string
+  errors?: string[]
+  // Appended to this field's hint rather than rendered beside it, so the whole
+  // instruction is one string the control points at with `aria-describedby`.
+  // `libri` uses it for the covers rule (spec content.md, 2026-09-09).
+  hintSuffix?: string
+}>()
+
+const hint = computed(() =>
+  ['La prima è la copertina della scheda. JPG, PNG o WebP, fino a 5 MB l’una.', props.hintSuffix]
+    .filter(Boolean)
+    .join(' '),
+)
 
 const entries = defineModel<CardImageEntry[]>('entries', { required: true })
 const removedIds = defineModel<(string | number)[]>('removedIds', { required: true })
@@ -47,7 +62,7 @@ const key = (entry: CardImageEntry, index: number) =>
   <FormField
     :field-id="props.fieldId"
     label="Aggiungi immagini"
-    hint="La prima è la copertina della scheda. JPG, PNG o WebP, fino a 5 MB l’una."
+    :hint="hint"
     :errors="props.errors"
   >
     <template #default="{ describedBy }">

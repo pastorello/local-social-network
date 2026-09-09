@@ -207,9 +207,9 @@ thing between a finished build and a public URL:
 > - ~~[content.md](./spec/content.md) — whether `Termine` should **drop
 >   `term`**.~~ **Answered 2026-09-09: dropped.** The title is the word; the
 >   field said it a second time on every entry.
-> - [content.md](./spec/content.md) — `libri`' **covers**: publisher-supplied
->   or none, since a scanned jacket is a rights question the archive's own
->   photographs never raised. **Still open** (2026-09-09).
+> - ~~[content.md](./spec/content.md) — `libri`' **covers**.~~ **Answered
+>   2026-09-09: the publisher's image or none, never a scan.** No code can tell
+>   the two apart, so the rule is attached to the upload field as its hint.
 >
 > Each changes what a reader sees, which is why they are the author's and not
 > maintenance.
