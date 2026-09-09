@@ -26,6 +26,7 @@ export interface TranslationRef {
 export default interface Feste {
   id: string
   title: string
+  original_title: string
   body_html: string
   author: User
   is_published: boolean

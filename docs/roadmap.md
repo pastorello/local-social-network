@@ -191,19 +191,25 @@ thing between a finished build and a public URL:
 
 ## 4. Content and input — the author's own, in parallel
 
-> **Three product questions are open in the specs and are not visible from this
-> file** — recorded here as pointers on 2026-09-08, because a reader who plans
-> from the roadmap would otherwise never meet them. All three were raised by
-> writing real content rather than by reading code:
+> **Product questions the specs hold and this file does not show** —
+> recorded here as pointers on 2026-09-08, because a reader who plans from the
+> roadmap would otherwise never meet them. All were raised by writing real
+> content rather than by reading code.
 >
-> - [translations.md](./spec/translations.md) — whether a translation should
->   **copy, share or do without** the original's images and map point (today it
->   has none, so the English archive has no pictures until every photograph is
->   uploaded twice), and whether translations should keep appearing as
->   **separate rows in every list** while the map deliberately excludes them.
+> - ~~[translations.md](./spec/translations.md) — images, map point, and
+>   whether a translation is its own row in every list.~~ **Answered
+>   2026-09-09 and built the same day** (T5/T6/T7): the photographs and the
+>   place belong to the original in every language, the lists follow the map
+>   with one row per thing, and the heading of a translated card stays the
+>   Italian name with the translation as a subtitle — because the signs in
+>   Gaeta are in Italian and a fully translated title is how a tourist fails to
+>   find the place.
 > - [content.md](./spec/content.md) — whether `Termine` should **drop `term`**,
 >   which duplicates the card's title on every dialect entry, both visible to
->   the reader.
+>   the reader. **Still open.**
+> - [content.md](./spec/content.md) — `libri`' **covers**: publisher-supplied
+>   or none, since a scanned jacket is a rights question the archive's own
+>   photographs never raised. **Still open** (2026-09-09).
 >
 > Each changes what a reader sees, which is why they are the author's and not
 > maintenance.

@@ -82,6 +82,24 @@ def start_translation(request, card, type_model, language, extra_defaults=None):
     return new_card
 
 
+MEDIA_BELONGS_TO_ORIGINAL = (
+    'Le fotografie e la mappa appartengono alla scheda originale.'
+)
+
+
+def reject_media_on_translation(card, field_name='images'):
+    """A translation shows the original's photographs and geometry rather than
+    owning any (spec translations.md, 2026-09-09 — see
+    content/serializers.py::media_source), so a write that would give it its own
+    is refused here, once, for every type app.
+
+    Loud rather than ignored: an upload that silently vanished would read as a
+    rejected file, and the author would go looking at image sizes.
+    """
+    if card.translation_of_id is not None:
+        raise ValidationError({field_name: [MEDIA_BELONGS_TO_ORIGINAL]})
+
+
 def save_images(card, files, raw_order=None):
     """Store the uploads, then put every image of this card in the order the
     author arranged (`image_order`).
@@ -96,6 +114,9 @@ def save_images(card, files, raw_order=None):
     a photograph being uploaded now can be made the cover in the same save,
     without a round trip.
     """
+    if files or raw_order is not None:
+        reject_media_on_translation(card)
+
     created = []
     if files:
         next_position = card.images.count()
@@ -150,6 +171,7 @@ def _apply_image_order(card, raw_order, created):
 def remove_images(card, raw_ids):
     if not raw_ids:
         return
+    reject_media_on_translation(card)
     try:
         ids = json.loads(raw_ids)
     except (TypeError, ValueError):
@@ -180,6 +202,7 @@ def parse_points(raw, field_name='pins', max_points=MAX_POINTS):
 def replace_points(card, points):
     if points is None:
         return
+    reject_media_on_translation(card, field_name='pins')
     card.map_features.filter(kind=MapFeature.POINT).delete()
     MapFeature.objects.bulk_create([
         MapFeature(card=card, kind=MapFeature.POINT, position=i, lat=p['lat'], lng=p['lng'], label=p['label'])

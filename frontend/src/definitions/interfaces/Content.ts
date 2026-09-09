@@ -30,6 +30,11 @@ export interface TranslationRef {
 export interface CardBase {
   id: string
   title: string
+  // The card group's name: the original's title, the same string on a
+  // translation as on its original (2026-09-09). A translated card shows this
+  // as its heading and its own `title` underneath — the signs in Gaeta are in
+  // Italian, so the Italian name is the identity and the translation a gloss.
+  original_title: string
   body_html: string
   author: User
   is_published: boolean

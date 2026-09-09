@@ -20,6 +20,23 @@ class CardImageSerializer(serializers.ModelSerializer):
         fields = ('id', 'imageURL', 'position', 'caption')
 
 
+def media_source(card):
+    """The card that owns the photographs and the map features of this card's
+    group — the original, whichever member of the group you are holding.
+
+    Decided with the author on 2026-09-09 (spec translations.md): a photograph
+    of the Santuario is the same photograph in every language, and uploading it
+    once per language is how two copies of one picture drift apart. The map had
+    already taken the same decision for geometry in C5 — `/api/map/features/`
+    excludes translations so one doorstep gets one pin — and this is that rule
+    applied to the rest of a card's media.
+
+    Before it, a translation started empty *and stayed* empty of pictures: the
+    English archive, which is the whole point of translating, had none.
+    """
+    return card if card.translation_of_id is None else card.translation_of
+
+
 class TranslationSerializer(serializers.Serializer):
     """One entry of a card's `translations` list — the sibling versions a
     reader's language switch (T1) or a collaborator's "traduci" control (T2)

@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from account.serializers import UserSerializer
 from content.models import MapFeature
-from content.serializers import CardImageSerializer, TranslationSerializer, visible_translations
+from content.serializers import CardImageSerializer, TranslationSerializer, media_source, visible_translations
 from content.fields import PlainTextField
 from content.sanitize import sanitize_html
 
@@ -36,17 +36,26 @@ class FesteReadSerializer(serializers.ModelSerializer):
     route = serializers.SerializerMethodField()
     pins = serializers.SerializerMethodField()
     translations = serializers.SerializerMethodField()
+    original_title = serializers.SerializerMethodField()
 
     def get_images(self, obj):
-        return CardImageSerializer(obj.card.images.all(), many=True).data
+        return CardImageSerializer(media_source(obj.card).images.all(), many=True).data
 
     def get_route(self, obj):
-        points = obj.card.map_features.filter(kind=MapFeature.ROUTE).order_by('position')
+        points = media_source(obj.card).map_features.filter(kind=MapFeature.ROUTE).order_by('position')
         return [_map_point(p) for p in points]
 
     def get_pins(self, obj):
-        points = obj.card.map_features.filter(kind=MapFeature.POINT)
+        points = media_source(obj.card).map_features.filter(kind=MapFeature.POINT)
         return [_map_point(p) for p in points]
+
+    def get_original_title(self, obj):
+        # The card group's name, which is the original's title (2026-09-09):
+        # a reader of the English version needs the Italian name, because the
+        # signs in Gaeta are in Italian and a fully translated title is how a
+        # tourist fails to find the place. For an original this is its own
+        # title, so callers need no special case.
+        return media_source(obj.card).title
 
     def get_translations(self, obj):
         request = self.context.get('request')
@@ -57,7 +66,7 @@ class FesteReadSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'body_html', 'author', 'is_published',
             'recurrence', 'programme', 'images', 'route', 'pins',
-            'language', 'translation_of', 'translations',
+            'language', 'translation_of', 'original_title', 'translations',
             'created_at', 'updated_at',
         )
 

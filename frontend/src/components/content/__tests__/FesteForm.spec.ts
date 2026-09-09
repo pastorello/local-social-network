@@ -30,6 +30,7 @@ describe('FesteForm', () => {
         feste: {
           id: '1',
           title: 'Festa esistente',
+          original_title: 'Festa esistente',
           body_html: '<p>Testo</p>',
           author: { id: 'u1', name: 'Autore', avatarURL: null },
           is_published: true,
