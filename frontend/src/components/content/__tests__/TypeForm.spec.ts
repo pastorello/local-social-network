@@ -7,6 +7,7 @@ import TypeForm from '../TypeForm.vue'
 import {
   chiesaConfig,
   dialettoConfig,
+  libroConfig,
   personaggioConfig,
   ricettaConfig,
 } from '@/definitions/typeConfigs'
@@ -40,6 +41,7 @@ describe.each([
   ['ricette', ricettaConfig],
   ['personaggi', personaggioConfig],
   ['dialetto', dialettoConfig],
+  ['libri', libroConfig],
 ])('TypeForm (%s)', (_key, config) => {
   it('renders the create-mode fields and button copy', () => {
     const wrapper = mount(TypeForm, {

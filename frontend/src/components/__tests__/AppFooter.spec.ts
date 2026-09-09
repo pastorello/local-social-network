@@ -20,6 +20,7 @@ const makeRouter = () =>
       { path: '/ricette', name: 'ricettelist', component: stub },
       { path: '/personaggi', name: 'personaggilist', component: stub },
       { path: '/dialetto', name: 'dialettolist', component: stub },
+      { path: '/libri', name: 'librilist', component: stub },
     ],
   })
 
@@ -35,7 +36,7 @@ describe('AppFooter', () => {
     const wrapper = await mountFooter()
     const hrefs = wrapper.findAll('a').map((a) => a.attributes('href'))
 
-    for (const path of ['/feste', '/chiese', '/ricette', '/personaggi', '/dialetto']) {
+    for (const path of ['/feste', '/chiese', '/ricette', '/personaggi', '/dialetto', '/libri']) {
       expect(hrefs).toContain(path)
     }
   })

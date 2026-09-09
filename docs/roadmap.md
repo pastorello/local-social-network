@@ -230,6 +230,10 @@ Two phases the design interview surfaced (2026-08-27). Both are recorded so the
 direction is not lost, neither is scheduled, and **both are non-goals of item
 1** — the design enables them, it does not build them.
 
+(A third thing sat here for a few hours on 2026-09-09 — the `libri` card type,
+proposed in the morning and delivered the same day. It is recorded at the foot
+of item 6, with what it cost.)
+
 - **Geolocation** — "you are here" plus what is around you while walking
   Gaeta. The author wants it and it fits the product; it is a **feature, not a
   style**: browser permission, HTTPS (so it depends on item 3), sane handling
@@ -304,6 +308,18 @@ one phase per PR, each proven before the next:
    boundaries and the georeferenced scans come from) are now *input*
    questions, not build ones. `ReportsMap.vue` became `GaetaMap.vue` — it draws more than
    reports now.
+
+**A sixth card type landed after that order closed.** `libri` — recommended
+books about Gaeta — was proposed on 2026-09-09, specified in
+[spec/content.md](./spec/content.md) the same morning and built the same day,
+without a phase of its own: no new component, no new view, its backend shape
+copied from `dialetto` (the other type with no map) and its frontend a config
+entry, three routes and an icon. A second type proposed in the same
+conversation, `tradizioni`, was dropped by the author within the hour — every
+card he could name for it was already a festa or a ricetta, and the reasoning
+is kept in the spec because it is the argument against the next generic type
+too. **This is ADR-0004's "days, not a module" bar measured for the sixth
+time**, and the first time it was measured on a type nobody had planned for.
 
 **With C5, the v2 build order is complete** — C1 through C5, each proven
 before the next. What comes after it is items 1 to 4 above; whatever comes
