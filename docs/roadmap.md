@@ -226,9 +226,27 @@ build questions into input ones:
 
 ## 5. Named but not scheduled
 
-Two phases the design interview surfaced (2026-08-27). Both are recorded so the
-direction is not lost, neither is scheduled, and **both are non-goals of item
-1** — the design enables them, it does not build them.
+Three things, from two different conversations. The first is specified and
+cheap and waits only on the author's word; the other two are directions, not
+plans.
+
+- **Libri consigliati, the sixth card type** — proposed 2026-09-09, specified
+  the same day in [spec/content.md](./spec/content.md), **not built**. A
+  section of recommended books about Gaeta, one card each, the body being the
+  reason to read it: no map footprint, three free-text fields, translations
+  inherited. It is the cheapest thing on this whole file — ADR-0004's "days,
+  not a module" bar, exercised for the sixth time — and the spec names what is
+  still open before it starts: how long an entry is (which decides grid or
+  list), and whether covers are used at all, since a scanned jacket is a rights
+  question the archive's own photographs are not. **A second type proposed in
+  the same conversation, `tradizioni`, was dropped by the author within the
+  hour** — every card he could name for it was already a festa or a ricetta.
+  The reasoning is in the spec, because it is the argument against the next
+  generic type too.
+
+The two below are phases the design interview surfaced (2026-08-27). Both are
+recorded so the direction is not lost, neither is scheduled, and **both are
+non-goals of item 1** — the design enables them, it does not build them.
 
 - **Geolocation** — "you are here" plus what is around you while walking
   Gaeta. The author wants it and it fits the product; it is a **feature, not a

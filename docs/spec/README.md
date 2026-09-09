@@ -58,7 +58,7 @@ not mean).
 | Area | File | Status |
 |---|---|---|
 | Accounts & the "Collabora con noi" flow | [accounts.md](./accounts.md) | delivered (C1, 2026-08-21) |
-| Content core + typed cards | [content.md](./content.md) | delivered (core + feste C2, 2026-08-22; chiese/ricette/personaggi/dialetto C3, 2026-08-22) |
+| Content core + typed cards | [content.md](./content.md) | delivered (core + feste C2, 2026-08-22; chiese/ricette/personaggi/dialetto C3, 2026-08-22); **a sixth type, libri consigliati, specified 2026-09-09 and not built** |
 | Translations | [translations.md](./translations.md) | delivered (C4, 2026-08-22) |
 | The map: layers & overlays | [map.md](./map.md) | delivered (C5, 2026-08-27) |
 | Reports & polls (from v1) | [reports-and-polls.md](./reports-and-polls.md) | delivered; reports change author |
@@ -69,7 +69,8 @@ not mean).
 
 - **One content core, thin type apps** — a `content` app owns rich text
   (sanitized), images, translations, map features and publication; `feste`,
-  `chiese`, `ricette`, `personaggi`, `dialetto` each add only their fields.
+  `chiese`, `ricette`, `personaggi`, `dialetto` each add only their fields —
+  and `libri` will, when it is built (content.md, 2026-09-09).
   Rationale: [../adr/0004-content-core-thin-type-apps.md](../adr/0004-content-core-thin-type-apps.md).
   Honors the author's requirement that modules be separable and reusable
   without rebuilding rich text five times.
