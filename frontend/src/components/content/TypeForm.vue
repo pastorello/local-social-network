@@ -192,6 +192,7 @@ const submitForm = async () => {
       <CardImagesField
         v-else
         field-id="type-form-images"
+        :hint-suffix="config.imagesHint"
         v-model:entries="imageEntries"
         v-model:removed-ids="removedImageIds"
         :errors="fieldErrors.images"

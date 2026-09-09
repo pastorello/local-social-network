@@ -138,3 +138,31 @@ describe('TypeForm error wiring (ADR-0005)', () => {
     expect(wrapper.find('#type-form-title-error').exists()).toBe(false)
   })
 })
+
+// A rule with no mechanism behind it is only as good as where it is written.
+// The covers decision (2026-09-09) is a rights call nobody can enforce in
+// code, so it belongs where a collaborator is about to upload — attached to
+// the field, not floating beside it.
+describe('the per-type images rule', () => {
+  it('tells a book’s author to use the publisher’s cover, on the images field itself', () => {
+    const wrapper = mount(TypeForm, {
+      props: { config: libroConfig },
+      global: { plugins: [createPinia()], stubs: globalStubs },
+    })
+
+    const hint = wrapper.get('#type-form-images-hint')
+    expect(hint.text()).toContain('copertina fornita dall’editore')
+    expect(wrapper.get('#type-form-images').attributes('aria-describedby')).toContain(
+      'type-form-images-hint',
+    )
+  })
+
+  it('says nothing extra on a type without such a rule', () => {
+    const wrapper = mount(TypeForm, {
+      props: { config: chiesaConfig },
+      global: { plugins: [createPinia()], stubs: globalStubs },
+    })
+
+    expect(wrapper.get('#type-form-images-hint').text()).not.toContain('editore')
+  })
+})
