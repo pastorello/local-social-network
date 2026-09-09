@@ -7,7 +7,9 @@ class Termine(models.Model):
     card = models.OneToOneField(
         Card, related_name='dialetto', on_delete=models.CASCADE, primary_key=True
     )
-    term = models.CharField(max_length=200)
+    # No `term`: the card's title is the word (decided 2026-09-09). It used to
+    # be both, and a reader saw "Sciuscià" as the heading and then "Termine:
+    # Sciuscià" as the first field, every time.
     meaning = models.TextField()
     example_usage = models.TextField(blank=True, default='')
 
@@ -15,4 +17,4 @@ class Termine(models.Model):
         ordering = ('-card__created_at',)
 
     def __str__(self):
-        return self.term
+        return self.card.title

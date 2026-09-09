@@ -120,7 +120,7 @@ const submitForm = async () => {
             v-model="title"
             :invalid="invalid"
             :aria-describedby="describedBy"
-            :placeholder="`Es. ${config.singularLabel}`"
+            :placeholder="config.titlePlaceholder ?? `Es. ${config.singularLabel}`"
           />
         </template>
       </FormField>

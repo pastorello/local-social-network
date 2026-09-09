@@ -39,7 +39,7 @@ def termine_list(request):
                 author=request.user, is_published=data['is_published'],
             )
             termine = Termine.objects.create(
-                card=card, term=data['term'], meaning=data['meaning'],
+                card=card, meaning=data['meaning'],
                 example_usage=data['example_usage'],
             )
             save_images(card, request.FILES.getlist('images'), request.data.get('image_order'))
@@ -105,7 +105,7 @@ def termine_detail(request, pk):
                 setattr(card, field, data[field])
         card.save()
 
-        for field in ('term', 'meaning', 'example_usage'):
+        for field in ('meaning', 'example_usage'):
             if field in data:
                 setattr(termine, field, data[field])
         termine.save()
@@ -123,7 +123,7 @@ def termine_translate(request, pk):
     language = request.data.get('language')
     new_card = start_translation(
         request, termine.card, Termine, language,
-        extra_defaults={'term': '', 'meaning': '', 'example_usage': ''},
+        extra_defaults={'meaning': '', 'example_usage': ''},
     )
     translation = _base_queryset().get(pk=new_card.pk)
     return Response(TermineReadSerializer(translation, context={'request': request}).data, status=201)

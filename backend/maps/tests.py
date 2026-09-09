@@ -140,7 +140,7 @@ def test_map_features_skips_a_card_with_no_type_row(api_client, make_card):
     bare = make_card()
     add_point(bare)
     termine = make_card()
-    Termine.objects.create(card=termine, term='Muffato', meaning='Ammuffito')
+    Termine.objects.create(card=termine, meaning='Ammuffito')
 
     assert api_client.get('/api/map/features/').json() == []
 

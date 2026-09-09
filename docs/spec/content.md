@@ -38,7 +38,7 @@ Each type is a **thin app** adding only its fields on top of the core.
 | **Chiese** | — | one fixed pin |
 | **Ricette** | ingredients, servings ("per 8 persone"), procedure | zero or more "sold here" pins |
 | **Personaggi storici** | life dates | optional pins (birthplace, monument) |
-| **Dialetto** | term, meaning, example usage | none |
+| **Dialetto** | meaning, example usage | none |
 | **Libri consigliati** | book author, year, publisher | none |
 
 The bar: **a sixth type costs days, not a module.** The fifth was invented
@@ -64,12 +64,16 @@ exercise was for:
   way, and the only remedy was removing every stop after it. Fixed the same day,
   with the same buttons the images strip got: `lib/reorder.ts::moveItem` is now
   the one implementation behind both.
-- **`Termine` duplicates the card's title on every entry.** A dialect card is
-  titled "Sciuscià" and then its first field says *Termine: Sciuscià*. The two
-  are the same word every time, and the reader sees both. Whether the type
-  should drop `term` and let the title carry it — or whether the title is meant
-  to be something else, like the term plus a gloss — is a modelling question
-  this file should answer before the archive fills with the redundancy.
+- ~~**`Termine` duplicates the card's title on every entry.**~~ **Answered
+  2026-09-09: `term` is gone, the title is the word.** A dialect card was
+  titled "Sciuscià" and then its first field said *Termine: Sciuscià* — the
+  same word twice, both visible to the reader, on every entry. The author's
+  answer was the short one: "il titolo basta". The column is dropped
+  (`dialetto/migrations/0002`), the form's title placeholder now says what the
+  field is for on this type ("Es. Sciuscià"), and `Termine.__str__` reads the
+  card's title. Nothing was lost: the one row in the development archive had a
+  `term` identical to its title, which was checked before the migration ran
+  rather than assumed.
 - Worth recording as *working*, since nobody had checked: plain-text fields
   keep their line breaks for the reader (`white-space: pre-line`), free-text
   dates take "sec. XI — 1119" as intended, dialetto has no map anywhere (form
