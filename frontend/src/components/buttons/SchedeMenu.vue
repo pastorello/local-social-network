@@ -7,16 +7,18 @@ import ChiesaIcon from '../icons/ChiesaIcon.vue'
 import RicettaIcon from '../icons/RicettaIcon.vue'
 import PersonaggioIcon from '../icons/PersonaggioIcon.vue'
 import DialettoIcon from '../icons/DialettoIcon.vue'
+import LibroIcon from '../icons/LibroIcon.vue'
 
-// A disclosure menu, not 5 flat MenuButtons: the nav row is sized for 3-4
-// items, and Feste/Chiese/Ricette/Personaggi/Dialetto all flat would overflow
-// it and risk a WCAG reflow/target-size regression (ADR-0005).
+// A disclosure menu, not 6 flat MenuButtons: the nav row is sized for 3-4
+// items, and Feste/Chiese/Ricette/Personaggi/Dialetto/Libri all flat would
+// overflow it and risk a WCAG reflow/target-size regression (ADR-0005).
 const items = [
   { to: '/feste', label: 'Feste', icon: FesteIcon },
   { to: '/chiese', label: 'Chiese', icon: ChiesaIcon },
   { to: '/ricette', label: 'Ricette', icon: RicettaIcon },
   { to: '/personaggi', label: 'Personaggi storici', icon: PersonaggioIcon },
   { to: '/dialetto', label: 'Dialetto', icon: DialettoIcon },
+  { to: '/libri', label: 'Libri consigliati', icon: LibroIcon },
 ]
 
 const route = useRoute()

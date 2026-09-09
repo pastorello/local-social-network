@@ -77,12 +77,14 @@ exercise was for:
   type's gender — `/personaggi/nuovo`, `/ricette/nuova`.
 
 
-## The sixth type: libri consigliati — 2026-09-09
+## The sixth type: libri consigliati — 2026-09-09, **delivered the same day**
 
 A section of **recommended books** about Gaeta: what to read to understand the
 city, each with the reason a collaborator recommends it. Proposed by the author
-on 2026-09-09 and written down here before any code, per this repo's rule that
-scope changes start in the spec.
+on 2026-09-09, written down here before any code — per this repo's rule that
+scope changes start in the spec — and built once he had read it and answered
+the one question that was blocking (an entry is **a paragraph**, which settles
+the list surface: the same `CardGrid` every other type uses).
 
 **It arrived beside a second idea, `tradizioni`** — generic cards for the city's
 customs — **and that one was dropped the same day, by the author**: every
@@ -143,12 +145,24 @@ deciding before the section fills, not after.
 
 ### Open at the time of writing
 
-1. **How long is an entry?** Asked and not yet answered. It does not change the
-   model (see above) but it decides the list surface: grid of covers, or a
-   compact list.
+1. ~~**How long is an entry?**~~ **Answered 2026-09-09: a paragraph.** So the
+   list is `CardGrid` like every other type, and nothing special was built.
 2. **A "dove trovarlo" field** — the *Biblioteca comunale*, a bookshop — as free
    text rather than a pin. Cheap; nobody has asked for it.
 3. Not proposed, and listed so it is not silently smuggled in later: **no
    purchase links**. The footer of this product says presence is chosen on
    editorial merit and nothing is bought; an affiliate link to a shop is the
    first crack in that.
+
+### What it cost — the ADR-0004 bar, measured a sixth time
+
+Built 2026-09-09, in one sitting: a `libri` app that is models/serializers/api/
+urls/admin/migration/tests, its shape taken from `dialetto` because that is the
+other type with no map; on the frontend one interface, one entry in
+`typeConfigs.ts`, three routes, one icon, and the two places that list the
+types (the nav's `SchedeMenu` and the footer). No new component and no new
+view: `TypeForm`/`TypeListView`/`TypeDetailView` already do this, which is what
+C3 bought. 23 backend tests, all of them derived from dialetto's.
+
+The one thing that was not a copy is the **field name**. `book_author` next to
+`Card.author` is ugly on purpose — see the table above.

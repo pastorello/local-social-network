@@ -13,6 +13,7 @@ const schede = [
   { to: '/ricette', label: 'Ricette' },
   { to: '/personaggi', label: 'Personaggi storici' },
   { to: '/dialetto', label: 'Dialetto' },
+  { to: '/libri', label: 'Libri consigliati' },
 ]
 </script>
 

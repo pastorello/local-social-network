@@ -84,9 +84,24 @@ export const dialettoConfig: TypeConfig = {
   mapMode: 'none',
 }
 
+export const libroConfig: TypeConfig = {
+  key: 'libri',
+  label: 'Libri consigliati',
+  singularLabel: 'libro',
+  endpoint: '/api/libri/',
+  routeNames: { list: 'librilist', detail: 'libridetail', create: 'libricreate' },
+  extraFields: [
+    { key: 'book_author', label: 'Autore del libro', kind: 'input', placeholder: 'Es. Anna Ferri' },
+    { key: 'year', label: 'Anno', kind: 'input', placeholder: 'Es. 1987, rist. 2004' },
+    { key: 'publisher', label: 'Editore', kind: 'input', placeholder: 'Es. Edizioni del Golfo' },
+  ],
+  mapMode: 'none',
+}
+
 export const typeConfigs: TypeConfig[] = [
   chiesaConfig,
   ricettaConfig,
   personaggioConfig,
   dialettoConfig,
+  libroConfig,
 ]

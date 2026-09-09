@@ -135,6 +135,7 @@ INSTALLED_APPS = [
     'ricette',
     'personaggi',
     'dialetto',
+    'libri',
     'maps',
     'polls',
     'reports',

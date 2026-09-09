@@ -3,6 +3,7 @@ import { useUserStore } from '../stores/user'
 import {
   chiesaConfig,
   dialettoConfig,
+  libroConfig,
   personaggioConfig,
   ricettaConfig,
 } from '../definitions/typeConfigs'
@@ -174,6 +175,27 @@ const router = createRouter({
       name: dialettoConfig.routeNames.detail,
       component: () => import('../views/TypeDetailView.vue'),
       props: { config: dialettoConfig },
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/libri',
+      name: libroConfig.routeNames.list,
+      component: () => import('../views/TypeListView.vue'),
+      props: { config: libroConfig },
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/libri/nuovo',
+      name: libroConfig.routeNames.create,
+      component: () => import('../views/TypeCreateView.vue'),
+      props: { config: libroConfig },
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/libri/:id',
+      name: libroConfig.routeNames.detail,
+      component: () => import('../views/TypeDetailView.vue'),
+      props: { config: libroConfig },
       meta: { requiresAuth: false },
     },
     {

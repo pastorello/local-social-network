@@ -12,6 +12,7 @@ urlpatterns = [
     path('api/ricette/', include('ricette.urls')),
     path('api/personaggi/', include('personaggi.urls')),
     path('api/dialetto/', include('dialetto.urls')),
+    path('api/libri/', include('libri.urls')),
     path('api/map/', include('maps.urls')),
     path('api/polls/', include('polls.urls')),
     path('api/', include('reports.urls')),
