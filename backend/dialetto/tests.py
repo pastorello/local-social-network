@@ -26,13 +26,13 @@ def auth_client(api_client, citizen):
 def make_termine(citizen):
     def _make(
         author=None, is_published=False, title='Muffato', body_html='<p>Un termine gaetano.</p>',
-        term='Muffato', meaning='Confuso, rimbambito', example_usage='"Che si’ muffato?"',
+        meaning='Confuso, rimbambito', example_usage='"Che si’ muffato?"',
     ):
         card = Card.objects.create(
             title=title, body_html=body_html, author=author or citizen, is_published=is_published,
         )
         return Termine.objects.create(
-            card=card, term=term, meaning=meaning, example_usage=example_usage,
+            card=card, meaning=meaning, example_usage=example_usage,
         )
 
     return _make
@@ -48,7 +48,6 @@ def valid_payload(**overrides):
     payload = {
         'title': 'Sciù',
         'body_html': '<p>Testo <strong>ricco</strong>.</p>',
-        'term': 'Sciù',
         'meaning': 'Su, sopra',
         'example_usage': '"Vai sciù."',
     }
@@ -70,8 +69,11 @@ def test_termine_create_makes_a_draft_by_default(auth_client):
     assert response.status_code == 201
     data = response.json()
     assert data['is_published'] is False
-    assert data['term'] == 'Sciù'
+    assert data['title'] == 'Sciù'
     assert data['meaning'] == 'Su, sopra'
+    # The word is the title and nothing else — decided 2026-09-09, after a
+    # dialect card showed "Sciù" as its heading and "Termine: Sciù" under it.
+    assert 'term' not in data
     card = Card.objects.get(pk=data['id'])
     assert card.is_published is False
 
@@ -87,8 +89,8 @@ def test_termine_create_sanitizes_the_body_end_to_end(auth_client):
     assert '<script>' not in card.body_html
 
 
-def test_termine_create_requires_term_and_meaning(auth_client):
-    response = auth_client.post('/api/dialetto/', {**valid_payload(), 'term': '', 'meaning': ''})
+def test_termine_create_requires_a_meaning(auth_client):
+    response = auth_client.post('/api/dialetto/', {**valid_payload(), 'meaning': ''})
 
     assert response.status_code == 400
 
@@ -136,8 +138,8 @@ def test_a_published_termine_is_public(api_client, make_termine):
 
 
 def test_list_only_returns_published_termini(api_client, make_termine):
-    make_termine(is_published=True, title='Pubblicato', term='Uno')
-    make_termine(is_published=False, title='Bozza', term='Due')
+    make_termine(is_published=True, title='Pubblicato')
+    make_termine(is_published=False, title='Bozza')
 
     response = api_client.get('/api/dialetto/')
 
@@ -153,9 +155,9 @@ def test_mine_requires_auth(api_client):
 
 
 def test_mine_returns_the_requesters_drafts_and_published(auth_client, citizen, other_citizen, make_termine):
-    make_termine(author=citizen, is_published=False, title='Mia bozza', term='Uno')
-    make_termine(author=citizen, is_published=True, title='Mia pubblicata', term='Due')
-    make_termine(author=other_citizen, is_published=True, title='Non mia', term='Tre')
+    make_termine(author=citizen, is_published=False, title='Mia bozza')
+    make_termine(author=citizen, is_published=True, title='Mia pubblicata')
+    make_termine(author=other_citizen, is_published=True, title='Non mia')
 
     body = auth_client.get('/api/dialetto/mine/').json()
     titles = {item['title'] for item in body['results']}
@@ -170,7 +172,7 @@ def test_only_the_author_or_admin_can_edit(make_client, other_citizen, make_term
     termine = make_termine()
 
     response = make_client(other_citizen).patch(
-        f'/api/dialetto/{termine.pk}/', {'term': 'Rubato'}, format='multipart',
+        f'/api/dialetto/{termine.pk}/', {'meaning': 'Rubato'}, format='multipart',
     )
 
     assert response.status_code == 403
@@ -252,7 +254,6 @@ def test_translate_creates_an_empty_draft_linked_to_the_source(auth_client, citi
     assert response.status_code == 201
     data = response.json()
     assert data['title'] == ''
-    assert data['term'] == ''
     assert data['language'] == 'en'
     assert data['translation_of'] == str(termine.pk)
 

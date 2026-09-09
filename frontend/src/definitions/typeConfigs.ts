@@ -12,6 +12,10 @@ export interface TypeConfig {
   endpoint: string
   routeNames: { list: string; detail: string; create: string }
   extraFields: FieldConfig[]
+  // Only where the title means something more specific than "the name of this
+  // card" — dialetto's title *is* the dialect word since 2026-09-09, and
+  // "Es. termine" is a poor hint for that.
+  titlePlaceholder?: string
   mapMode: 'none' | 'pins'
   maxPoints?: number
 }
@@ -71,8 +75,8 @@ export const dialettoConfig: TypeConfig = {
   singularLabel: 'termine',
   endpoint: '/api/dialetto/',
   routeNames: { list: 'dialettolist', detail: 'dialettodetail', create: 'dialettocreate' },
+  titlePlaceholder: 'Es. Sciuscià',
   extraFields: [
-    { key: 'term', label: 'Termine', kind: 'input', placeholder: 'Es. Muffato' },
     { key: 'meaning', label: 'Significato', kind: 'textarea', placeholder: 'Il significato...' },
     {
       key: 'example_usage',

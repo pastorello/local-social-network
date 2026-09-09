@@ -204,9 +204,9 @@ thing between a finished build and a public URL:
 >   Italian name with the translation as a subtitle — because the signs in
 >   Gaeta are in Italian and a fully translated title is how a tourist fails to
 >   find the place.
-> - [content.md](./spec/content.md) — whether `Termine` should **drop `term`**,
->   which duplicates the card's title on every dialect entry, both visible to
->   the reader. **Still open.**
+> - ~~[content.md](./spec/content.md) — whether `Termine` should **drop
+>   `term`**.~~ **Answered 2026-09-09: dropped.** The title is the word; the
+>   field said it a second time on every entry.
 > - [content.md](./spec/content.md) — `libri`' **covers**: publisher-supplied
 >   or none, since a scanned jacket is a rights question the archive's own
 >   photographs never raised. **Still open** (2026-09-09).

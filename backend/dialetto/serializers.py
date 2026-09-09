@@ -41,7 +41,7 @@ class TermineReadSerializer(serializers.ModelSerializer):
         model = Termine
         fields = (
             'id', 'title', 'body_html', 'author', 'is_published',
-            'term', 'meaning', 'example_usage', 'images',
+            'meaning', 'example_usage', 'images',
             'language', 'translation_of', 'original_title', 'translations',
             'created_at', 'updated_at',
         )
@@ -53,7 +53,6 @@ class TermineWriteSerializer(serializers.Serializer):
 
     title = serializers.CharField(max_length=200)
     body_html = serializers.CharField(allow_blank=True)
-    term = PlainTextField(max_length=200)
     meaning = PlainTextField()
     example_usage = PlainTextField(required=False, allow_blank=True, default='')
     is_published = serializers.BooleanField(required=False, default=False)
