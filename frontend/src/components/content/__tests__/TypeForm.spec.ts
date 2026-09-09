@@ -25,6 +25,7 @@ const globalStubs = { MapPinsEditor: true, RichTextEditor: true }
 const baseItem: ContentItem = {
   id: '1',
   title: 'Scheda esistente',
+  original_title: 'Scheda esistente',
   body_html: '<p>Testo</p>',
   author: { id: 'u1', name: 'Autore', avatarURL: null },
   is_published: true,

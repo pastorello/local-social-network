@@ -95,7 +95,9 @@ watch(
     <div>
       <template v-if="item && !editing">
         <CardArticle
-          :title="item.title"
+          :title="item.original_title || item.title"
+          :subtitle="item.translation_of ? item.title : null"
+          :language="item.language"
           :body-html="item.body_html"
           :author="item.author"
           :created-at="item.created_at"

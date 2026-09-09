@@ -12,7 +12,17 @@ import type User from '@/definitions/interfaces/User'
 // and a church are the same *article* to a reader, and restyling that twice
 // is how the two drift apart. Same reasoning as C3's generic type views.
 const props = defineProps<{
+  // The card group's name — the original's title, in Italian. It is the same
+  // string for an original and for its translations, on purpose (2026-09-09):
+  // the signs in Gaeta are in Italian, and a fully translated title is how a
+  // tourist fails to find the place they are reading about.
   title: string
+  // The card's own title when it differs — i.e. the translated name, shown
+  // under the Italian one. Absent on an original.
+  subtitle?: string | null
+  // The language this card's prose is in; marks the article for WCAG 3.1.2
+  // (Language of Parts), since the document itself is `lang="it"`.
+  language?: string
   bodyHtml: string
   author: User
   createdAt: string
@@ -39,7 +49,7 @@ const createdAtFormatted = computed(() =>
 </script>
 
 <template>
-  <article class="mx-auto w-full max-w-3xl">
+  <article class="mx-auto w-full max-w-3xl" :lang="language">
     <!-- Full-bleed on a phone, contained above it: the cover is the first
     thing a reader who arrived from a pin sees. -->
     <!-- The wrapper carries the bleed, not the image: a negative margin plus
@@ -62,7 +72,16 @@ const createdAtFormatted = computed(() =>
         <LanguageSwitch :translations="translations" :detail-route-name="detailRouteName" />
       </div>
 
-      <h1 class="mb-4 font-display text-display text-balance text-ink">{{ title }}</h1>
+      <h1
+        class="font-display text-display text-balance text-ink"
+        :class="subtitle ? 'mb-1' : 'mb-4'"
+        lang="it"
+      >
+        {{ title }}
+      </h1>
+      <p v-if="subtitle" class="mb-4 font-display text-title text-balance text-muted">
+        {{ subtitle }}
+      </p>
 
       <p class="flex items-center gap-2 text-sm text-muted">
         <UserAvatar

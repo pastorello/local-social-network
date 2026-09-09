@@ -87,7 +87,9 @@ watch(
     <div>
       <template v-if="feste && !editing">
         <CardArticle
-          :title="feste.title"
+          :title="feste.original_title || feste.title"
+          :subtitle="feste.translation_of ? feste.title : null"
+          :language="feste.language"
           :body-html="feste.body_html"
           :author="feste.author"
           :created-at="feste.created_at"

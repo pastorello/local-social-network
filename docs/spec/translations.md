@@ -24,7 +24,14 @@ alternate rendering of one card, owned by the `content` core so every type
 inherits it (ADR-0004). Which fields are translatable per type (e.g. a recipe's
 ingredient names) is a content-modelling detail for C4, not decided here.
 
-## Open questions — raised 2026-09-07 by translating a real card
+## Both answered — 2026-09-09
+
+The two questions below were raised on 2026-09-07 by translating a real card
+and put to the author on 2026-09-09. His answers are in the sections after
+them; the questions are kept because the reasoning that produced them is what
+makes the answers legible.
+
+## The questions, as raised 2026-09-07
 
 The C4 flow was built and tested against cards that had only text. Translating
 a **real** one — a church with three photographs and a pin — turns two silences
@@ -60,3 +67,61 @@ code says it is. The reason they are written here rather than fixed is that
 each one changes what a reader sees, which is this file's business and not a
 maintenance decision.
 
+
+## T5 — The photographs and the map belong to the original — decided 2026-09-09
+
+**Share**, of the three ways out above. In the author's words, *"le foto sono
+sempre uniche per tutte le lingue"* — one photograph per place, whatever the
+language.
+
+- A translation **shows** the original's images and map features and owns
+  none. `content/serializers.py::media_source` is the one place that resolves
+  this, and every type's Read serializer goes through it.
+- A write that would give a translation its own is **refused, not ignored** —
+  `content/api_helpers.py::reject_media_on_translation`, one guard behind
+  `save_images`, `remove_images`, `replace_points` and feste's route. An upload
+  that vanished silently would read as a rejected file.
+- The collaborator's form on a translation shows the photographs and the map
+  read-only, with the reason, and its upload strip is gone. The cover order is
+  an editorial decision (D5) taken once, on the original.
+
+**Captions are the exception, and they are not built.** `CardImage.caption`
+exists, is serialized, and **no form writes it** — every caption in the archive
+is empty. The author's call for the day they become writable: the translation
+gets *the caption fields and not the images*. That means the caption cannot
+stay a column on the shared `CardImage` row, which is one value where two
+languages need two; it moves to a per (image, language) table. Building that
+now, for a field nobody can fill, would be a table with no rows in it.
+
+## T6 — One thing in the world, one row — decided 2026-09-09
+
+The lists follow the map: **a translation is not a second row**. Every type's
+public list filters `card__translation_of__isnull=True`, so the archive shows
+one card per place and the reader who opens it changes language with the
+switch that is already there.
+
+`mine/` deliberately does **not** filter: it is the only way back to a
+translation a collaborator has not finished, and hiding it there would strand
+work rather than tidy a list.
+
+## T7 — The Italian name is the identity — decided 2026-09-09
+
+Asked what a translated *title* should be, the author gave the reason before
+the rule: a tourist who reads everything in English then stands in front of a
+sign, a map, a poster — all of them in Italian — and is lost. So:
+
+- the **heading of every card is the Italian name**, on the English version
+  too. `original_title` is on every type's Read serializer; on an original it
+  is that card's own title, so a reader of the code needs no special case;
+- the translated name is a **subtitle under it**, which is what the
+  translation's own `title` field now means. The collaborator's form says so:
+  on a translation the label reads "Nome tradotto", with the hint that the
+  title stays Italian;
+- the article carries `lang` and the Italian heading carries `lang="it"`,
+  which is **WCAG 3.1.2 Language of Parts** (AA, so inside ADR-0005's bar) —
+  the document is `lang="it"` and an English card had been saying nothing.
+  This was not asked for; it is the accessibility consequence of the decision.
+
+What this does not do is translate the *body* differently — the prose is the
+translator's, whole. Only the name is treated as an address rather than as
+text.
