@@ -89,10 +89,14 @@ class CollaborationRequest(models.Model):
     APPROVED = 'approved'
     REJECTED = 'rejected'
 
+    # Italian, because Django admin is the review surface and the author is
+    # the one reading it (N4) — the same reason maps.Overlay carries Italian
+    # verbose names. The stored values stay English identifiers; only the
+    # labels are translated, so nothing in the API or the SPA moves.
     STATUS_CHOICES = (
-        (PENDING, 'Pending'),
-        (APPROVED, 'Approved'),
-        (REJECTED, 'Rejected'),
+        (PENDING, 'In attesa'),
+        (APPROVED, 'Approvata'),
+        (REJECTED, 'Rifiutata'),
     )
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -106,6 +110,10 @@ class CollaborationRequest(models.Model):
     reviewed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL
     )
+
+    class Meta:
+        verbose_name = 'richiesta di collaborazione'
+        verbose_name_plural = 'richieste di collaborazione'
 
     def __str__(self):
         return f'{self.name} <{self.email}> ({self.status})'
