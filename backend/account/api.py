@@ -1,8 +1,10 @@
+import logging
 import time
 
 from django.contrib.auth import password_validation
 from django.contrib.auth.forms import PasswordChangeForm
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 
 from rest_framework.decorators import (
@@ -29,6 +31,8 @@ from .throttling import (
     PasswordChangeRateThrottle,
     PasswordResetRateThrottle,
 )
+
+logger = logging.getLogger(__name__)
 
 # A4: the request form is public, so a bot can fill it in well under a human's
 # reaction time — the honeypot catches the ones that autofill every field, this
@@ -131,8 +135,18 @@ def requestpasswordreset(request):
     email = request.data.get('email', '')
     user = User.objects.filter(email=email, is_active=True).first()
     if user is not None and user.has_usable_password():
-        token, raw_token = AccountToken.create_for(user, AccountToken.RESET)
-        send_password_reset_email(user, raw_token)
+        try:
+            with transaction.atomic():
+                token, raw_token = AccountToken.create_for(user, AccountToken.RESET)
+                send_password_reset_email(user, raw_token)
+        except OSError:
+            # The same reply as always, even though nothing was sent. Until
+            # 2026-09-10 a mail server that did not answer turned this into a
+            # 500 for a registered address and a 200 for an unknown one — the
+            # enumeration the fixed reply below exists to prevent, open for as
+            # long as mail is down. The address is not logged: the log is where
+            # an operator looks, not a list of who asked.
+            logger.exception('Password-reset e-mail could not be sent.')
 
     # Always the same response, whether or not the address is registered —
     # anything else would let a caller enumerate collaborator e-mails.

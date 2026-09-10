@@ -179,13 +179,28 @@ thing between a finished build and a public URL:
   migration (TD-34) landed, so the configuration is in its final shape. What
   remains is genuinely an input rather than code — a provider and a sender
   domain (spec §11.3).
-- **The compose path wants re-walking.** `docs/deploy.md` part 1 was written by
-  running it on 2026-08-30, and the three things that landed after are exactly
-  deploy-shaped: the database cache for the rate limits, the `MAILERS`
-  migration, and the app serving its own media ([ADR-0007](./adr/0007-serving-media-from-the-app.md)).
-  None of that depends on which host is chosen, so it can be checked now rather
-  than on the day — and a guide that was true last week is the kind that fails
-  quietly. Needs nothing from the author.
+- ~~**The compose path wants re-walking.**~~ **Done 2026-09-10**, against a
+  live production-shaped stack on the author's machine (`DOMAIN=localhost`, so
+  Caddy's local CA stood in for Let's Encrypt — the one step a laptop cannot
+  rehearse). The premise was half wrong: the three deploy-shaped changes it
+  named had landed the same day as the guide, not after. What *had* landed
+  after — four migrations that had only ever run on SQLite — applied cleanly
+  on Postgres 17.
+  **It found five problems, and fixed all five**: an unquoted secret key loses
+  every `$abc` to Compose's interpolation, which is two keys in three; the
+  backup command expanded its variables in the wrong shell and wrote a 20-byte
+  "successful" backup; approving a request with mail down left an account
+  nobody could use and a request nobody could re-approve (TD-38); password
+  reset told a stranger which addresses exist whenever mail was down (TD-39);
+  and none of it would have been diagnosable, because a production 500 wrote no
+  traceback anywhere (TD-40). The code fixes were verified on the same stack
+  after an update done with the guide's own procedure.
+  **What worked as written**: the HTTP surface through Caddy (SPA, deep links,
+  API, admin, static files, the 80→443 redirect, the security headers), admin
+  login over HTTPS, media served with ADR-0007's headers, the rate limit shared
+  by three workers and not fooled by a forged `X-Forwarded-For`, the update
+  procedure, and the media backup, whose restored photo matched the served one
+  byte for byte.
 - `VITE_API_BASE_URL` is baked at build time, so the SPA build is
   environment-specific.
 - ~~**TD-06** (remaining dependency drift)~~ — **minors done 2026-08-30**,

@@ -51,6 +51,13 @@ Fill in `deploy/.env`. Generate the secret key with:
 docker run --rm python:3.14-slim sh -c "pip install -q django && python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'"
 ```
 
+**Put the key between single quotes** in `.env` — `DJANGO_SECRET_KEY='…'`.
+The generator above draws from a set of characters that includes `$`, and
+Compose reads an unquoted `$abc` inside a value as a variable: the key reaches
+Django with that piece cut out, and the only sign is one warning line in the
+log. About two keys in three contain a `$`. Checked on 2026-09-10 with
+`docker compose config`, which shows what the containers will actually receive.
+
 Then start it:
 
 ```sh
@@ -87,20 +94,38 @@ docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
 Migrations, the cache table and `collectstatic` run on every start, because all
 three are idempotent and forgetting one is the failure mode.
 
+Run it **from the repository's root**: the paths are relative, and from anywhere
+else Compose answers `couldn't find env file` and changes nothing. Walked on
+2026-09-10 against a live stack with data in it — `api` and `web` were rebuilt
+and recreated, `db` and its volume were left alone, the second start printed
+`No migrations to apply` and re-collected the static files, and the card and
+photo uploaded before the update were still there after it.
+
 ### Backups — the two things that are not in git
 
 ```sh
 # database
 docker compose -f deploy/docker-compose.yml --env-file deploy/.env exec -T db \
-  pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" | gzip > backup-$(date +%F).sql.gz
+  sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' | gzip > backup-$(date +%F).sql.gz
 
 # uploads (photos, card covers, overlay rasters)
 docker run --rm -v vivere-gaeta_media:/media -v "$PWD":/out alpine \
   tar czf /out/media-$(date +%F).tar.gz -C /media .
 ```
 
+**The single quotes around `pg_dump` are the whole point.** `POSTGRES_USER` and
+`POSTGRES_DB` exist inside the container, not in the shell you type into.
+Without the quotes your shell expands them to nothing, `pg_dump` connects as
+`root` and fails — and `gzip` still writes a 20-byte file and exits 0. A
+scheduled backup in that shape reports success every night and contains
+nothing. This guide printed it that way until 2026-09-10, when running it
+turned the problem up. **Check the size of the first backup you take**; a real
+one of an empty archive is several kilobytes and lists every table.
+
 Losing the `media` volume loses every photo, and nothing else has a copy. Put
-both on a schedule before the archive has anything in it worth losing.
+both on a schedule before the archive has anything in it worth losing. Both
+commands were run against a live stack on 2026-09-10, and a photo taken out of
+the media archive matched the one the site served, byte for byte.
 
 ### What will bite you
 
@@ -110,8 +135,19 @@ both on a schedule before the archive has anything in it worth losing.
 - **Rotating `DJANGO_SECRET_KEY`** logs everyone out: it also signs the JWTs.
 - **No SMTP, no invitations.** Approving a collaboration request sends an
   e-mail with a single-use link, and that is the only way a collaborator ever
-  sets a password. Without `EMAIL_HOST`, approval silently produces an account
-  nobody can log into.
+  sets a password. Without a mail server that answers, approval now **fails in
+  plain sight**: the admin says the invite was not sent, no account is created,
+  and the request stays pending so it can be approved again once mail works.
+  Until 2026-09-10 it was worse than this guide said — the account was created,
+  the admin answered 500, and every later approval was refused with "esiste già
+  un account", so the person could never get in. Password reset has the same
+  dependency and now answers the same way for every address even when mail is
+  down; before, a 500 for a registered address gave away who has an account.
+- **When something answers 500, the reason is in the logs.**
+  `docker compose -f deploy/docker-compose.yml --env-file deploy/.env logs api`
+  shows the full traceback of any server error. Only errors are written — not
+  the 404s every public host collects — so it stays readable. Until 2026-09-10
+  a production 500 left nothing behind but its status code (TD-40).
 - **`docker compose down -v` deletes the volumes**, including uploads and the
   certificates. `down` without `-v` is the safe one.
 

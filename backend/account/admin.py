@@ -1,10 +1,15 @@
-from django.contrib import admin
+import logging
+
+from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.db import transaction
 from django.utils import timezone
 
 from account.forms import AdminUserChangeForm, SignupForm
 from account.models import AccountToken, CollaborationRequest, User
 from account.services import send_invite_email
+
+logger = logging.getLogger(__name__)
 
 
 @admin.register(User)
@@ -64,17 +69,46 @@ class CollaborationRequestAdmin(admin.ModelAdmin):
                 )
                 continue
 
-            user = User(email=collab_request.email, name=collab_request.name, role=User.CITIZEN)
-            user.set_unusable_password()
-            user.save()
+            # One unit: the account, its invite token, the request's new status
+            # and the e-mail stand or fall together. The send is last and inside
+            # the transaction, so a mail server that does not answer rolls back
+            # everything before it. Until 2026-09-10 it did not: with SMTP down
+            # the user was saved, the send raised a 500, the request stayed
+            # pending — and a second approval answered "esiste già un account",
+            # for ever. A person who could never log in, and a request the
+            # author could never approve again. Found walking deploy/ by hand.
+            try:
+                with transaction.atomic():
+                    user = User(
+                        email=collab_request.email, name=collab_request.name, role=User.CITIZEN
+                    )
+                    user.set_unusable_password()
+                    user.save()
 
-            _token, raw_token = AccountToken.create_for(user, AccountToken.INVITE)
-            send_invite_email(user, raw_token)
+                    _token, raw_token = AccountToken.create_for(user, AccountToken.INVITE)
 
-            collab_request.status = CollaborationRequest.APPROVED
-            collab_request.reviewed_at = timezone.now()
-            collab_request.reviewed_by = request.user
-            collab_request.save(update_fields=('status', 'reviewed_at', 'reviewed_by'))
+                    collab_request.status = CollaborationRequest.APPROVED
+                    collab_request.reviewed_at = timezone.now()
+                    collab_request.reviewed_by = request.user
+                    collab_request.save(update_fields=('status', 'reviewed_at', 'reviewed_by'))
+
+                    send_invite_email(user, raw_token)
+            except OSError:
+                # OSError covers what a missing or unreachable mail server
+                # raises: a refused connection, an unknown host, and every
+                # smtplib.SMTPException (a subclass since Python 3.4).
+                logger.exception(
+                    'Invite e-mail to %s could not be sent; approval rolled back.',
+                    collab_request.email,
+                )
+                self.message_user(
+                    request,
+                    f'{collab_request.email}: invito non inviato, la posta non risponde. '
+                    'Nessun account creato: la richiesta resta in attesa e si può '
+                    'riapprovare quando la posta funziona.',
+                    messages.ERROR,
+                )
+                continue
             approved += 1
 
         if approved:
