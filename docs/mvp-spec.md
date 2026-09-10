@@ -142,7 +142,7 @@ Migration tasks recorded by the audit: existing list endpoints implemented as `P
 - **Frontend:** Vitest + Vue Test Utils. Every store/composable with logic has unit tests; each view has at least one rendering test. Cypress covers end-to-end flows against a production build. Target: meaningful coverage of logic, not a vanity %.
 - **Backend:** pytest + DRF test client. Every endpoint: happy path + auth/permission failure + validation failure.
 - **Linting:** oxlint then ESLint (`vueTsConfigs.recommended` + `eslint-plugin-vue` essential), plus Prettier; ruff for Python. CI runs both linters check-only — `npm run lint` applies `--fix`.
-- **Definition of done** for a feature: the spec section it implements is referenced, pytest + Vitest green, ruff + ESLint clean, `npm run build` green. All of it runs in CI on every push and pull request.
+- **Definition of done** for a feature: the spec section it implements is referenced, pytest + Vitest green, ruff + ESLint + Prettier (`--check`) clean, `npm run build` green. All of it runs in CI on every push and pull request.
 
 ## 10. Working agreement
 

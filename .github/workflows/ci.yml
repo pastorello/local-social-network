@@ -81,6 +81,12 @@ jobs:
       - name: Lint (eslint)
         run: npx eslint .
 
+      # TD-35, adopted 2026-09-10. Formatting drift was invisible until somebody
+      # ran a command nobody ran — two files sat unclean for nine days that way.
+      # Check-only, like the linters: `npm run format` writes, this does not.
+      - name: Format (prettier)
+        run: npx prettier --check .
+
       # `npm run test:unit` is watch mode; `-- run` makes it a single pass.
       - name: Test (vitest)
         run: npm run test:unit -- run
@@ -126,6 +132,10 @@ jobs:
         env:
           DJANGO_DEBUG: 'true'
           CORS_ALLOWED_ORIGINS: 'http://localhost:4173,http://127.0.0.1:4173'
+          # Where the API writes its mail, so the invite journey can read the
+          # link the way its recipient would (settings.py, DEBUG only). The
+          # Cypress step below reads the same directory.
+          E2E_MAIL_DIR: ${{ runner.temp }}/mail
         run: |
           python manage.py migrate --noinput
           python manage.py seed_e2e
@@ -157,6 +167,8 @@ jobs:
       # is where the step above put it — so the production build needs no extra
       # environment here. It would if the API ever moved.
       - name: Run Cypress
+        env:
+          E2E_MAIL_DIR: ${{ runner.temp }}/mail
         run: npm run test:e2e
 
       - name: Upload failure artifacts
@@ -168,5 +180,6 @@ jobs:
             frontend/cypress/screenshots
             frontend/cypress/videos
             backend/api.log
+            ${{ runner.temp }}/mail
           if-no-files-found: ignore
           retention-days: 7

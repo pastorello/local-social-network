@@ -134,7 +134,7 @@ output, which is also why CI runs Cypress there.
 `npm run format` is `prettier --write src/`. The tree **is** prettier-clean as
 of 2026-08-27 (`npx prettier --check .` passes, `eslint.config.ts` included),
 so running it now touches only what you changed — it used to rewrite ~30
-unrelated files, which is why it is still not part of the definition of done.
+unrelated files, which is why it was kept out of the definition of done until the tree was clean. **It is part of it since 2026-09-10** (TD-35): CI runs `npx prettier --check .` in the frontend job, check-only.
 Keep it that way: if a formatting sweep ever becomes necessary again, it goes
 in its own commit, never mixed into a feature diff.
 
@@ -142,7 +142,7 @@ in its own commit, never mixed into a feature diff.
 
 `.github/workflows/ci.yml` runs the gates on every push to `main` and every pull
 request: backend (ruff + pytest, Python 3.14, SQLite fallback) and frontend
-(oxlint + eslint + vitest + build, Node 22). A third job runs
+(oxlint + eslint + prettier `--check` + vitest + build, Node 22). A third job runs
 Cypress against a **production build** (`npm run test:e2e`, vite preview on
 :4173) — not the dev server, because TD-02's double Leaflet bundle and the
 default-import gotcha only appear in built output. It must stay green. Two
@@ -164,9 +164,23 @@ blocked by the browser while the server cheerfully logs a 200, and the specs
 fail as if the data were missing:
 
 ```sh
-cd backend && DJANGO_DEBUG=true CORS_ALLOWED_ORIGINS='http://localhost:4173,http://127.0.0.1:4173' \
-  python manage.py seed_e2e && python manage.py runserver 127.0.0.1:8000 --noreload
+cd backend && export DJANGO_DEBUG=true E2E_MAIL_DIR=/tmp/vivere-gaeta-mail \
+  CORS_ALLOWED_ORIGINS='http://localhost:4173,http://127.0.0.1:4173'
+python manage.py seed_e2e && python manage.py runserver 127.0.0.1:8000 --noreload
+# then, from frontend/, after a build:
+#   E2E_MAIL_DIR=/tmp/vivere-gaeta-mail npm run test:e2e
 ```
+
+`export`, not a prefix, and it matters: `VAR=x a && b` gives the variables to
+`a` only, so the command this block used to print started `runserver` with
+neither DEBUG nor the preview origin — the very failure the paragraph above
+warns about (found 2026-09-10). **`E2E_MAIL_DIR` must name the same directory
+for the API and for Cypress**: the API writes its mail there as files (DEBUG
+only, a branch production cannot reach) and the `inviteLink` task in
+`cypress.config.ts` reads the invite back, so `collabora.cy.ts` can follow a
+request through the author's approval in Django admin to a collaborator who
+signs in. `seed_e2e` makes its admin a Django superuser for that reason, and
+clears every `@e2e.test` request and `invito-…` account a previous run left.
 
 **The WCAG 2.1 AA gate lives in that same job** (`cypress/e2e/a11y.cy.ts`,
 2026-08-31): axe-core through `cypress-axe`, ADR-0005's four WCAG tags and no
@@ -181,7 +195,7 @@ floor, not a conformance claim: while the auth forms' labels were unassociated
 the gate passed them anyway, because an input takes an accessible name from its
 `placeholder` — ADR-0005 is what got them fixed, not a red build. **Watch the login
 count when adding specs:** the endpoint is rate limited to 10/min per IP
-(TD-18) and a whole run spends seven of those, so a new suite that signs in per test
+(TD-18) and a whole run spends eight of those (the invite journey in `collabora.cy.ts` signs its new collaborator in once), so a new suite that signs in per test
 turns the whole run intermittently red with a 429 the SPA reports as a wrong
 password. The a11y spec's collaborator block uses `testIsolation: false` and
 one `before` login for that reason. **`cy.session` is not the answer here**:
@@ -193,7 +207,7 @@ and it fails as 401s on every write.
 
 Two upgrades are **held back on purpose**, with the reasons in TD-06 rather than in a lockfile nobody reads: **cypress 16** (`cypress-axe@1.7.0` peers only up to 15, so the a11y gate's plugin would go to an invalid peer state — and 16 counts a `.sr-only` element as visible, which `login.cy.ts` asserts against) and **typescript 7** (`vue-tsc` cannot load it: `ERR_PACKAGE_PATH_NOT_EXPORTED`).
 
-Definition of done for a feature (spec §9): the spec section it implements is referenced, pytest + Vitest green, ruff + eslint clean, `npm run build` green. CI runs all of it on every push and pull request.
+Definition of done for a feature (spec §9): the spec section it implements is referenced, pytest + Vitest green, ruff + eslint + prettier (`--check`) clean, `npm run build` green. CI runs all of it on every push and pull request.
 
 ## External agent skills (agent-skills + impeccable)
 
@@ -232,7 +246,7 @@ authority, planned work goes in [docs/roadmap.md](docs/roadmap.md), debt in
 has no session logs, by decision (2026-08-20).
 
 **Definition of done** stays the project's own (spec §9): pytest + ruff + Vitest
-+ eslint + `npm run build`. A skill's generic checklist does not replace it.
++ eslint + prettier `--check` + `npm run build`. A skill's generic checklist does not replace it.
 
 **Language.** Both packs write English by default; UI copy in this app is Italian
 (N4). Any copy a skill proposes for the SPA must be translated before it lands.

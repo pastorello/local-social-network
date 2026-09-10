@@ -15,7 +15,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
-from account.models import User
+from account.models import CollaborationRequest, User
 from chiese.models import Chiesa
 from content.models import Card, MapFeature
 from feste.models import Feste
@@ -72,7 +72,13 @@ class Command(BaseCommand):
 
         collaborator = self._user(COLLABORATOR_EMAIL, 'Collaboratore E2E')
         removed = self._clear_previous_runs(collaborator)
-        admin = self._user(ADMIN_EMAIL, 'Amministratore E2E', role=User.ADMIN)
+        # A Django superuser as well as role=admin, because that is what the
+        # author is in production (docs/deploy.md creates one) and approving a
+        # collaboration request is a Django admin action — the invite journey in
+        # collabora.cy.ts signs in there as this account. `role` is still what
+        # the product's own permissions read.
+        admin = self._user(ADMIN_EMAIL, 'Amministratore E2E', role=User.ADMIN, staff=True)
+        self._clear_invite_journeys()
 
         published = self._card(PUBLISHED_CHIESA, collaborator, is_published=True)
         Chiesa.objects.get_or_create(card=published)
@@ -179,10 +185,24 @@ class Command(BaseCommand):
 
         return count
 
-    def _user(self, email, name, role=User.CITIZEN):
+    def _clear_invite_journeys(self):
+        """collabora.cy.ts files requests on every run and, since 2026-09-10,
+        follows one all the way to an account — each under a fresh address, so
+        reruns never collide. Same rule as the collaborator's cards above: every
+        request from an @e2e.test address, and every account the journey made,
+        is a test artefact by construction, and a database that survives
+        between runs should not collect them. The fixture accounts are not
+        `invito-…`, and none of them files a request, so neither filter can
+        reach one."""
+        CollaborationRequest.objects.filter(email__endswith='@e2e.test').delete()
+        User.objects.filter(email__startswith='invito-', email__endswith='@e2e.test').delete()
+
+    def _user(self, email, name, role=User.CITIZEN, staff=False):
         user, _ = User.objects.get_or_create(email=email, defaults={'name': name})
         user.name = name
         user.role = role
+        user.is_staff = staff
+        user.is_superuser = staff
         user.set_password(PASSWORD)
         user.save()
         return user
