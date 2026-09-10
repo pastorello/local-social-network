@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import axios from 'axios'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { useToastStore } from '@/stores/toast'
 import type Feste from '@/definitions/interfaces/Feste'
@@ -35,6 +35,13 @@ const route = ref<RoutePoint[]>(props.feste?.route ?? [])
 const imageEntries = ref<CardImageEntry[]>(toEntries(props.feste?.images))
 const removedImageIds = ref<(string | number)[]>([])
 
+// The photographs and the procession's route belong to the original card, in
+// every language (spec translations.md, 2026-09-09). A translation shows them
+// and cannot edit them; the API refuses the write too, this only keeps the
+// form from offering something that would be rejected.
+const isTranslation = computed(() => props.feste?.translation_of != null)
+const sharedImages = computed(() => props.feste?.images ?? [])
+
 const formErrors = ref<string[]>([])
 const fieldErrors = ref<Record<string, string[]>>({})
 const submitting = ref(false)
@@ -51,8 +58,10 @@ const submitForm = async () => {
   formData.append('recurrence', recurrence.value)
   formData.append('programme', programme.value)
   formData.append('is_published', String(isPublished.value))
-  formData.append('route', JSON.stringify(route.value))
-  appendImages(formData, imageEntries.value, removedImageIds.value)
+  if (!isTranslation.value) {
+    formData.append('route', JSON.stringify(route.value))
+    appendImages(formData, imageEntries.value, removedImageIds.value)
+  }
 
   submitting.value = true
   try {
@@ -81,7 +90,12 @@ const submitForm = async () => {
     <fieldset class="space-y-5">
       <legend class="mb-4 font-display text-title text-ink">Contenuto</legend>
 
-      <FormField field-id="feste-title" label="Titolo" :errors="fieldErrors.title">
+      <FormField
+        field-id="feste-title"
+        :label="isTranslation ? 'Nome tradotto' : 'Titolo'"
+        :hint="isTranslation ? 'Il titolo resta quello italiano: questo compare sotto.' : undefined"
+        :errors="fieldErrors.title"
+      >
         <template #default="{ describedBy, invalid }">
           <FormInput
             id="feste-title"
@@ -146,7 +160,22 @@ const submitForm = async () => {
 
     <fieldset class="space-y-4">
       <legend class="mb-4 font-display text-title text-ink">Immagini</legend>
+      <template v-if="isTranslation">
+        <p class="text-body text-muted">
+          Le fotografie sono quelle della scheda originale, per ogni lingua. Si modificano da lì.
+        </p>
+        <ul v-if="sharedImages.length" class="flex flex-wrap gap-3">
+          <li v-for="image in sharedImages" :key="image.id">
+            <img
+              :src="image.imageURL"
+              :alt="image.caption || title"
+              class="h-20 w-20 rounded-lg object-cover"
+            />
+          </li>
+        </ul>
+      </template>
       <CardImagesField
+        v-else
         field-id="feste-images"
         v-model:entries="imageEntries"
         v-model:removed-ids="removedImageIds"
@@ -156,7 +185,10 @@ const submitForm = async () => {
 
     <fieldset class="space-y-4">
       <legend class="mb-4 font-display text-title text-ink">Il percorso</legend>
-      <FesteRouteEditor v-model="route" />
+      <p v-if="isTranslation" class="text-body text-muted">
+        Il percorso è quello della scheda originale. Si modifica da lì.
+      </p>
+      <FesteRouteEditor v-model="route" :readonly="isTranslation" />
     </fieldset>
 
     <fieldset class="space-y-4">

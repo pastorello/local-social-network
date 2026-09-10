@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from account.serializers import UserSerializer
-from content.serializers import CardImageSerializer, TranslationSerializer, visible_translations
+from content.serializers import CardImageSerializer, TranslationSerializer, media_source, visible_translations
 from content.fields import PlainTextField
 from content.sanitize import sanitize_html
 
@@ -20,9 +20,18 @@ class TermineReadSerializer(serializers.ModelSerializer):
     translation_of = serializers.PrimaryKeyRelatedField(source='card.translation_of', read_only=True)
     images = serializers.SerializerMethodField()
     translations = serializers.SerializerMethodField()
+    original_title = serializers.SerializerMethodField()
 
     def get_images(self, obj):
-        return CardImageSerializer(obj.card.images.all(), many=True).data
+        return CardImageSerializer(media_source(obj.card).images.all(), many=True).data
+
+    def get_original_title(self, obj):
+        # The card group's name, which is the original's title (2026-09-09):
+        # a reader of the English version needs the Italian name, because the
+        # signs in Gaeta are in Italian and a fully translated title is how a
+        # tourist fails to find the place. For an original this is its own
+        # title, so callers need no special case.
+        return media_source(obj.card).title
 
     def get_translations(self, obj):
         request = self.context.get('request')
@@ -32,8 +41,8 @@ class TermineReadSerializer(serializers.ModelSerializer):
         model = Termine
         fields = (
             'id', 'title', 'body_html', 'author', 'is_published',
-            'term', 'meaning', 'example_usage', 'images',
-            'language', 'translation_of', 'translations',
+            'meaning', 'example_usage', 'images',
+            'language', 'translation_of', 'original_title', 'translations',
             'created_at', 'updated_at',
         )
 
@@ -44,7 +53,6 @@ class TermineWriteSerializer(serializers.Serializer):
 
     title = serializers.CharField(max_length=200)
     body_html = serializers.CharField(allow_blank=True)
-    term = PlainTextField(max_length=200)
     meaning = PlainTextField()
     example_usage = PlainTextField(required=False, allow_blank=True, default='')
     is_published = serializers.BooleanField(required=False, default=False)

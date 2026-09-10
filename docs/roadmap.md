@@ -108,14 +108,18 @@ and are unblocked by the same event (they will have stopped):
   different things lived under that one sentence and were conflated until
   2026-09-08:
   - **Automating it** needs a decision — the invite token arrives by e-mail, so
-    either a spec reads an outbox or a test-only endpoint has to exist. That is
-    the half waiting on the author.
-  - **Walking it once, by hand, needs nothing from anybody** — and nobody has:
-    approve a request in the admin, read the mail the console backend prints,
-    follow the link, choose a password, sign in. It is the path by which every
-    collaborator after the author gets an account, so if it is broken the
-    author finds out the first time he tries to add somebody. Worth doing
-    before that day, the way the overlay admin and the five card types were.
+    either a spec reads an outbox or a test-only endpoint has to exist (which
+    means production code carrying a door that exists for tests). **Still the
+    half waiting on the author.**
+  - ~~**Walking it once, by hand**~~ — **done 2026-09-09**, and it works end to
+    end: request, admin approval, the e-mail, the link, the password, the login,
+    and the new collaborator reaching an authoring form. The single-use token
+    and the field-attributed password mismatch were checked rather than assumed.
+    What it found was on the *review* surface, not the reader's:
+    **Django admin was answering in English** ("Pending", "Collaboration
+    requests") on the one screen where the author decides about a person —
+    fixed the same day. The full account is at the foot of
+    [spec/accounts.md](./spec/accounts.md).
 - ~~**The three items ADR-0005 deferred**~~ — **all three settled**: two
   built, the third decided. **The focus-order and skip-link pass the ADR lists
   separately is done too (2026-09-08)**, which empties that list entirely: a
@@ -191,19 +195,25 @@ thing between a finished build and a public URL:
 
 ## 4. Content and input — the author's own, in parallel
 
-> **Three product questions are open in the specs and are not visible from this
-> file** — recorded here as pointers on 2026-09-08, because a reader who plans
-> from the roadmap would otherwise never meet them. All three were raised by
-> writing real content rather than by reading code:
+> **Product questions the specs hold and this file does not show** —
+> recorded here as pointers on 2026-09-08, because a reader who plans from the
+> roadmap would otherwise never meet them. All were raised by writing real
+> content rather than by reading code.
 >
-> - [translations.md](./spec/translations.md) — whether a translation should
->   **copy, share or do without** the original's images and map point (today it
->   has none, so the English archive has no pictures until every photograph is
->   uploaded twice), and whether translations should keep appearing as
->   **separate rows in every list** while the map deliberately excludes them.
-> - [content.md](./spec/content.md) — whether `Termine` should **drop `term`**,
->   which duplicates the card's title on every dialect entry, both visible to
->   the reader.
+> - ~~[translations.md](./spec/translations.md) — images, map point, and
+>   whether a translation is its own row in every list.~~ **Answered
+>   2026-09-09 and built the same day** (T5/T6/T7): the photographs and the
+>   place belong to the original in every language, the lists follow the map
+>   with one row per thing, and the heading of a translated card stays the
+>   Italian name with the translation as a subtitle — because the signs in
+>   Gaeta are in Italian and a fully translated title is how a tourist fails to
+>   find the place.
+> - ~~[content.md](./spec/content.md) — whether `Termine` should **drop
+>   `term`**.~~ **Answered 2026-09-09: dropped.** The title is the word; the
+>   field said it a second time on every entry.
+> - ~~[content.md](./spec/content.md) — `libri`' **covers**.~~ **Answered
+>   2026-09-09: the publisher's image or none, never a scan.** No code can tell
+>   the two apart, so the rule is attached to the upload field as its hint.
 >
 > Each changes what a reader sees, which is why they are the author's and not
 > maintenance.

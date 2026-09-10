@@ -20,7 +20,7 @@ from .serializers import TermineReadSerializer, TermineWriteSerializer
 
 
 def _base_queryset():
-    return Termine.objects.select_related('card', 'card__author').prefetch_related('card__images')
+    return Termine.objects.select_related('card', 'card__author', 'card__translation_of').prefetch_related('card__images', 'card__translation_of__images')
 
 
 @api_view(['GET', 'POST'])
@@ -39,7 +39,7 @@ def termine_list(request):
                 author=request.user, is_published=data['is_published'],
             )
             termine = Termine.objects.create(
-                card=card, term=data['term'], meaning=data['meaning'],
+                card=card, meaning=data['meaning'],
                 example_usage=data['example_usage'],
             )
             save_images(card, request.FILES.getlist('images'), request.data.get('image_order'))
@@ -48,7 +48,13 @@ def termine_list(request):
         return Response(TermineReadSerializer(termine, context={'request': request}).data, status=201)
 
     paginator = StandardPagination()
-    queryset = _base_queryset().filter(card__is_published=True)
+    # One thing in the world, one row (spec translations.md, 2026-09-09): a
+    # published translation is a second Card for the same church, and listing
+    # both put the same doorstep twice in the archive under two titles. The map
+    # had already taken this decision in C5; the lists follow it. `mine/` below
+    # deliberately does not — a collaborator needs the way back to the
+    # translation they have not finished.
+    queryset = _base_queryset().filter(card__is_published=True, card__translation_of__isnull=True)
     page = paginator.paginate_queryset(queryset, request)
     return paginator.get_paginated_response(
         TermineReadSerializer(page, many=True, context={'request': request}).data
@@ -99,7 +105,7 @@ def termine_detail(request, pk):
                 setattr(card, field, data[field])
         card.save()
 
-        for field in ('term', 'meaning', 'example_usage'):
+        for field in ('meaning', 'example_usage'):
             if field in data:
                 setattr(termine, field, data[field])
         termine.save()
@@ -117,7 +123,7 @@ def termine_translate(request, pk):
     language = request.data.get('language')
     new_card = start_translation(
         request, termine.card, Termine, language,
-        extra_defaults={'term': '', 'meaning': '', 'example_usage': ''},
+        extra_defaults={'meaning': '', 'example_usage': ''},
     )
     translation = _base_queryset().get(pk=new_card.pk)
     return Response(TermineReadSerializer(translation, context={'request': request}).data, status=201)

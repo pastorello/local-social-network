@@ -27,8 +27,12 @@ MAX_PINS = 1
 
 
 def _base_queryset():
-    return Chiesa.objects.select_related('card', 'card__author').prefetch_related(
-        'card__images', 'card__map_features'
+    return Chiesa.objects.select_related('card', 'card__author', 'card__translation_of').prefetch_related(
+        'card__images', 'card__map_features',
+        # A translation shows the original's photographs and geometry
+        # (content/serializers.py::media_source), so the original's are part of
+        # this query rather than one extra query per row of a list.
+        'card__translation_of__images', 'card__translation_of__map_features',
     )
 
 
@@ -56,7 +60,13 @@ def chiesa_list(request):
         return Response(ChiesaReadSerializer(chiesa, context={'request': request}).data, status=201)
 
     paginator = StandardPagination()
-    queryset = _base_queryset().filter(card__is_published=True)
+    # One thing in the world, one row (spec translations.md, 2026-09-09): a
+    # published translation is a second Card for the same church, and listing
+    # both put the same doorstep twice in the archive under two titles. The map
+    # had already taken this decision in C5; the lists follow it. `mine/` below
+    # deliberately does not — a collaborator needs the way back to the
+    # translation they have not finished.
+    queryset = _base_queryset().filter(card__is_published=True, card__translation_of__isnull=True)
     page = paginator.paginate_queryset(queryset, request)
     return paginator.get_paginated_response(
         ChiesaReadSerializer(page, many=True, context={'request': request}).data

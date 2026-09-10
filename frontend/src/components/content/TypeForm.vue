@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import axios from 'axios'
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 
 import { useToastStore } from '@/stores/toast'
 import type { TypeConfig } from '@/definitions/typeConfigs'
@@ -34,6 +34,13 @@ const pins = ref<MapPoint[]>((props.item?.pins as MapPoint[]) ?? [])
 const imageEntries = ref<CardImageEntry[]>(toEntries(props.item?.images))
 const removedImageIds = ref<(string | number)[]>([])
 
+// The photographs and the map belong to the original card, in every language
+// (spec translations.md, 2026-09-09): one place, one picture, one pin. So a
+// translation shows them and cannot edit them — the API refuses the write too,
+// this only keeps the form from offering something that would be rejected.
+const isTranslation = computed(() => props.item?.translation_of != null)
+const sharedImages = computed(() => props.item?.images ?? [])
+
 const extraValues = reactive<Record<string, string>>(
   Object.fromEntries(
     props.config.extraFields.map((field) => [field.key, (props.item?.[field.key] as string) ?? '']),
@@ -59,10 +66,12 @@ const submitForm = async () => {
   for (const field of props.config.extraFields) {
     formData.append(field.key, extraValues[field.key] ?? '')
   }
-  if (props.config.mapMode === 'pins') {
+  if (props.config.mapMode === 'pins' && !isTranslation.value) {
     formData.append('pins', JSON.stringify(pins.value))
   }
-  appendImages(formData, imageEntries.value, removedImageIds.value)
+  if (!isTranslation.value) {
+    appendImages(formData, imageEntries.value, removedImageIds.value)
+  }
 
   submitting.value = true
   try {
@@ -94,7 +103,16 @@ const submitForm = async () => {
     <fieldset class="space-y-5">
       <legend class="mb-4 font-display text-title text-ink">Contenuto</legend>
 
-      <FormField field-id="type-form-title" label="Titolo" :errors="fieldErrors.title">
+      <!-- On a translation the title is the translated name, which the
+      article shows *under* the Italian one (2026-09-09) — so the label says
+      that, rather than asking for a "title" the reader will never see as the
+      heading. -->
+      <FormField
+        field-id="type-form-title"
+        :label="isTranslation ? 'Nome tradotto' : 'Titolo'"
+        :hint="isTranslation ? 'Il titolo resta quello italiano: questo compare sotto.' : undefined"
+        :errors="fieldErrors.title"
+      >
         <template #default="{ describedBy, invalid }">
           <FormInput
             id="type-form-title"
@@ -102,7 +120,7 @@ const submitForm = async () => {
             v-model="title"
             :invalid="invalid"
             :aria-describedby="describedBy"
-            :placeholder="`Es. ${config.singularLabel}`"
+            :placeholder="config.titlePlaceholder ?? `Es. ${config.singularLabel}`"
           />
         </template>
       </FormField>
@@ -157,8 +175,24 @@ const submitForm = async () => {
 
     <fieldset class="space-y-4">
       <legend class="mb-4 font-display text-title text-ink">Immagini</legend>
+      <template v-if="isTranslation">
+        <p class="text-body text-muted">
+          Le fotografie sono quelle della scheda originale, per ogni lingua. Si modificano da lì.
+        </p>
+        <ul v-if="sharedImages.length" class="flex flex-wrap gap-3">
+          <li v-for="image in sharedImages" :key="image.id">
+            <img
+              :src="image.imageURL"
+              :alt="image.caption || title"
+              class="h-20 w-20 rounded-lg object-cover"
+            />
+          </li>
+        </ul>
+      </template>
       <CardImagesField
+        v-else
         field-id="type-form-images"
+        :hint-suffix="config.imagesHint"
         v-model:entries="imageEntries"
         v-model:removed-ids="removedImageIds"
         :errors="fieldErrors.images"
@@ -169,7 +203,10 @@ const submitForm = async () => {
       <legend class="mb-4 font-display text-title text-ink">
         {{ config.maxPoints === 1 ? 'Il punto sulla mappa' : 'I punti sulla mappa' }}
       </legend>
-      <MapPinsEditor v-model="pins" :max="config.maxPoints ?? 1" />
+      <p v-if="isTranslation" class="text-body text-muted">
+        Il luogo è quello della scheda originale. Si sposta da lì.
+      </p>
+      <MapPinsEditor v-model="pins" :max="config.maxPoints ?? 1" :readonly="isTranslation" />
     </fieldset>
 
     <fieldset class="space-y-4">
