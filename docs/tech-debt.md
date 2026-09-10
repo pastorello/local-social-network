@@ -1211,3 +1211,63 @@ should go in with step 2.
 > doing if it ever becomes the reason somebody skips running the suite.
 
 
+### TD-38 · Approving a request with mail down left a person who could never get in — **FIXED 2026-09-10** ✔
+
+> Found on a live production-shaped stack, walking `docs/deploy.md` by hand
+> with `EMAIL_HOST` empty — exactly the case the guide warned about, and worse
+> than it said. The approve action saved the `User`, created the invite token,
+> then called `send_invite_email`, which raised; the admin answered **500**,
+> the request stayed **pending**, and every later approval was refused with
+> "esiste già un account, saltata". An account with an unusable password that
+> no e-mail would ever reach, and a request the author could never approve
+> again — the only way out was deleting the user by hand, which nothing told
+> him to do.
+>
+> **Fixed the same day**: the account, the token, the request's new status and
+> the e-mail are one `transaction.atomic()` block, with the send last, so a
+> mail server that does not answer rolls everything back. The author sees an
+> error message in Italian saying the invite did not leave and the request can
+> be approved again; the operator gets the traceback (see TD-40). `OSError` is
+> what gets caught — it covers a refused connection, an unknown host and every
+> `smtplib.SMTPException`. Verified on the stack after the fix: HTTP 302 with
+> the message, no user, no token, request still pending. Two tests, both shown
+> to fail against the old code before they were trusted.
+>
+> A stack that already hit the bug keeps its orphans: the user from the failed
+> attempt still blocks the request. Nothing is deployed, so there are none.
+
+### TD-39 · Password reset told a stranger which addresses have accounts, whenever mail was down — **FIXED 2026-09-10** ✔
+
+> Same walk, same cause. `requestpasswordreset` promises the same reply for
+> every address — its own comment and its own test say so, because anything
+> else lets a caller enumerate collaborator e-mails. With mail unreachable it
+> answered **500** for a registered address and **200** for an unknown one:
+> the enumeration oracle it exists to prevent, open for exactly as long as the
+> mail provider is down. The test passed throughout, because under pytest the
+> locmem backend never fails.
+>
+> **Fixed the same day**: the token and the send are atomic, a send that
+> raises is logged — without the address, since the log is where an operator
+> looks and not a list of who asked — and the reply is the usual 200. Verified
+> on the stack: 200 for both addresses. One test, shown to fail against the old
+> code.
+
+### TD-40 · A server error in production left no trace of why — **FIXED 2026-09-10** ✔
+
+> `settings.py` had no `LOGGING`. Django's default sends a production
+> traceback to `ADMINS` by e-mail and nowhere else — no `ADMINS` are set, and
+> mail may be the very thing that failed. On the stack, TD-38's and TD-39's
+> 500s showed up in `docker compose logs api` only as access-log lines with the
+> status code; searching the whole log for "error" found one line, and it was
+> the name of a migration. Every other finding of that walk was diagnosable
+> only because the code was being read at the same time — on the day it
+> mattered, nobody would have been.
+>
+> **Fixed the same day**: a production-only `LOGGING` block, root to stderr at
+> WARNING, `django.request` held at ERROR so the 404s and 401s a public host
+> collects do not bury the one line that matters. Dev and tests keep Django's
+> defaults. Verified twice: inside the container with production settings, an
+> ERROR on `django.request` reached stderr, a WARNING (a 404) did not, and an
+> application ERROR did; and end to end, after the fix both of the walk's mail
+> failures appeared in `docker compose logs api` with full tracebacks — the
+> reset one without the address.

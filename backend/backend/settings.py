@@ -315,6 +315,26 @@ else:
 
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@viveregaeta.it')
 
+# Where a server error goes. Django's default logging sends a production
+# traceback to ADMINS by e-mail and nowhere else — and no ADMINS are set, and
+# mail may be the very thing that failed. Walking deploy/ on 2026-09-10 two
+# real 500s left nothing behind but an access-log line with the status code:
+# no exception, no traceback, no way to find out why.
+#
+# Production only, and errors only: everything at ERROR reaches stderr, which
+# is what `docker compose logs` reads. `django.request` is held at ERROR so the
+# 404s and 401s every public host collects do not bury the one line that
+# matters. Dev and tests keep Django's defaults (the console already shows
+# everything under DEBUG, and pytest's caplog attaches its own handler).
+if not (DEBUG or TESTING):
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'handlers': {'console': {'class': 'logging.StreamHandler'}},
+        'root': {'handlers': ['console'], 'level': 'WARNING'},
+        'loggers': {'django.request': {'level': 'ERROR'}},
+    }
+
 # The credential rate limits (TD-18) count through the Django cache, and the
 # default cache is LocMemCache — *per process*. Behind two gunicorn workers
 # each keeps its own tally, so the effective limit is doubled; behind four,

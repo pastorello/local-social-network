@@ -668,6 +668,72 @@ def test_reject_sets_status_and_sends_no_email(admin_request):
     assert len(mail.outbox) == 0
 
 
+
+def _refuse(*args, **kwargs):
+    # What smtplib raises when EMAIL_HOST is empty or the server is down.
+    raise ConnectionRefusedError(61, 'Connection refused')
+
+
+def _capture_messages(monkeypatch, admin_obj):
+    sent = []
+    monkeypatch.setattr(
+        admin_obj, 'message_user',
+        lambda request, message, level=None, *args, **kwargs: sent.append((level, message)),
+    )
+    return sent
+
+
+def test_approve_rolls_everything_back_when_the_invite_cannot_be_sent(admin_request, monkeypatch, caplog):
+    # Found on the running production stack, 2026-09-10: with no SMTP the user
+    # was created, the send raised a 500 and the request stayed pending, so a
+    # second approval answered "esiste già un account" for ever.
+    from django.contrib import messages
+
+    from account import admin as account_admin
+    from account.admin import CollaborationRequestAdmin
+
+    monkeypatch.setattr(account_admin, 'send_invite_email', _refuse)
+    collab_request = make_collaboration_request()
+    admin_obj = CollaborationRequestAdmin(CollaborationRequest, _admin_site())
+    sent = _capture_messages(monkeypatch, admin_obj)
+
+    admin_obj.approve_requests(admin_request, CollaborationRequest.objects.filter(pk=collab_request.pk))
+
+    assert not User.objects.filter(email=collab_request.email).exists()
+    assert not AccountToken.objects.exists()
+    collab_request.refresh_from_db()
+    assert collab_request.status == CollaborationRequest.PENDING
+    # The author is told, in words, and the operator gets the traceback.
+    assert [level for level, _ in sent] == [messages.ERROR]
+    assert 'invito non inviato' in sent[0][1]
+    assert 'could not be sent' in caplog.text
+
+
+def test_a_request_whose_invite_failed_can_be_approved_once_mail_works(admin_request, monkeypatch):
+    from account import admin as account_admin
+    from account.admin import CollaborationRequestAdmin
+
+    collab_request = make_collaboration_request()
+    admin_obj = CollaborationRequestAdmin(CollaborationRequest, _admin_site())
+
+    def this_request():
+        # A fresh queryset per call, as the admin builds one per POST. A reused
+        # one would hand back its cached row, whose in-memory status the
+        # rolled-back attempt had already set — a test artifact, not the product.
+        return CollaborationRequest.objects.filter(pk=collab_request.pk)
+
+    monkeypatch.setattr(account_admin, 'send_invite_email', _refuse)
+    _capture_messages(monkeypatch, admin_obj)
+    admin_obj.approve_requests(admin_request, this_request())
+    monkeypatch.undo()
+
+    admin_obj.approve_requests(admin_request, this_request())
+
+    collab_request.refresh_from_db()
+    assert collab_request.status == CollaborationRequest.APPROVED
+    assert User.objects.filter(email=collab_request.email).exists()
+    assert len(mail.outbox) == 1
+
 # --- A3: accepting an invite ---
 
 
@@ -768,6 +834,22 @@ def test_requestpasswordreset_skips_a_user_with_no_usable_password(api_client):
 
     assert len(mail.outbox) == 0
 
+
+
+def test_requestpasswordreset_answers_200_even_when_mail_cannot_be_sent(api_client, citizen, monkeypatch, caplog):
+    # With mail down, a 500 for a registered address and a 200 for an unknown
+    # one is an enumeration oracle — seen on the running stack, 2026-09-10.
+    from account import api as account_api
+
+    monkeypatch.setattr(account_api, 'send_password_reset_email', _refuse)
+
+    for email in (citizen.email, 'non-esiste@example.com'):
+        response = api_client.post('/api/users/requestpasswordreset/', {'email': email})
+        assert response.status_code == 200
+
+    assert not AccountToken.objects.filter(user=citizen, purpose=AccountToken.RESET).exists()
+    assert 'could not be sent' in caplog.text
+    assert citizen.email not in caplog.text
 
 def test_confirmpasswordreset_sets_password_and_evicts_sessions(api_client, citizen):
     login = api_client.post('/api/users/login/', {'email': citizen.email, 'password': PASSWORD}).json()
