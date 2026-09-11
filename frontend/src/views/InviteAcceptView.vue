@@ -4,6 +4,7 @@ import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useToastStore } from '@/stores/toast'
+import { useUserStore } from '@/stores/user'
 import { parseZodObject, InviteAcceptForm } from '@/forms/user'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import FormErrors from '@/components/forms/FormErrors.vue'
@@ -17,6 +18,7 @@ import { extractFieldErrors, extractFormErrors } from '@/lib/apiErrors'
 const route = useRoute()
 const router = useRouter()
 const toastStore = useToastStore()
+const userStore = useUserStore()
 
 const form = ref({
   password1: '',
@@ -41,6 +43,11 @@ const submitForm = () => {
       token: route.params.token,
     })
     .then(() => {
+      // The browser now belongs to someone new: whoever was signed in here —
+      // the author, trying the link on their own machine — must not survive
+      // it, or the new collaborator goes on to write as them (accounts.md).
+      // Only on success, so a dead link does not sign anyone out.
+      void userStore.logout()
       toastStore.showToast(5000, 'Account attivato. Ora puoi accedere.', 'bg-emerald-500')
       router.push('/login')
     })
