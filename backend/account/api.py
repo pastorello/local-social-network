@@ -226,11 +226,22 @@ def editpassword(request):
 
 
 @api_view(['POST'])
+@authentication_classes([])
+@permission_classes([])
 def logout(request):
     """Blacklist the presented refresh token (TD-20).
 
     Without this the SPA only forgets the token; the server keeps honouring it
     for its full lifetime.
+
+    No bearer token required, on purpose (2026-09-10). The SPA now ends the
+    local session *before* telling the server — a logout that waited for the
+    answer left the session behind whenever the page reloaded or closed in
+    between — so this request goes out with no access token. Possessing the
+    refresh token is the proof that matters: blacklisting it can only end that
+    one session. It also closes a gap the old shape had: with an expired access
+    token the 401 interceptor used to refresh first — rotating the token — and
+    then blacklist the old one, leaving the new one valid for thirty days.
     """
     token = request.data.get('refresh')
 
