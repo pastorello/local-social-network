@@ -421,8 +421,22 @@ def test_logout_blacklists_the_refresh_token(api_client, citizen):
     assert replay.status_code == 401
 
 
-def test_logout_requires_authentication(api_client):
-    assert api_client.post('/api/users/logout/', {'refresh': 'x'}).status_code == 401
+def test_logout_needs_only_the_refresh_token(api_client, citizen):
+    # Auth-free on purpose (2026-09-10): the SPA ends the local session before
+    # telling the server, so this request carries no bearer token. Possessing
+    # the refresh token is the proof, and blacklisting it ends only that session.
+    login = api_client.post(
+        '/api/users/login/', {'email': citizen.email, 'password': PASSWORD}
+    ).json()
+
+    response = api_client.post('/api/users/logout/', {'refresh': login['refresh']})
+
+    assert response.status_code == 200
+    assert api_client.post('/api/users/refresh/', {'refresh': login['refresh']}).status_code == 401
+
+
+def test_logout_without_a_usable_refresh_token_is_a_400(api_client):
+    assert api_client.post('/api/users/logout/', {'refresh': 'x'}).status_code == 400
 
 
 def test_logout_rejects_a_token_that_is_not_a_refresh_token(auth_client):

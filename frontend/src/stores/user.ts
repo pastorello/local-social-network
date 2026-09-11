@@ -109,18 +109,23 @@ export const useUserStore = defineStore('user', {
     },
 
     async logout(): Promise<void> {
-      // Best effort: the server blacklists the refresh token so it cannot be
-      // replayed for the rest of its 30-day life. A failure here must still log
-      // the user out locally.
+      // Local first, then the server (2026-09-10). This used to wait for the
+      // server before clearing anything, so a reload or a closed tab in between
+      // left the session in localStorage — and the access token, which
+      // blacklisting the refresh token does not revoke, kept authorising
+      // requests for up to an hour. In CI it read a draft after "Esci", four
+      // times on main. The endpoint takes no bearer token for this reason.
       const refresh = this.user.refresh
+      this.removeToken()
       if (refresh) {
         try {
+          // Best effort: blacklisting stops the refresh token being replayed
+          // for the rest of its 30-day life.
           await axios.post('/api/users/logout/', { refresh })
         } catch {
-          // already invalid, or offline — nothing useful to do
+          // already invalid, or offline — the local session is gone either way
         }
       }
-      this.removeToken()
     },
 
     async refreshToken(): Promise<boolean> {

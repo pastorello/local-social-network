@@ -1271,3 +1271,69 @@ should go in with step 2.
 > application ERROR did; and end to end, after the fix both of the walk's mail
 > failures appeared in `docker compose logs api` with full tracebacks — the
 > reset one without the address.
+### TD-41 · "Esci" did not end the session until the server answered — **FIXED 2026-09-11** ✔
+
+> `collaborator.cy.ts:59` ("keeps a draft to itself") failed on main three
+> times — 2026-09-05 (`77dc241`), twice on 2026-09-08 (`033324d`, `4811bc4`) —
+> and again on #60's second CI attempt, always the same way: after "Esci" the
+> reader was still shown the draft. Nobody re-ran those runs, so it was never
+> recognised as one recurring failure until #60 went red with it.
+>
+> The server log of the #60 run shows the whole mechanism, in one second:
+> `POST /logout` 200 (the refresh token blacklisted) → the next page's
+> `POST /refresh` 401 "Il token è stato inserito nella blacklist" →
+> `GET` of the draft **200**. `logout()` awaited the server *before* clearing
+> anything, and the test reloaded the page while that request was in flight,
+> so the old page never ran `removeToken()`. The new page still held the
+> tokens, and its draft request went out alongside the refresh with the
+> **access token — which blacklisting the refresh token does not revoke**. So
+> this was not only an impatient test: on a shared computer, "Esci" followed
+> by a closed tab left the session alive for up to an hour.
+>
+> **Fix:** the local session ends first (`stores/user.ts::logout` calls
+> `removeToken()` before posting), and `/api/users/logout/` takes no bearer
+> token, since the request now goes out after the access token is gone —
+> possessing the refresh token is the proof, and blacklisting it ends only that
+> session. That also closes a TD-20 gap: with an expired access token the 401
+> interceptor used to refresh first — rotating the token — and then blacklist
+> the old one, leaving the new one valid for thirty days. A store test holds a
+> request open forever to make the ordering observable; the backend's two new
+> tests pin the auth-free contract. Both were proved by putting the old code
+> back and watching them fail.
+
+### TD-42 · The first refresh after a login was once refused as already used — **open**, one occurrence
+
+> #60's first CI attempt (run 34506706878, 2026-09-10) lost the collaborator's
+> session inside `a11y.cy.ts`, and the last two tests of its collaborator block
+> were redirected to `/login`. The server log has: login 200 at 17:13:05, and
+> the **only** refresh after it, at 17:13:07, answering 401 with the body a
+> *rotated or blacklisted* token gets (80 bytes, "Il token è stato inserito
+> nella blacklist" — measured locally against every refusal reason). There is
+> no successful refresh before it, no logout, and no "Broken pipe" to suggest a
+> response cut off by a reload; the home page's requests after the login left
+> only their CORS preflights, so that page was torn down mid-flight. The SPA
+> has exactly two refresh callers — `initStore` once per page load, and the 401
+> interceptor — and the log shows neither doing anything else. Three local runs
+> of the same spec in a row passed, with fifteen refreshes all 200. **The
+> mechanism is not established**, and this entry does not pretend otherwise.
+>
+> What would remove the class without explaining the instance: stop refreshing
+> on every page load while the access token is still valid (read `exp` from the
+> JWT client-side — a scheduling decision, not a trust one). Fewer rotations,
+> fewer chances for a reload to race one. **The cost is a session-semantics
+> change, and that is the author's call:** today a reload after a remote logout
+> ends the local session at once, because the refresh fails; with the change it
+> would last until the access token expires (at most 60 minutes) — the window
+> every API call already has, since access tokens are never revoked.
+
+### TD-43 · Refreshing a token whose account was deleted is a 500 — **open**, low impact
+
+> Found measuring TD-42's refusal bodies: simplejwt 5.5.1's
+> `TokenRefreshSerializer.validate` looks the user up with `objects.get()` and
+> does not catch `DoesNotExist`, so `/api/users/refresh/` with a token for a
+> deleted account raises instead of answering 401. Nothing deletes accounts
+> today, the SPA treats any failed refresh as a logout, and since TD-40 the
+> traceback would at least reach the log — which is why this is recorded
+> rather than fixed. The fix, when it matters, is a subclassed serializer that
+> turns `DoesNotExist` into `AuthenticationFailed`, or an upstream bump if
+> simplejwt handles it by then.

@@ -188,4 +188,20 @@ describe('user store', () => {
     expect(store.user.isAuthenticated).toBe(false)
     expect(localStorage.getItem('user.refresh')).toBe('')
   })
+
+  it('logout ends the local session before the server answers', () => {
+    // A reload or a closed tab while the request is in flight must not leave
+    // the session behind: collaborator.cy.ts read a draft after "Esci" exactly
+    // that way. A request that never settles makes the ordering observable.
+    vi.mocked(axios.post).mockReturnValueOnce(new Promise(() => {}))
+    const store = useUserStore()
+    store.setToken({ access: 'access-token', refresh: 'refresh-token' })
+
+    void store.logout()
+
+    expect(store.user.isAuthenticated).toBe(false)
+    expect(localStorage.getItem('user.access')).toBe('')
+    expect(localStorage.getItem('user.refresh')).toBe('')
+    expect(axios.post).toHaveBeenCalledWith('/api/users/logout/', { refresh: 'refresh-token' })
+  })
 })

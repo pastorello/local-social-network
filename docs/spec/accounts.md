@@ -33,7 +33,13 @@ vetting where it belongs — outside the app.
   spec accepts it, because a locked-out collaborator with no self-service reset
   lands on the admin every time.
 - **A5 — Login / logout / password change.** Already built (v1; logout and
-  password-change token eviction from TD-20). Carry over unchanged.
+  password-change token eviction from TD-20). Carry over unchanged — with one
+  correction on 2026-09-11 (TD-41): **"Esci" ends the session on this device at
+  once**, and the server is told afterwards. It used to wait for the server's
+  answer first, so a page reloaded or closed in between stayed signed in, and
+  the access token — which blacklisting the refresh token does not revoke —
+  kept working for up to an hour. On a shared computer that is the difference
+  between logged out and not.
 
 ## Consequences
 
