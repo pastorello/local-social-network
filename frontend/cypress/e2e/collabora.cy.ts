@@ -19,6 +19,14 @@ const API = 'http://127.0.0.1:8000' // the SPA's default API base (main.ts)
 const PASSWORD = 'E2ePassw0rd!'
 const ADMIN_EMAIL = 'amministratore@e2e.test'
 
+// A session already on the browser when the invite is opened: a JWT-shaped
+// token that expires in 2100 and that the API never signed — the same forgery
+// session.cy.ts uses, and it only has to look alive to the SPA.
+const PREVIOUS_SESSION =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9' +
+  '.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjo0MTAyNDQ0ODAwLCJqdGkiOiJkZWFkIiwidXNlcl9pZCI6IjAifQ' +
+  '.not-a-valid-signature'
+
 // Django admin's forms carry their CSRF token in a hidden input.
 const csrfFrom = (html: string) =>
   html.match(/name="csrfmiddlewaretoken" value="([^"]+)"/)?.[1] ?? ''
@@ -105,17 +113,41 @@ describe('collabora con noi', () => {
 
     approveAsTheAuthor(email)
 
-    // The link as the recipient gets it — out of the mail, not from the API.
+    // The link as the recipient gets it — out of the mail, not from the API —
+    // opened in a browser where somebody is still signed in: the author,
+    // trying the link on their own machine (spec accounts.md). Planted rather
+    // than logged in, because a login costs one of the ten a minute the whole
+    // run shares (TD-18); its `exp` is in 2100 so the page load keeps it
+    // (TD-42), and the invite page makes no call that would test it.
     cy.task<string | null>('inviteLink', { to: email }).then((path) => {
       expect(path, 'an invite reached the mailbox').to.match(/^\/invito\/[A-Za-z0-9_-]+$/)
-      cy.visit(path as string)
+      cy.visit(path as string, {
+        onBeforeLoad(win) {
+          win.localStorage.setItem('user.access', PREVIOUS_SESSION)
+          win.localStorage.setItem('user.refresh', PREVIOUS_SESSION)
+          // The header shows "Esci" only for a session with an id.
+          win.localStorage.setItem('user.id', '00000000-0000-4000-8000-000000000000')
+          win.localStorage.setItem('user.name', "L'autrice")
+        },
+      })
     })
+    // Without this the test could pass by accident: a session that died on
+    // its own before the activation would prove nothing about it.
+    cy.contains('Esci').should('exist')
 
     cy.get('#invite-password1').type(chosen)
     cy.get('#invite-password2').type(chosen)
     cy.contains('button', 'Attiva account').click()
     cy.contains('Account attivato').should('exist')
     cy.location('pathname').should('equal', '/login')
+
+    // The previous session did not survive the handover, so what follows is
+    // the new collaborator signing in as themselves, not writing as the author.
+    cy.contains('Esci').should('not.exist')
+    cy.window().then((win) => {
+      expect(win.localStorage.getItem('user.access')).to.be.oneOf([null, ''])
+      expect(win.localStorage.getItem('user.refresh')).to.be.oneOf([null, ''])
+    })
 
     // The payoff: the account the author approved is one its owner can use.
     cy.get('#login-email').type(email)
