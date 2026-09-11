@@ -4,7 +4,10 @@ What is planned and in what order. Ordered by what is **active**. The product
 authority is [spec (v2)](./spec/README.md) (v2, 2026-08-21); this file only
 sequences the work.
 
-**Where things stand (2026-08-31).** Item 1 is complete; item 2 is active.
+**Where things stand (2026-09-10).** Items 1 and 2 are complete, and so is the
+technical half of item 3 — what is left of it is input only the author has: a
+mail provider, a sender domain, a host. Item 4, the content, is now the
+bottleneck.
 The paragraph below is the standing picture, written when the v2 build order
 closed.
 
@@ -89,7 +92,7 @@ WCAG findings as advisory — was written when the accessibility question was
 open. **It is no longer open** (ADR-0005), so their contrast and
 keyboard findings now land against a bar this project has accepted.
 
-## 2. Coverage: TD-04 and the deferred accessibility work — **active (2026-08-31)**
+## 2. Coverage: TD-04 and the deferred accessibility work — **complete (2026-09-10)**
 
 Two things that were deferred for the same reason (the screens kept changing)
 and are unblocked by the same event (they will have stopped):
@@ -107,10 +110,13 @@ and are unblocked by the same event (they will have stopped):
   on purpose:** the leg after an admin approves a collaboration request. Two
   different things lived under that one sentence and were conflated until
   2026-09-08:
-  - **Automating it** needs a decision — the invite token arrives by e-mail, so
-    either a spec reads an outbox or a test-only endpoint has to exist (which
-    means production code carrying a door that exists for tests). **Still the
-    half waiting on the author.**
+  - ~~**Automating it**~~ — **done 2026-09-10**, the author choosing the
+    outbox over a test-only endpoint so production code carries no door built
+    for tests. Under DEBUG with `E2E_MAIL_DIR` set, the API writes each
+    message to a file; `collabora.cy.ts` files a request, approves it through
+    the real Django admin action, reads the link out of the mail, chooses a
+    password and signs in. **With it TD-04 is paid in full**, and item 2 has
+    nothing left in it.
   - ~~**Walking it once, by hand**~~ — **done 2026-09-09**, and it works end to
     end: request, admin approval, the e-mail, the link, the password, the login,
     and the new collaborator reaching an authoring form. The single-use token

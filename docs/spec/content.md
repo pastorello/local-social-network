@@ -160,13 +160,20 @@ rule of its own about what may be uploaded.
    list is `CardGrid` like every other type, and nothing special was built.
 2. ~~**Covers?**~~ **Answered 2026-09-09**: the publisher's image or none —
    see the section above for what carries the rule, since no code can.
-3. **A "dove trovarlo" field** — the *Biblioteca comunale*, a bookshop — as free
-   text rather than a pin. Cheap; nobody has asked for it. **Still open**, and
-   the only thing on this list that is.
+3. ~~**A "dove trovarlo" field**~~ — the *Biblioteca comunale*, a bookshop, as
+   free text. **Decided 2026-09-10: not now.** Nobody has asked for it, and a
+   field nobody fills is a blank line under every book. Cheap to add the day a
+   collaborator wants it.
 4. Not proposed, and listed so it is not silently smuggled in later: **no
    purchase links**. The footer of this product says presence is chosen on
    editorial merit and nothing is bought; an affiliate link to a shop is the
    first crack in that.
+
+**The footer keeps its five subjects** — decided 2026-09-10. Its line
+("feste, chiese, ricette, personaggi e dialetto") names what the archive tells
+*about the city*; recommended books are about the city rather than part of it,
+so the sentence stays as it is. The footer's *Schede* column links to `/libri`
+like every other type, which is where a reader actually looks for it.
 
 ### What it cost — the ADR-0004 bar, measured a sixth time
 

@@ -298,7 +298,21 @@ if TESTING:
 if TESTING:
     MAILERS = {'default': {'BACKEND': 'django.core.mail.backends.locmem.EmailBackend'}}
 elif DEBUG:
-    MAILERS = {'default': {'BACKEND': 'django.core.mail.backends.console.EmailBackend'}}
+    # The e2e suite reads an invite the way its recipient would — out of the
+    # mail — so a DEBUG process given E2E_MAIL_DIR writes each message there as
+    # a file and Cypress reads the link back (collabora.cy.ts). DEBUG only: in
+    # production this branch cannot be reached, so the app carries no door that
+    # exists for tests — which is why this was chosen over a test-only endpoint
+    # that hands the token back (decided 2026-09-10, closing TD-04's last gap).
+    if os.environ.get('E2E_MAIL_DIR'):
+        MAILERS = {
+            'default': {
+                'BACKEND': 'django.core.mail.backends.filebased.EmailBackend',
+                'OPTIONS': {'file_path': os.environ['E2E_MAIL_DIR']},
+            }
+        }
+    else:
+        MAILERS = {'default': {'BACKEND': 'django.core.mail.backends.console.EmailBackend'}}
 else:
     MAILERS = {
         'default': {

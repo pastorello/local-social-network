@@ -87,8 +87,13 @@ account and remain logged in as whoever you were. It is a plausible thing to do
 on the author's own machine. Nothing is lost and nothing leaks, so it is
 recorded rather than fixed.
 
-**Still open, and it is a decision rather than work:** automating this in the
-e2e suite. The invite arrives by e-mail, so a spec either reads an outbox or
-the app grows a test-only endpoint that hands the token back — the second means
-production code carrying a door that exists for tests. That is the author's
-call, not maintenance.
+**Automated 2026-09-10.** The invite arrives by e-mail, so a spec had to either
+read an outbox or have the app grow a test-only endpoint handing the token back
+— and the second means production code carrying a door that exists for tests.
+The author chose the outbox. Under DEBUG with `E2E_MAIL_DIR` set, the API
+writes each message into that directory as a file (settings.py — a branch
+production cannot reach); `collabora.cy.ts` files a request at human speed,
+approves it through the same Django admin action the author uses, reads the
+link out of the mail with a Cypress task, chooses a password and signs in. The
+e2e admin is a Django superuser for that reason, as the author is in
+production.

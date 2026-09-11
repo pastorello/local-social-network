@@ -163,7 +163,17 @@ genuine runtime advisory lands, it will be buried in dev-server noise.
 
 **Fix:** move both to `devDependencies`, then `npm audit fix` (patch-level vite).
 
-### TD-04 · End-to-end coverage is one file — **paid 2026-08-30 and 2026-09-04**, one gap left
+### TD-04 · End-to-end coverage is one file — **paid in full 2026-09-10** ✔
+
+> **The last gap closed 2026-09-10.** The leg after an admin approves a
+> collaboration request is covered: `collabora.cy.ts` follows a request filed
+> at human speed through the author's approval in Django admin — the real
+> action, driven over HTTP — to the invite read out of the mail, a password
+> chosen, and a collaborator who signs in. The mail is read the way its
+> recipient would read it: under DEBUG with `E2E_MAIL_DIR` set, the API writes
+> each message to a file and a Cypress task finds the link. The author chose
+> that over a test-only endpoint handing the token back, so production code
+> carries no door built for tests. Earlier stages of this item follow.
 
 > **What changed.** Four spec files, **17 tests** (was one file, 5). The v2
 > flows now have end-to-end proof that the SPA and the API agree:
@@ -1099,7 +1109,7 @@ Then take 0.16 as its own PR, with the import sort as its own commit.
 **Found:** 2026-08-30, doing TD-06's backend minors.
 
 
-### TD-34 · `EMAIL_BACKEND` is deprecated and goes away in Django 7.0
+### TD-34 · `EMAIL_BACKEND` is deprecated and goes away in Django 7.0 — **FIXED 2026-08-30** ✔
 
 Django 6.1 warns: *"The EMAIL_BACKEND setting is deprecated. Migrate to MAILERS
 before Django 7.0."* It is the setting C1's invite and password-reset e-mail
@@ -1181,6 +1191,11 @@ should go in with step 2.
 > enforcing rather than hoping for. Not taken here: turning a convention into a
 > gate changes what "done" means for everyone who works on this, which is the
 > author's call and not a maintenance decision.
+>
+> **Adopted 2026-09-10, by the author.** `npx prettier --check .` runs in CI's
+> frontend job after the two linters, check-only like them, and the definition
+> of done ([mvp-spec](./mvp-spec.md) §9 and CLAUDE.md) names it. It went in on
+> the day the tree was clean, which is the only day it costs one line.
 ### TD-36 · Plain-text card fields are stored with CRLF line endings — **FIXED 2026-09-08** ✔
 
 > Found by writing a real recipe (2026-09-08). A `<textarea>`'s submitted value

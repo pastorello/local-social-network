@@ -1,15 +1,65 @@
-// The public half of the C1 flow (TD-04): "Collabora con noi" is the only way
-// an account is ever asked for, so it is the front door of the whole product.
+// The C1 flow (TD-04), end to end: "Collabora con noi" is the only way an
+// account is ever asked for, so it is the front door of the whole product —
+// and since 2026-09-10 this file follows it through the door: request, the
+// author's approval in Django admin, the invite read out of the mail, a
+// password chosen, a collaborator signed in.
 //
-// Not covered here, and deliberately: what happens *after* the admin approves.
-// That leg needs the invite token out of an e-mail, which means either reading
-// the outbox or a test-only endpoint — a hook worth adding on purpose, not as
-// a side effect of writing this spec.
+// The invite is read the way its recipient would read it. The API writes each
+// message into E2E_MAIL_DIR (settings.py, DEBUG only) and the `inviteLink` task
+// in cypress.config.ts finds it. That was chosen over a test-only endpoint
+// handing the token back, so production code carries no door built for tests.
+// Running this file locally therefore needs E2E_MAIL_DIR set, to the same
+// directory, for both the API and Cypress.
 // Re-running this file locally more than five times in an hour will fail with
 // "Troppi tentativi": `collaborate` is throttled at 10/hour per IP (TD-18), and
 // it posts twice. That is the endpoint working, not a flake. The throttle
 // history lives in the API process's own LocMemCache, so restarting the API
 // clears it; CI starts a fresh process each run and never sees it.
+const API = 'http://127.0.0.1:8000' // the SPA's default API base (main.ts)
+const PASSWORD = 'E2ePassw0rd!'
+const ADMIN_EMAIL = 'amministratore@e2e.test'
+
+// Django admin's forms carry their CSRF token in a hidden input.
+const csrfFrom = (html: string) =>
+  html.match(/name="csrfmiddlewaretoken" value="([^"]+)"/)?.[1] ?? ''
+
+// The author's half, through the real admin action rather than a shortcut into
+// the database: sign in to Django admin, find the request, run "Approva".
+const approveAsTheAuthor = (email: string) => {
+  cy.request(`${API}/admin/login/`).then(({ body }) =>
+    cy.request({
+      method: 'POST',
+      url: `${API}/admin/login/`,
+      form: true,
+      body: {
+        username: ADMIN_EMAIL,
+        password: PASSWORD,
+        csrfmiddlewaretoken: csrfFrom(body),
+        next: '/admin/',
+      },
+    }),
+  )
+  const changelist = `${API}/admin/account/collaborationrequest/`
+  cy.request(`${changelist}?q=${encodeURIComponent(email)}`)
+    .then(({ body }) => {
+      const id = body.match(/name="_selected_action" value="([^"]+)"/)?.[1]
+      expect(id, 'the request is waiting in the admin').to.be.a('string')
+      return cy.request({
+        method: 'POST',
+        url: changelist,
+        form: true,
+        body: {
+          csrfmiddlewaretoken: csrfFrom(body),
+          action: 'approve_requests',
+          _selected_action: id,
+          index: 0,
+        },
+      })
+    })
+    .its('body')
+    .should('contain', 'richieste approvate e invito inviato')
+}
+
 describe('collabora con noi', () => {
   beforeEach(() => cy.viewport(1280, 800))
 
@@ -32,11 +82,14 @@ describe('collabora con noi', () => {
     cy.location('pathname').should('equal', '/')
   })
 
-  it('accepts one filled at human speed and says so', () => {
+  it('takes a request filed at human speed all the way to a collaborator who can sign in', () => {
+    const email = `invito-${Date.now()}@e2e.test`
+    const chosen = 'Invito-E2e-2026!'
+
     cy.visit('/collabora')
 
     cy.get('#collabora-name').type('Persona E2E')
-    cy.get('#collabora-email').type(`persona-${Date.now()}@e2e.test`)
+    cy.get('#collabora-email').type(email)
     cy.get('#collabora-message').type('Vorrei scrivere le schede sulle chiese di Gaeta.')
 
     // A fixed wait, and the one place it is the right tool: the thing under
@@ -49,6 +102,27 @@ describe('collabora con noi', () => {
 
     cy.contains('Richiesta inviata').should('exist')
     cy.location('pathname').should('equal', '/')
+
+    approveAsTheAuthor(email)
+
+    // The link as the recipient gets it — out of the mail, not from the API.
+    cy.task<string | null>('inviteLink', { to: email }).then((path) => {
+      expect(path, 'an invite reached the mailbox').to.match(/^\/invito\/[A-Za-z0-9_-]+$/)
+      cy.visit(path as string)
+    })
+
+    cy.get('#invite-password1').type(chosen)
+    cy.get('#invite-password2').type(chosen)
+    cy.contains('button', 'Attiva account').click()
+    cy.contains('Account attivato').should('exist')
+    cy.location('pathname').should('equal', '/login')
+
+    // The payoff: the account the author approved is one its owner can use.
+    cy.get('#login-email').type(email)
+    cy.get('#login-password').type(chosen)
+    cy.contains('button', 'Accedi').click()
+    cy.location('pathname').should('equal', '/')
+    cy.contains('Esci').should('exist')
   })
 
   it('offers collaboration rather than signup, anywhere a visitor looks', () => {
