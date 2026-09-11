@@ -11,6 +11,16 @@
 > This file is about *how the product presents itself*. It adds no features.
 > Where it touches something that would be a feature, it says so and sends it
 > to the roadmap instead of smuggling it in.
+>
+> **Reopened 2026-09-11 — the layout, not the register.** A brainstorming
+> session with the author decided that the map becomes the ground of every
+> page and that every page opens over it as a panel: D13–D21, in
+> [The map under every page](#the-map-under-every-page) at the foot of this
+> file. They are **decided and not built**; until they are, the requirements
+> above them describe the layout that exists. The palette, the type and the
+> tokens (D6–D9) are untouched. A requirement that D13–D21 overturn keeps its
+> text and gains a dated note naming what replaced it, so the reasoning that
+> was overturned stays readable.
 
 ## Why this exists
 
@@ -76,10 +86,18 @@ geolocation is a later phase (see Non-goals) rather than the centre of this one.
   Gaetano abroad has no reason to look at a map at all. The sheet serves both
   without asking anyone to pick a tab.
 
+  **Amended 2026-09-11 by D18:** the home keeps this sheet, but a *card*
+  opened on a phone no longer lives in it — it opens full screen, with a strip
+  of the map at its head.
+
 - **D4 — The map chrome lands here.** C5 deliberately did not build M1's
   "minimal top menu" as a chrome redesign — layer toggles live in a side panel
   and the nav kept C3's `SchedeMenu`. The full-bleed map with floating controls
   is a design decision, and this is where it is taken.
+
+  **Superseded 2026-09-11 by D13/D14:** M1's minimal top menu is now taken
+  literally — one menu at the top centre of every page, the layer controls
+  floating over a map that is under every page, not only the home.
 
 - **D5 — Cards have a cover.** The **first image of a card is its cover** — no
   new field, no migration. A mobile list of bare titles is dreary, and every
@@ -194,6 +212,11 @@ rule, stated by the author and load-bearing for the design:
   does **not** carry an invented endorsement: there is no municipal patronage
   today, and a placeholder logo would be the product claiming something that
   is not true.
+
+  **Moved 2026-09-11 by D21:** with the map under every page there is no
+  route left for a footer to sit on, so the credits surface becomes
+  *Il progetto*. The rule above — dignified, fixed, no invented endorsement —
+  moves with it unchanged.
 - **D12 — No ad slots.** Nothing in the layout is a rectangle waiting to be
   sold.
 
@@ -250,6 +273,9 @@ answer is not a redesign.
    `lg:hidden` on both, so only one is ever in the DOM — two copies of the
    layer controls would mean two elements with the same `id`, which breaks the
    `for`/`id` pairing ADR-0005 requires, and would mount two Leaflet maps.
+   **Superseded 2026-09-11 by D15/D17:** panels over the map, not a panel
+   beside it. The reason for switching in JS survives and gets stronger — see
+   D13.
 
 ## What the pass covered, and what it left — 2026-08-31
 
@@ -277,3 +303,204 @@ reader a designed page and then a 2026-M1 one in a single click.
 Both are deliberate scope, not debt to be paid quietly by whoever passes next:
 redrawing them is a decision to take, and the reason to take it would be a new
 one (they became part of the reader's path), not tidiness.
+
+**2026-09-11:** D17 gives that reason — every one of these screens becomes a
+panel over the map, so each gets at least the wide panel's frame. How much
+more than the frame is a decision for the build (see below).
+
+## The map under every page
+
+> **Decided 2026-09-11, not built.** The confirmed output of a brainstorming
+> session with the author, produced the way the rest of this file was: one
+> question at a time, a committed guess and the strongest case against it.
+> Each requirement below records the counter-case that lost, because that is
+> the part a later reader needs when the question comes back. The screens were
+> drawn on a canvas the author holds (desktop and phone, one note per
+> decision); this section is the authority, the drawing is an illustration.
+
+### Why this exists
+
+The design pass gave the reader a map home and gave every other screen a page
+of its own. The author's proposal reverses that proportion: **the map is the
+ground of the whole site, and every page is something that opens over it and
+closes back onto it.** It is the product's thesis made literal — this is a
+map-archive, so the reader never leaves the map.
+
+The inspiration was a Venice Biennale exhibitions map the author was shown,
+with a tour planner. Its tour idea is taken, as its own phase (below); its
+opening-hours filter is not.
+
+### What this amends
+
+| Was | Becomes |
+|---|---|
+| **D3** — mobile home: full-bleed map + bottom sheet | Kept for the home. A card opened on a phone no longer lives in the sheet (D18). |
+| **D4** — floating chrome on mobile, side panel on desktop | One menu at the top centre of every page, layer controls floating over the map (D13, D14). |
+| **D11** — credits in a footer on every route but the map | No route is without the map, so there is no footer; the credits move to *Il progetto* (D21). |
+| **Open question 4** — the wide layout keeps a side panel | Panels over the map (D15, D17). |
+| **D2** — the collaborator's wide editor | Still desktop-first, but the form sits in a panel and the map it draws on is the real one (D19). |
+
+### Requirements
+
+- **D13 — The map is the ground of every page.** One map, mounted by the
+  shell rather than by `HomeView`, and every route renders over it; the layer
+  state moves up with it. There is still exactly one Leaflet map in the
+  document at any time — the reason `HomeView` switches its two layouts in JS
+  today holds more strongly, not less.
+
+  *Known cost, accepted:* Leaflet and its tiles now load on every route,
+  including `/login` and a phone opening a shared article cold. Measure it on
+  the preview build before calling the phase done.
+
+- **D14 — A minimal menu, top centre.** The wordmark, *Mappa*, *Schede*,
+  *Il progetto*, then *Accedi* (or the collaborator's avatar). *Itinerario*
+  is added by its own phase and not before: an empty menu item at launch is
+  worse than none. **The polls leave the top level** and are reached from
+  *Il progetto* — the v2 spec already says there is no new work on them.
+  **No search in this phase:** it was drawn and dropped, because search is a
+  feature with an endpoint of its own, not a place in a menu.
+
+- **D15 — Every page is a panel over the map, and keeps its URL.** A shared
+  link to `/feste/:id` opens the map *and* the panel. Back and Escape close
+  the panel, and focus returns to whatever opened it. A panel is a dialog for
+  ADR-0005's purposes: focus management, one `<h1>` per panel, and the skip
+  link retargeted at the panel's content rather than at a `<main>` that no
+  longer frames the page.
+
+- **D16 — The map reacts.** Opening a card that has a place moves the map so
+  the place sits in the space the panel leaves free — never under it —
+  highlights its pins or its route, and dims everything else. Closing returns
+  the map to where the reader left it.
+
+  *Counter-case, rejected:* the map as a backdrop only. Cheaper, but then the
+  map under every page is decoration for most of the site, paid for in bytes
+  on every route.
+
+- **D17 — Two panel shapes on desktop.** A **narrow panel on the right** for
+  a card with a place, because the map beside it is doing work. A **wide
+  reading panel, centred, over a veiled map** for a card without one
+  (dialetto, libri) and for every page without one (*Il progetto*, sign-in,
+  polls, profile).
+
+  *Counter-case, rejected:* one shape for everything, the map veiled when it
+  has nothing to show. Simpler and more predictable, but it puts a book in a
+  side column beside a map that has nothing to say about it. Reading wants
+  the space.
+
+- **D18 — On a phone, a card opens full screen.** A strip of the map (about
+  180 px) at the head of the article is already centred on the place;
+  tapping it expands the map to the whole screen, with *Torna alla scheda* to
+  come back. The strip is **the same map instance, resized** — not a second
+  map. The **cover moves below the title** on a phone, so the strip and the
+  cover do not stack and push the title to mid-screen (D5's rule, that the
+  first image is the cover, is unchanged; only its position moves). The
+  home's sheet (D3) is unchanged.
+
+  *Counter-case, rejected:* opening at half height with the reacting map
+  visible above. It costs every reader a drag on every card to show a map
+  most of them look at for half a second. On a phone, the reacting map *is*
+  the strip.
+
+- **D19 — The background map is the collaborator's editor.** The form sits in
+  the panel; the route or the pins are drawn on the real map. The form's
+  sections become tabs at the head of the panel (*Contenuto*, *Immagini*,
+  *Il percorso* or *Mappa*, *Pubblicazione*), since a panel would turn
+  today's long stack into an endless scroll. While the map is editing it says
+  so, in a banner that cannot be missed — a map that sometimes takes clicks
+  as edits and sometimes does not must never leave that ambiguous.
+
+  **The form owns the data; the map draws the draft it is handed and reports
+  clicks.** `GaetaMap` only draws what it is handed today, and that rule
+  survives the new mode. **Manual latitude/longitude entry stays** — it is
+  the keyboard path (WCAG 2.1.1) and must not retire with the in-form maps.
+  `FesteRouteEditor` and `MapPinsEditor` retire.
+
+  On a phone the collaborator's screens must work, not be good (D2): the
+  expanded strip of D18 is the editing surface.
+
+  *Counter-case, rejected:* keep each form's own map. Cheaper, and it leaves
+  alone the component every reader uses — but it means a map inside a panel
+  over a map, which is the first oddity anyone notices.
+
+- **D20 — The text lists stay one tap away on every map screen** ("Elenco ·
+  N luoghi"). They are ADR-0005's decided equivalent of the pins, not a
+  convenience; a layout that makes them harder to reach quietly undoes that
+  decision.
+
+- **D21 — *Il progetto* is the credits surface.** What `AppFooter` carries
+  today moves here: the editorial rule in the reader's words ("nessuna
+  presenza è acquistata") and the reserved place for a patrocinio. D11's rule
+  moves with it: no invented endorsement.
+
+### The itinerary — the next phase, not this one
+
+**Its own phase, immediately after this one.** This layout reserves nothing
+visible for it (D14).
+
+What the Venice map actually does, so nobody has to take it apart again:
+
+- Stops are picked by tapping markers; the tap order is the tour order;
+  arrows reorder. Stops are joined by **straight lines**, and the distance and
+  time are a straight-line estimate at 80 m a minute.
+- **"Open in Maps" is a plain link** — `google.com/maps/dir/?api=1` with an
+  origin, a destination, waypoints and `travelmode=walking`. No key, no
+  account, nothing from Google loaded on the page; Google computes the walking
+  route when the link is opened.
+- **Its "auto-order" and its Google and 3D views use the paid Maps JavaScript
+  API** (a directions request with waypoint optimisation), behind an API key.
+- **Its days-and-hours filter is not a Google service.** It is hand-made
+  data — opening hours as free text plus a structured copy (closed days,
+  opening and closing hour) — filtered in the page. The structured copy is
+  lossy: one venue's summer and autumn hours collapse into a single range.
+
+What the phase would build: the reader picks stops (on the map, or from an
+"Aggiungi all'itinerario" button on a card), reorders them with buttons
+(`lib/reorder.ts::moveItem`, the one implementation), sees straight dashed
+lines between them, and hands off to Google Maps with a link built from
+**our coordinates** — more precise than text addresses, which matters in the
+old town. Ordering by proximity is computed locally; nothing from Google runs
+on our page (TD-30, D6b). The stops live **in the URL and on the device**,
+because there is no public signup and so no account to keep them in. Only
+cards with a place can be stops.
+
+Open for that phase: the waypoint limit of a Maps link (recalled as about
+nine, fewer from a mobile browser — to be checked against Google's
+documentation, not trusted from memory); whether a festa, which is a route
+rather than a point, can be a stop; and whether collaborators should also
+curate itineraries ("Gaeta medievale in due ore"), which would be a seventh
+card type and an editorial decision before a technical one.
+
+### Considered and not taken
+
+- **"Open now" and opening hours.** A new structured field on chiese and on
+  the places that sell a ricetta, kept current by collaborators. A wrong
+  opening time is worse than none — a tourist walks to a church that is shut
+  — and this file already names standing in front of a closed church as the
+  moment the product is for. A "feste this month" filter is a separate
+  question: it would need a structured date beside the free-text recurrence.
+- **The Maps JavaScript API** (route optimisation, 3D). Paid, needs a key,
+  and loads Google's script on every view — what TD-30 and D6b took out.
+- **Search** — see D14.
+
+### Costs to plan for
+
+- **Routing.** A shell holding the map, with routes nested as panels; the
+  guard, `meta.fullBleed` and `HomeView`'s two layouts are all rethought.
+- **Coverage.** The Cypress suite pins today's layout, and
+  `collaborator.cy.ts` is rewritten by D19. The accessibility gate excludes
+  `.leaflet-container`, which now includes the editing surface — so D19's
+  manual-entry path needs an explicit test of its own rather than riding on
+  axe.
+- **The screens the first pass left in v1 clothes** all become panels (see
+  the note under the previous section). `ReportForm` is the delicate one:
+  filing a report is already a click-on-the-map flow, which D19's editing
+  mode should absorb rather than duplicate.
+- **Build-only behaviour.** Verify against the preview build, not the dev
+  server: the Leaflet default-import gotcha and TD-02 only show there.
+
+### Left to the build
+
+- Panel widths. The drawing uses 560 px (narrow), 808 px (wide) and 600 px
+  (editor); they are drawn values, not decided ones.
+- What a signed-in collaborator finds behind the avatar (their cards, a way
+  to start a new one). The drawing shows only the avatar.
