@@ -78,6 +78,8 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
+    # A deleted account's token answers 401, not 500 (TD-43).
+    'TOKEN_REFRESH_SERIALIZER': 'account.serializers.TokenRefreshSerializer',
 }
 
 REST_FRAMEWORK = {

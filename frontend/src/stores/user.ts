@@ -1,5 +1,8 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
+import type { AxiosError } from 'axios'
+
+import { expiresSoon } from '@/lib/jwt'
 
 export type UserRole = 'citizen' | 'admin'
 
@@ -57,7 +60,18 @@ export const useUserStore = defineStore('user', {
         this.user.avatarURL = localStorage.getItem('user.avatarURL')
         this.user.isAuthenticated = true
 
-        this.refreshToken()
+        // Only when the access token is about to run out (TD-42, 2026-09-11).
+        // Refreshing on every page load rotated the refresh token on every
+        // page load, and a reload that tore the page down mid-refresh lost the
+        // rotated token while the server had already blacklisted the old one:
+        // the next load presented it and was logged out. The 401 interceptor
+        // still covers a token that dies before its `exp`. The cost, accepted
+        // by the author: after a password change elsewhere revokes this
+        // session, a reload here keeps looking signed in until the access
+        // token expires — the window every API call already had.
+        if (!this.user.access || expiresSoon(this.user.access)) {
+          this.refreshToken()
+        }
       }
     },
 
@@ -164,8 +178,13 @@ export const useUserStore = defineStore('user', {
         }
 
         return true
-      } catch {
-        this.removeToken()
+      } catch (error) {
+        // Only the server refusing the token ends the session. Anything else —
+        // no signal, a 502 while the API redeploys — said nothing about it,
+        // and used to log the collaborator out all the same (TD-42).
+        if ((error as AxiosError | undefined)?.response?.status === 401) {
+          this.removeToken()
+        }
         return false
       }
     },
