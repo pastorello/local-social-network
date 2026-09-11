@@ -87,6 +87,16 @@ account and remain logged in as whoever you were. It is a plausible thing to do
 on the author's own machine. Nothing is lost and nothing leaks, so it is
 recorded rather than fixed.
 
+**Fixed 2026-09-11**, because "nothing leaks" missed one case: if Antonio sits
+down at that browser and starts writing without noticing whose name is in the
+corner, his card goes out under the author's. A successful activation now ends
+whatever session the browser held — locally first, then the old refresh token
+is blacklisted, the same `logout()` as "Esci" — before sending him to sign in.
+Only on success, so opening a dead link signs nobody out. **The password reset
+got the same rule**, for the same reason and one more: it revokes every session
+of the account on the server (TD-20), but a session of that account left open
+on this browser would otherwise go on looking signed in.
+
 **Automated 2026-09-10.** The invite arrives by e-mail, so a spec had to either
 read an outbox or have the app grow a test-only endpoint handing the token back
 — and the second means production code carrying a door that exists for tests.

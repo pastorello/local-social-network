@@ -4,6 +4,7 @@ import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useToastStore } from '@/stores/toast'
+import { useUserStore } from '@/stores/user'
 import { parseZodObject, PasswordResetConfirmForm } from '@/forms/user'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import FormErrors from '@/components/forms/FormErrors.vue'
@@ -17,6 +18,7 @@ import { extractFieldErrors, extractFormErrors } from '@/lib/apiErrors'
 const route = useRoute()
 const router = useRouter()
 const toastStore = useToastStore()
+const userStore = useUserStore()
 
 const form = ref({
   password1: '',
@@ -41,6 +43,11 @@ const submitForm = () => {
       token: route.params.token,
     })
     .then(() => {
+      // Same rule as activating an invite: the next step is signing in with
+      // the new password, so no older session on this browser may stand in
+      // for it — someone else's, or this account's own, which the server has
+      // just revoked (TD-20) but whose access token would still look alive.
+      void userStore.logout()
       toastStore.showToast(5000, 'Password aggiornata. Accedi di nuovo.', 'bg-emerald-500')
       router.push('/login')
     })
