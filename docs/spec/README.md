@@ -63,7 +63,7 @@ not mean).
 | The map: layers & overlays | [map.md](./map.md) | delivered (C5, 2026-08-27) |
 | Reports & polls (from v1) | [reports-and-polls.md](./reports-and-polls.md) | delivered; reports change author |
 | Steering tier & political tooling | [politics.md](./politics.md) | tier delivered (C1); its first consumer is C5's seggi overlay (2026-08-27); the tooling is future, out of current build |
-| Design & visual direction | [design.md](./design.md) | interviewed and written 2026-08-27; **to build** (roadmap item 1) |
+| Design & visual direction | [design.md](./design.md) | interviewed 2026-08-27, built 2026-08-31; **layout reopened 2026-09-11** (D13–D21, decided, not built) |
 
 ## Architecture (shared across areas)
 
@@ -127,6 +127,13 @@ values, typography, whether the authoring screens were restyled in the same
 pass, and the desktop counterpart of the mobile bottom sheet) are **all
 answered and dated in that file**, and its closing note records which surfaces
 the pass deliberately left in v1 clothes.
+
+**The layout was reopened on 2026-09-11** — not the palette or the type. The
+map becomes the ground of every page, every page opens over it as a panel,
+the map reacts to what is opened, and the map under the collaborator's form
+becomes their editor: design.md D13–D21, **decided and not built**. A reader's
+itinerary handed off to Google Maps was named in the same session and is its
+own phase, immediately after.
 
 Two ambitions were named in that interview and deliberately **not** folded into
 the design phase — **geolocation** and a **multi-city superadmin**. Both are

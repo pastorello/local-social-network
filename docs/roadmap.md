@@ -265,6 +265,22 @@ direction is not lost, neither is scheduled, and **both are non-goals of item
 proposed in the morning and delivered the same day. It is recorded at the foot
 of item 6, with what it cost.)
 
+Two more were decided on **2026-09-11**, and unlike the two below they are
+already specified. **Neither is scheduled against items 2–4** — where they go
+is the author's call:
+
+- **The map under every page** — [spec/design.md](./spec/design.md) D13–D21.
+  The layout reopened: the map is the ground of every page, pages open over it
+  as panels, the map reacts to what is opened, and it becomes the
+  collaborator's editor. Not a restyle — it moves the map into the shell,
+  retires the two in-form map editors, and rewrites a share of the Cypress
+  suite that item 2 built. Read the "Costs to plan for" in that section
+  before sizing it.
+- **The itinerary** — a reader picks stops and hands the walk off to Google
+  Maps through a plain link (no key, nothing of Google's loaded on the page).
+  **Its own phase, immediately after the layout**, and specified in the same
+  section of design.md.
+
 - **Geolocation** — "you are here" plus what is around you while walking
   Gaeta. The author wants it and it fits the product; it is a **feature, not a
   style**: browser permission, HTTPS (so it depends on item 3), sane handling
