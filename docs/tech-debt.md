@@ -1316,7 +1316,7 @@ should go in with step 2.
 > tests pin the auth-free contract. Both were proved by putting the old code
 > back and watching them fail.
 
-### TD-42 · The first refresh after a login was once refused as already used — **open**, one occurrence
+### TD-42 · The first refresh after a login was once refused as already used — **FIXED 2026-09-11** ✔, and explained after all
 
 > #60's first CI attempt (run 34506706878, 2026-09-10) lost the collaborator's
 > session inside `a11y.cy.ts`, and the last two tests of its collaborator block
@@ -1340,8 +1340,64 @@ should go in with step 2.
 > ends the local session at once, because the refresh fails; with the change it
 > would last until the access token expires (at most 60 minutes) — the window
 > every API call already has, since access tokens are never revoked.
+>
+> **The mechanism, 2026-09-11 — a refresh whose page died, which the CI log
+> cannot show.** The one argument above against a lost response was the log's
+> silence: no "Broken pipe". That holds on a Mac and not on the CI runner.
+> Measured with Django's own dev server (`django.core.servers.basehttp`, what
+> `runserver` runs), sending `/api/users/refresh/` and closing the connection
+> before reading the answer: on macOS every such request left a "Broken pipe"
+> line; in a Linux container on Python 3.14, as in CI, **six of six left
+> nothing at all** — no access line, no "Broken pipe". In every case, on both,
+> the presented token was **blacklisted anyway** and its replacement issued to
+> nobody. The reason is `wsgiref.handlers.BaseHandler.run`, which swallows
+> `BrokenPipeError`/`ConnectionResetError` and returns before `close()`, which
+> is where the access line is written.
+>
+> The #60 log confirms it on its own: at 17:13:47 in the same run, `login.cy.ts`'s
+> planted token produces Django's `Unauthorized: /api/users/refresh/` warning
+> with **no access line after it** — a refused refresh whose page (a 52 ms
+> test) was already gone. And at 17:13:05 the log has a **refresh preflight
+> with no POST of its own**: that is where the lost refresh sits. 17:13:07 is
+> the next page load presenting the token it rotated out. What remains unknown
+> is which page load issued the 17:13:05 refresh and what tore it down before
+> its answer — the log cannot say, by construction, and this entry does not
+> guess. **Worth keeping for whoever reads `api.log` next: in CI, a request
+> missing from it may have happened.** The "left only their CORS preflights"
+> above is the same blind spot.
+>
+> **Fixed** by removing the class rather than the instance, as proposed, and
+> with the author's go-ahead:
+>
+> - `initStore` refreshes only when the access token expires within a minute
+>   (`lib/jwt.ts::expiresSoon` reads `exp`; a token it cannot read counts as
+>   expiring). The 401 interceptor still covers a token that dies early. The
+>   whole local e2e run now makes **three** refreshes, all deliberate
+>   (`login.cy.ts`'s planted token, `session.cy.ts`'s two) and none from a page
+>   load — against the fifteen counted above.
+> - `performRefresh` ends the session **only on a 401**. It used to end it on
+>   any failure — no signal, a 502 while the API redeploys — so a page load at
+>   the wrong moment was one more logout for no reason. This is what made TD-43
+>   worth fixing now.
+> - `session.cy.ts`'s forged access token now expires in 2100: with `exp: 1`
+>   the page load would refresh first and the interceptor, which that file
+>   exists to prove, would never be asked. It also asserts that a reload with
+>   a live token makes no refresh.
+>
+> **The cost, as accepted:** it is smaller than first written. A plain "Esci"
+> on another device never touched this session — it blacklists only its own
+> token (TD-41) — and "Esci" in another tab of the same browser empties the
+> shared localStorage, refresh or not. What changes is a **password change or
+> reset** elsewhere (`_blacklist_all_tokens`): a reload here now keeps looking
+> signed in until the access token expires, at most 60 minutes, instead of
+> ending at once. If that immediacy ever matters, the lever is
+> `ACCESS_TOKEN_LIFETIME`, which shortens the window for API calls too — the
+> page-load refresh only ever protected a tab that happened to reload.
+>
+> Four store tests pin it, shown failing against the old store first, and
+> `lib/__tests__/jwt.spec.ts` covers the parsing.
 
-### TD-43 · Refreshing a token whose account was deleted is a 500 — **open**, low impact
+### TD-43 · Refreshing a token whose account was deleted is a 500 — **FIXED 2026-09-11** ✔
 
 > Found measuring TD-42's refusal bodies: simplejwt 5.5.1's
 > `TokenRefreshSerializer.validate` looks the user up with `objects.get()` and
@@ -1352,3 +1408,14 @@ should go in with step 2.
 > rather than fixed. The fix, when it matters, is a subclassed serializer that
 > turns `DoesNotExist` into `AuthenticationFailed`, or an upstream bump if
 > simplejwt handles it by then.
+>
+> **Fixed 2026-09-11**, because TD-42 changed what "low impact" meant: once
+> only a 401 ends a session, this 500 would have left a deleted account
+> looking signed in on every page load. `account/serializers.py::TokenRefreshSerializer`
+> subclasses simplejwt's and answers exactly as it does for a deactivated
+> account (401, `no_active_account`); it is wired in through `SIMPLE_JWT`'s
+> `TOKEN_REFRESH_SERIALIZER`. The lookup runs before any rotation, so nothing
+> has been written when it refuses. One test, shown failing against the old
+> code with the `DoesNotExist` above, and a second pinning the deactivated
+> case, since the SPA now depends on it being a 401 too. Drop the subclass once
+> upstream catches the exception.

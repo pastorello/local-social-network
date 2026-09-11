@@ -76,10 +76,10 @@ describe('setupAuthInterceptor', () => {
     expect(axios.post).not.toHaveBeenCalled()
   })
 
-  it('gives up and clears the session when the refresh fails', async () => {
+  it('gives up and clears the session when the refresh token is refused', async () => {
     const store = useUserStore()
     store.setToken({ access: 'stale-access', refresh: 'expired-refresh' })
-    vi.mocked(axios.post).mockRejectedValue(new Error('401'))
+    vi.mocked(axios.post).mockRejectedValue(make401('/api/users/refresh/'))
 
     const error = make401('/api/reports/')
     await expect(state.onRejected!(error)).rejects.toBe(error)

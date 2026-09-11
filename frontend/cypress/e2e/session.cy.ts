@@ -13,14 +13,18 @@
 const EMAIL = 'collaboratore@e2e.test'
 const PASSWORD = 'E2ePassw0rd!'
 
-// A structurally valid JWT the API cannot have signed.
+// A structurally valid JWT the API cannot have signed. Its `exp` is in 2100 on
+// purpose (TD-42): a page load no longer refreshes a token that still has time
+// on it, so only a token the *server* rejects before its expiry reaches the
+// interceptor — which is the path this file exists to prove. With `exp: 1`
+// the page load would refresh first and the interceptor would never be asked.
 // Every test here logs in, and `login` is throttled at 10/min per IP (TD-18).
 // A full local re-run of the suite twice inside a minute will therefore fail
 // on a 429 rather than on anything real — the same footnote collabora.cy.ts
 // carries for its own limit.
 const FORGED_ACCESS =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9' +
-  '.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxLCJqdGkiOiJkZWFkIiwidXNlcl9pZCI6IjAifQ' +
+  '.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjo0MTAyNDQ0ODAwLCJqdGkiOiJkZWFkIiwidXNlcl9pZCI6IjAifQ' +
   '.not-a-valid-signature'
 
 describe('an expired access token', () => {
@@ -34,13 +38,21 @@ describe('an expired access token', () => {
   })
 
   it('is refreshed and the request replayed, without the reader noticing', () => {
+    cy.intercept('POST', '**/api/users/refresh/').as('refresh')
+
+    // First, what a reload with a live token does *not* do (TD-42): refresh.
+    // Every refresh rotates, and a rotation whose answer dies with its page
+    // leaves the next load holding a blacklisted token. Here rather than in a
+    // test of its own because each test costs a login against the rate limit.
+    cy.visit('/users')
+    cy.contains('h1', 'Utenti del network')
+    cy.get('@refresh.all').should('have.length', 0)
+
     cy.window().then((win) => {
       const refreshBefore = win.localStorage.getItem('user.refresh')
       expect(refreshBefore, 'a refresh token was stored at login').to.be.a('string')
       win.localStorage.setItem('user.access', FORGED_ACCESS)
     })
-
-    cy.intercept('POST', '**/api/users/refresh/').as('refresh')
 
     // An auth-only page: the guard lets it through (the store still believes
     // it is logged in), the API rejects the forged token, and the interceptor

@@ -202,6 +202,37 @@ def test_refresh_rotates_and_blacklists_the_old_token(api_client, citizen):
     assert reused.status_code == 401
 
 
+# The SPA ends a session only when the refresh endpoint answers 401 (TD-42), so
+# every way a refresh token can be dead has to arrive as a 401 — a 500 would
+# leave the collaborator looking signed in with an account that is gone.
+
+
+def test_refresh_for_a_deleted_account_is_a_401(api_client, citizen):
+    # TD-43: simplejwt 5.5.1 looks the user up with objects.get() and lets
+    # DoesNotExist escape as a 500.
+    login = api_client.post(
+        '/api/users/login/', {'email': citizen.email, 'password': PASSWORD}
+    )
+    citizen.delete()
+
+    response = api_client.post('/api/users/refresh/', {'refresh': login.json()['refresh']})
+
+    assert response.status_code == 401
+    assert 'refresh' not in response.json()
+
+
+def test_refresh_for_a_deactivated_account_is_a_401(api_client, citizen):
+    login = api_client.post(
+        '/api/users/login/', {'email': citizen.email, 'password': PASSWORD}
+    )
+    citizen.is_active = False
+    citizen.save()
+
+    response = api_client.post('/api/users/refresh/', {'refresh': login.json()['refresh']})
+
+    assert response.status_code == 401
+
+
 # --- F1.4 avatar upload hardening (TD-12) ---
 
 

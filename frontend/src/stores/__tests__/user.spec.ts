@@ -11,6 +11,17 @@ vi.mock('axios', () => ({
   },
 }))
 
+// A JWT whose payload only carries `exp` — enough for the store to schedule by.
+function accessExpiringIn(seconds: number): string {
+  const payload = btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + seconds }))
+  return `header.${payload.replace(/=+$/, '')}.signature`
+}
+
+// The shape axios rejects with when the server answered.
+function httpError(status: number) {
+  return Object.assign(new Error(`HTTP ${status}`), { response: { status } })
+}
+
 describe('user store', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -64,8 +75,8 @@ describe('user store', () => {
     expect(localStorage.getItem('user.role')).toBe('')
   })
 
-  it('initStore restores a persisted session and refreshes the access token', () => {
-    localStorage.setItem('user.access', 'old-access')
+  it('initStore restores a persisted session and refreshes an expired access token', () => {
+    localStorage.setItem('user.access', accessExpiringIn(-60))
     localStorage.setItem('user.refresh', 'stored-refresh')
     localStorage.setItem('user.id', 'user-1')
     localStorage.setItem('user.name', 'Anna')
@@ -81,6 +92,28 @@ describe('user store', () => {
     expect(axios.post).toHaveBeenCalledWith('/api/users/refresh/', {
       refresh: 'stored-refresh',
     })
+  })
+
+  it('initStore does not refresh while the access token is still valid', () => {
+    // TD-42: a refresh rotates the refresh token, and one per page load was
+    // one chance per page load for a reload to lose the rotated token.
+    localStorage.setItem('user.access', accessExpiringIn(30 * 60))
+    localStorage.setItem('user.refresh', 'stored-refresh')
+
+    const store = useUserStore()
+    store.initStore()
+
+    expect(store.user.isAuthenticated).toBe(true)
+    expect(axios.post).not.toHaveBeenCalled()
+  })
+
+  it('initStore refreshes an access token it cannot read', () => {
+    localStorage.setItem('user.access', 'not-a-jwt')
+    localStorage.setItem('user.refresh', 'stored-refresh')
+
+    useUserStore().initStore()
+
+    expect(axios.post).toHaveBeenCalledWith('/api/users/refresh/', { refresh: 'stored-refresh' })
   })
 
   it('initStore does nothing without a persisted access token', () => {
@@ -147,13 +180,31 @@ describe('user store', () => {
   it('refreshToken clears the session when the refresh token is rejected', async () => {
     const store = useUserStore()
     store.setToken({ access: 'old-access', refresh: 'expired-refresh' })
-    vi.mocked(axios.post).mockRejectedValueOnce(new Error('401'))
+    vi.mocked(axios.post).mockRejectedValueOnce(httpError(401))
 
     const refreshed = await store.refreshToken()
 
     expect(refreshed).toBe(false)
     expect(store.user.isAuthenticated).toBe(false)
     expect(localStorage.getItem('user.access')).toBe('')
+  })
+
+  // A failed refresh that is not the server refusing the token says nothing
+  // about the session, so it must not end it (TD-42).
+  it.each([
+    ['the network is down', new Error('Network Error')],
+    ['the API answers 502 mid-deploy', httpError(502)],
+    ['the API answers 500', httpError(500)],
+  ])('refreshToken keeps the session when %s', async (_label, failure) => {
+    const store = useUserStore()
+    store.setToken({ access: 'old-access', refresh: 'good-refresh' })
+    vi.mocked(axios.post).mockRejectedValueOnce(failure)
+
+    const refreshed = await store.refreshToken()
+
+    expect(refreshed).toBe(false)
+    expect(store.user.isAuthenticated).toBe(true)
+    expect(localStorage.getItem('user.refresh')).toBe('good-refresh')
   })
 
   it('removeToken stops axios from sending the old bearer token', () => {
