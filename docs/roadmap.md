@@ -254,6 +254,13 @@ build questions into input ones:
 - The **first real cards**, in every type, and their English translations —
   which is also the only way to find out whether the authoring flow is
   pleasant to use for someone who is not its author.
+  **Seeding began 2026-09-11**, in the development database only: eleven
+  drafts written from public sources, none published, each ending with its
+  sources and what is left to verify. The rules — and what the first batch
+  showed about why they are needed — are in
+  [spec/content.md](./spec/content.md#seeding-the-archive-from-public-sources--2026-09-11).
+  Seeded drafts are material for the author's reading, not a substitute for
+  it.
 
 ## 5. Named but not scheduled
 
@@ -276,10 +283,16 @@ is the author's call:
   retires the two in-form map editors, and rewrites a share of the Cypress
   suite that item 2 built. Read the "Costs to plan for" in that section
   before sizing it.
-- **The itinerary** — a reader picks stops and hands the walk off to Google
-  Maps through a plain link (no key, nothing of Google's loaded on the page).
-  **Its own phase, immediately after the layout**, and specified in the same
-  section of design.md.
+- **The itinerary** — ~~a reader picks stops and hands the walk off to Google
+  Maps~~. **Redecided the same day: curated itineraries**,
+  [spec/itinerari.md](./spec/itinerari.md). A guest arriving from a B&B's card
+  chooses what they feel like doing (the beach, food, the old town) and follows
+  a tour a collaborator composed from archive cards, one stop at a time, with
+  each leg handed off to Google Maps through a plain link. Still **its own
+  phase, immediately after the layout** — and it needs a seventh card type
+  first, **luoghi** (beaches, the castle, monuments, museums: see
+  [spec/content.md](./spec/content.md)), since every stop is a card. Luoghi
+  depends on nothing and could be built on its own at any time.
 
 - **Geolocation** — "you are here" plus what is around you while walking
   Gaeta. The author wants it and it fits the product; it is a **feature, not a

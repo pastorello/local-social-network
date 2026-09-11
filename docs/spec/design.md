@@ -359,6 +359,9 @@ opening-hours filter is not.
   *Il progetto* — the v2 spec already says there is no new work on them.
   **No search in this phase:** it was drawn and dropped, because search is a
   feature with an endpoint of its own, not a place in a menu.
+  **2026-09-11:** the reserved item arrives as *Itinerari*, plural — curated
+  tours ([itinerari.md](./itinerari.md) I11). The same session put a *Luoghi*
+  heading into the reader's grouping of card types (content.md, luoghi).
 
 - **D15 — Every page is a panel over the map, and keeps its URL.** A shared
   link to `/feste/:id` opens the map *and* the panel. Back and Escape close
@@ -433,6 +436,15 @@ opening-hours filter is not.
   moves with it: no invented endorsement.
 
 ### The itinerary — the next phase, not this one
+
+> **Superseded 2026-09-11 by [itinerari.md](./itinerari.md).** The phase after
+> the layout is still an itinerary, but a **curated** one: collaborators compose
+> tours out of archive cards, and the guest chooses among them rather than
+> assembling their own (itinerari.md I10 — a guest has no account to keep one
+> in). What survives from the section below is the hand-off: a plain Google
+> Maps link, built from our coordinates, now for each leg of a guided tour.
+> The teardown of the Venice map stays as it was written; the reader-built
+> planner it describes is not going to be built.
 
 **Its own phase, immediately after this one.** This layout reserves nothing
 visible for it (D14).
