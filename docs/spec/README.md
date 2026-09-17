@@ -64,13 +64,14 @@ not mean).
 | Reports & polls (from v1) | [reports-and-polls.md](./reports-and-polls.md) | delivered; reports change author |
 | Steering tier & political tooling | [politics.md](./politics.md) | tier delivered (C1); its first consumer is C5's seggi overlay (2026-08-27); the tooling is future, out of current build |
 | Design & visual direction | [design.md](./design.md) | interviewed 2026-08-27, built 2026-08-31; **layout reopened 2026-09-11** (D13–D21, decided, not built) |
+| Itinerari — curated tours for a visitor's stay | [itinerari.md](./itinerari.md) | decided 2026-09-11, not built; needs the luoghi type ([content.md](./content.md)) first |
 
 ## Architecture (shared across areas)
 
 - **One content core, thin type apps** — a `content` app owns rich text
   (sanitized), images, translations, map features and publication; `feste`,
   `chiese`, `ricette`, `personaggi`, `dialetto`, `libri` each add only their
-  fields.
+  fields — and so will `luoghi` and `itinerari`, specified 2026-09-11.
   Rationale: [../adr/0004-content-core-thin-type-apps.md](../adr/0004-content-core-thin-type-apps.md).
   Honors the author's requirement that modules be separable and reusable
   without rebuilding rich text five times.
