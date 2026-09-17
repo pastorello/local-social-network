@@ -125,11 +125,16 @@ npm run format           # prettier --write --experimental-cli src/
 npm run build            # type-check (vue-tsc) + vite build
 ```
 
-Two entries in `.claude/launch.json` for the in-app browser: `frontend` (Vite
-dev server, :5173) and **`frontend-preview`** (:4173, `vite preview` over
-`dist/`). Verify anything Leaflet-related against the **preview**, not the dev
-server — the default-import gotcha and TD-02's bundling only show in built
-output, which is also why CI runs Cypress there.
+Three entries in `.claude/launch.json` for the in-app browser: **`backend`**
+(Django on :8000 against the bare-metal SQLite database, `DJANGO_DEBUG=true`),
+`frontend` (Vite dev server, :5173) and **`frontend-preview`** (:4173, `vite
+preview` over `dist/`). Start `backend` too — the SPA is empty without its API.
+It calls the venv's Python directly rather than `scripts/dev` because the
+in-app launcher cannot execute that script (exit 126, "Operation not
+permitted"), and it does not run migrations: if a branch brought new ones,
+`python manage.py migrate` first. Verify anything Leaflet-related against the
+**preview**, not the dev server — the default-import gotcha and TD-02's
+bundling only show in built output, which is also why CI runs Cypress there.
 
 `npm run format` is `prettier --write src/`. The tree **is** prettier-clean as
 of 2026-08-27 (`npx prettier --check .` passes, `eslint.config.ts` included),
