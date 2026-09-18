@@ -64,7 +64,7 @@ not mean).
 | Reports & polls (from v1) | [reports-and-polls.md](./reports-and-polls.md) | delivered; reports change author |
 | Steering tier & political tooling | [politics.md](./politics.md) | tier delivered (C1); its first consumer is C5's seggi overlay (2026-08-27); the tooling is future, out of current build |
 | Design & visual direction | [design.md](./design.md) | interviewed 2026-08-27, built 2026-08-31; **layout reopened 2026-09-11** (D13–D21, decided, not built) |
-| Itinerari — curated tours for a visitor's stay | [itinerari.md](./itinerari.md) | decided 2026-09-11, not built; the luoghi type it needs ([content.md](./content.md)) was built 2026-09-18 |
+| Itinerari — curated tours for a visitor's stay | [itinerari.md](./itinerari.md) | decided 2026-09-11; backend built 2026-09-18, reader pages and editor to follow |
 
 ## Architecture (shared across areas)
 
