@@ -8,7 +8,8 @@ const login = () => {
   cy.get('input[type="email"]').type(EMAIL)
   cy.get('input[type="password"]').type(PASSWORD, { log: false })
   cy.contains('button', 'Accedi').click()
-  cy.contains('button', 'Esci').should('exist')
+  // Signed in: the menu shows the account behind the avatar (design.md D14).
+  cy.get('button[aria-label^="Il tuo account"]').should('exist')
 }
 
 // Two runs must not collide on a title, and the suite must be re-runnable
@@ -51,6 +52,7 @@ describe('the collaborator', () => {
     cy.contains('h1', title)
 
     cy.url().then((cardUrl) => {
+      cy.get('button[aria-label^="Il tuo account"]').click()
       cy.contains('button', 'Esci').click()
 
       // The endpoint answers 404 rather than 403, so an outsider cannot tell

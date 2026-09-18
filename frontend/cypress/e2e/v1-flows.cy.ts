@@ -35,7 +35,7 @@ describe('the v1 flows', { testIsolation: false }, () => {
     cy.get('#login-email').type(EMAIL)
     cy.get('#login-password').type(PASSWORD, { log: false })
     cy.contains('button', 'Accedi').click()
-    cy.contains('button', 'Esci').should('exist')
+    cy.get('button[aria-label^="Il tuo account"]').should('exist')
   })
 
   it('files a report from the map and finds it on the map afterwards', () => {

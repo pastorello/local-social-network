@@ -24,14 +24,22 @@ const NARROW_PANEL = 560
 const HOME_COLUMN = 416
 const GAP = 48
 
+// The map runs under the floating menu, so what it frames starts below it.
+const menuBottom = () => {
+  if (typeof window === 'undefined') return 0
+  const value = getComputedStyle(document.documentElement).getPropertyValue('--header-h')
+  return Number.parseFloat(value) || 0
+}
+
 const focusPadding = computed<{ topLeft: [number, number]; bottomRight: [number, number] }>(() => {
+  const top = menuBottom() + GAP
   if (isDesktop.value && route.meta.panel === 'narrow') {
-    return { topLeft: [GAP, GAP], bottomRight: [NARROW_PANEL + 16 + GAP, GAP] }
+    return { topLeft: [GAP, top], bottomRight: [NARROW_PANEL + 16 + GAP, GAP] }
   }
   if (isDesktop.value && route.meta.fullBleed) {
-    return { topLeft: [HOME_COLUMN + 16 + GAP, GAP], bottomRight: [GAP, GAP] }
+    return { topLeft: [HOME_COLUMN + 16 + GAP, top], bottomRight: [GAP, GAP] }
   }
-  return { topLeft: [GAP, GAP], bottomRight: [GAP, GAP] }
+  return { topLeft: [GAP, top], bottomRight: [GAP, GAP] }
 })
 
 // Out of reach while a page covers it — a wide panel veils it, and on a phone
@@ -42,6 +50,17 @@ const covered = computed(
     route.name !== undefined &&
     !route.meta.fullBleed &&
     (!isDesktop.value || route.meta.panel !== 'narrow'),
+)
+
+// D20: the text lists are ADR-0005's equivalent of the pins, so they stay one
+// tap away wherever the map is on screen. The home carries them; beside a
+// narrow panel the map is on screen without them, so it offers the way back.
+const offerList = computed(() => isDesktop.value && route.meta.panel === 'narrow')
+
+// Leaflet's zoom buttons live in the map's top-left corner, which on the wide
+// home is under the floating column: they move out beside it.
+const controlsLeft = computed(() =>
+  isDesktop.value && route.meta.fullBleed ? `${HOME_COLUMN + 16 + 16}px` : '0px',
 )
 
 const onPinClick = (id: string) => router.push(`/reports/${id}`)
@@ -58,7 +77,8 @@ onMounted(mapStore.load)
 </script>
 
 <template>
-  <div class="fixed inset-x-0 top-[var(--header-h,10rem)] bottom-0 z-0" :inert="covered">
+  <!-- Edge to edge, under the menu too (D14): the menu floats over the map. -->
+  <div class="fixed inset-0 z-0" :inert="covered" :style="{ '--map-controls-left': controlsLeft }">
     <GaetaMap
       :pins="mapStore.visiblePins"
       :features="mapStore.visibleFeatures"
@@ -70,5 +90,35 @@ onMounted(mapStore.load)
       @pin-click="onPinClick"
       @feature-click="onFeatureClick"
     />
+    <RouterLink
+      v-if="offerList"
+      to="/"
+      class="absolute bottom-4 left-4 z-1000 flex h-10 items-center gap-2 rounded-full bg-ink px-4 text-sm font-semibold text-white shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+    >
+      <svg
+        viewBox="0 0 20 20"
+        class="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+        aria-hidden="true"
+      >
+        <path d="M7.5 5.5h9M7.5 10h9M7.5 14.5h9M3.5 5.5h.5M3.5 10h.5M3.5 14.5h.5" />
+      </svg>
+      Elenco · {{ mapStore.visibleFeatures.length }} luoghi
+    </RouterLink>
   </div>
 </template>
+
+<style scoped>
+/* Leaflet's own controls (zoom) sit in its top corners, and the map now runs
+   under the floating menu: they start below it instead of behind it. */
+div :deep(.leaflet-top) {
+  top: var(--header-h, 0px);
+}
+
+div :deep(.leaflet-left) {
+  left: var(--map-controls-left, 0px);
+}
+</style>

@@ -310,9 +310,10 @@ more than the frame is a decision for the build (see below).
 
 ## The map under every page
 
-> **Decided 2026-09-11. Built in part:** D13, D15, D16 and D17 on 2026-09-18
-> (see "What the first build decided" at the end of this section); D14 and
-> D18–D21 not yet. The confirmed output of a brainstorming
+> **Decided 2026-09-11. Built in part:** D13, D15, D16 and D17 on 2026-09-18,
+> then D14, D20 and D21 the same day (see "What the first build decided" and
+> "The menu, the list, the credits" at the end of this section); D18 and D19
+> not yet. The confirmed output of a brainstorming
 > session with the author, produced the way the rest of this file was: one
 > question at a time, a committed guess and the strongest case against it.
 > Each requirement below records the counter-case that lost, because that is
@@ -560,3 +561,31 @@ wallpaper. What the build settled, so it is not re-argued:
   progetto*; a narrow panel has no room for them.
 - **The map refetches what a save changed**: publishing, unpublishing,
   moving or deleting a card refreshes the layer it is on.
+
+### The menu, the list, the credits — built 2026-09-18
+
+D14, D20 and D21, built together because the menu is where the credits and
+the polls are reached from:
+
+- **D14.** The menu is a pill at the top centre, floating over the map — the
+  map now runs edge to edge under it, and Leaflet's zoom buttons are pushed
+  below it (and, on the wide home, out beside the floating column). Wordmark,
+  *Mappa*, *Schede*, *Il progetto*, then *Accedi* or the avatar. **Behind the
+  avatar: the profile, *Utenti* and *Esci*** — the drawing showed only the
+  avatar, and those three had to live somewhere a collaborator would look.
+  On a phone the pill keeps the wordmark and *Schede*, and the rest sits
+  behind one *Menu* button. Both are disclosures of links, not ARIA menus;
+  Escape closes them and gives focus back to their button.
+- **"Collabora con noi" left the top bar.** D14 names *Accedi* and nothing
+  after it, so the way in for someone without an account is the login page's
+  own link and *Il progetto*'s *Partecipa* — the no-signup rule still holds:
+  nothing anywhere offers "Registrati".
+- **D20.** Beside a narrow panel, where the map is on screen without its
+  lists, a floating *Elenco · N luoghi* at the map's bottom-left goes back to
+  the home, which carries them. The home and the phone's sheet already had
+  them.
+- **D21.** *Il progetto* is `/il-progetto`, a wide panel: what the footer
+  carried — the one-line description, the card types, the polls, *Collabora
+  con noi*, the editorial rule — and no invented endorsement. There is no
+  footer anywhere now.
+

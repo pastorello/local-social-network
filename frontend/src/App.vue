@@ -8,7 +8,6 @@ import AppToast from '@/components/modals/AppToast.vue'
 import RoutePanel from '@/components/layout/RoutePanel.vue'
 import MapStage from '@/components/maps/MapStage.vue'
 import HomeView from '@/views/HomeView.vue'
-import AppFooter from './components/AppFooter.vue'
 import AppHeader from './components/AppHeader.vue'
 
 const route = useRoute()
@@ -67,11 +66,8 @@ router.afterEach(async (to, from) => {
         v-if="Component && !current.meta.fullBleed"
         :shape="current.meta.panel === 'narrow' ? 'narrow' : 'wide'"
       >
+        <!-- No footer: the credits are a page of their own, Il progetto (D21). -->
         <component :is="Component" />
-        <!-- The credits surface (D11) rides on every reading panel until
-        D21 moves it to Il progetto; a narrow panel is beside the map and
-        has no room for it. -->
-        <AppFooter v-if="current.meta.panel !== 'narrow'" class="-mx-4 mt-8 lg:-mx-8" />
       </RoutePanel>
     </RouterView>
 
