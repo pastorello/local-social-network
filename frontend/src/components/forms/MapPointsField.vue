@@ -24,6 +24,10 @@ const props = defineProps<{
   // True while the form's map tab is open: only then does the map draw.
   drawing: boolean
   idPrefix: string
+  // What a route's point is called. A procession's are its stops ("tappe");
+  // a tour's walked path has points between the tour's own stops, and calling
+  // them tappe too made two different things share one word.
+  routeNoun?: 'tappa' | 'punto'
 }>()
 
 const emit = defineEmits<{
@@ -37,13 +41,33 @@ const mapStore = useMapStore()
 const route = computed(() => props.kind === 'route')
 const cap = computed(() => (route.value ? Infinity : (props.max ?? 1)))
 const atCapacity = computed(() => props.modelValue.length >= cap.value)
-const noun = computed(() => (route.value ? 'tappa' : 'punto'))
+const noun = computed(() => (route.value && props.routeNoun !== 'punto' ? 'tappa' : 'punto'))
+// The Italian around the noun, which changes with its gender.
+const words = computed(() =>
+  noun.value === 'tappa'
+    ? {
+        a: 'una tappa',
+        art: 'la',
+        the: 'la tappa',
+        of: 'della tappa',
+        ofThe: 'della',
+        plural: 'le tappe',
+      }
+    : {
+        a: 'un punto',
+        art: 'il',
+        the: 'il punto',
+        of: 'del punto',
+        ofThe: 'del',
+        plural: 'i punti',
+      },
+)
 
 // What the banner over the map says: what is being drawn, and what the next
 // click does.
 const bannerLabel = computed(() => {
   if (route.value) {
-    return `Stai disegnando il percorso · clicca sulla mappa per aggiungere la tappa ${props.modelValue.length + 1}`
+    return `Stai disegnando il percorso · clicca sulla mappa per aggiungere ${words.value.the} ${props.modelValue.length + 1}`
   }
   if (atCapacity.value) {
     return cap.value === 1
@@ -146,7 +170,8 @@ const iconButton =
         }}
       </template>
       <template v-else-if="route">
-        Clicca sulla mappa per aggiungere una tappa: le tappe si uniscono nell’ordine della lista.
+        Clicca sulla mappa per aggiungere {{ words.a }}: {{ words.plural }} si uniscono nell’ordine
+        della lista.
       </template>
       <template v-else>
         {{
@@ -161,14 +186,14 @@ const iconButton =
       <li v-for="(point, index) in modelValue" :key="index" class="flex items-center gap-2">
         <span v-if="route" class="w-6 flex-none text-right font-semibold">{{ index + 1 }}.</span>
         <span v-if="readonly" class="text-ink">
-          {{ point.label || (route ? 'Tappa senza nome' : 'Punto senza nome') }}
+          {{ point.label || (noun === 'tappa' ? 'Tappa senza nome' : 'Punto senza nome') }}
         </span>
         <template v-else>
           <input
             type="text"
             :class="[input, 'min-w-0 flex-1']"
-            :placeholder="`Nome ${route ? 'della tappa' : 'del punto'} (facoltativo)`"
-            :aria-label="`Nome ${route ? 'della tappa' : 'del punto'} ${index + 1}`"
+            :placeholder="`Nome ${words.of} (facoltativo)`"
+            :aria-label="`Nome ${words.of} ${index + 1}`"
             :value="point.label"
             @input="updateLabel(index, ($event.target as HTMLInputElement).value)"
           />
@@ -177,7 +202,7 @@ const iconButton =
               type="button"
               :class="iconButton"
               :disabled="index === 0"
-              :aria-label="`Sposta la tappa ${index + 1} prima della ${index}`"
+              :aria-label="`Sposta ${words.the} ${index + 1} prima ${words.ofThe} ${index}`"
               @click="move(index, -1)"
             >
               ↑
@@ -186,7 +211,7 @@ const iconButton =
               type="button"
               :class="iconButton"
               :disabled="index === modelValue.length - 1"
-              :aria-label="`Sposta la tappa ${index + 1} dopo la ${index + 2}`"
+              :aria-label="`Sposta ${words.the} ${index + 1} dopo ${words.art} ${index + 2}`"
               @click="move(index, 1)"
             >
               ↓
@@ -217,9 +242,7 @@ const iconButton =
       v-if="!readonly && !atCapacity"
       class="space-y-2 rounded-lg border border-hairline bg-surface p-4"
     >
-      <legend class="px-1 text-sm font-semibold text-ink">
-        Aggiungi {{ route ? 'una tappa' : 'un punto' }} a mano
-      </legend>
+      <legend class="px-1 text-sm font-semibold text-ink">Aggiungi {{ words.a }} a mano</legend>
       <p class="text-xs text-muted">In alternativa al clic sulla mappa (es. da tastiera).</p>
       <div class="flex gap-2">
         <label class="sr-only" :for="`${idPrefix}-manual-lat`">Latitudine</label>
@@ -241,14 +264,12 @@ const iconButton =
           :class="[input, 'w-1/2']"
         />
       </div>
-      <label class="sr-only" :for="`${idPrefix}-manual-label`">
-        Nome {{ route ? 'della tappa' : 'del punto' }}
-      </label>
+      <label class="sr-only" :for="`${idPrefix}-manual-label`"> Nome {{ words.of }} </label>
       <input
         :id="`${idPrefix}-manual-label`"
         v-model="manualLabel"
         type="text"
-        :placeholder="`Nome ${route ? 'della tappa' : 'del punto'} (facoltativo)`"
+        :placeholder="`Nome ${words.of} (facoltativo)`"
         :class="[input, 'w-full']"
       />
       <button
@@ -256,7 +277,7 @@ const iconButton =
         class="cursor-pointer rounded-lg bg-sea px-4 py-2 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
         @click="addManual"
       >
-        Aggiungi {{ route ? 'tappa' : 'punto' }}
+        Aggiungi {{ noun }}
       </button>
     </fieldset>
   </div>

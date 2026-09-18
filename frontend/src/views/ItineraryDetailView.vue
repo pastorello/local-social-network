@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import axios from 'axios'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import ActionButton from '@/components/buttons/ActionButton.vue'
@@ -86,7 +86,20 @@ useMapFocus(() => {
   }
 })
 
-const goToStep = (n: number | null) => router.push({ query: n ? { tappa: String(n) } : {} })
+// Entering or leaving the guided mode removes the button that was pressed,
+// and the last "Tappa successiva" disables itself: either way focus would fall
+// to the page's start (WCAG 2.4.3). It goes to the stop's heading — which also
+// tells a screen reader where they are — or back to "Inizia il tour".
+const stepHeading = ref<HTMLElement | null>(null)
+const startButton = ref<{ $el: HTMLElement } | null>(null)
+const goToStep = async (n: number | null) => {
+  await router.push({ query: n ? { tappa: String(n) } : {} })
+  await nextTick()
+  const active = document.activeElement as HTMLButtonElement | null
+  if (active && active !== document.body && !active.disabled) return
+  if (n) stepHeading.value?.focus()
+  else startButton.value?.$el.focus()
+}
 
 const getTour = async () => {
   try {
@@ -136,7 +149,12 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
       <p class="text-xs font-semibold tracking-[0.12em] text-terracotta uppercase">
         {{ tour.original_title || tour.title }} · Tappa {{ step }} di {{ placed.length }}
       </p>
-      <h1 class="mt-2 font-display text-display text-balance text-ink" lang="it">
+      <h1
+        ref="stepHeading"
+        tabindex="-1"
+        class="mt-2 font-display text-display text-balance text-ink focus:outline-none"
+        lang="it"
+      >
         {{ current.title }}
       </h1>
       <p v-if="current.point?.label" class="mt-1 text-muted">{{ current.point.label }}</p>
@@ -275,7 +293,12 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
             </li>
           </component>
 
-          <ActionButton v-if="isPercorso && placed.length" class="mt-6" @click="goToStep(1)">
+          <ActionButton
+            v-if="isPercorso && placed.length"
+            ref="startButton"
+            class="mt-6"
+            @click="goToStep(1)"
+          >
             Inizia il tour
           </ActionButton>
         </section>

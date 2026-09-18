@@ -127,7 +127,12 @@ onMounted(() => {
         <div>
           <MainTitle>{{ activeOption?.name_plural ?? config.label }}</MainTitle>
           <p v-if="!loading" class="text-muted">
-            {{ entries.length }} {{ entries.length === 1 ? 'scheda' : 'schede' }}
+            {{ entries.length }}
+            {{
+              entries.length === 1
+                ? (config.countNouns?.[0] ?? 'scheda')
+                : (config.countNouns?.[1] ?? 'schede')
+            }}
           </p>
         </div>
 
