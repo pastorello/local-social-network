@@ -92,7 +92,7 @@ const router = createRouter({
       path: '/feste/nuova',
       name: 'festecreate',
       component: () => import('../views/FesteCreateView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, panel: 'narrow' },
     },
     {
       path: '/feste/:id',
@@ -115,7 +115,7 @@ const router = createRouter({
       name: chiesaConfig.routeNames.create,
       component: () => import('../views/TypeCreateView.vue'),
       props: { config: chiesaConfig },
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, panel: 'narrow' },
     },
     {
       path: '/chiese/:id',
@@ -136,7 +136,7 @@ const router = createRouter({
       name: ricettaConfig.routeNames.create,
       component: () => import('../views/TypeCreateView.vue'),
       props: { config: ricettaConfig },
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, panel: 'narrow' },
     },
     {
       path: '/ricette/:id',
@@ -157,7 +157,7 @@ const router = createRouter({
       name: personaggioConfig.routeNames.create,
       component: () => import('../views/TypeCreateView.vue'),
       props: { config: personaggioConfig },
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, panel: 'narrow' },
     },
     {
       path: '/personaggi/:id',
@@ -199,7 +199,7 @@ const router = createRouter({
       name: luogoConfig.routeNames.create,
       component: () => import('../views/TypeCreateView.vue'),
       props: { config: luogoConfig },
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, panel: 'narrow' },
     },
     {
       path: '/luoghi/:id',

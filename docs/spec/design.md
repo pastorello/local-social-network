@@ -310,10 +310,9 @@ more than the frame is a decision for the build (see below).
 
 ## The map under every page
 
-> **Decided 2026-09-11. Built in part:** D13, D15, D16 and D17 on 2026-09-18,
-> then D14, D20, D21 and D18 the same day (see "What the first build
-> decided", "The menu, the list, the credits" and "The phone's strip" at the
-> end of this section); D19 not yet. The confirmed output of a brainstorming
+> **Decided 2026-09-11. Built 2026-09-18**, all of it, in four steps — see
+> "What the first build decided", "The menu, the list, the credits", "The
+> phone's strip" and "The map as the editor" at the end of this section. The confirmed output of a brainstorming
 > session with the author, produced the way the rest of this file was: one
 > question at a time, a committed guess and the strongest case against it.
 > Each requirement below records the counter-case that lost, because that is
@@ -609,4 +608,38 @@ D18 as specified, and what the build had to decide:
 - **The wordmark no longer wraps.** The first build of D14 let the browser
   squeeze it inside a 390 px pill, where it broke into four lines and made the
   menu a third of the screen — found while building this strip, fixed here.
+
+### The map as the editor — built 2026-09-18
+
+D19, and what the build decided:
+
+- **One field for both shapes**, `components/forms/MapPointsField.vue`: a
+  route (ordered, reordered with buttons, joined by a line) or pins (a capped
+  bag). While the form's map tab is open it lends its points to the shell's
+  map through `stores/map.ts`; the map draws them in the accent colour, dims
+  every other card, and hands clicks back. **The form owns the data**: a click
+  changes the form's points, and cancelling the form cancels the drawing.
+  `FesteRouteEditor`, `MapPinsEditor` and the `useLeafletMap` composable they
+  shared are gone.
+- **The banner** ("Stai disegnando il percorso · clicca sulla mappa per
+  aggiungere la tappa 3", or for pins what the next click does and when the
+  cap is reached) is a `role="status"` region, at the map's bottom-left on a
+  wide screen and in the strip beside the zoom buttons on a phone. **Fatto**
+  leaves the map tab for the next one, *Pubblicazione*.
+- **The sections are tabs** (`FormTabs.vue`, ARIA's tabs pattern: one tab
+  stop, arrows, Home/End). The panels stay in the DOM while hidden, so every
+  field keeps its id and error wiring; a tab holding a rejected field says so
+  in words as well as with a dot, and a failed save opens the first such tab.
+- **The editing panel is the narrow panel, 560 px**, not the drawing's 600 —
+  one narrow shape rather than two. The create pages of the types with a
+  place open in it too (`meta.panel: 'narrow'`), so the map is beside them.
+- **Typed coordinates stay**, in the same field — the keyboard path the map
+  click does not have; `collaborator.cy.ts` tests it on its own, since the
+  WCAG gate excludes the map.
+- **Not built, and named so it is not assumed:** dragging a stop to move it
+  (the drawing's note suggested it; remove and re-add does the same, and the
+  buttons already reorder), and **folding the report filing flow into this
+  editing mode** — "Costs to plan for" above said it *should*; filing still
+  uses its own placing mode on the same map, which works, and merging the two
+  is a change to the v1 reports flow rather than to the layout.
 

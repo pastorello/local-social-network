@@ -29,7 +29,7 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 ;(globalThis as typeof globalThis & { L: typeof L }).L = L
 
 import type { MapCardFeature, Overlay } from '@/definitions/interfaces/MapData'
-import type { MapFocus } from '@/stores/map'
+import type { MapEditor, MapFocus } from '@/stores/map'
 import type { ReportPin } from '@/definitions/interfaces/Report'
 import { layerColor } from '@/lib/mapLayers'
 import { keepMarkersOutOfTabOrder } from '@/lib/leafletKeyboard'
@@ -52,6 +52,8 @@ const props = defineProps<{
   // page's panel leaves visible.
   focus?: MapFocus | null
   focusPadding?: { topLeft: [number, number]; bottomRight: [number, number] }
+  // A form drawing on the map (D19): its draft, drawn as the form holds it.
+  editor?: MapEditor | null
 }>()
 
 const emit = defineEmits<{
@@ -75,6 +77,7 @@ let map: LeafletMap | null = null
 let cluster: MarkerClusterGroup | null = null
 let featureLayer: LayerGroup | null = null
 let focusLayer: LayerGroup | null = null
+let editorLayer: LayerGroup | null = null
 // Where the reader was before a page took the map somewhere, so closing the
 // page gives it back (D16).
 let viewBeforeFocus: { center: LatLng; zoom: number } | null = null
@@ -114,7 +117,7 @@ const renderFeatures = () => {
 
   // While a page is open the rest of the city steps back (D16) — still there,
   // still clickable, but not competing with what the reader is reading about.
-  const dimmed = hasFocusGeometry()
+  const dimmed = hasFocusGeometry() || !!props.editor
   const fillOpacity = dimmed ? 0.3 : 0.9
   const lineOpacity = dimmed ? 0.3 : 0.85
 
@@ -239,6 +242,57 @@ const frameFocus = () => {
   })
 }
 
+// The draft of the form that is drawing (D19), in the accent colour: a route's
+// stops numbered and joined in order, a card's pins as pins. It is the form's
+// data, drawn — the map owns none of it.
+const renderEditor = () => {
+  if (!map) return
+  editorLayer?.remove()
+  editorLayer = null
+  if (!props.editor) return
+
+  const accent = readToken('--color-sea', '#0f5f73')
+  const surface = readToken('--color-surface', '#ffffff')
+  editorLayer = L.layerGroup()
+  const points = props.editor.points
+
+  if (props.editor.kind === 'route' && points.length > 1) {
+    const line = points.map((point) => [point.lat, point.lng] as [number, number])
+    editorLayer.addLayer(L.polyline(line, { color: surface, weight: 10, opacity: 0.9 }))
+    editorLayer.addLayer(L.polyline(line, { color: accent, weight: 5 }))
+  }
+  points.forEach((point, index) => {
+    const name =
+      props.editor?.kind === 'route'
+        ? `${index + 1}${point.label ? `. ${point.label}` : ''}`
+        : point.label || `Punto ${index + 1}`
+    editorLayer?.addLayer(
+      L.circleMarker([point.lat, point.lng], {
+        radius: props.editor?.kind === 'route' ? 8 : 11,
+        color: surface,
+        weight: 3,
+        fillColor: accent,
+        fillOpacity: 1,
+      }).bindTooltip(name, { permanent: props.editor?.kind === 'route', direction: 'top' }),
+    )
+  })
+  editorLayer.addTo(map)
+}
+
+// When a form starts drawing, the map goes to what it already has, if
+// anything; while it draws, the view is the collaborator's to move.
+const frameEditor = () => {
+  if (!map || !props.editor || props.editor.points.length === 0) return
+  map.fitBounds(
+    L.latLngBounds(props.editor.points.map((point) => [point.lat, point.lng] as [number, number])),
+    {
+      paddingTopLeft: props.focusPadding?.topLeft ?? [48, 48],
+      paddingBottomRight: props.focusPadding?.bottomRight ?? [48, 48],
+      maxZoom: 17,
+    },
+  )
+}
+
 const buildOverlay = (overlay: Overlay): Layer | null => {
   if (overlay.kind === 'raster') {
     if (!overlay.imageURL || !overlay.bounds) return null
@@ -325,7 +379,14 @@ const onReady = (leafletMap: LeafletMap) => {
   }
 
   map.on('click', (event: LeafletMouseEvent) => {
-    if (!props.placing || !map) return
+    if (!map) return
+    // A form drawing on the map takes the click (D19); it draws the result
+    // itself, through the editor prop.
+    if (props.editor) {
+      emit('mapClick', { lat: event.latlng.lat, lng: event.latlng.lng })
+      return
+    }
+    if (!props.placing) return
 
     const { lat, lng } = event.latlng
     if (draftMarker) {
@@ -347,6 +408,8 @@ const onReady = (leafletMap: LeafletMap) => {
   renderOverlays()
   renderFocus()
   frameFocus()
+  renderEditor()
+  frameEditor()
 }
 
 watch(() => props.pins, renderPins, { deep: true })
@@ -361,6 +424,19 @@ watch(
   { deep: true },
 )
 watch(() => props.focusPadding, frameFocus, { deep: true })
+watch(
+  () => props.editor,
+  (editor, previous) => {
+    renderEditor()
+    // Dim the rest while drawing, and frame what the form already has — once,
+    // when drawing starts, not on every point added.
+    if (!!editor !== !!previous) {
+      renderFeatures()
+      frameEditor()
+    }
+  },
+  { deep: true },
+)
 watch(() => (props.overlays ?? []).map((overlay) => overlay.id).join('|'), renderOverlays)
 watch(() => (props.overlays ?? []).map((overlay) => overlay.opacity), applyOverlayOpacity)
 
@@ -380,7 +456,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="wrapper" class="h-full w-full" :class="{ 'cursor-crosshair': placing }">
+  <div ref="wrapper" class="h-full w-full" :class="{ 'cursor-crosshair': placing || editor }">
     <l-map v-model:zoom="zoom" :center="center" :use-global-leaflet="true" @ready="onReady">
       <l-tile-layer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

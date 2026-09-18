@@ -25,6 +25,24 @@ export interface MapFocus {
   color?: string
 }
 
+// The map as the collaborator's editor (spec/design.md D19): a form that is
+// drawing hands the map the points it owns, and the map reports clicks back.
+// The form owns the data — the map only draws the draft it is handed — so
+// what is edited is always the form's, and cancelling the form cancels it.
+export interface MapEditor {
+  // A route is ordered and joined by a line; pins are an unordered, capped bag.
+  kind: 'route' | 'pins'
+  points: MapPoint[]
+  max: number
+  // What the banner over the map says is being drawn.
+  label: string
+}
+
+// Handles, not data (the same reasoning as stores/toast.ts's timers): the
+// callbacks of the one form that is drawing, kept out of reactive state.
+let onEditorAdd: ((point: { lat: number; lng: number }) => void) | null = null
+let onEditorDone: (() => void) | null = null
+
 export const useMapStore = defineStore('map', {
   state: () => ({
     categories: [] as Category[],
@@ -49,6 +67,7 @@ export const useMapStore = defineStore('map', {
     placing: false,
     draftCoords: null as { lat: number; lng: number } | null,
     focus: null as MapFocus | null,
+    editor: null as MapEditor | null,
     loaded: false,
   }),
 
@@ -139,6 +158,37 @@ export const useMapStore = defineStore('map', {
 
     setFocus(focus: MapFocus | null) {
       this.focus = focus
+    },
+
+    startEditing(
+      editor: MapEditor,
+      onAdd: (point: { lat: number; lng: number }) => void,
+      onDone: () => void,
+    ) {
+      this.editor = editor
+      onEditorAdd = onAdd
+      onEditorDone = onDone
+    },
+
+    updateEditorPoints(points: MapPoint[]) {
+      if (this.editor) this.editor = { ...this.editor, points }
+    },
+
+    stopEditing() {
+      this.editor = null
+      onEditorAdd = null
+      onEditorDone = null
+    },
+
+    // A click on the map while a form is drawing: the form decides what it
+    // means (a new stop, a pin — or nothing, at capacity).
+    editorAdd(point: { lat: number; lng: number }) {
+      onEditorAdd?.(point)
+    },
+
+    // "Fatto" on the banner: the form leaves its drawing tab.
+    editorDone() {
+      onEditorDone?.()
     },
   },
 })

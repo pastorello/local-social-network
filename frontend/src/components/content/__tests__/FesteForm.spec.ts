@@ -4,13 +4,10 @@ import { createPinia } from 'pinia'
 
 import FesteForm from '../FesteForm.vue'
 
-// FesteRouteEditor mounts a real Leaflet map, which isn't viable under
-// jsdom/Vitest (no other map component in this codebase has a unit test
-// either — see ReportsMap.vue) — stubbed here so FesteForm's own fields and
-// create/edit copy can be tested without it. RichTextEditor is stubbed too:
-// it has its own spec, and its toolbar buttons would otherwise be the first
-// `button[type="button"]` this file's selectors find.
-const globalStubs = { FesteRouteEditor: true, RichTextEditor: true }
+// The route is drawn on the map under the panel since design.md D19, so the
+// form mounts no map any more and needs no map stub. RichTextEditor is
+// stubbed: it has its own spec, and its toolbar is not what is tested here.
+const globalStubs = { RichTextEditor: true }
 
 describe('FesteForm', () => {
   it('renders the create-mode fields and button copy', () => {
@@ -60,7 +57,9 @@ describe('FesteForm', () => {
       global: { plugins: [createPinia()], stubs: globalStubs },
     })
 
-    await wrapper.find('button[type="button"]').trigger('click')
+    // By its words: since D19 the form opens with its tabs, which are buttons too.
+    const cancel = wrapper.findAll('button[type="button"]').find((b) => b.text() === 'Annulla')
+    await cancel!.trigger('click')
 
     expect(wrapper.emitted('cancel')).toBeTruthy()
   })
