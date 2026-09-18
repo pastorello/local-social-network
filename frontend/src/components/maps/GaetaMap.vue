@@ -10,6 +10,7 @@ import type {
   CircleMarker,
   GeoJSON as GeoJSONLayer,
   ImageOverlay,
+  LatLng,
   Layer,
   LayerGroup,
   LeafletMouseEvent,
@@ -28,6 +29,7 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 ;(globalThis as typeof globalThis & { L: typeof L }).L = L
 
 import type { MapCardFeature, Overlay } from '@/definitions/interfaces/MapData'
+import type { MapFocus } from '@/stores/map'
 import type { ReportPin } from '@/definitions/interfaces/Report'
 import { layerColor } from '@/lib/mapLayers'
 import { keepMarkersOutOfTabOrder } from '@/lib/leafletKeyboard'
@@ -36,13 +38,20 @@ import { statusColor } from '@/lib/reportStatus'
 
 // The one map of Gaeta (spec map.md): the v1 reports layer, every card type
 // that has a footprint, and the overlays — "the same Gaeta, shown
-// differently". This component only draws what it is handed; which layers are
-// on is the caller's business (HomeView.vue owns the toggles).
+// differently". Since the layout of 2026-09-18 (design.md D13) it is the ground
+// of every page, mounted once by the shell. It still only draws what it is
+// handed: which layers are on, and what a page wants it to look at, are the
+// caller's business (stores/map.ts).
 const props = defineProps<{
   pins: ReportPin[]
   features?: MapCardFeature[]
   overlays?: Overlay[]
   placing?: boolean
+  // What an open page is about (D16): drawn over everything else, with the
+  // rest dimmed, and framed inside `focusPadding` — the part of the map the
+  // page's panel leaves visible.
+  focus?: MapFocus | null
+  focusPadding?: { topLeft: [number, number]; bottomRight: [number, number] }
 }>()
 
 const emit = defineEmits<{
@@ -65,6 +74,10 @@ const wrapper = ref<HTMLDivElement | null>(null)
 let map: LeafletMap | null = null
 let cluster: MarkerClusterGroup | null = null
 let featureLayer: LayerGroup | null = null
+let focusLayer: LayerGroup | null = null
+// Where the reader was before a page took the map somewhere, so closing the
+// page gives it back (D16).
+let viewBeforeFocus: { center: LatLng; zoom: number } | null = null
 let draftMarker: CircleMarker | null = null
 let resizeObserver: ResizeObserver | null = null
 const overlayLayers = new Map<string, Layer>()
@@ -99,7 +112,14 @@ const renderFeatures = () => {
   featureLayer?.remove()
   featureLayer = L.layerGroup()
 
+  // While a page is open the rest of the city steps back (D16) — still there,
+  // still clickable, but not competing with what the reader is reading about.
+  const dimmed = hasFocusGeometry()
+  const fillOpacity = dimmed ? 0.3 : 0.9
+  const lineOpacity = dimmed ? 0.3 : 0.85
+
   for (const feature of props.features ?? []) {
+    if (dimmed && feature.id === props.focus?.id) continue
     const color = layerColor(feature.type)
     const open = () => emit('featureClick', { type: feature.type, id: feature.id })
 
@@ -108,8 +128,9 @@ const renderFeatures = () => {
         radius: 8,
         color: readToken('--color-surface', '#ffffff'),
         weight: 2,
+        opacity: dimmed ? 0.4 : 1,
         fillColor: color,
-        fillOpacity: 0.9,
+        fillOpacity,
       })
       marker.bindTooltip(point.label ? `${feature.title} — ${point.label}` : feature.title)
       marker.on('click', open)
@@ -121,7 +142,7 @@ const renderFeatures = () => {
     if (feature.route.length > 1) {
       const polyline = L.polyline(
         feature.route.map((point) => [point.lat, point.lng] as [number, number]),
-        { color, weight: 4, opacity: 0.85 },
+        { color, weight: 4, opacity: lineOpacity },
       )
       polyline.bindTooltip(feature.title)
       polyline.on('click', open)
@@ -132,8 +153,9 @@ const renderFeatures = () => {
         radius: 5,
         color: readToken('--color-surface', '#ffffff'),
         weight: 2,
+        opacity: dimmed ? 0.4 : 1,
         fillColor: color,
-        fillOpacity: 1,
+        fillOpacity: dimmed ? 0.3 : 1,
       })
       stop.bindTooltip(point.label ? `${feature.title} — ${point.label}` : feature.title)
       stop.on('click', open)
@@ -142,6 +164,79 @@ const renderFeatures = () => {
   }
 
   featureLayer.addTo(map)
+}
+
+const focusLatLngs = (): [number, number][] =>
+  props.focus
+    ? [...props.focus.route, ...props.focus.points].map(
+        (point) => [point.lat, point.lng] as [number, number],
+      )
+    : []
+
+const hasFocusGeometry = () => focusLatLngs().length > 0
+
+// The open page's own geometry, drawn from what the page handed over rather
+// than looked up among the published features — so a draft, which is not
+// among them, is shown the same way.
+const renderFocus = () => {
+  if (!map) return
+  focusLayer?.remove()
+  focusLayer = null
+  if (!props.focus || !hasFocusGeometry()) return
+
+  const color = props.focus.color ?? layerColor(props.focus.type)
+  const surface = readToken('--color-surface', '#ffffff')
+  focusLayer = L.layerGroup()
+
+  if (props.focus.route.length > 1) {
+    const line = props.focus.route.map((point) => [point.lat, point.lng] as [number, number])
+    // A pale halo under the line keeps it readable over any tile.
+    focusLayer.addLayer(L.polyline(line, { color: surface, weight: 11, opacity: 0.9 }))
+    focusLayer.addLayer(L.polyline(line, { color, weight: 6, opacity: 1 }))
+  }
+  for (const point of props.focus.route) {
+    focusLayer.addLayer(
+      L.circleMarker([point.lat, point.lng], {
+        radius: 7,
+        color: surface,
+        weight: 2.5,
+        fillColor: color,
+        fillOpacity: 1,
+      }).bindTooltip(point.label || ''),
+    )
+  }
+  for (const point of props.focus.points) {
+    focusLayer.addLayer(
+      L.circleMarker([point.lat, point.lng], {
+        radius: 11,
+        color: surface,
+        weight: 3,
+        fillColor: color,
+        fillOpacity: 1,
+      }),
+    )
+  }
+  focusLayer.addTo(map)
+}
+
+// Frame the open page's place in the part of the map its panel leaves free,
+// and give the reader their own view back when the page closes (D16).
+const frameFocus = () => {
+  if (!map) return
+  const latLngs = focusLatLngs()
+  if (latLngs.length === 0) {
+    if (viewBeforeFocus) {
+      map.setView(viewBeforeFocus.center, viewBeforeFocus.zoom)
+      viewBeforeFocus = null
+    }
+    return
+  }
+  if (!viewBeforeFocus) viewBeforeFocus = { center: map.getCenter(), zoom: map.getZoom() }
+  map.fitBounds(L.latLngBounds(latLngs), {
+    paddingTopLeft: props.focusPadding?.topLeft ?? [48, 48],
+    paddingBottomRight: props.focusPadding?.bottomRight ?? [48, 48],
+    maxZoom: 17,
+  })
 }
 
 const buildOverlay = (overlay: Overlay): Layer | null => {
@@ -250,10 +345,22 @@ const onReady = (leafletMap: LeafletMap) => {
   renderPins()
   renderFeatures()
   renderOverlays()
+  renderFocus()
+  frameFocus()
 }
 
 watch(() => props.pins, renderPins, { deep: true })
 watch(() => props.features, renderFeatures, { deep: true })
+watch(
+  () => props.focus,
+  () => {
+    renderFeatures()
+    renderFocus()
+    frameFocus()
+  },
+  { deep: true },
+)
+watch(() => props.focusPadding, frameFocus, { deep: true })
 watch(() => (props.overlays ?? []).map((overlay) => overlay.id).join('|'), renderOverlays)
 watch(() => (props.overlays ?? []).map((overlay) => overlay.opacity), applyOverlayOpacity)
 

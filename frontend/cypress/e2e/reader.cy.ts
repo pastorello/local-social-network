@@ -76,6 +76,40 @@ describe('the reader, on a wide screen', () => {
     cy.contains(DRAFT).should('not.exist')
   })
 
+  // The map under every page (design.md D13/D15/D16/D17): a card opens over
+  // the map, the map shows the card's place, and closing the card gives the
+  // reader back the map and their place in it.
+  it('opens a card over the map, sees the map show it, and closes back onto the link', () => {
+    cy.visit('/')
+
+    cy.get('ul[aria-label="Luoghi sulla mappa"]').contains('a', PUBLISHED).as('placeLink')
+    cy.get('@placeLink').focus()
+    cy.get('@placeLink').click()
+
+    cy.location('pathname').should('match', /^\/chiese\/[0-9a-f-]+$/)
+    // The narrow panel, beside a map that stays usable — and focus inside it.
+    cy.get('main section[tabindex="-1"]').should('have.focus').and('contain', PUBLISHED)
+    cy.get('.leaflet-container').closest('[inert]').should('not.exist')
+    // D16: the card's pin is drawn over everything else.
+    cy.get('path.leaflet-interactive[stroke-width="3"]').should('have.length', 1)
+
+    cy.get('main section[tabindex="-1"]').trigger('keydown', { key: 'Escape' })
+
+    cy.location('pathname').should('eq', '/')
+    cy.focused().should('contain', PUBLISHED)
+    cy.get('path.leaflet-interactive[stroke-width="3"]').should('not.exist')
+  })
+
+  it('reads a list in a wide panel, over a map it cannot reach', () => {
+    cy.visit('/chiese')
+
+    cy.contains('h1', 'Chiese')
+    // D17: the veil, and a map that is out of the tab order while veiled.
+    cy.get('.leaflet-container').closest('[inert]').should('exist')
+    cy.get('button[aria-label="Chiudi e torna alla mappa"]').click()
+    cy.location('pathname').should('eq', '/')
+  })
+
   it('sees a feste route drawn as a list of stops', () => {
     cy.visit('/feste')
     cy.contains('a', 'Festa E2E pubblicata').click()

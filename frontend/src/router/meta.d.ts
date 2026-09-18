@@ -1,0 +1,15 @@
+import 'vue-router'
+
+// What the shell reads from a route (spec/design.md D13–D17).
+declare module 'vue-router' {
+  interface RouteMeta {
+    requiresAuth?: boolean
+    // The home: the map itself is the page, with its chrome floating over it.
+    fullBleed?: boolean
+    // Every other page opens as a panel over the map (D15). 'narrow' is the
+    // side panel for a card that has a place — the map beside it is doing
+    // work (D16); 'wide', the default, is the centred reading panel over a
+    // veiled map, for everything that has no place (D17).
+    panel?: 'narrow' | 'wide'
+  }
+}

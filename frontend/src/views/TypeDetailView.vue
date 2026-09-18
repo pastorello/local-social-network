@@ -8,6 +8,9 @@ import ViewContainer from '@/components/boxes/ViewContainer.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import CardArticle from '@/components/content/CardArticle.vue'
 import MapPinsEditor from '@/components/content/MapPinsEditor.vue'
+import { useIsDesktop } from '@/composables/useBreakpoint'
+import { useMapFocus } from '@/composables/useMapFocus'
+import { useMapStore } from '@/stores/map'
 import TypeForm from '@/components/content/TypeForm.vue'
 import TranslateControl from '@/components/content/TranslateControl.vue'
 import { useUserStore } from '@/stores/user'
@@ -21,6 +24,8 @@ const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 const toastStore = useToastStore()
+const mapStore = useMapStore()
+const { isDesktop } = useIsDesktop()
 
 const item = ref<ContentItem | null>(null)
 // A freshly-started translation (see TranslateControl) is an empty draft —
@@ -35,6 +40,14 @@ const canEdit = computed(
 )
 
 const pins = computed(() => (item.value?.pins as MapPoint[] | undefined) ?? [])
+const labelledPins = computed(() => pins.value.filter((pin) => pin.label))
+
+// The map behind the panel shows this card's place while it is open (D16).
+useMapFocus(() =>
+  item.value && props.config.mapMode === 'pins' && pins.value.length
+    ? { id: item.value.id, type: props.config.key, points: pins.value, route: [] }
+    : null,
+)
 
 const filledFields = computed(() =>
   props.config.extraFields.filter((field) => Boolean(item.value?.[field.key])),
@@ -53,6 +66,8 @@ const getItem = async () => {
 }
 
 const onEdited = (updated: ContentItem) => {
+  // A card just published — or unpublished, or moved — changes the map.
+  mapStore.fetchFeatures()
   item.value = updated
   editing.value = false
 }
@@ -65,6 +80,7 @@ const deleteItem = async () => {
     .delete(`${props.config.endpoint}${item.value.id}/`)
     .then(() => {
       toastStore.showToast(5000, 'Scheda eliminata', 'bg-emerald-500')
+      mapStore.fetchFeatures()
       router.push({ name: props.config.routeNames.list })
     })
     .catch(() => {
@@ -132,7 +148,17 @@ watch(
           <template #map>
             <section v-if="config.mapMode === 'pins' && pins.length > 0" class="mb-10">
               <h2 class="mb-3 font-display text-title text-ink">Dove si trova</h2>
-              <MapPinsEditor :model-value="pins" :max="config.maxPoints ?? 1" readonly />
+              <!-- On a wide screen the map is beside the panel, already showing
+              the place (D16) — a second map inside the panel would be a map
+              over a map. On a phone the panel is the whole screen, so the
+              card keeps its own. -->
+              <template v-if="isDesktop">
+                <p class="text-muted">È evidenziato sulla mappa, qui accanto.</p>
+                <ul v-if="labelledPins.length" class="mt-3 list-disc space-y-1 pl-5 text-ink">
+                  <li v-for="(pin, index) in labelledPins" :key="index">{{ pin.label }}</li>
+                </ul>
+              </template>
+              <MapPinsEditor v-else :model-value="pins" :max="config.maxPoints ?? 1" readonly />
             </section>
           </template>
 

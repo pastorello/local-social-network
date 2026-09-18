@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import { useMapStore } from '@/stores/map'
 
 import PanelBox from '@/components/boxes/PanelBox.vue'
 import ViewContainer from '@/components/boxes/ViewContainer.vue'
@@ -13,6 +14,7 @@ const props = defineProps<{ config: TypeConfig }>()
 const router = useRouter()
 
 const onCreated = (item: ContentItem) => {
+  useMapStore().fetchFeatures()
   router.push({ name: props.config.routeNames.detail, params: { id: item.id } })
 }
 </script>

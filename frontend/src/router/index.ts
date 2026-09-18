@@ -15,18 +15,19 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: () => import('../views/HomeView.vue'),
-      // fullBleed: the home is viewport-height in both its layouts — the map
-      // filling the screen small-first (spec/design.md D3), the panel column
-      // large-first — so the site footer is not appended under it. It would
-      // make the one screen that must not scroll, scroll.
+      // The home is the map itself (spec/design.md D13), and its chrome —
+      // HomeView — is mounted by the shell for the life of the app rather than
+      // by this route, so it keeps its state and its elements while a panel is
+      // open over it (D15: closing a panel gives focus back to what opened it).
+      // The route renders nothing of its own.
+      component: () => import('../views/EmptyRoute.vue'),
       meta: { requiresAuth: false, fullBleed: true },
     },
     {
       path: '/reports/:id',
       name: 'reportdetail',
       component: () => import('../views/ReportDetailView.vue'),
-      meta: { requiresAuth: false },
+      meta: { requiresAuth: false, panel: 'narrow' },
     },
     {
       path: '/collabora',
@@ -89,7 +90,7 @@ const router = createRouter({
       path: '/feste/:id',
       name: 'festedetail',
       component: () => import('../views/FesteDetailView.vue'),
-      meta: { requiresAuth: false },
+      meta: { requiresAuth: false, panel: 'narrow' },
     },
     // C3: chiese/ricette/personaggi/dialetto share the same generic
     // Type*View components, parameterized by definitions/typeConfigs.ts —
@@ -113,7 +114,7 @@ const router = createRouter({
       name: chiesaConfig.routeNames.detail,
       component: () => import('../views/TypeDetailView.vue'),
       props: { config: chiesaConfig },
-      meta: { requiresAuth: false },
+      meta: { requiresAuth: false, panel: 'narrow' },
     },
     {
       path: '/ricette',
@@ -134,7 +135,7 @@ const router = createRouter({
       name: ricettaConfig.routeNames.detail,
       component: () => import('../views/TypeDetailView.vue'),
       props: { config: ricettaConfig },
-      meta: { requiresAuth: false },
+      meta: { requiresAuth: false, panel: 'narrow' },
     },
     {
       path: '/personaggi',
@@ -155,7 +156,7 @@ const router = createRouter({
       name: personaggioConfig.routeNames.detail,
       component: () => import('../views/TypeDetailView.vue'),
       props: { config: personaggioConfig },
-      meta: { requiresAuth: false },
+      meta: { requiresAuth: false, panel: 'narrow' },
     },
     {
       path: '/dialetto',
@@ -197,7 +198,7 @@ const router = createRouter({
       name: luogoConfig.routeNames.detail,
       component: () => import('../views/TypeDetailView.vue'),
       props: { config: luogoConfig },
-      meta: { requiresAuth: false },
+      meta: { requiresAuth: false, panel: 'narrow' },
     },
     {
       path: '/libri',

@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import axios from 'axios'
-import { computed, onMounted, ref, watch } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
 
-import GaetaMap from '@/components/maps/GaetaMap.vue'
 import LayerToggles from '@/components/maps/LayerToggles.vue'
 import MapChrome from '@/components/maps/MapChrome.vue'
 import MapSheet from '@/components/maps/MapSheet.vue'
@@ -12,51 +11,49 @@ import ReportsList from '@/components/maps/ReportsList.vue'
 import ReportForm from '@/components/reports/ReportForm.vue'
 import PanelBox from '@/components/boxes/PanelBox.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
-import ViewContainer from '@/components/boxes/ViewContainer.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import SearchBar from '@/components/forms/SearchBar.vue'
 import { useUserStore } from '@/stores/user'
 import { useToastStore } from '@/stores/toast'
-import type Category from '@/definitions/interfaces/Category'
-import type { MapCardFeature, Overlay } from '@/definitions/interfaces/MapData'
-import type { ReportPin, ReportStatus } from '@/definitions/interfaces/Report'
+import { useMapStore } from '@/stores/map'
+import type { ReportStatus } from '@/definitions/interfaces/Report'
 import { useIsDesktop } from '@/composables/useBreakpoint'
-import { CARD_LAYERS, REPORTS_LAYER_KEY, layerRoute } from '@/lib/mapLayers'
+import { REPORTS_LAYER_KEY } from '@/lib/mapLayers'
 import { STATUS_META, statusColor } from '@/lib/reportStatus'
 
-// Two layouts, not one stretched over both (spec/design.md D2): the reader's
-// home is designed small-first, the collaborator's panels large-first. Only
-// one of them is ever in the DOM — see useBreakpoint for why that matters
-// beyond tidiness.
+// The home's chrome — what floats over the map when no page is open. The map
+// itself is the shell's (spec/design.md D13, MapStage.vue), and what it shows
+// is stores/map.ts: the toggles here change the store, and the map follows.
+//
+// Two layouts, not one stretched over both (D2): the reader's home is designed
+// small-first, the collaborator's large-first. Only one of them is ever in the
+// DOM — see useBreakpoint for why that matters beyond tidiness.
 const { isDesktop } = useIsDesktop()
 
 const router = useRouter()
 const userStore = useUserStore()
 const toastStore = useToastStore()
+const mapStore = useMapStore()
+const {
+  activeLayers,
+  activeOverlays,
+  overlayOpacity,
+  overlays,
+  pins,
+  categories,
+  visibleFeatures,
+  visiblePins,
+  placing,
+  draftCoords,
+  q,
+  categoryFilter,
+  statusFilter,
+} = storeToRefs(mapStore)
 
-const categories = ref<Category[]>([])
-const pins = ref<ReportPin[]>([])
-const features = ref<MapCardFeature[]>([])
-const overlays = ref<Overlay[]>([])
-
-// Spec map.md M1/M2: the map is the landing view and every layer is the
-// reader's to toggle. All on by default — the first thing a visitor should
-// see is how much of the city is on the map.
-const activeLayers = ref<Record<string, boolean>>(
-  Object.fromEntries([...CARD_LAYERS.map((layer) => [layer.key, true]), [REPORTS_LAYER_KEY, true]]),
-)
-const activeOverlays = ref<Record<string, boolean>>({})
 // Mobile only: the floating layer panel and the sheet both sit over the map,
 // so opening one gets the other out of the way.
 const chromeOpen = ref(false)
-const overlayOpacity = ref<Record<string, number>>({})
 
-const q = ref('')
-const categoryFilter = ref('')
-const statusFilter = ref('')
-
-const placing = ref(false)
-const draftCoords = ref<{ lat: number; lng: number } | null>(null)
 const manualLat = ref('')
 const manualLng = ref('')
 
@@ -65,76 +62,7 @@ const statusOptions = (Object.keys(STATUS_META) as ReportStatus[]).map((status) 
   label: STATUS_META[status].label,
 }))
 
-const visibleFeatures = computed(() =>
-  features.value.filter((feature) => activeLayers.value[feature.type]),
-)
-const visiblePins = computed(() => (activeLayers.value[REPORTS_LAYER_KEY] ? pins.value : []))
-const visibleOverlays = computed(() =>
-  overlays.value
-    .filter((overlay) => activeOverlays.value[overlay.id])
-    .map((overlay) => ({
-      ...overlay,
-      opacity: overlayOpacity.value[overlay.id] ?? overlay.opacity,
-    })),
-)
-
-const featureCount = (key: string) =>
-  features.value.filter((feature) => feature.type === key).length
-
-const getCategories = async () => {
-  await axios
-    .get('/api/categories/')
-    .then((response) => {
-      categories.value = response.data
-    })
-    .catch((error) => {
-      console.log('error', error)
-    })
-}
-
-const getPins = async () => {
-  const params: Record<string, string> = {}
-  if (q.value) params.q = q.value
-  if (categoryFilter.value) params.category = categoryFilter.value
-  if (statusFilter.value) params.status = statusFilter.value
-
-  await axios
-    .get('/api/reports/map/', { params })
-    .then((response) => {
-      pins.value = response.data
-    })
-    .catch((error) => {
-      console.log('error', error)
-    })
-}
-
-const getFeatures = async () => {
-  await axios
-    .get('/api/map/features/')
-    .then((response) => {
-      features.value = response.data
-    })
-    .catch((error) => {
-      console.log('error', error)
-    })
-}
-
-// What comes back depends on who is asking — the server decides (spec
-// politics.md). The SPA neither knows nor asks: it draws the list it is given.
-const getOverlays = async () => {
-  await axios
-    .get('/api/map/overlays/')
-    .then((response) => {
-      overlays.value = response.data
-      for (const overlay of overlays.value) {
-        if (!(overlay.id in overlayOpacity.value))
-          overlayOpacity.value[overlay.id] = overlay.opacity
-      }
-    })
-    .catch((error) => {
-      console.log('error', error)
-    })
-}
+const featureCount = (key: string) => mapStore.featureCount(key)
 
 const startReporting = () => {
   if (!userStore.user.isAuthenticated) {
@@ -142,18 +70,11 @@ const startReporting = () => {
     router.push('/login')
     return
   }
-  placing.value = true
-  draftCoords.value = null
-  activeLayers.value[REPORTS_LAYER_KEY] = true
+  mapStore.startPlacing()
 }
 
 const cancelReporting = () => {
-  placing.value = false
-  draftCoords.value = null
-}
-
-const onMapClick = (coords: { lat: number; lng: number }) => {
-  draftCoords.value = coords
+  mapStore.stopPlacing()
 }
 
 // The map click is the fast path but has no keyboard equivalent — this is
@@ -164,54 +85,27 @@ const useManualCoords = () => {
   if (!manualLat.value || !manualLng.value || Number.isNaN(lat) || Number.isNaN(lng)) return
   if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return
 
-  draftCoords.value = { lat, lng }
-}
-
-const onPinClick = (id: string) => {
-  router.push(`/reports/${id}`)
-}
-
-const onFeatureClick = (feature: { type: string; id: string }) => {
-  router.push(layerRoute(feature.type, feature.id))
+  mapStore.draftCoords = { lat, lng }
 }
 
 const onReportSaved = () => {
   cancelReporting()
-  getPins()
+  mapStore.fetchPins()
 }
 
-// Logging in or out changes which overlays exist for this reader.
-watch(() => userStore.user.isAuthenticated, getOverlays)
-
-onMounted(() => {
-  getCategories()
-  getPins()
-  getFeatures()
-  getOverlays()
-})
+// The shell loads the map's data too; this makes the chrome self-sufficient
+// (and is a no-op once loaded).
+onMounted(mapStore.load)
 </script>
 
 <template>
   <!-- ============ the reader's home, small-first (D3/D4/D5) ============ -->
-  <div
-    v-if="!isDesktop"
-    class="relative -mx-4 -mt-4 h-[calc(100dvh-var(--header-h,10rem))] overflow-hidden"
-  >
+  <div v-if="!isDesktop" class="absolute inset-0 overflow-hidden">
     <!-- The page still needs its one h1 (ADR-0005), and the small-first home
     has no room to show one: here the map *is* the title. Visually hidden is
     the honest answer — someone on a screen reader gets the page identity that
     a sighted reader gets from the map filling the screen. -->
     <h1 class="sr-only">La mappa di Gaeta</h1>
-
-    <GaetaMap
-      :pins="visiblePins"
-      :features="visibleFeatures"
-      :overlays="visibleOverlays"
-      :placing="placing"
-      @map-click="onMapClick"
-      @pin-click="onPinClick"
-      @feature-click="onFeatureClick"
-    />
 
     <MapChrome v-model:open="chromeOpen">
       <LayerToggles
@@ -225,6 +119,7 @@ onMounted(() => {
     </MapChrome>
 
     <MapSheet
+      class="pointer-events-auto"
       title="Luoghi sulla mappa"
       :subtitle="`${visibleFeatures.length} schede`"
       :force-peek="chromeOpen"
@@ -266,10 +161,15 @@ onMounted(() => {
     </MapSheet>
   </div>
 
-  <!-- ============ the collaborator's home, large-first ============ -->
-  <ViewContainer v-else class="grid-cols-6">
-    <!-- self-start: PanelBox is h-full; a stacked column must not stretch to row height -->
-    <div class="col-span-2 space-y-4 self-start">
+  <!-- ============ the wide home, large-first ============ -->
+  <!-- A column floating over the map rather than a column beside it (D13):
+  the map is the page. Each PanelBox sits in its own block: PanelBox is h-full,
+  and a column with a height would otherwise stretch every box to it. -->
+  <div
+    v-else
+    class="pointer-events-auto absolute top-4 bottom-4 left-4 w-[26rem] space-y-4 overflow-y-auto pr-1"
+  >
+    <div>
       <PanelBox>
         <MainTitle>La mappa di Gaeta</MainTitle>
         <p class="mb-4 text-muted">
@@ -285,14 +185,18 @@ onMounted(() => {
           :report-count="pins.length"
         />
       </PanelBox>
+    </div>
 
-      <PanelBox v-if="visibleFeatures.length">
+    <div v-if="visibleFeatures.length">
+      <PanelBox>
         <h2 class="mb-1 font-display text-title">Luoghi sulla mappa</h2>
         <p class="mb-3 text-xs text-muted">Gli stessi luoghi disegnati sulla mappa.</p>
         <PlacesList :features="visibleFeatures" />
       </PanelBox>
+    </div>
 
-      <PanelBox v-if="activeLayers[REPORTS_LAYER_KEY]">
+    <div v-if="activeLayers[REPORTS_LAYER_KEY]">
+      <PanelBox>
         <h2 class="mb-4 font-display text-title">Segnalazioni</h2>
 
         <template v-if="!placing">
@@ -373,14 +277,14 @@ onMounted(() => {
         <template v-if="!placing">
           <h3 class="mt-6 mb-4 text-base font-semibold">Filtri</h3>
 
-          <SearchBar v-model="q" @submit="getPins" placeholder="Cerca per titolo..." />
+          <SearchBar v-model="q" @submit="mapStore.fetchPins()" placeholder="Cerca per titolo..." />
 
           <div class="space-y-3">
             <select
               v-model="categoryFilter"
               class="w-full rounded-lg bg-gray-100 p-4"
               aria-label="Filtra per categoria"
-              @change="getPins"
+              @change="mapStore.fetchPins()"
             >
               <option value="">Tutte le categorie</option>
               <option v-for="category in categories" :key="category.id" :value="category.id">
@@ -392,7 +296,7 @@ onMounted(() => {
               v-model="statusFilter"
               class="w-full rounded-lg bg-gray-100 p-4"
               aria-label="Filtra per stato"
-              @change="getPins"
+              @change="mapStore.fetchPins()"
             >
               <option value="">Tutti gli stati</option>
               <option v-for="option in statusOptions" :key="option.value" :value="option.value">
@@ -417,21 +321,5 @@ onMounted(() => {
         </template>
       </PanelBox>
     </div>
-
-    <div class="col-span-4">
-      <PanelBox>
-        <div class="h-[36rem]">
-          <GaetaMap
-            :pins="visiblePins"
-            :features="visibleFeatures"
-            :overlays="visibleOverlays"
-            :placing="placing"
-            @map-click="onMapClick"
-            @pin-click="onPinClick"
-            @feature-click="onFeatureClick"
-          />
-        </div>
-      </PanelBox>
-    </div>
-  </ViewContainer>
+  </div>
 </template>

@@ -9,6 +9,9 @@ import ActionButton from '@/components/buttons/ActionButton.vue'
 import CardArticle from '@/components/content/CardArticle.vue'
 import FesteRouteEditor from '@/components/content/FesteRouteEditor.vue'
 import FesteForm from '@/components/content/FesteForm.vue'
+import { useIsDesktop } from '@/composables/useBreakpoint'
+import { useMapFocus } from '@/composables/useMapFocus'
+import { useMapStore } from '@/stores/map'
 import TranslateControl from '@/components/content/TranslateControl.vue'
 import { useUserStore } from '@/stores/user'
 import { useToastStore } from '@/stores/toast'
@@ -18,6 +21,8 @@ const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 const toastStore = useToastStore()
+const mapStore = useMapStore()
+const { isDesktop } = useIsDesktop()
 
 const feste = ref<Feste | null>(null)
 // A freshly-started translation (see TranslateControl) is an empty draft —
@@ -43,7 +48,16 @@ const getFeste = async () => {
     })
 }
 
+// The map behind the panel draws this feast's route while it is open (D16).
+useMapFocus(() =>
+  feste.value && feste.value.route.length
+    ? { id: feste.value.id, type: 'feste', points: [], route: feste.value.route }
+    : null,
+)
+
 const onEdited = (updated: Feste) => {
+  // A feast just published — or unpublished, or re-routed — changes the map.
+  mapStore.fetchFeatures()
   feste.value = updated
   editing.value = false
 }
@@ -56,6 +70,7 @@ const deleteFeste = async () => {
     .delete(`/api/feste/${feste.value.id}/`)
     .then(() => {
       toastStore.showToast(5000, 'Scheda eliminata', 'bg-emerald-500')
+      mapStore.fetchFeatures()
       router.push('/feste')
     })
     .catch(() => {
@@ -127,7 +142,19 @@ watch(
           <template #map>
             <section v-if="feste.route.length > 0" class="mb-10">
               <h2 class="mb-3 font-display text-title text-ink">Il percorso</h2>
-              <FesteRouteEditor :model-value="feste.route" readonly />
+              <!-- Wide screen: the route is drawn on the map beside the panel
+              (D16), so the panel keeps only the stops, in words — the text
+              path the map does not offer. Phone: the card keeps its own map. -->
+              <template v-if="isDesktop">
+                <p class="mb-3 text-muted">È evidenziato sulla mappa, qui accanto.</p>
+                <ol class="space-y-2">
+                  <li v-for="(point, index) in feste.route" :key="index" class="flex gap-2">
+                    <span class="font-semibold">{{ index + 1 }}.</span>
+                    <span>{{ point.label || 'Tappa senza nome' }}</span>
+                  </li>
+                </ol>
+              </template>
+              <FesteRouteEditor v-else :model-value="feste.route" readonly />
             </section>
           </template>
 
