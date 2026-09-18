@@ -72,7 +72,13 @@ const controlsLeft = computed(() =>
   isDesktop.value && route.meta.fullBleed ? `${HOME_COLUMN + 16 + 16}px` : '0px',
 )
 
-const onPinClick = (id: string) => router.push(`/reports/${id}`)
+// While a form draws on the map, nothing on it navigates: opening a pin would
+// unmount the form and lose what it holds. The click still reaches the map,
+// where the form decides what it means (D19).
+const onPinClick = (id: string) => {
+  if (mapStore.editor) return
+  router.push(`/reports/${id}`)
+}
 // While an itinerary picks its stops (spec itinerari.md I8), a card's pin
 // becomes the next stop instead of opening the card.
 const onFeatureClick = (feature: { type: string; id: string }) => {
@@ -80,6 +86,7 @@ const onFeatureClick = (feature: { type: string; id: string }) => {
     mapStore.editorPick(feature)
     return
   }
+  if (mapStore.editor) return
   router.push(layerRoute(feature.type, feature.id))
 }
 const onMapClick = (coords: { lat: number; lng: number }) => {

@@ -72,10 +72,10 @@ const bannerLabel = computed(() =>
 
 // Lend the stops to the map while this tab is open — the same bargain as
 // MapPointsField: the form owns them, the map draws them and reports picks.
-let lending = false
+let lease: symbol | null = null
 const sync = () => {
   if (props.drawing && !props.readonly) {
-    mapStore.startEditing(
+    lease = mapStore.startEditing(
       {
         kind: 'stops',
         points: props.modelValue.map(pointOf).filter((point): point is MapPoint => !!point),
@@ -87,10 +87,9 @@ const sync = () => {
       () => emit('done'),
       (feature) => add(feature.id),
     )
-    lending = true
-  } else if (lending) {
-    mapStore.stopEditing()
-    lending = false
+  } else if (lease) {
+    mapStore.stopEditing(lease)
+    lease = null
   }
 }
 watch(
@@ -99,7 +98,7 @@ watch(
   { deep: true, immediate: true },
 )
 onBeforeUnmount(() => {
-  if (lending) mapStore.stopEditing()
+  if (lease) mapStore.stopEditing(lease)
 })
 
 const update = (index: number, patch: Partial<StopDraft>) => {

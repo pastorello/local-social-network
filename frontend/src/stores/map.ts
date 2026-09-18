@@ -49,6 +49,12 @@ export interface MapEditor {
 let onEditorAdd: ((point: { lat: number; lng: number }) => void) | null = null
 let onEditorDone: (() => void) | null = null
 let onEditorPick: ((feature: { type: string; id: string }) => void) | null = null
+// Who holds the editor now. Two fields can hand it over in the same flush —
+// a form's *Il tragitto* tab closing while its *Tappe* tab opens — and the
+// order their watchers run in is not the order that makes sense, so a field
+// may only switch off the editor it started, never one another field has
+// taken since.
+let editorLease: symbol | null = null
 
 export const useMapStore = defineStore('map', {
   state: () => ({
@@ -172,18 +178,24 @@ export const useMapStore = defineStore('map', {
       onAdd: (point: { lat: number; lng: number }) => void,
       onDone: () => void,
       onPick: ((feature: { type: string; id: string }) => void) | null = null,
-    ) {
+    ): symbol {
       this.editor = editor
       onEditorAdd = onAdd
       onEditorDone = onDone
       onEditorPick = onPick
+      editorLease = Symbol('editor')
+      return editorLease
     },
 
     updateEditorPoints(points: MapPoint[]) {
       if (this.editor) this.editor = { ...this.editor, points }
     },
 
-    stopEditing() {
+    // With the lease `startEditing` returned, a no-op once someone else holds
+    // the editor; without one, unconditional.
+    stopEditing(lease?: symbol) {
+      if (lease && lease !== editorLease) return
+      editorLease = null
       this.editor = null
       onEditorAdd = null
       onEditorDone = null

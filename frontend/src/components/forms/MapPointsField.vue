@@ -68,19 +68,18 @@ const editorState = () => ({
 })
 
 // Lend the points to the map while drawing, and take them back when drawing
-// stops — the tab closes, the form is cancelled or saved. `lending` keeps this
+// stops — the tab closes, the form is cancelled or saved. The lease keeps this
 // field from switching off an editor some other form started.
-let lending = false
+let lease: symbol | null = null
 const onAdd = (point: { lat: number; lng: number }) => add({ ...point, label: '' })
 const onDone = () => emit('done')
 
 const sync = () => {
   if (props.drawing && !props.readonly) {
-    mapStore.startEditing(editorState(), onAdd, onDone)
-    lending = true
-  } else if (lending) {
-    mapStore.stopEditing()
-    lending = false
+    lease = mapStore.startEditing(editorState(), onAdd, onDone)
+  } else if (lease) {
+    mapStore.stopEditing(lease)
+    lease = null
   }
 }
 
@@ -90,7 +89,7 @@ watch(() => [props.drawing, props.readonly, props.modelValue, bannerLabel.value]
 })
 
 onBeforeUnmount(() => {
-  if (lending) mapStore.stopEditing()
+  if (lease) mapStore.stopEditing(lease)
 })
 
 const updateLabel = (index: number, label: string) => {
