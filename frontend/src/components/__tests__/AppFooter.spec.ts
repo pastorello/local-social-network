@@ -66,7 +66,11 @@ describe('the shell', () => {
     return mount(App, {
       global: {
         plugins: [createPinia(), router],
-        stubs: { AppHeader: true, AppToast: true },
+        // The map is the shell's since 2026-09-18 (design.md D13), and no unit
+        // test mounts a real Leaflet map (jsdom cannot load its marker PNGs) —
+        // same precedent as every map component here. HomeView reads the map
+        // store and would fire its requests; neither is what this tests.
+        stubs: { AppHeader: true, AppToast: true, MapStage: true, HomeView: true },
       },
     })
   }

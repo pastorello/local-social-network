@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import { useMapStore } from '@/stores/map'
 
 import PanelBox from '@/components/boxes/PanelBox.vue'
 import ViewContainer from '@/components/boxes/ViewContainer.vue'
@@ -10,6 +11,7 @@ import type Feste from '@/definitions/interfaces/Feste'
 const router = useRouter()
 
 const onCreated = (feste: Feste) => {
+  useMapStore().fetchFeatures()
   router.push({ name: 'festedetail', params: { id: feste.id } })
 }
 </script>

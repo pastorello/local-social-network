@@ -14,7 +14,8 @@ import { useToastStore } from '@/stores/toast'
 import type Category from '@/definitions/interfaces/Category'
 import type Report from '@/definitions/interfaces/Report'
 import type { ReportStatus } from '@/definitions/interfaces/Report'
-import { ADMIN_TRANSITIONS, STATUS_META } from '@/lib/reportStatus'
+import { ADMIN_TRANSITIONS, STATUS_META, statusColor } from '@/lib/reportStatus'
+import { useMapFocus } from '@/composables/useMapFocus'
 
 const route = useRoute()
 const router = useRouter()
@@ -22,6 +23,19 @@ const userStore = useUserStore()
 const toastStore = useToastStore()
 
 const report = ref<Report | null>(null)
+
+// The map behind the panel shows where the problem is (D16).
+useMapFocus(() =>
+  report.value
+    ? {
+        id: report.value.id,
+        type: 'segnalazioni',
+        points: [{ lat: report.value.lat, lng: report.value.lng, label: '' }],
+        route: [],
+        color: statusColor(report.value.status),
+      }
+    : null,
+)
 const categories = ref<Category[]>([])
 const editing = ref(false)
 

@@ -1,19 +1,20 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
-import { createPinia } from 'pinia'
+import { createPinia, setActivePinia } from 'pinia'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import axios from 'axios'
 
 import HomeView from '../HomeView.vue'
 import { CARD_LAYERS } from '@/lib/mapLayers'
+import { useMapStore } from '@/stores/map'
 
 vi.mock('axios')
 
-// GaetaMap mounts a real Leaflet map, which isn't viable under jsdom — same
-// precedent as every other map component in this codebase (FesteRouteEditor,
-// MapPinsEditor). The layer panel is what's under test here; what the map
-// draws from the props it is handed is browser/Cypress territory.
-const globalStubs = { GaetaMap: true }
+// The map itself is the shell's since the layout of 2026-09-18 (design.md
+// D13): HomeView is the chrome over it, and it changes what the map draws
+// through stores/map.ts. So "what the map draws" is asserted on the store —
+// the map's own rendering of it is browser/Cypress territory, as before.
+const globalStubs = {}
 
 const stub = { template: '<div />' }
 
@@ -92,8 +93,10 @@ const mockApi = (overlays: unknown[] = OVERLAYS) => {
 }
 
 const mountHome = async () => {
+  const pinia = createPinia()
+  setActivePinia(pinia)
   const wrapper = mount(HomeView, {
-    global: { plugins: [createPinia(), makeRouter()], stubs: globalStubs },
+    global: { plugins: [pinia, makeRouter()], stubs: globalStubs },
   })
   await flushPromises()
   return wrapper
@@ -137,12 +140,11 @@ describe('HomeView (the map, spec map.md M1/M2/M3)', () => {
   it('drops a layer from the map when its toggle goes off', async () => {
     const wrapper = await mountHome()
 
-    expect(wrapper.getComponent({ name: 'GaetaMap' }).props('features')).toHaveLength(2)
+    expect(useMapStore().visibleFeatures).toHaveLength(2)
 
     await wrapper.find('#layer-chiese').setValue(false)
 
-    const drawn = wrapper.getComponent({ name: 'GaetaMap' }).props('features') as typeof FEATURES
-    expect(drawn.map((feature) => feature.type)).toEqual(['feste'])
+    expect(useMapStore().visibleFeatures.map((feature) => feature.type)).toEqual(['feste'])
   })
 
   it('lists the visible places as links — the keyboard path a pin does not have', async () => {
@@ -184,11 +186,11 @@ describe('HomeView (the map, spec map.md M1/M2/M3)', () => {
     const wrapper = await mountHome()
 
     expect(wrapper.find('#overlay-o1').exists()).toBe(true)
-    expect(wrapper.getComponent({ name: 'GaetaMap' }).props('overlays')).toEqual([])
+    expect(useMapStore().visibleOverlays).toEqual([])
 
     await wrapper.find('#overlay-o1').setValue(true)
 
-    expect(wrapper.getComponent({ name: 'GaetaMap' }).props('overlays')).toHaveLength(1)
+    expect(useMapStore().visibleOverlays).toHaveLength(1)
     expect(wrapper.find('#overlay-opacity-o1').exists()).toBe(true)
   })
 
@@ -220,7 +222,8 @@ describe('HomeView on a phone (spec/design.md D3/D4/D5)', () => {
 
     expect(wrapper.find('section[aria-label="Luoghi sulla mappa"]').exists()).toBe(true)
     // The wide layout's own furniture must not come along for the ride.
-    expect(wrapper.findComponent({ name: 'ViewContainer' }).exists()).toBe(false)
+    expect(wrapper.find('#layer-chiese').exists()).toBe(false)
+    expect(wrapper.findComponent({ name: 'MainTitle' }).exists()).toBe(false)
   })
 
   it('keeps the layer controls behind a floating button instead of beside the map (D4)', async () => {

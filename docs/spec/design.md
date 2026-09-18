@@ -310,7 +310,9 @@ more than the frame is a decision for the build (see below).
 
 ## The map under every page
 
-> **Decided 2026-09-11, not built.** The confirmed output of a brainstorming
+> **Decided 2026-09-11. Built in part:** D13, D15, D16 and D17 on 2026-09-18
+> (see "What the first build decided" at the end of this section); D14 and
+> D18–D21 not yet. The confirmed output of a brainstorming
 > session with the author, produced the way the rest of this file was: one
 > question at a time, a committed guess and the strongest case against it.
 > Each requirement below records the counter-case that lost, because that is
@@ -512,7 +514,49 @@ card type and an editorial decision before a technical one.
 
 ### Left to the build
 
-- Panel widths. The drawing uses 560 px (narrow), 808 px (wide) and 600 px
-  (editor); they are drawn values, not decided ones.
+- ~~Panel widths.~~ Built 2026-09-18 at the drawn values: 560 px (narrow),
+  808 px (wide); the editor's 600 px waits for D19.
 - What a signed-in collaborator finds behind the avatar (their cards, a way
   to start a new one). The drawing shows only the avatar.
+
+### What the first build decided — 2026-09-18
+
+D13, D15, D16 and D17 were built together, because each is half a thing
+without the others: a map under every page that pages do not open over is the
+old home, and a panel over a map that does not react is a map used as
+wallpaper. What the build settled, so it is not re-argued:
+
+- **One map, in the shell** (`components/maps/MapStage.vue`, mounted by
+  `App.vue`), drawing what `stores/map.ts` holds. The home's chrome
+  (`HomeView.vue`) no longer mounts a map: on a wide screen it is a column
+  floating over the map, on a phone the same sheet and floating button as
+  before. Layer toggles now outlive the page that set them.
+- **The home stays mounted, hidden, while a panel is open** — so that closing
+  a panel can give focus back to the link that opened it (D15), which has to be
+  the same element, not a rebuilt copy. It sits *after* the panel in the DOM:
+  while a panel is open, the page the reader is on comes first in document
+  order, and the hidden home never answers a query for the page's own links
+  (the e2e suite found this the first time it ran: `contains('a', title)` was
+  clicking the hidden copy).
+- **Panels** (`components/layout/RoutePanel.vue`) take focus when a new page
+  opens, close on their button or on Escape (Escape inside a field is the
+  field's), and close by going *back* when the app has somewhere to go back
+  to, onto the home when it does not (a deep link). A route declares its
+  shape in `meta.panel`; the narrow ones are the card types with a place and a
+  report.
+- **The map is `inert` while it cannot be seen** — behind a wide panel's veil,
+  and under every panel on a phone — so it is never an invisible tab stop.
+- **The map reacts** through `composables/useMapFocus.ts`: a page hands the
+  store its own geometry (so a draft, not among the published features, is
+  shown too), the map frames it inside the space the panel leaves free, draws
+  it over everything else, dims the rest to 30%, and returns the reader to
+  their own view when the page closes. A report brings its status colour.
+- **No map inside a panel on a wide screen.** The detail views keep only the
+  words — the stops of a route, the labels of a card's pins, "È evidenziato
+  sulla mappa, qui accanto" — because the map beside them is showing the
+  place. **On a phone they keep their own small map for now**: the panel is
+  the whole screen there, and D18's strip, which replaces it, is not built.
+- **The credits ride on every wide panel** until D21 moves them to *Il
+  progetto*; a narrow panel has no room for them.
+- **The map refetches what a save changed**: publishing, unpublishing,
+  moving or deleting a card refreshes the layer it is on.
