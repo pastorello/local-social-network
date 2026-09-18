@@ -32,6 +32,7 @@ import type { MapCardFeature, Overlay } from '@/definitions/interfaces/MapData'
 import type { MapEditor, MapFocus } from '@/stores/map'
 import type { ReportPin } from '@/definitions/interfaces/Report'
 import { layerColor } from '@/lib/mapLayers'
+import { mapText } from '@/lib/mapText'
 import { keepMarkersOutOfTabOrder } from '@/lib/leafletKeyboard'
 import { readToken } from '@/lib/tokens'
 import { statusColor } from '@/lib/reportStatus'
@@ -101,7 +102,7 @@ const renderPins = () => {
       fillColor: statusColor(pin.status),
       fillOpacity: 0.9,
     })
-    marker.bindTooltip(pin.title)
+    marker.bindTooltip(mapText(pin.title))
     marker.on('click', () => emit('pinClick', pin.id))
     cluster.addLayer(marker)
   }
@@ -137,7 +138,7 @@ const renderFeatures = () => {
         fillColor: color,
         fillOpacity,
       })
-      marker.bindTooltip(point.label ? `${feature.title} — ${point.label}` : feature.title)
+      marker.bindTooltip(mapText(point.label ? `${feature.title} — ${point.label}` : feature.title))
       marker.on('click', open)
       featureLayer.addLayer(marker)
     }
@@ -149,7 +150,7 @@ const renderFeatures = () => {
         feature.route.map((point) => [point.lat, point.lng] as [number, number]),
         { color, weight: 4, opacity: lineOpacity },
       )
-      polyline.bindTooltip(feature.title)
+      polyline.bindTooltip(mapText(feature.title))
       polyline.on('click', open)
       featureLayer.addLayer(polyline)
     }
@@ -162,7 +163,7 @@ const renderFeatures = () => {
         fillColor: color,
         fillOpacity: dimmed ? 0.3 : 1,
       })
-      stop.bindTooltip(point.label ? `${feature.title} — ${point.label}` : feature.title)
+      stop.bindTooltip(mapText(point.label ? `${feature.title} — ${point.label}` : feature.title))
       stop.on('click', open)
       featureLayer.addLayer(stop)
     }
@@ -207,7 +208,7 @@ const renderFocus = () => {
         weight: 2.5,
         fillColor: color,
         fillOpacity: 1,
-      }).bindTooltip(point.label || ''),
+      }).bindTooltip(mapText(point.label || '')),
     )
   }
   props.focus.points.forEach((point, index) => {
@@ -220,7 +221,7 @@ const renderFocus = () => {
     })
     // A tour's stops carry their number on the map, as in its list.
     if (props.focus?.numbered) {
-      marker.bindTooltip(String(index + 1), { permanent: true, direction: 'top' })
+      marker.bindTooltip(mapText(String(index + 1)), { permanent: true, direction: 'top' })
     }
     focusLayer?.addLayer(marker)
   })
@@ -282,7 +283,7 @@ const renderEditor = () => {
         // A stop is drawn over its card's own pin: it must not swallow the
         // click that would pick that card again.
         interactive: props.editor?.kind !== 'stops',
-      }).bindTooltip(name, { permanent: numbered, direction: 'top' }),
+      }).bindTooltip(mapText(name), { permanent: numbered, direction: 'top' }),
     )
   })
   editorLayer.addTo(map)
@@ -322,7 +323,9 @@ const buildOverlay = (overlay: Overlay): Layer | null => {
     }),
     onEachFeature: (geoFeature, layer) => {
       const name = (geoFeature.properties as Record<string, unknown> | null)?.name
-      layer.bindTooltip(typeof name === 'string' ? `${overlay.name} — ${name}` : overlay.name)
+      layer.bindTooltip(
+        mapText(typeof name === 'string' ? `${overlay.name} — ${name}` : overlay.name),
+      )
     },
   })
 }
