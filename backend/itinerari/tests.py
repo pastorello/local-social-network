@@ -158,6 +158,65 @@ def test_an_unknown_intent_is_refused(auth_client, places):
     assert 'intents' in response.json()['fields']
 
 
+
+def test_someone_elses_draft_is_not_a_stop_and_its_title_never_comes_back(
+    auth_client, other_citizen, places
+):
+    secret = Chiesa.objects.create(card=_card(other_citizen, 'Bozza di un altro', is_published=False))
+    MapFeature.objects.create(card=secret.card, kind=MapFeature.POINT, position=0, lat=41.21, lng=13.58, label='Casa')
+
+    for extra in ({}, {'is_published': 'true'}):
+        response = auth_client.post('/api/itinerari/', payload([{'card': str(secret.card.pk)}], **extra))
+        assert response.status_code == 400
+        # The same answer as a card that does not exist — the draft's title
+        # and place must not reach someone who cannot open it.
+        assert response.json()['fields']['stops'] == ['Una delle schede non esiste.']
+        assert 'Bozza di un altro' not in response.content.decode()
+        assert 'Casa' not in response.content.decode()
+
+
+def test_an_admin_may_use_any_draft_and_an_author_their_own(make_client, admin, citizen, places):
+    draft = Chiesa.objects.create(card=_card(citizen, 'La mia bozza', is_published=False))
+    MapFeature.objects.create(card=draft.card, kind=MapFeature.POINT, position=0, lat=41.21, lng=13.58)
+
+    for user in (citizen, admin):
+        response = make_client(user).post('/api/itinerari/', payload([{'card': str(draft.card.pk)}]))
+        assert response.status_code == 201, user
+
+
+def test_a_stop_unpublished_by_its_author_does_not_lock_the_tour(
+    make_client, citizen, other_citizen, places
+):
+    theirs = Chiesa.objects.create(card=_card(other_citizen, 'Chiesa di un altro'))
+    MapFeature.objects.create(card=theirs.card, kind=MapFeature.POINT, position=0, lat=41.21, lng=13.58)
+    client = make_client(citizen)
+    stops = [{'card': str(places['chiesa'].pk)}, {'card': str(theirs.card.pk)}]
+    tour_id = client.post('/api/itinerari/', payload(stops)).json()['id']
+    Card.objects.filter(pk=theirs.card.pk).update(is_published=False)
+
+    response = client.patch(
+        f'/api/itinerari/{tour_id}/',
+        {'title': 'Nuovo titolo', 'stops': json.dumps(stops)},
+        format='multipart',
+    )
+
+    assert response.status_code == 200
+
+
+def test_a_tour_is_not_a_stop_not_even_of_itself(auth_client, places):
+    path = [{'lat': 41.21, 'lng': 13.57, 'label': ''}, {'lat': 41.212, 'lng': 13.575, 'label': ''}]
+    tour_id = auth_client.post(
+        '/api/itinerari/', payload([{'card': str(places['chiesa'].pk)}], route=json.dumps(path))
+    ).json()['id']
+
+    as_new_stop = auth_client.post('/api/itinerari/', payload([{'card': tour_id}]))
+    as_own_stop = auth_client.patch(
+        f'/api/itinerari/{tour_id}/', {'stops': json.dumps([{'card': tour_id}])}, format='multipart'
+    )
+
+    assert as_new_stop.status_code == 400
+    assert as_own_stop.status_code == 400
+
 # --- I4: a published tour never shows a stop the reader cannot open ---
 
 

@@ -24,7 +24,7 @@ from content.models import Card, MapFeature
 from maps.api import CARD_TYPES
 
 from .models import Intent, Itinerario, Stop
-from .serializers import IntentSerializer, ItinerarioReadSerializer, ItinerarioWriteSerializer
+from .serializers import IntentSerializer, ItinerarioReadSerializer, ItinerarioWriteSerializer, card_type
 
 # A generous cap: a day out with forty stops is not a day out, and the limit
 # keeps a malformed request from writing a thousand rows.
@@ -73,10 +73,17 @@ def _parse_intents(raw):
     return intents
 
 
-def _parse_stops(raw):
+def _parse_stops(raw, user, kept=()):
     """Stops arrive as JSON: `[{card, point_index?, note?}]`, in order. Every
     stop is a card of the archive that has a place (spec itinerari.md I3) — an
-    original, since a translation is the same place under another name."""
+    original, since a translation is the same place under another name.
+
+    A stop is a card the writer may open: a published one, one of their own
+    drafts, or any card for an admin. Anything else answers exactly as a card
+    that does not exist, so a draft's title and place never come back to
+    someone who could not read it (the rule every type's detail follows).
+    `kept` is the card ids the tour already has as stops — a card unpublished
+    by its author after it became a stop does not make the tour unsavable."""
     if raw in (None, ''):
         return None
     try:
@@ -94,7 +101,9 @@ def _parse_stops(raw):
     try:
         cards = {
             str(card.pk): card
-            for card in Card.objects.filter(pk__in=ids).prefetch_related('map_features')
+            for card in Card.objects.filter(pk__in=ids)
+            .select_related(*CARD_TYPES)
+            .prefetch_related('map_features')
         }
     except DjangoValidationError:
         # A malformed UUID: the ORM raises before any row is read.
@@ -103,12 +112,20 @@ def _parse_stops(raw):
     stops = []
     for position, entry in enumerate(entries):
         card = cards.get(entry['card'])
-        if card is None:
+        visible = card is not None and (
+            card.is_published
+            or card.author_id == user.id
+            or user.role == User.ADMIN
+            or str(card.pk) in kept
+        )
+        if not visible:
             raise ValidationError({'stops': ['Una delle schede non esiste.']})
         if card.translation_of_id is not None:
             raise ValidationError({'stops': [f'«{card.title}» è una traduzione: la tappa è la scheda originale.']})
         points = [f for f in card.map_features.all() if f.kind == MapFeature.POINT]
-        if not card.map_features.all():
+        # A card of a type with no place, and another tour — which has a drawn
+        # path but is not somewhere to go — are not stops.
+        if card_type(card) is None or not card.map_features.all():
             raise ValidationError({'stops': [f'«{card.title}» non ha un luogo sulla mappa, quindi non può essere una tappa.']})
         point_index = entry.get('point_index')
         if point_index is not None and (
@@ -164,7 +181,7 @@ def itinerario_list(request):
         write_serializer = ItinerarioWriteSerializer(data=request.data)
         write_serializer.is_valid(raise_exception=True)
         data = write_serializer.validated_data
-        stops = _parse_stops(request.data.get('stops')) or []
+        stops = _parse_stops(request.data.get('stops'), request.user) or []
         intents = _parse_intents(request.data.get('intents')) or []
         path = parse_points(request.data.get('route'), field_name='route', max_points=MAX_PATH_POINTS)
         _require_publishable(data['is_published'], stops)
@@ -241,7 +258,8 @@ def itinerario_detail(request, pk):
     write_serializer = ItinerarioWriteSerializer(data=request.data, partial=True)
     write_serializer.is_valid(raise_exception=True)
     data = write_serializer.validated_data
-    stops = _parse_stops(request.data.get('stops'))
+    kept = {str(card_id) for card_id in itinerario.stops.values_list('card_id', flat=True)}
+    stops = _parse_stops(request.data.get('stops'), request.user, kept)
     intents = _parse_intents(request.data.get('intents'))
     path = parse_points(request.data.get('route'), field_name='route', max_points=MAX_PATH_POINTS)
 

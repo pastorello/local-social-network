@@ -1442,3 +1442,26 @@ should go in with step 2.
 > against the old `GaetaMap.vue`, all eight sites listed). ADR-0001 carries an
 > amendment, because its safety argument had counted exactly one sink.
 
+### TD-45 · A tour's stop could be someone else's draft, and the answer showed its title — **FIXED 2026-09-18** ✔
+
+> Found by both lenses of the 2026-09-18 debugging sweep (security and
+> correctness), confirmed by running. `itinerari/api.py::_parse_stops` loaded
+> any card by id: a collaborator who knew the UUID of another's draft — a card
+> once published, or named as `translation_of` — could make it a stop, and the
+> 201 carried its title, type and coordinates; an out-of-range `point_index`
+> or a publish attempt named it in the error. Every type's detail 404s a draft
+> for anyone but its author and admins; this was the one path around that. The
+> same function accepted **another tour** as a stop — even the tour itself —
+> since a percorso has route features; the stop came back with `type: null` and
+> a broken *Leggi la scheda* link (spec I3 says a stop is a card with a place).
+>
+> **Fixed the same day**: a stop is a card the writer may open (published, or
+> theirs, or any for an admin), and anything else answers exactly as a missing
+> card; a card whose type is not one of `maps.CARD_TYPES` is refused as having
+> no place. A card that was already a stop of *this* tour stays acceptable, so
+> an author unpublishing their card does not make someone's tour unsavable.
+> Four tests; the two about the defect shown failing against the old code.
+> **Not covered**: the Django admin's stop inline (`itinerari/admin.py`)
+> still bypasses these checks and I4 — admins only, recorded here rather than
+> fixed.
+
