@@ -48,7 +48,7 @@ const tour = {
   ],
 } as unknown as Itinerario
 
-const mountAt = async (path: string) => {
+const mountAt = async (path: string, attach = false) => {
   const stub = { template: '<div />' }
   const router = createRouter({
     history: createMemoryHistory(),
@@ -63,6 +63,7 @@ const mountAt = async (path: string) => {
   await router.isReady()
   const wrapper = mount(ItineraryDetailView, {
     global: { plugins: [createPinia(), router], stubs: { ItineraryForm: true } },
+    attachTo: attach ? document.body : undefined,
   })
   await flushPromises()
   return { wrapper, router }
@@ -101,6 +102,28 @@ describe('ItineraryDetailView (spec itinerari.md I7)', () => {
       .trigger('click')
     await flushPromises()
     expect(router.currentRoute.value.query.tappa).toBe('1')
+  })
+
+  it('keeps focus on the page when the pressed button goes away (WCAG 2.4.3)', async () => {
+    const { wrapper } = await mountAt('/itinerari/t1', true)
+    const button = (label: string) => wrapper.findAll('button').find((b) => b.text() === label)!
+
+    // "Inizia il tour" disappears with the article: focus goes to the stop.
+    await button('Inizia il tour').trigger('click')
+    await flushPromises()
+    expect(document.activeElement?.textContent?.trim()).toBe('Duomo')
+
+    // The last "Tappa successiva" disables itself: focus goes to the stop.
+    ;(button('Tappa successiva →').element as HTMLButtonElement).focus()
+    await button('Tappa successiva →').trigger('click')
+    await flushPromises()
+    expect(document.activeElement?.textContent?.trim()).toBe('Processione')
+
+    // Back to the article: focus goes to "Inizia il tour" again.
+    await button('Torna all’itinerario').trigger('click')
+    await flushPromises()
+    expect(document.activeElement?.textContent?.trim()).toBe('Inizia il tour')
+    wrapper.unmount()
   })
 
   it('does not guide a raccolta: it has no order to follow', async () => {

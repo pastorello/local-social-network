@@ -289,6 +289,7 @@ const submitForm = async () => {
         <MapPointsField
           v-model="path"
           kind="route"
+          route-noun="punto"
           :readonly="isTranslation"
           :drawing="tab === 'tragitto'"
           id-prefix="tour-path"

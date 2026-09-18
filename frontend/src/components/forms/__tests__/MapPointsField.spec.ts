@@ -17,6 +17,7 @@ const mountField = (props: {
   max?: number
   drawing?: boolean
   readonly?: boolean
+  routeNoun?: 'tappa' | 'punto'
 }) => {
   const points = ref<MapPoint[]>(props.points ?? [])
   const drawing = ref(props.drawing ?? true)
@@ -30,6 +31,7 @@ const mountField = (props: {
         kind: props.kind,
         max: props.max,
         readonly: props.readonly,
+        routeNoun: props.routeNoun,
         drawing: drawing.value,
         idPrefix: 'test',
       }),
@@ -119,5 +121,13 @@ describe('MapPointsField — the map under the panel as the editor (design.md D1
     useMapStore().editorDone()
 
     expect(done.value).toBe(1)
+  })
+
+  it('calls a tour path’s points "punti", leaving "tappa" to the tour’s stops', async () => {
+    const { wrapper } = mountField({ kind: 'route', routeNoun: 'punto', points: [A, B] })
+
+    expect(useMapStore().editor?.label).toContain('aggiungere il punto 3')
+    expect(wrapper.find('button[aria-label="Sposta il punto 2 prima del 1"]').exists()).toBe(true)
+    expect(wrapper.text()).not.toMatch(/tapp/i)
   })
 })

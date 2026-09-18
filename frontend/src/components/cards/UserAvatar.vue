@@ -13,8 +13,11 @@ const initials = computed(() =>
     .trim()
     .split(/\s+/)
     .filter(Boolean)
+    // The first letter of each word, not its first character: a name like
+    // "Redazione (bozze da fonti pubbliche)" showed "R(".
+    .map((word) => word.match(/\p{L}/u)?.[0]?.toUpperCase() ?? '')
+    .filter(Boolean)
     .slice(0, 2)
-    .map((word) => word[0]?.toUpperCase() ?? '')
     .join(''),
 )
 </script>

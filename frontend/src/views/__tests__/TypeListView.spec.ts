@@ -5,7 +5,7 @@ import { createPinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import TypeListView from '../TypeListView.vue'
-import { chiesaConfig, luogoConfig } from '@/definitions/typeConfigs'
+import { chiesaConfig, itinerarioConfig, luogoConfig } from '@/definitions/typeConfigs'
 
 vi.mock('axios')
 
@@ -26,6 +26,9 @@ const mountAt = async (path: string, config = luogoConfig) => {
       { path: '/chiese', name: 'chieselist', component: stub },
       { path: '/luoghi/nuovo', name: 'luoghicreate', component: stub },
       { path: '/chiese/nuova', name: 'chiesecreate', component: stub },
+      { path: '/itinerari', name: 'itinerarilist', component: stub },
+      { path: '/itinerari/nuovo', name: 'itinerariocreate', component: stub },
+      { path: '/itinerari/:id', name: 'itinerariodetail', component: stub },
     ],
   })
   router.push(path)
@@ -85,5 +88,28 @@ describe('TypeListView — the genre filter (spec content.md, luoghi)', () => {
 
     expect(wrapper.find('nav').exists()).toBe(false)
     expect(axios.get).not.toHaveBeenCalledWith('/api/luoghi/generi/')
+  })
+})
+
+describe('TypeListView — what it counts', () => {
+  it('counts tours as itinerari, not as schede', async () => {
+    const tour = {
+      id: 't1',
+      title: 'Giro',
+      is_published: true,
+      images: [],
+      duration: 'Mezza giornata',
+    }
+    vi.mocked(axios.get).mockImplementation((url: string) =>
+      Promise.resolve({
+        data: url.includes('intenti')
+          ? []
+          : { count: 1, next: null, previous: null, results: [tour] },
+      }),
+    )
+    const { wrapper } = await mountAt('/itinerari', itinerarioConfig)
+
+    expect(wrapper.text()).toContain('1 itinerario')
+    expect(wrapper.text()).not.toContain('1 scheda')
   })
 })

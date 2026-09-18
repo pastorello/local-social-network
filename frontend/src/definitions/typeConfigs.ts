@@ -40,6 +40,9 @@ export interface TypeConfig {
   mapMode: 'none' | 'pins'
   maxPoints?: number
   listFilter?: ListFilterConfig
+  // How the list counts its rows, where "scheda" is the wrong word for them:
+  // a guest reading "1 scheda" under *Scoprire la città* is looking at a tour.
+  countNouns?: [singular: string, plural: string]
 }
 
 export const chiesaConfig: TypeConfig = {
@@ -165,6 +168,7 @@ export const itinerarioConfig: TypeConfig = {
   key: 'itinerari',
   label: 'Itinerari',
   singularLabel: 'itinerario',
+  countNouns: ['itinerario', 'itinerari'],
   endpoint: '/api/itinerari/',
   routeNames: { list: 'itinerarilist', detail: 'itinerariodetail', create: 'itinerariocreate' },
   extraFields: [{ key: 'duration', label: 'Durata indicativa', kind: 'input' }],
