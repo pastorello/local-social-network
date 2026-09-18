@@ -24,6 +24,14 @@ const router = createRouter({
       meta: { requiresAuth: false, fullBleed: true },
     },
     {
+      // The credits surface (spec/design.md D21) — a footer until the map went
+      // under every page.
+      path: '/il-progetto',
+      name: 'progetto',
+      component: () => import('../views/ProjectView.vue'),
+      meta: { requiresAuth: false },
+    },
+    {
       path: '/reports/:id',
       name: 'reportdetail',
       component: () => import('../views/ReportDetailView.vue'),

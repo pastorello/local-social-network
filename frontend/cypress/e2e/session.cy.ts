@@ -34,7 +34,7 @@ describe('an expired access token', () => {
     cy.get('input[type="email"]').type(EMAIL)
     cy.get('input[type="password"]').type(PASSWORD, { log: false })
     cy.contains('button', 'Accedi').click()
-    cy.contains('button', 'Esci').should('exist')
+    cy.get('button[aria-label^="Il tuo account"]').should('exist')
   })
 
   it('is refreshed and the request replayed, without the reader noticing', () => {
@@ -61,7 +61,7 @@ describe('an expired access token', () => {
 
     cy.wait('@refresh').its('response.statusCode').should('equal', 200)
     cy.location('pathname').should('equal', '/users')
-    cy.contains('button', 'Esci').should('exist')
+    cy.get('button[aria-label^="Il tuo account"]').should('exist')
 
     cy.window().then((win) => {
       // M4 rotates refresh tokens and blacklists the old one, so a successful

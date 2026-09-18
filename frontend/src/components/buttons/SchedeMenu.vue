@@ -59,30 +59,40 @@ onBeforeUnmount(() => {
 
 <template>
   <div ref="menuRef" class="relative">
+    <!-- A pill item like its neighbours in the menu (spec/design.md D14). -->
     <button
       type="button"
-      class="flex w-auto cursor-pointer items-center gap-2 rounded-lg bg-gray-200 px-3 py-2 text-sm lg:grid lg:w-26 lg:place-items-center lg:gap-0 lg:p-4 lg:text-base"
-      :class="{ 'text-sea border border-sea shadow-md': isActive }"
+      class="flex h-9 cursor-pointer items-center gap-1 rounded-full px-3 text-sm font-semibold text-ink hover:bg-page focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+      :class="{ 'bg-sea/10 text-sea': isActive }"
       aria-haspopup="menu"
       :aria-expanded="open"
       @click="toggle"
     >
-      <span class="lg:mb-1" aria-hidden="true">
-        <FesteIcon class="h-5 w-5 lg:h-6 lg:w-6" />
-      </span>
       <span>Schede</span>
+      <svg
+        viewBox="0 0 20 20"
+        class="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M5.5 8l4.5 4.5L14.5 8" />
+      </svg>
     </button>
 
     <ul
       v-if="open"
       role="menu"
-      class="absolute z-50 mt-2 w-52 bg-white rounded-lg shadow-lg border border-gray-200 py-2"
+      class="absolute left-0 z-50 mt-2 w-56 rounded-lg border border-hairline bg-surface py-2 shadow-lg"
     >
       <li v-for="item in items" :key="item.to" role="none">
         <RouterLink
           :to="item.to"
           role="menuitem"
-          class="flex items-center gap-2 px-4 py-2 hover:bg-gray-50"
+          class="flex items-center gap-2 px-4 py-2 text-sm text-ink hover:bg-page"
           @click="close"
         >
           <component :is="item.icon" class="w-5 h-5" aria-hidden="true" />

@@ -121,6 +121,16 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
     check('/chiese/:id')
   })
 
+  // The credits surface since the footer went (design.md D21) — reached from
+  // the menu on every page, so a reader's surface like any other.
+  it('Il progetto, the credits', () => {
+    cy.viewport(1280, 800)
+    cy.visit('/il-progetto')
+    cy.contains('h1', 'Il progetto')
+
+    check('/il-progetto')
+  })
+
   it('the public request form, where a would-be collaborator arrives', () => {
     cy.viewport(1280, 800)
     cy.visit('/collabora')
@@ -189,7 +199,7 @@ describe("the collaborator's surfaces meet WCAG 2.1 AA", { testIsolation: false 
     cy.get('input[type="email"]').type(EMAIL)
     cy.get('input[type="password"]').type(PASSWORD, { log: false })
     cy.contains('button', 'Accedi').click()
-    cy.contains('button', 'Esci').should('exist')
+    cy.get('button[aria-label^="Il tuo account"]').should('exist')
   })
 
   it('the authoring form, with its sections and its editor', () => {
@@ -214,12 +224,16 @@ describe("the collaborator's surfaces meet WCAG 2.1 AA", { testIsolation: false 
   })
 
   it('the user directory and a profile, both login-only', () => {
+    // Wide on purpose: the avatar with its account menu is the wide menu; on
+    // a phone the same links sit behind "Menu" (design.md D14).
+    cy.viewport(1280, 800)
     cy.visit('/users')
     cy.contains('h1', 'Utenti del network')
     check('/users')
 
-    // The chrome is a <nav>, not a <header>: the avatar in it is the only
-    // link to one's own profile.
+    // The chrome is a <nav>, not a <header>, and the link to one's own profile
+    // sits behind the avatar in it (design.md D14).
+    cy.get('button[aria-label^="Il tuo account"]').click()
     cy.get('nav a[href^="/profile/"]').first().click()
     cy.location('pathname').should('match', /^\/profile\/[0-9a-f-]+$/)
     check('/profile/:id')

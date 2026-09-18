@@ -125,7 +125,7 @@ describe('collabora con noi', () => {
         onBeforeLoad(win) {
           win.localStorage.setItem('user.access', PREVIOUS_SESSION)
           win.localStorage.setItem('user.refresh', PREVIOUS_SESSION)
-          // The header shows "Esci" only for a session with an id.
+          // The menu shows the account only for a session with an id.
           win.localStorage.setItem('user.id', '00000000-0000-4000-8000-000000000000')
           win.localStorage.setItem('user.name', "L'autrice")
         },
@@ -133,7 +133,7 @@ describe('collabora con noi', () => {
     })
     // Without this the test could pass by accident: a session that died on
     // its own before the activation would prove nothing about it.
-    cy.contains('Esci').should('exist')
+    cy.get('button[aria-label^="Il tuo account"]').should('exist')
 
     cy.get('#invite-password1').type(chosen)
     cy.get('#invite-password2').type(chosen)
@@ -143,7 +143,7 @@ describe('collabora con noi', () => {
 
     // The previous session did not survive the handover, so what follows is
     // the new collaborator signing in as themselves, not writing as the author.
-    cy.contains('Esci').should('not.exist')
+    cy.get('button[aria-label^="Il tuo account"]').should('not.exist')
     cy.window().then((win) => {
       expect(win.localStorage.getItem('user.access')).to.be.oneOf([null, ''])
       expect(win.localStorage.getItem('user.refresh')).to.be.oneOf([null, ''])
@@ -154,15 +154,20 @@ describe('collabora con noi', () => {
     cy.get('#login-password').type(chosen)
     cy.contains('button', 'Accedi').click()
     cy.location('pathname').should('equal', '/')
-    cy.contains('Esci').should('exist')
+    cy.get('button[aria-label^="Il tuo account"]').should('exist')
   })
 
   it('offers collaboration rather than signup, anywhere a visitor looks', () => {
     // v2's standing decision: an account is an invitation, not a right. The
-    // header is where a visitor would look for "Registrati".
+    // menu is where a visitor would look for "Registrati": it offers Accedi,
+    // and the way in for someone without an account is "Collabora con noi" —
+    // on the login page and in Il progetto (design.md D14/D21).
     cy.visit('/')
-    cy.contains('a', 'Collabora con noi').should('exist')
     cy.contains('Registrati').should('not.exist')
     cy.get('a[href="/signup"]').should('not.exist')
+    cy.get('nav[aria-label="Principale"]').contains('a', 'Accedi').click()
+    cy.get('a[href="/collabora"]').should('exist')
+    cy.visit('/il-progetto')
+    cy.contains('a', 'Collabora con noi').should('exist')
   })
 })

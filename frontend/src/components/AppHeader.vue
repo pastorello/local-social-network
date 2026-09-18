@@ -1,34 +1,36 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/user'
 
-import ActionButton from './buttons/ActionButton.vue'
-import CommunityIcon from './icons/CommunityIcon.vue'
-import PollsIcon from './icons/PollsIcon.vue'
-import HomeIcon from './icons/HomeIcon.vue'
-import MenuButton from './buttons/MenuButton.vue'
+import { useUserStore } from '@/stores/user'
+import { useIsDesktop } from '@/composables/useBreakpoint'
+import NavDisclosure from './buttons/NavDisclosure.vue'
 import SchedeMenu from './buttons/SchedeMenu.vue'
 import SiteTitle from './typography/SiteTitle.vue'
 import UserAvatar from './cards/UserAvatar.vue'
 
+// The menu (spec/design.md D14): one pill at the top centre of every page,
+// floating over the map rather than a bar above it — the map is the ground of
+// every page (D13). The wordmark, Mappa, Schede, Il progetto, then Accedi or
+// the collaborator's avatar. The polls are reached from Il progetto; there is
+// no search in this phase; Itinerari arrives with its own phase.
 const userStore = useUserStore()
 const user = userStore.user
-
 const router = useRouter()
+const { isDesktop } = useIsDesktop()
 
-// The header is fixed, so everything below it needs to know how tall it is —
-// and it is not one number: it wraps to two rows on a phone, and it grows
-// when a collaborator logs in and gains an avatar and an Esci button. The
-// mobile home in particular is sized as "the viewport minus this", and a
-// hard-coded guess put the map's own controls underneath the header. So it is
-// measured once and published as a custom property, the same way colours are.
+// Everything below the menu needs to know where it ends — pages open as panels
+// under it, the home's chrome starts under it — and that is not one number:
+// the pill is shorter on a phone, and taller with an avatar. So it is measured
+// and published as a custom property, the same way colours are. The map does
+// not read it: it runs under the pill, edge to edge.
 const nav = ref<HTMLElement | null>(null)
 let observer: ResizeObserver | null = null
 
 const publishHeight = () => {
   if (!nav.value) return
-  document.documentElement.style.setProperty('--header-h', `${nav.value.offsetHeight}px`)
+  const bottom = nav.value.offsetTop + nav.value.offsetHeight
+  document.documentElement.style.setProperty('--header-h', `${bottom + 8}px`)
 }
 
 onMounted(() => {
@@ -45,76 +47,94 @@ const logout = async () => {
   await userStore.logout()
   router.push('/login')
 }
+
+const item =
+  'flex h-9 items-center rounded-full px-3 text-sm font-semibold whitespace-nowrap text-ink hover:bg-page focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea'
+const active = 'bg-sea/10 text-sea'
+const menuLink =
+  'block px-4 py-2 text-sm text-ink hover:bg-page focus-visible:bg-page focus-visible:outline-none'
 </script>
 
 <template>
   <nav
     ref="nav"
-    class="fixed z-1100 w-full border-hairline bg-surface px-4 py-3 shadow-md lg:px-8 lg:py-6"
+    aria-label="Principale"
+    class="fixed top-3 left-1/2 z-1100 flex max-w-[calc(100%-1.5rem)] -translate-x-1/2 items-center gap-1 rounded-full border border-hairline bg-surface py-1.5 pr-1.5 pl-4 shadow-md lg:gap-2 lg:pl-5"
   >
-    <div class="max-w-7xl mx-auto">
-      <div
-        class="flex flex-wrap items-center justify-between gap-3 lg:grid lg:grid-cols-4 lg:gap-8 lg:px-6"
+    <SiteTitle class="mr-1 lg:mr-2" />
+    <span class="h-6 w-px bg-hairline" aria-hidden="true"></span>
+
+    <template v-if="isDesktop">
+      <RouterLink to="/" :class="item" :exact-active-class="active">Mappa</RouterLink>
+      <SchedeMenu />
+      <RouterLink to="/il-progetto" :class="item" :active-class="active">Il progetto</RouterLink>
+      <span class="h-6 w-px bg-hairline" aria-hidden="true"></span>
+
+      <NavDisclosure
+        v-if="user.isAuthenticated && user.id"
+        :label="`Il tuo account: ${user.name}`"
+        trigger-class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
       >
-        <SiteTitle />
-
-        <div
-          class="order-last flex w-full justify-center gap-2 lg:order-none lg:col-span-2 lg:w-auto lg:gap-6"
+        <template #trigger>
+          <UserAvatar
+            :src="user.avatarURL"
+            :name="user.name"
+            class="h-9 w-9 rounded-full object-cover"
+          />
+        </template>
+        <RouterLink :to="{ name: 'profile', params: { id: user.id } }" :class="menuLink">
+          Il tuo profilo
+        </RouterLink>
+        <RouterLink to="/users" :class="menuLink">Utenti</RouterLink>
+        <button
+          type="button"
+          :class="[menuLink, 'w-full cursor-pointer text-left']"
+          @click="logout"
         >
-          <MenuButton to="/">
-            <template #icon>
-              <HomeIcon class="h-5 w-5 lg:h-6 lg:w-6" />
-            </template>
-            Mappa
-          </MenuButton>
+          Esci
+        </button>
+      </NavDisclosure>
+      <RouterLink v-else to="/login" :class="item" :active-class="active">Accedi</RouterLink>
+    </template>
 
-          <MenuButton to="/polls">
-            <template #icon>
-              <PollsIcon class="h-5 w-5 lg:h-6 lg:w-6" />
-            </template>
-            Sondaggi
-          </MenuButton>
-
-          <SchedeMenu />
-
-          <template v-if="user.isAuthenticated">
-            <MenuButton to="/users">
-              <template #icon>
-                <CommunityIcon class="h-5 w-5 lg:h-6 lg:w-6" />
-              </template>
-              Utenti
-            </MenuButton>
-          </template>
-        </div>
-
-        <div class="flex items-center justify-end">
-          <template v-if="user.isAuthenticated && user.id">
-            <RouterLink :to="{ name: 'profile', params: { id: user.id } }">
-              <UserAvatar
-                :src="user.avatarURL"
-                :name="user.name"
-                class="mr-2 inline-block h-9 w-9 rounded-full object-cover lg:mr-4 lg:h-12 lg:w-12"
-              />
-            </RouterLink>
-            <ActionButton class="inline-block" size="small" button-type="danger" @click="logout">
-              Esci
-            </ActionButton>
-          </template>
-
-          <template v-else>
-            <RouterLink
-              to="/login"
-              class="mr-2 rounded-lg bg-gray-600 px-4 py-3 text-sm text-white lg:mr-4 lg:px-6 lg:py-4 lg:text-base"
-              >Accedi</RouterLink
-            >
-            <RouterLink
-              to="/collabora"
-              class="rounded-lg bg-sea px-4 py-3 text-sm text-white lg:px-6 lg:py-4 lg:text-base"
-              >Collabora con noi</RouterLink
-            >
-          </template>
-        </div>
-      </div>
-    </div>
+    <!-- On a phone the pill holds what a reader reaches for first — the
+    wordmark home and the cards — and the rest sits behind one button. -->
+    <template v-else>
+      <SchedeMenu />
+      <NavDisclosure
+        label="Menu"
+        trigger-class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-ink hover:bg-page focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+      >
+        <template #trigger>
+          <svg
+            viewBox="0 0 20 20"
+            class="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <path d="M3.5 6h13M3.5 10h13M3.5 14h13" />
+          </svg>
+        </template>
+        <RouterLink to="/" :class="menuLink">Mappa</RouterLink>
+        <RouterLink to="/il-progetto" :class="menuLink">Il progetto</RouterLink>
+        <template v-if="user.isAuthenticated && user.id">
+          <RouterLink :to="{ name: 'profile', params: { id: user.id } }" :class="menuLink">
+            Il tuo profilo
+          </RouterLink>
+          <RouterLink to="/users" :class="menuLink">Utenti</RouterLink>
+          <button
+            type="button"
+            :class="[menuLink, 'w-full cursor-pointer text-left']"
+            @click="logout"
+          >
+            Esci
+          </button>
+        </template>
+        <RouterLink v-else to="/login" :class="menuLink">Accedi</RouterLink>
+      </NavDisclosure>
+    </template>
   </nav>
 </template>
