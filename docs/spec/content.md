@@ -41,7 +41,7 @@ Each type is a **thin app** adding only its fields on top of the core.
 | **Dialetto** | meaning, example usage | none |
 | **Libri consigliati** | book author, year, publisher | none |
 | **Luoghi** | genre (admin-managed), how to get there | one fixed pin |
-| **Itinerari** *(specified 2026-09-11, not built)* | form, indicative duration, intents; ordered stops, each a card | a drawn path and numbered stops — see [itinerari.md](./itinerari.md) |
+| **Itinerari** *(specified 2026-09-11, built 2026-09-18)* | form, indicative duration, intents; ordered stops, each a card | a drawn path and numbered stops — see [itinerari.md](./itinerari.md) |
 
 The bar: **a sixth type costs days, not a module.** The fifth was invented
 mid-interview; more will come — and the sixth arrived on 2026-09-09, which is

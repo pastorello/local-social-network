@@ -2,7 +2,7 @@
 
 > **Delivered (C5, 2026-08-27.)** Leaflet, as today (the markercluster
 > default-import gotcha still applies; TD-02's double bundle was paid first, as
-> planned — see [tech-debt.md](../tech-debt.md#td-02)). The visibility gate M4
+> planned — see TD-02 in [tech-debt.md](../tech-debt.md)). The visibility gate M4
 > asks for is recorded in [ADR-0006](../adr/0006-overlay-visibility-gate.md).
 
 ## Requirements
@@ -12,7 +12,8 @@
   internal ones).
 - **M2 — Layers.** Each content type with a footprint is a reader-toggleable
   layer: chiese (pins), feste (routes), ricette (sale points), personaggi
-  (pins), and the existing reports layer. The map shows only what has a place;
+  (pins), and the existing reports layer — and luoghi (pins), the seventh type,
+  since 2026-09-18. The map shows only what has a place;
   dialetto and recipes-as-articles are reached from the menu, not the map.
 - **M3 — Overlays**, one mechanism, two kinds:
   - **raster** — historical maps of Gaeta (1820, 1600…): georeferenced images
@@ -36,6 +37,9 @@
 - `frontend/src/components/maps/GaetaMap.vue` — the one map, renamed from
   `ReportsMap.vue` now that it draws more than reports; layer toggles and
   opacity sliders live in `HomeView.vue`, which owns which layers are on.
+  *(Since 2026-09-18, design.md D13: the map lives in the shell,
+  `MapStage.vue`, and which layers are on is held by `stores/map.ts`;
+  `HomeView`'s toggles write it.)*
 - **The gate (M4)**: `Overlay.objects.visible_to(user)`, default visibility
   `steering`, and no `visibility` field in any response. Rationale and the
   alternatives rejected: [ADR-0006](../adr/0006-overlay-visibility-gate.md).
@@ -49,7 +53,9 @@ Two decisions worth knowing, both narrower than the requirement:
   view (it already was) and the layer toggles sit in the panel beside it; the
   nav keeps the C3 `SchedeMenu`. Making the map full-bleed with a floating
   menu is design work, and design is roadmap item 1 — not something to smuggle
-  into a phase about geometry.
+  into a phase about geometry. *(It arrived there: the full-bleed home in the
+  design pass, 2026-08-31, and the floating pill menu, design.md D14, on
+  2026-09-18.)*
 
 ## Note
 

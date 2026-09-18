@@ -17,19 +17,27 @@ direction is [docs/spec/](./docs/spec/README.md) (v2, 2026-08-21).
 
 ## Features
 
-- **Issue reports on a map** — geolocated, with category, photo and a moderated
-  status workflow (`open → acknowledged → resolved`, or `rejected`). Pins are
-  clustered and colored by status; filters by category, status and free text;
-  one-click upvotes.
-- **Polls** — admins open a poll with 2–10 options and an optional closing date.
-  Citizens cast one final vote. Results stay hidden until you have voted or the
-  poll closes, so early results cannot steer later ones.
-- **Roles** — anonymous visitors read the map, reports and polls. Citizens
-  contribute. Admins moderate statuses and manage polls, and are promoted
-  through the Django admin.
-- **Privacy by default** — uploaded photos are re-encoded and stripped of EXIF
-  (including GPS) before storage; e-mail addresses are returned only to their
-  owner and are never serialized anywhere else.
+- **A map under every page** — one Leaflet map of Gaeta is the ground of the
+  whole app; every page opens as a panel over it, and the map moves to show
+  what the page is about. One toggleable layer per card type that has a place,
+  plus the reports layer, and overlays (district boundaries, georeferenced
+  historical maps) behind a visibility gate.
+- **Cards in eight types** — feste (with their processional routes), luoghi,
+  chiese, ricette, personaggi storici, dialetto, libri consigliati, and
+  **itinerari**: curated tours built from the other cards, followed one stop at
+  a time, with each leg handed to Google Maps. Rich text is sanitized on the
+  server; every card can be translated (English first).
+- **Collaborators by invitation only** — no public signup. "Collabora con noi"
+  files a request, the author approves it in Django admin, and the invite
+  arrives by e-mail. Collaborators write and publish; drafts are invisible to
+  everyone else.
+- **Issue reports and polls** (from v1) — geolocated reports with a moderated
+  status workflow and upvotes; polls whose results stay hidden until you have
+  voted or the poll closes.
+- **Accessible and private by default** — WCAG 2.1 AA is the bar
+  ([ADR-0005](./docs/adr/0005-wcag-2.1-aa-accessibility-bar.md)), gated in CI;
+  uploaded photos are re-encoded and stripped of EXIF (including GPS); e-mail
+  addresses are returned only to their owner.
 
 ## Quick start
 
@@ -75,11 +83,11 @@ fails safe (see [ADR-0002](./docs/adr/0002-debug-off-secret-key-required.md)).
 |---|---|
 | `scripts/dev` | API :8000 + SPA :5173 bare metal, one Ctrl-C stops both |
 | `docker compose up --build` | Postgres + API :8000 + SPA :5173 |
-| `python -m pytest` | Backend tests — **315**, ~5s (from `backend/`) |
+| `python -m pytest` | Backend tests — **446**, a few seconds (from `backend/`) |
 | `python -m ruff check .` | Backend lint |
 | `npm run dev` | Vite dev server on :5173 (from `frontend/`) |
-| `npm run test:unit -- run` | Frontend unit tests — **88** |
-| `npm run test:e2e` | Cypress against a production build — **17** (needs the API running) |
+| `npm run test:unit -- run` | Frontend unit tests — **206** |
+| `npm run test:e2e` | Cypress against a production build — **47** (needs the API running, seeded by `seed_e2e`; see CLAUDE.md) |
 | `npm run lint` | oxlint then eslint, both with `--fix` |
 | `npm run build` | Type-check (`vue-tsc`) + production build |
 
@@ -97,10 +105,14 @@ Two applications talking over plain HTTP + CORS.
 | Database | PostgreSQL 17; SQLite fallback for bare-metal development |
 | Tests | pytest (API) · Vitest + Vue Test Utils (SPA) · Cypress (e2e) |
 
-The backend is four Django apps — `account` (custom user, UUID pk, e-mail
-login), `reports` (the core domain), `polls`, and `common` (shared upload
-hardening, not an app). Endpoints live in `api.py` per app and follow a single
-error convention, `{detail, fields}`.
+The backend is thirteen Django apps: `account` (custom user, UUID pk, e-mail
+login, the invite flow), `content` (the shared card core — sanitized rich text,
+images, map features, translations), one thin app per card type (`feste`,
+`chiese`, `ricette`, `personaggi`, `dialetto`, `libri`, `luoghi`,
+`itinerari`), `maps` (layers and overlays), and v1's `reports` and `polls`;
+`common` holds the shared upload hardening and media serving, and is not an
+app. Endpoints live in `api.py` per app and follow a single error convention,
+`{detail, fields}`.
 
 Deeper notes, gotchas and conventions live in [CLAUDE.md](./CLAUDE.md), which is
 also what coding agents read. Decisions that would be expensive to reverse are
@@ -115,13 +127,15 @@ in [docs/adr/](./docs/adr/README.md).
 | [docs/roadmap.md](./docs/roadmap.md) | What is planned and in what order |
 | [docs/tech-debt.md](./docs/tech-debt.md) | Measured debt register, with what is fixed and what is not |
 | [docs/adr/](./docs/adr/README.md) | Architecture decision records |
-| [docs/deploy.md](./docs/deploy.md) | Deployment notes — not yet exercised, see the roadmap |
+| [docs/deploy.md](./docs/deploy.md) | Deployment guide — walked end to end on a production-shaped stack (2026-09-10); nothing is deployed yet |
 | [CLAUDE.md](./CLAUDE.md) | Architecture, conventions and gotchas for humans and agents |
 
 ## Status
 
-The v1 feature set (`docs/mvp-spec.md` — map reports + polls) is implemented
-and tested, and the 2026-08-19 audit's debt is paid down to three
-maintenance-grade items. The v2 pivot to a cultural map-archive is **specified
-but not yet built** — `docs/spec/` is the plan, `docs/roadmap.md` the order.
-Nothing is deployed; deployment is last, on the author's signal.
+Everything the v2 spec asks for is built and tested — the five build phases
+(accounts, the content core, the card types, translations, the map), the
+design pass, the map under every page, luoghi and itinerari (2026-09-18). The
+debt register is closed except for two items it keeps open on purpose. What is
+missing is **content**: the archive is empty until its collaborators write it.
+Nothing is deployed; deployment waits on a host and a mail provider, and on the
+author's signal. See [docs/roadmap.md](./docs/roadmap.md).

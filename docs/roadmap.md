@@ -4,10 +4,15 @@ What is planned and in what order. Ordered by what is **active**. The product
 authority is [spec (v2)](./spec/README.md) (v2, 2026-08-21); this file only
 sequences the work.
 
-**Where things stand (2026-09-10).** Items 1 and 2 are complete, and so is the
+**Where things stand (2026-09-18).** Items 1 and 2 are complete, and so is the
 technical half of item 3 — what is left of it is input only the author has: a
-mail provider, a sender domain, a host. Item 4, the content, is now the
-bottleneck.
+mail provider, a sender domain, a host. The two phases decided on 2026-09-11
+are built too (item 5): the map under every page, and curated itineraries
+with the seventh card type, luoghi, that they needed. **Nothing planned is
+left to build.** Item 4, the content, is the bottleneck — and itineraries
+sharpen it: `/benvenuto`, the address printed on the B&B cards, lists only
+intents with a published tour, so until one is written it says the tours are
+in preparation.
 The paragraph below is the standing picture, written when the v2 build order
 closed.
 
@@ -210,9 +215,10 @@ thing between a finished build and a public URL:
 - `VITE_API_BASE_URL` is baked at build time, so the SPA build is
   environment-specific.
 - ~~**TD-06** (remaining dependency drift)~~ — **minors done 2026-08-30**,
-  backend and frontend, each in its own PR. What is left is the majors and
-  **TD-33** (pin the ruff rule set, so a linter bump stops being a way to
-  change the lint policy by accident).
+  backend and frontend, each in its own PR; **the majors 2026-09-05**, with
+  two held back on purpose (cypress 16, typescript 7 — the reasons are in
+  TD-06). ~~**TD-33**~~ (pin the lint rule sets, so a linter bump stops being
+  a way to change the lint policy by accident) — **done 2026-09-05**.
 
 ## 4. Content and input — the author's own, in parallel
 
@@ -273,8 +279,9 @@ proposed in the morning and delivered the same day. It is recorded at the foot
 of item 6, with what it cost.)
 
 Two more were decided on **2026-09-11**, and unlike the two below they are
-already specified. **Neither is scheduled against items 2–4** — where they go
-is the author's call:
+already specified. **Both are built (2026-09-18)** — they were never
+scheduled against items 2–4, and the author took them up once those were
+done:
 
 - **The map under every page** — [spec/design.md](./spec/design.md) D13–D21.
   **Built, all of it, 2026-09-18** — the map in the shell, pages as panels,
@@ -314,7 +321,8 @@ is the author's call:
   can change palette, name and city centre. Item 1's D8 (colour in tokens, never
   in a component) is what keeps this from costing a second redesign. The other
   things hard-coded to Gaeta, for whoever picks it up: the map centre in
-  `composables/useLeafletMap.ts` and `GaetaMap.vue`, **`MAP_CENTER_LAT` /
+  `GaetaMap.vue` (`useLeafletMap.ts` held a second copy until D19 retired it),
+  **`MAP_CENTER_LAT` /
   `MAP_CENTER_LNG` in `backend/backend/settings.py`** (added 2026-09-05 to
   refuse overlay geometry that cannot be this town — the *second* place that
   knows where Gaeta is, and the one a move would most easily miss: the symptom
@@ -396,7 +404,9 @@ after *those* starts by editing the spec, not this file.
 
 The debt register that ran alongside this build order —
 [tech-debt.md](./tech-debt.md) — is down to **TD-04** (item 2) and **TD-06**
-(item 3). TD-02, the double Leaflet bundle it had reserved for a session of
+(item 3). *(2026-09-18: both since closed — TD-04 in full on 2026-09-10,
+TD-06 with two upgrades held back on purpose; what the register keeps open
+now is TD-08 and TD-37, each deliberately.)* TD-02, the double Leaflet bundle it had reserved for a session of
 its own, was paid at the head of C5 and verified in a production build with
 clustered pins on screen.
 

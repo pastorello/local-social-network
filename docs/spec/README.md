@@ -58,20 +58,20 @@ not mean).
 | Area | File | Status |
 |---|---|---|
 | Accounts & the "Collabora con noi" flow | [accounts.md](./accounts.md) | delivered (C1, 2026-08-21) |
-| Content core + typed cards | [content.md](./content.md) | delivered (core + feste C2, 2026-08-22; chiese/ricette/personaggi/dialetto C3, 2026-08-22); sixth type libri consigliati 2026-09-09 |
+| Content core + typed cards | [content.md](./content.md) | delivered (core + feste C2, 2026-08-22; chiese/ricette/personaggi/dialetto C3, 2026-08-22); sixth type libri consigliati 2026-09-09; seventh, luoghi, 2026-09-18 |
 | Translations | [translations.md](./translations.md) | delivered (C4, 2026-08-22) |
 | The map: layers & overlays | [map.md](./map.md) | delivered (C5, 2026-08-27) |
 | Reports & polls (from v1) | [reports-and-polls.md](./reports-and-polls.md) | delivered; reports change author |
 | Steering tier & political tooling | [politics.md](./politics.md) | tier delivered (C1); its first consumer is C5's seggi overlay (2026-08-27); the tooling is future, out of current build |
-| Design & visual direction | [design.md](./design.md) | interviewed 2026-08-27, built 2026-08-31; **layout reopened 2026-09-11** (D13–D21, decided, not built) |
-| Itinerari — curated tours for a visitor's stay | [itinerari.md](./itinerari.md) | decided 2026-09-11; backend built 2026-09-18, reader pages and editor to follow |
+| Design & visual direction | [design.md](./design.md) | interviewed 2026-08-27, built 2026-08-31; **layout reopened 2026-09-11** (D13–D21), built 2026-09-18 |
+| Itinerari — curated tours for a visitor's stay | [itinerari.md](./itinerari.md) | decided 2026-09-11; built 2026-09-18 — backend, the guest's pages and the collaborator's editor |
 
 ## Architecture (shared across areas)
 
 - **One content core, thin type apps** — a `content` app owns rich text
   (sanitized), images, translations, map features and publication; `feste`,
   `chiese`, `ricette`, `personaggi`, `dialetto`, `libri` each add only their
-  fields — `luoghi` too (built 2026-09-18), and so will `itinerari`.
+  fields — `luoghi` and `itinerari` too (both built 2026-09-18).
   Rationale: [../adr/0004-content-core-thin-type-apps.md](../adr/0004-content-core-thin-type-apps.md).
   Honors the author's requirement that modules be separable and reusable
   without rebuilding rich text five times.
@@ -132,9 +132,10 @@ the pass deliberately left in v1 clothes.
 **The layout was reopened on 2026-09-11** — not the palette or the type. The
 map becomes the ground of every page, every page opens over it as a panel,
 the map reacts to what is opened, and the map under the collaborator's form
-becomes their editor: design.md D13–D21, **decided and not built**. A reader's
-itinerary handed off to Google Maps was named in the same session and is its
-own phase, immediately after.
+becomes their editor: design.md D13–D21, **built 2026-09-18**. A reader's
+itinerary handed off to Google Maps was named in the same session and was
+redecided the same day as curated tours — [itinerari.md](./itinerari.md),
+also built 2026-09-18.
 
 Two ambitions were named in that interview and deliberately **not** folded into
 the design phase — **geolocation** and a **multi-city superadmin**. Both are
