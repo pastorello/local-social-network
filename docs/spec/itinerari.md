@@ -1,6 +1,7 @@
 # Itinerari — curated tours for a visitor's stay
 
-> **Decided 2026-09-11, not built.** The confirmed output of a session with the
+> **Decided 2026-09-11. Backend built 2026-09-18** (see "What the build
+> decided" at the end); the reader's pages and the collaborator's editor follow. The confirmed output of a session with the
 > author, one question at a time, each a committed guess against the strongest
 > case for the opposite; every requirement below records the case that lost.
 > It needs a new card type, **luoghi**, which is specified in
@@ -161,3 +162,39 @@ walking directions are handed to the app that already does them.
   purpose; this would need a structured date beside it. A separate decision.
 - Whether the guided mode shows a walking time between stops, or leaves that
   to Google Maps.
+
+## What the build decided — backend, 2026-09-18
+
+The `itinerari` app (`/api/itinerari/`), and the details the requirements
+left open:
+
+- **Models.** `Itinerario` is a card type (I1) with `form`
+  (`raccolta`/`percorso`), `duration` (free text) and `intents` (many-to-many);
+  `Intent` is the admin-managed list, seeded with the three (I5) and addressed
+  by slug (`?intento=mare`); `Stop` is an ordered row holding a card, an
+  optional `point_index` into that card's pins, and a plain-text note.
+- **A stop must have a place.** I3 says "any type"; a dialect word or a book
+  has nothing to walk to, nothing for *Come arrivarci* to point at, so a card
+  with no map feature is refused as a stop ("non ha un luogo sulla mappa").
+  A translation is refused too — the stop is the original. A stop's point is
+  the one chosen, else the card's first pin, else the start of a festa's
+  route.
+- **I4, both halves.** Publishing is refused while any stop's card is a draft,
+  naming the drafts. A stop whose card is unpublished *later* stays in the
+  tour: the reader never sees it, the author and admins see it flagged
+  (`is_published: false` on the stop). A stop whose card is **deleted**
+  disappears with it (`CASCADE`), without notice — the admin list of stops is
+  where that shows.
+- **The walked path** is the itinerary card's own route (`MapFeature`,
+  `kind=route`), like a festa's. A raccolta has none: switching a tour to
+  raccolta deletes it.
+- **A translation shows the original's tour** — stops, their notes, the path,
+  the form and the intents — as it shows the original's photographs (T5);
+  writing stops or a path to a translation is refused. The notes are therefore
+  Italian in every language until the English interface phase (I9) decides
+  otherwise.
+- **Not a map layer** (I11): `/api/map/features/` does not include tours; a
+  test says so.
+- **Django admin** has an inline for the stops (with card autocomplete), so a
+  tour can be assembled there before the collaborator's editor exists.
+

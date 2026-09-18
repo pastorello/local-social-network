@@ -139,6 +139,7 @@ INSTALLED_APPS = [
     'dialetto',
     'libri',
     'luoghi',
+    'itinerari',
     'maps',
     'polls',
     'reports',
