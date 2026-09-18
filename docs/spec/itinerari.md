@@ -5,7 +5,7 @@
 > author, one question at a time, each a committed guess against the strongest
 > case for the opposite; every requirement below records the case that lost.
 > It needs a new card type, **luoghi**, which is specified in
-> [content.md](./content.md#the-seventh-type-luoghi--2026-09-11-specified-not-built)
+> [content.md](./content.md#the-seventh-type-luoghi--specified-2026-09-11-built-2026-09-18)
 > because it is a type like the others, not part of this feature. Both sit on
 > top of the layout decided the same day ([design.md](./design.md#the-map-under-every-page),
 > D13–D21), and this file **supersedes the reader-built itinerary** that

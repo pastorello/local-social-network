@@ -16,8 +16,9 @@
 > session with the author decided that the map becomes the ground of every
 > page and that every page opens over it as a panel: D13–D21, in
 > [The map under every page](#the-map-under-every-page) at the foot of this
-> file. They are **decided and not built**; until they are, the requirements
-> above them describe the layout that exists. The palette, the type and the
+> file. They were **built on 2026-09-18** ("What the first build decided" and
+> the three sections after it); where they overturn a requirement above them,
+> they are what the app does. The palette, the type and the
 > tokens (D6–D9) are untouched. A requirement that D13–D21 overturn keeps its
 > text and gains a dated note naming what replaced it, so the reasoning that
 > was overturned stays readable.
@@ -245,7 +246,9 @@ answer is not a redesign.
   makes it possible without redoing the design.** Note the other things hard-
   coded to Gaeta today, for whoever picks that phase up: the map centre in
   `composables/useLeafletMap.ts` and `GaetaMap.vue`, the product name, and an
-  Italian-only UI.
+  Italian-only UI. *(Since 2026-09-18 `useLeafletMap` is gone (D19); the
+  frontend's centre is in `GaetaMap.vue` alone, the backend's in settings —
+  see roadmap item 5.)*
 - **New content features**, deployment, and anything already listed in the v2
   spec's non-goals.
 
@@ -515,9 +518,14 @@ card type and an editorial decision before a technical one.
 ### Left to the build
 
 - ~~Panel widths.~~ Built 2026-09-18 at the drawn values: 560 px (narrow),
-  808 px (wide); the editor's 600 px waits for D19.
+  808 px (wide); the editor's 600 px waits for D19. *(D19 chose the narrow
+  560 px instead — "The map as the editor".)*
 - What a signed-in collaborator finds behind the avatar (their cards, a way
-  to start a new one). The drawing shows only the avatar.
+  to start a new one). The drawing shows only the avatar. **Half answered
+  2026-09-18** (D14 below): the profile, *Utenti* and *Esci*. **Still open:**
+  the collaborator's own cards and a way to start one are not behind the
+  avatar — they are reached per type, through each list's *Le mie*
+  filter and its *Nuova scheda* button.
 
 ### What the first build decided — 2026-09-18
 
@@ -556,8 +564,10 @@ wallpaper. What the build settled, so it is not re-argued:
   sulla mappa, qui accanto" — because the map beside them is showing the
   place. **On a phone they keep their own small map for now**: the panel is
   the whole screen there, and D18's strip, which replaces it, is not built.
+  *(It was, later the same day — "The phone's strip" below.)*
 - **The credits ride on every wide panel** until D21 moves them to *Il
-  progetto*; a narrow panel has no room for them.
+  progetto*; a narrow panel has no room for them. *(D21 did, the same day —
+  below.)*
 - **The map refetches what a save changed**: publishing, unpublishing,
   moving or deleting a card refreshes the layer it is on.
 

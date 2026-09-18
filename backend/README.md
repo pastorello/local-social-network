@@ -43,6 +43,6 @@ Tests are pytest-style — `python manage.py test` exits 0 but runs nothing.
 
 ```sh
 python -m pytest                          # all apps
-python -m pytest account/tests.py -k signup   # subset
+python -m pytest account/tests.py -k collaborate   # subset
 python -m ruff check .                    # lint (must be clean)
 ```
