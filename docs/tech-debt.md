@@ -1465,3 +1465,28 @@ should go in with step 2.
 > still bypasses these checks and I4 — admins only, recorded here rather than
 > fixed.
 
+### TD-46 · Five write-path and read-path gaps the 2026-09-18 sweep found — **FIXED 2026-09-18** ✔
+
+> All five found by the sweep's security and correctness lenses and confirmed
+> by running; each fix has a test shown failing against the old code.
+>
+> - **NaN coordinates.** DRF's `FloatField` accepts `"nan"` — every
+>   comparison with NaN is false, so `min_value`/`max_value` let it through.
+>   On SQLite the insert failed (500); on Postgres a NaN would be stored and
+>   every response carrying it would fail to render, `/api/map/features/`
+>   included, for every visitor. `common/coordinates.py::CoordinateField` is
+>   now the one coordinate field (pins, feste's route, reports).
+> - **A translation published before its original** showed the Italian
+>   draft's title, photographs and place to everyone (T5). Every type's update
+>   path calls `content/api_helpers.py::require_original_published`. Not
+>   covered: unpublishing an original leaves its published translations up.
+> - **A stop whose pin was removed** made every save of its tour fail with 400:
+>   the read side fell back to the first pin but returned the stale
+>   `point_index`, and the form sent it back. It now reads as `null`.
+> - **The tours list cost two queries per tour** (19 for six): the route read
+>   with `.filter()` past the prefetch, and the translation group was never
+>   prefetched. Constant now (9), and a test counts it.
+> - **A malformed `remove_image_ids`** (`["a"]`, an object, a boolean) was a
+>   500 from the ORM. Now a 400 on that field; ids as numbers or digit
+>   strings, as the SPA sends them.
+

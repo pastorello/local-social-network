@@ -380,3 +380,49 @@ def test_the_tour_model_reads_as_its_title():
     intent = Intent.objects.get(slug='mare')
     assert str(intent) == 'Andare al mare'
     assert Itinerario._meta.verbose_name_plural == 'itinerari'
+
+
+# --- the list does not cost a query per tour ---
+
+
+def test_the_list_costs_the_same_queries_for_one_tour_or_six(api_client, citizen, places):
+    from django.db import connection
+    from django.test.utils import CaptureQueriesContext
+
+    def make_tour(n):
+        card = _card(citizen, f'Giro {n}')
+        tour = Itinerario.objects.create(card=card, form=Itinerario.PERCORSO)
+        Stop.objects.create(itinerario=tour, position=0, card=places['chiesa'])
+        MapFeature.objects.create(card=card, kind=MapFeature.ROUTE, position=0, lat=41.21, lng=13.57)
+
+    def count():
+        with CaptureQueriesContext(connection) as queries:
+            assert api_client.get('/api/itinerari/').status_code == 200
+        return len(queries)
+
+    make_tour(0)
+    one = count()
+    for n in range(1, 6):
+        make_tour(n)
+
+    assert count() == one
+
+
+def test_a_stop_whose_pin_was_removed_does_not_lock_the_tour(auth_client, places):
+    stops = [{'card': str(places['tiella'].pk), 'point_index': 1}]
+    tour_id = auth_client.post('/api/itinerari/', payload(stops)).json()['id']
+    # The recipe's author removes the second bakery.
+    MapFeature.objects.filter(card=places['tiella'], position=1).delete()
+
+    stop = auth_client.get(f'/api/itinerari/{tour_id}/').json()['stops'][0]
+    assert stop['point_index'] is None
+    assert stop['point']['label'] == 'Forno A'
+
+    # What the form sends back is what it was given; the save must go through.
+    resend = [{'card': stop['card'], 'point_index': stop['point_index']}]
+    response = auth_client.patch(
+        f'/api/itinerari/{tour_id}/',
+        {'title': 'Nuovo titolo', 'stops': json.dumps(resend)},
+        format='multipart',
+    )
+    assert response.status_code == 200
