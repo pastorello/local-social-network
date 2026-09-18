@@ -73,8 +73,15 @@ const controlsLeft = computed(() =>
 )
 
 const onPinClick = (id: string) => router.push(`/reports/${id}`)
-const onFeatureClick = (feature: { type: string; id: string }) =>
+// While an itinerary picks its stops (spec itinerari.md I8), a card's pin
+// becomes the next stop instead of opening the card.
+const onFeatureClick = (feature: { type: string; id: string }) => {
+  if (mapStore.editor?.kind === 'stops') {
+    mapStore.editorPick(feature)
+    return
+  }
   router.push(layerRoute(feature.type, feature.id))
+}
 const onMapClick = (coords: { lat: number; lng: number }) => {
   // A form drawing on the map takes the click (D19); otherwise it is a report
   // being placed.

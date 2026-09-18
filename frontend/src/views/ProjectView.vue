@@ -41,6 +41,7 @@ const heading = 'mb-3 text-xs font-semibold tracking-[0.12em] text-muted upperca
         <h2 :class="heading">Esplora</h2>
         <ul class="space-y-2 text-sm">
           <li><RouterLink to="/" :class="link">Mappa</RouterLink></li>
+          <li><RouterLink to="/itinerari" :class="link">Itinerari</RouterLink></li>
           <li><RouterLink to="/polls" :class="link">Sondaggi</RouterLink></li>
         </ul>
       </nav>

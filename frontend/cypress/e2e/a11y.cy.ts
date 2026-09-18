@@ -131,6 +131,28 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
     check('/il-progetto')
   })
 
+  // The guest's path (spec itinerari.md I6/I7): the page a B&B's card points
+  // at, a tour, and a tour followed one stop at a time.
+  it('the welcome page, on a phone — where a guest arrives from a QR code', () => {
+    cy.viewport(390, 844)
+    cy.visit('/benvenuto')
+    cy.contains('h1', 'Che cosa ti va di fare?')
+
+    check('/benvenuto')
+  })
+
+  it('a tour, and one of its stops', () => {
+    cy.viewport(1280, 800)
+    cy.visit('/itinerari')
+    cy.contains('a', 'Itinerario E2E').click()
+    cy.contains('h1', 'Itinerario E2E')
+    check('/itinerari/:id')
+
+    cy.contains('button', 'Inizia il tour').click()
+    cy.contains('Tappa 1 di 2')
+    check('/itinerari/:id?tappa=1')
+  })
+
   it('the public request form, where a would-be collaborator arrives', () => {
     cy.viewport(1280, 800)
     cy.visit('/collabora')
@@ -217,6 +239,19 @@ describe("the collaborator's surfaces meet WCAG 2.1 AA", { testIsolation: false 
     cy.get('[role="status"]').should('contain', 'Clicca sulla mappa')
 
     check('/chiese/nuova (mappa)')
+  })
+
+  // The tour form's stops tab lends the map a stops editor (itinerari.md I8);
+  // the stops list and its keyboard picker are measured with a stop in it.
+  it('the tour form, with a stop picked', () => {
+    cy.visit('/itinerari/nuovo')
+    cy.get('#tour-title').should('exist')
+    cy.contains('[role="tab"]', 'Tappe').click()
+    cy.get('#stop-pick').select(PUBLISHED)
+    cy.contains('button', 'Aggiungi tappa').click()
+    cy.get('#stop-note-0').should('exist')
+
+    check('/itinerari/nuovo (tappe)')
   })
 
   // The images strip only exists once there are images, so the gate never saw

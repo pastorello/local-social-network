@@ -53,12 +53,13 @@ describe('the menu (spec/design.md D14)', () => {
     delete window.matchMedia
   })
 
-  it('is Mappa, Schede, Il progetto and Accedi — and not the polls, nor a search', async () => {
+  it('is Mappa, Schede, Itinerari, Il progetto and Accedi — not the polls, nor a search', async () => {
     const wrapper = await mountHeader()
     const nav = wrapper.get('nav[aria-label="Principale"]')
 
     expect(nav.text()).toContain('Mappa')
     expect(nav.text()).toContain('Schede')
+    expect(nav.find('a[href="/itinerari"]').text()).toBe('Itinerari')
     expect(nav.find('a[href="/il-progetto"]').exists()).toBe(true)
     expect(nav.find('a[href="/login"]').text()).toBe('Accedi')
     expect(nav.find('a[href="/polls"]').exists()).toBe(false)
@@ -99,6 +100,7 @@ describe('the menu (spec/design.md D14)', () => {
     expect(wrapper.find('a[href="/il-progetto"]').exists()).toBe(false)
     await wrapper.get('button[aria-label="Menu"]').trigger('click')
 
+    expect(wrapper.find('a[href="/itinerari"]').exists()).toBe(true)
     expect(wrapper.find('a[href="/il-progetto"]').exists()).toBe(true)
     expect(wrapper.find('a[href="/login"]').exists()).toBe(true)
   })

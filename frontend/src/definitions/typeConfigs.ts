@@ -16,6 +16,8 @@ export interface FieldConfig {
 export interface ListFilterConfig {
   param: string
   optionsEndpoint: string
+  // What the filter is, for its accessible name ("Filtra luoghi per genere").
+  label: string
   // Types that belong under the same heading for the reader without being
   // stored as this type (spec content.md: the churches under "Luoghi").
   related?: { label: string; to: string }[]
@@ -151,7 +153,26 @@ export const luogoConfig: TypeConfig = {
   listFilter: {
     param: 'genere',
     optionsEndpoint: '/api/luoghi/generi/',
+    label: 'Filtra luoghi per genere',
     related: [{ label: 'Chiese', to: '/chiese' }],
+  },
+}
+
+// Curated tours (spec itinerari.md). Their list is the generic one, narrowed by
+// intent; their detail, form and guided mode are their own views, because a
+// tour's stops are cards and do not fit TypeForm's field list.
+export const itinerarioConfig: TypeConfig = {
+  key: 'itinerari',
+  label: 'Itinerari',
+  singularLabel: 'itinerario',
+  endpoint: '/api/itinerari/',
+  routeNames: { list: 'itinerarilist', detail: 'itinerariodetail', create: 'itinerariocreate' },
+  extraFields: [{ key: 'duration', label: 'Durata indicativa', kind: 'input' }],
+  mapMode: 'none',
+  listFilter: {
+    param: 'intento',
+    optionsEndpoint: '/api/itinerari/intenti/',
+    label: 'Filtra itinerari per intento',
   },
 }
 

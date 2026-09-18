@@ -19,6 +19,7 @@ from account.models import CollaborationRequest, User
 from chiese.models import Chiesa
 from content.models import Card, MapFeature
 from feste.models import Feste
+from itinerari.models import Intent, Itinerario, Stop
 from maps.models import Overlay
 from polls.models import Poll, PollOption, Vote
 from reports.models import Category, IssueReport, Upvote
@@ -35,6 +36,7 @@ GAETA_LNG = 13.5625165
 PUBLISHED_CHIESA = 'Chiesa E2E pubblicata'
 DRAFT_CHIESA = 'Chiesa E2E in bozza'
 PUBLISHED_FESTA = 'Festa E2E pubblicata'
+PUBLISHED_TOUR = 'Itinerario E2E'
 PUBLIC_OVERLAY = 'Quartieri E2E'
 STEERING_OVERLAY = 'Seggi E2E'
 # The v1 flows (TD-04): a report somebody *else* filed, so supporting one is
@@ -102,6 +104,21 @@ class Command(BaseCommand):
                 for index in range(3)
             ])
 
+        # A percorso through the two published cards, under "Scoprire la
+        # città", so `itinerari.cy.ts` can walk the B&B's journey (spec
+        # itinerari.md I6/I7): welcome page, intent, tour, one stop at a time.
+        # The stops are reset every run, so a stray edit cannot reorder them.
+        tour_card = self._card(PUBLISHED_TOUR, collaborator, is_published=True)
+        tour, _ = Itinerario.objects.get_or_create(
+            card=tour_card, defaults={'form': Itinerario.PERCORSO, 'duration': 'Un’ora'}
+        )
+        tour.intents.set(Intent.objects.filter(slug='citta'))
+        tour.stops.all().delete()
+        Stop.objects.bulk_create([
+            Stop(itinerario=tour, position=0, card=published),
+            Stop(itinerario=tour, position=1, card=festa, note='Si segue la processione.'),
+        ])
+
         # The pair the overlay gate is asserted on: a reader must be offered the
         # first and must not learn that the second exists (ADR-0006).
         Overlay.objects.update_or_create(
@@ -149,7 +166,7 @@ class Command(BaseCommand):
             )
 
         self.stdout.write(self.style.SUCCESS(
-            f'Seeded: {collaborator.email}, {admin.email}, 2 published cards, 1 draft, '
+            f'Seeded: {collaborator.email}, {admin.email}, 2 published cards, 1 draft, 1 tour, '
             f'2 overlays, 1 report ({report.upvotes_count} upvotes), 1 open poll; '
             f'cleared {removed} card(s) and every trace of previous v1 runs.'
         ))
@@ -170,7 +187,7 @@ class Command(BaseCommand):
         rule is simply: keep the fixtures, drop the rest.
         """
         leftovers = Card.objects.filter(author=collaborator).exclude(
-            title__in=(PUBLISHED_CHIESA, DRAFT_CHIESA, PUBLISHED_FESTA)
+            title__in=(PUBLISHED_CHIESA, DRAFT_CHIESA, PUBLISHED_FESTA, PUBLISHED_TOUR)
         )
         count = leftovers.count()
         leftovers.delete()

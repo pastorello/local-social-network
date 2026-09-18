@@ -41,6 +41,7 @@ describe('Il progetto', () => {
 
     expect(hrefs).toContain('/polls')
     expect(hrefs).toContain('/collabora')
+    expect(hrefs).toContain('/itinerari')
   })
 
   it('states the editorial rule (D10) rather than showing a sponsor slot (D12)', async () => {
