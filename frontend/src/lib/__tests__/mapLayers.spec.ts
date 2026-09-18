@@ -4,12 +4,14 @@ import { CARD_LAYERS, layerRoute } from '../mapLayers'
 
 describe('mapLayers', () => {
   it('covers exactly the card types the spec gives a map footprint', () => {
-    // dialetto is deliberately absent (spec map.md M2: "none").
+    // dialetto and libri are deliberately absent (spec content.md: "none");
+    // luoghi has one fixed pin, like a church (spec content.md, 2026-09-11).
     expect(CARD_LAYERS.map((layer) => layer.key)).toEqual([
       'chiese',
       'feste',
       'ricette',
       'personaggi',
+      'luoghi',
     ])
   })
 

@@ -16,6 +16,7 @@ const makeRouter = () =>
       { path: '/polls', name: 'polls', component: stub },
       { path: '/collabora', name: 'collabora', component: stub },
       { path: '/feste', name: 'festelist', component: stub },
+      { path: '/luoghi', name: 'luoghilist', component: stub },
       { path: '/chiese', name: 'chieselist', component: stub },
       { path: '/ricette', name: 'ricettelist', component: stub },
       { path: '/personaggi', name: 'personaggilist', component: stub },
@@ -36,7 +37,15 @@ describe('AppFooter', () => {
     const wrapper = await mountFooter()
     const hrefs = wrapper.findAll('a').map((a) => a.attributes('href'))
 
-    for (const path of ['/feste', '/chiese', '/ricette', '/personaggi', '/dialetto', '/libri']) {
+    for (const path of [
+      '/feste',
+      '/luoghi',
+      '/chiese',
+      '/ricette',
+      '/personaggi',
+      '/dialetto',
+      '/libri',
+    ]) {
       expect(hrefs).toContain(path)
     }
   })

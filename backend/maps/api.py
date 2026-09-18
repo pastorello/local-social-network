@@ -8,9 +8,9 @@ from .models import Overlay
 from .serializers import OverlaySerializer
 
 # Reverse OneToOne accessor -> the key the SPA uses for the layer and for the
-# card's own route (`/chiese/<id>`). dialetto is absent on purpose: the spec's
-# footprint table gives it none, so a Termine never reaches this endpoint.
-CARD_TYPES = ('feste', 'chiese', 'ricette', 'personaggi')
+# card's own route (`/chiese/<id>`). dialetto and libri are absent on purpose:
+# the spec's footprint table gives them none, so they never reach this endpoint.
+CARD_TYPES = ('feste', 'chiese', 'ricette', 'personaggi', 'luoghi')
 
 
 def _card_type(card):

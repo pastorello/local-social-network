@@ -291,8 +291,9 @@ is the author's call:
   each leg handed off to Google Maps through a plain link. Still **its own
   phase, immediately after the layout** — and it needs a seventh card type
   first, **luoghi** (beaches, the castle, monuments, museums: see
-  [spec/content.md](./spec/content.md)), since every stop is a card. Luoghi
-  depends on nothing and could be built on its own at any time.
+  [spec/content.md](./spec/content.md)), since every stop is a card —
+  **built 2026-09-18**, the first item of the queue the author handed over
+  that day.
 
 - **Geolocation** — "you are here" plus what is around you while walking
   Gaeta. The author wants it and it fits the product; it is a **feature, not a

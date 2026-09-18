@@ -1,8 +1,24 @@
 export interface FieldConfig {
   key: string
   label: string
-  kind: 'input' | 'textarea'
+  // 'select' reads its choices from `optionsEndpoint` — an admin-managed list
+  // (luoghi's genres), so the choices are data, not code.
+  kind: 'input' | 'textarea' | 'select'
   placeholder?: string
+  optionsEndpoint?: string
+  // What the reader sees in place of the stored value, where the two differ:
+  // a genre is stored as a slug and read as its name.
+  displayKey?: string
+}
+
+// A list that can be narrowed to one value of a field — luoghi by genre, read
+// from the URL so a heading elsewhere can link straight to "Spiagge".
+export interface ListFilterConfig {
+  param: string
+  optionsEndpoint: string
+  // Types that belong under the same heading for the reader without being
+  // stored as this type (spec content.md: the churches under "Luoghi").
+  related?: { label: string; to: string }[]
 }
 
 export interface TypeConfig {
@@ -21,6 +37,7 @@ export interface TypeConfig {
   imagesHint?: string
   mapMode: 'none' | 'pins'
   maxPoints?: number
+  listFilter?: ListFilterConfig
 }
 
 export const chiesaConfig: TypeConfig = {
@@ -106,7 +123,40 @@ export const libroConfig: TypeConfig = {
   mapMode: 'none',
 }
 
+export const luogoConfig: TypeConfig = {
+  key: 'luoghi',
+  label: 'Luoghi',
+  singularLabel: 'luogo',
+  endpoint: '/api/luoghi/',
+  routeNames: { list: 'luoghilist', detail: 'luoghidetail', create: 'luoghicreate' },
+  titlePlaceholder: 'Es. Spiaggia di Serapo',
+  extraFields: [
+    {
+      key: 'genre',
+      label: 'Genere',
+      kind: 'select',
+      placeholder: 'Scegli un genere',
+      optionsEndpoint: '/api/luoghi/generi/',
+      displayKey: 'genre_label',
+    },
+    {
+      key: 'how_to_get_there',
+      label: 'Come arrivarci',
+      kind: 'textarea',
+      placeholder: 'Es. A piedi dal centro; in auto, parcheggio sulla Flacca...',
+    },
+  ],
+  mapMode: 'pins',
+  maxPoints: 1,
+  listFilter: {
+    param: 'genere',
+    optionsEndpoint: '/api/luoghi/generi/',
+    related: [{ label: 'Chiese', to: '/chiese' }],
+  },
+}
+
 export const typeConfigs: TypeConfig[] = [
+  luogoConfig,
   chiesaConfig,
   ricettaConfig,
   personaggioConfig,

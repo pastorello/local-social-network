@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import axios from 'axios'
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 
 import { useToastStore } from '@/stores/toast'
 import type { TypeConfig } from '@/definitions/typeConfigs'
@@ -52,6 +52,23 @@ const formErrors = ref<string[]>([])
 // about (ADR-0005) instead of only at the bottom of the form.
 const fieldErrors = ref<Record<string, string[]>>({})
 const submitting = ref(false)
+
+// A 'select' field's choices come from the API, not from the config: luoghi's
+// genres are an admin-managed list (spec content.md). Every options endpoint
+// answers with `{slug, name}` rows.
+const selectOptions = reactive<Record<string, { slug: string; name: string }[]>>({})
+
+onMounted(async () => {
+  for (const field of props.config.extraFields) {
+    if (field.kind !== 'select' || !field.optionsEndpoint) continue
+    try {
+      const response = await axios.get<{ slug: string; name: string }[]>(field.optionsEndpoint)
+      selectOptions[field.key] = response.data
+    } catch {
+      formErrors.value.push(`Non è stato possibile caricare le scelte per «${field.label}».`)
+    }
+  }
+})
 
 const submitForm = async () => {
   formErrors.value = []
@@ -158,6 +175,24 @@ const submitForm = async () => {
             :aria-describedby="describedBy"
             :placeholder="field.placeholder"
           />
+          <select
+            v-else-if="field.kind === 'select'"
+            :id="`type-form-${field.key}`"
+            v-model="extraValues[field.key]"
+            :aria-describedby="describedBy"
+            :aria-invalid="invalid || undefined"
+            class="w-full rounded-lg border bg-surface px-4 py-3 text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+            :class="invalid ? 'border-status-open' : 'border-field'"
+          >
+            <option value="" disabled>{{ field.placeholder ?? 'Scegli' }}</option>
+            <option
+              v-for="option in selectOptions[field.key] ?? []"
+              :key="option.slug"
+              :value="option.slug"
+            >
+              {{ option.name }}
+            </option>
+          </select>
           <textarea
             v-else
             :id="`type-form-${field.key}`"
