@@ -6,6 +6,7 @@ import {
   libroConfig,
   personaggioConfig,
   ricettaConfig,
+  luogoConfig,
 } from '../definitions/typeConfigs'
 
 const router = createRouter({
@@ -175,6 +176,27 @@ const router = createRouter({
       name: dialettoConfig.routeNames.detail,
       component: () => import('../views/TypeDetailView.vue'),
       props: { config: dialettoConfig },
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/luoghi',
+      name: luogoConfig.routeNames.list,
+      component: () => import('../views/TypeListView.vue'),
+      props: { config: luogoConfig },
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/luoghi/nuovo',
+      name: luogoConfig.routeNames.create,
+      component: () => import('../views/TypeCreateView.vue'),
+      props: { config: luogoConfig },
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/luoghi/:id',
+      name: luogoConfig.routeNames.detail,
+      component: () => import('../views/TypeDetailView.vue'),
+      props: { config: luogoConfig },
       meta: { requiresAuth: false },
     },
     {

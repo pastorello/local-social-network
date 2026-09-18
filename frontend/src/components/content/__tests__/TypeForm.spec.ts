@@ -8,6 +8,7 @@ import {
   chiesaConfig,
   dialettoConfig,
   libroConfig,
+  luogoConfig,
   personaggioConfig,
   ricettaConfig,
 } from '@/definitions/typeConfigs'
@@ -43,6 +44,7 @@ describe.each([
   ['personaggi', personaggioConfig],
   ['dialetto', dialettoConfig],
   ['libri', libroConfig],
+  ['luoghi', luogoConfig],
 ])('TypeForm (%s)', (_key, config) => {
   it('renders the create-mode fields and button copy', () => {
     const wrapper = mount(TypeForm, {
@@ -164,5 +166,66 @@ describe('the per-type images rule', () => {
     })
 
     expect(wrapper.get('#type-form-images-hint').text()).not.toContain('editore')
+  })
+})
+
+// luoghi's genre is a choice from an admin-managed list (spec content.md), so
+// the form reads its options from the API instead of from the config.
+describe('the genre choice (luoghi)', () => {
+  const genres = [
+    { slug: 'spiaggia', name: 'Spiaggia', name_plural: 'Spiagge', count: 7 },
+    { slug: 'castello', name: 'Castello', name_plural: 'Castelli', count: 1 },
+  ]
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(axios.get).mockResolvedValue({ data: genres })
+  })
+
+  it('offers the genres the API returns, behind a placeholder that cannot be chosen', async () => {
+    const wrapper = mount(TypeForm, {
+      props: { config: luogoConfig },
+      global: { plugins: [createPinia()], stubs: globalStubs },
+    })
+    await flushPromises()
+
+    expect(axios.get).toHaveBeenCalledWith('/api/luoghi/generi/')
+    const options = wrapper.findAll('#type-form-genre option')
+    expect(options.map((option) => option.text())).toEqual([
+      'Scegli un genere',
+      'Spiaggia',
+      'Castello',
+    ])
+    expect(options[0]!.attributes('disabled')).toBeDefined()
+    // The select is labelled like every other field (ADR-0005).
+    expect(wrapper.get('label[for="type-form-genre"]').text()).toContain('Genere')
+  })
+
+  it('sends the chosen genre as its slug', async () => {
+    vi.mocked(axios.post).mockResolvedValue({ data: { id: 'new' } })
+    const wrapper = mount(TypeForm, {
+      props: { config: luogoConfig },
+      global: { plugins: [createPinia()], stubs: globalStubs },
+    })
+    await flushPromises()
+
+    await wrapper.get('#type-form-title').setValue('Spiaggia di Serapo')
+    wrapper.findComponent({ name: 'RichTextEditor' }).vm.$emit('update:modelValue', '<p>Testo.</p>')
+    await wrapper.get('#type-form-genre').setValue('spiaggia')
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+
+    const body = vi.mocked(axios.post).mock.calls[0]![1] as FormData
+    expect(body.get('genre')).toBe('spiaggia')
+  })
+
+  it('pre-selects the stored genre when editing', async () => {
+    const wrapper = mount(TypeForm, {
+      props: { config: luogoConfig, item: { ...baseItem, genre: 'castello' } },
+      global: { plugins: [createPinia()], stubs: globalStubs },
+    })
+    await flushPromises()
+
+    expect((wrapper.get('#type-form-genre').element as HTMLSelectElement).value).toBe('castello')
   })
 })

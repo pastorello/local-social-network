@@ -122,7 +122,9 @@ watch(
                 >
                   {{ field.label }}
                 </dt>
-                <dd class="whitespace-pre-line text-ink">{{ item![field.key] }}</dd>
+                <dd class="whitespace-pre-line text-ink">
+                  {{ item![field.displayKey ?? field.key] }}
+                </dd>
               </div>
             </dl>
           </template>

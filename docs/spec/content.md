@@ -40,7 +40,7 @@ Each type is a **thin app** adding only its fields on top of the core.
 | **Personaggi storici** | life dates | optional pins (birthplace, monument) |
 | **Dialetto** | meaning, example usage | none |
 | **Libri consigliati** | book author, year, publisher | none |
-| **Luoghi** *(specified 2026-09-11, not built)* | genre (admin-managed), how to get there | one fixed pin |
+| **Luoghi** | genre (admin-managed), how to get there | one fixed pin |
 | **Itinerari** *(specified 2026-09-11, not built)* | form, indicative duration, intents; ordered stops, each a card | a drawn path and numbered stops — see [itinerari.md](./itinerari.md) |
 
 The bar: **a sixth type costs days, not a module.** The fifth was invented
@@ -190,7 +190,7 @@ C3 bought. 23 backend tests, all of them derived from dialetto's.
 The one thing that was not a copy is the **field name**. `book_author` next to
 `Card.author` is ugly on purpose — see the table above.
 
-## The seventh type: luoghi — 2026-09-11, specified, not built
+## The seventh type: luoghi — specified 2026-09-11, **built 2026-09-18**
 
 The places a visitor goes that are not churches: the beaches, the castle, the
 monuments, the museums, the viewpoints, the walks on Monte Orlando. It exists
@@ -253,6 +253,34 @@ is a new token, checked against D9 like every other.
 **Beaches are the seven places, not the businesses on them**: Serapo,
 Fontania, Quaranta Remi, Ariana, San Vito, Arenauta, Sant'Agostino. No beach
 clubs — the archive lists places, and a *stabilimento* is a business.
+
+### What the build decided — 2026-09-18
+
+Details the spec above left to whoever built it, recorded so they are not
+re-argued:
+
+- **The genres are a model, not choices in code** — `luoghi.Genre`, seeded by a
+  data migration with the eight rows of the table above (each migration row
+  notes its Google place type), editable and reorderable in Django admin. A
+  genre still in use cannot be deleted (`PROTECT`).
+- **A genre is addressed by its slug** — `spiaggia`, `luogo-storico` — on the
+  wire and in the SPA's URLs, not by its UUID: `/luoghi?genere=spiaggia` is a
+  link a person can read. `GET /api/luoghi/generi/` returns every genre in the
+  admin's order with the count of published places carrying it.
+- **The reader's headings are a filter on the list.** `/luoghi` shows one chip
+  per genre that has something in it (an empty heading is noise; the active one
+  always stays), *Tutti*, and **a *Chiese* chip that links to `/chiese`** —
+  that is the "churches grouped under Luoghi" of the decision above, on the
+  surface where a reader actually chooses. The page's heading becomes the
+  genre's plural (*Spiagge*).
+- **The menu does not carry the genres yet.** *Luoghi* sits right above
+  *Chiese* in the Schede menu and in the footer; the full *Luoghi* heading with
+  its genres belongs to the menu design.md D14 redraws, rather than to a menu
+  that is about to be replaced.
+- **A translation shows its original's genre**, as it shows its original's pin
+  (translations.md T5): what kind of place it is belongs to the place.
+- **The layer colour is magenta**, `--color-layer-luoghi: #be185d` — the one hue
+  family no other layer used; 5.65:1 on the page ground, 6.04:1 on white.
 
 ### Why this is not `tradizioni` again
 

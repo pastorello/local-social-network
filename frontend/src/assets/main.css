@@ -114,6 +114,9 @@
   --color-layer-feste: #b45309;
   --color-layer-ricette: #15803d;
   --color-layer-personaggi: #7e22ce;
+  /* luoghi (2026-09-18): magenta, the one hue family no other layer uses —
+     5.65 on page, 6.04 on white, so a pin clears 1.4.11's 3:1 with room. */
+  --color-layer-luoghi: #be185d;
   --color-layer-unknown: #6b7280;
 
   @keyframes fadeInUp {

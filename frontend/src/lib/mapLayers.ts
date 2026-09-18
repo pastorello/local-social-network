@@ -1,9 +1,9 @@
 import { readToken } from './tokens'
 
 // The reader-toggleable layers of the home map (spec map.md M2): one per
-// content type that has a footprint, plus the v1 reports layer. dialetto is
-// absent by design — the spec gives it no place, so it is reached from the
-// menu instead.
+// content type that has a footprint, plus the v1 reports layer. dialetto and
+// libri are absent by design — the spec gives them no place, so they are
+// reached from the menu instead.
 //
 // `key` matches both the API's `type` key in /api/map/features/ and the
 // card's own route path, so a pin knows where it links without a lookup
@@ -46,6 +46,13 @@ export const CARD_LAYERS: MapLayer[] = [
     token: '--color-layer-personaggi',
     fallback: '#7e22ce',
     route: '/personaggi',
+  },
+  {
+    key: 'luoghi',
+    label: 'Luoghi',
+    token: '--color-layer-luoghi',
+    fallback: '#be185d',
+    route: '/luoghi',
   },
 ]
 

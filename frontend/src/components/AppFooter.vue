@@ -9,6 +9,7 @@ const year = new Date().getFullYear()
 
 const schede = [
   { to: '/feste', label: 'Feste' },
+  { to: '/luoghi', label: 'Luoghi' },
   { to: '/chiese', label: 'Chiese' },
   { to: '/ricette', label: 'Ricette' },
   { to: '/personaggi', label: 'Personaggi storici' },

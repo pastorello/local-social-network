@@ -138,6 +138,7 @@ INSTALLED_APPS = [
     'personaggi',
     'dialetto',
     'libri',
+    'luoghi',
     'maps',
     'polls',
     'reports',
