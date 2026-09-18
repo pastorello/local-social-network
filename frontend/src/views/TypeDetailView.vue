@@ -7,7 +7,6 @@ import PanelBox from '@/components/boxes/PanelBox.vue'
 import ViewContainer from '@/components/boxes/ViewContainer.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import CardArticle from '@/components/content/CardArticle.vue'
-import MapPinsEditor from '@/components/content/MapPinsEditor.vue'
 import { useIsDesktop } from '@/composables/useBreakpoint'
 import { useMapFocus } from '@/composables/useMapFocus'
 import { useMapStore } from '@/stores/map'
@@ -148,17 +147,15 @@ watch(
           <template #map>
             <section v-if="config.mapMode === 'pins' && pins.length > 0" class="mb-10">
               <h2 class="mb-3 font-display text-title text-ink">Dove si trova</h2>
-              <!-- On a wide screen the map is beside the panel, already showing
-              the place (D16) — a second map inside the panel would be a map
-              over a map. On a phone the panel is the whole screen, so the
-              card keeps its own. -->
-              <template v-if="isDesktop">
-                <p class="text-muted">È evidenziato sulla mappa, qui accanto.</p>
-                <ul v-if="labelledPins.length" class="mt-3 list-disc space-y-1 pl-5 text-ink">
-                  <li v-for="(pin, index) in labelledPins" :key="index">{{ pin.label }}</li>
-                </ul>
-              </template>
-              <MapPinsEditor v-else :model-value="pins" :max="config.maxPoints ?? 1" readonly />
+              <!-- The map is beside the panel on a wide screen and in the
+              strip above it on a phone, already showing the place (D16/D18) —
+              a second map inside the panel would be a map over a map. -->
+              <p class="text-muted">
+                È evidenziato sulla mappa, {{ isDesktop ? 'qui accanto' : 'qui sopra' }}.
+              </p>
+              <ul v-if="labelledPins.length" class="mt-3 list-disc space-y-1 pl-5 text-ink">
+                <li v-for="(pin, index) in labelledPins" :key="index">{{ pin.label }}</li>
+              </ul>
             </section>
           </template>
 

@@ -8,14 +8,27 @@ import { useIsDesktop } from '@/composables/useBreakpoint'
 // own URL, so a shared link to a card opens the map *and* the card. Two
 // shapes on a wide screen (D17): a narrow panel on the right for a card with a
 // place, because the map beside it is showing that place (D16); a wide,
-// centred reading panel over a veiled map for everything else. On a phone
-// every panel is the whole screen.
+// centred reading panel over a veiled map for everything else.
+//
+// On a phone (D18) a page is the whole screen — except a card with a place,
+// which leaves a strip of the map at its head, already centred on the place.
+// The strip is the same map, not a second one: the panel simply starts below
+// it. Tapping "Allarga la mappa" gives the map the whole screen, with "Torna
+// alla scheda" to come back; that state is in the URL (`?mappa=1`), so Back
+// undoes it like any other step.
 const props = defineProps<{ shape: 'narrow' | 'wide' }>()
 
 const router = useRouter()
 const route = useRoute()
 const { isDesktop } = useIsDesktop()
 const panel = ref<HTMLElement | null>(null)
+const expandButton = ref<HTMLButtonElement | null>(null)
+const collapseButton = ref<HTMLButtonElement | null>(null)
+
+const narrow = computed(() => isDesktop.value && props.shape === 'narrow')
+// The phone's card with a place: a strip of the map above the article.
+const withStrip = computed(() => !isDesktop.value && props.shape === 'narrow')
+const expanded = computed(() => withStrip.value && route.query.mappa === '1')
 
 // A page that opens over the map takes the reader's focus with it (D15):
 // otherwise it stays on the link that opened it, which is now under the panel,
@@ -28,7 +41,13 @@ const takeFocus = async () => {
 onMounted(takeFocus)
 watch(() => route.path, takeFocus)
 
-const narrow = computed(() => isDesktop.value && props.shape === 'narrow')
+// Expanding and collapsing move focus to the control that undoes them: the
+// button that was pressed has just disappeared.
+watch(expanded, async (isExpanded) => {
+  await nextTick()
+  if (isExpanded) collapseButton.value?.focus()
+  else expandButton.value?.focus()
+})
 
 // Back to where the reader came from — which, for someone who opened the card
 // from the map, is the map. A deep link has no "back" inside the app, so it
@@ -36,6 +55,18 @@ const narrow = computed(() => isDesktop.value && props.shape === 'narrow')
 const close = () => {
   if (window.history.state?.back) router.back()
   else router.push('/')
+}
+
+const expand = () => router.push({ query: { ...route.query, mappa: '1' } })
+
+// Back when the expanded map was one step of this visit; a link shared with
+// `?mappa=1` has no step to go back to, so the query is dropped in place.
+const collapse = () => {
+  const withoutMap = { ...route.query }
+  delete withoutMap.mappa
+  const back = window.history.state?.back as string | undefined
+  if (back && back.split('?')[0] === route.path) router.back()
+  else router.replace({ query: withoutMap })
 }
 
 // Escape closes the panel, unless the reader is typing: Escape inside a field
@@ -46,6 +77,9 @@ const onKeydown = (event: KeyboardEvent) => {
   if (target?.closest('input, textarea, select, [contenteditable="true"]')) return
   close()
 }
+
+const pill =
+  'pointer-events-auto flex h-11 cursor-pointer items-center gap-2 rounded-full border border-hairline bg-surface px-4 text-sm font-semibold text-ink shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea'
 </script>
 
 <template>
@@ -56,16 +90,52 @@ const onKeydown = (event: KeyboardEvent) => {
     aria-hidden="true"
   ></div>
 
+  <!-- The phone's strip: the map shows through above the article. -->
+  <button
+    v-if="withStrip && !expanded"
+    ref="expandButton"
+    type="button"
+    :class="[pill, 'absolute top-[8.5rem] right-3']"
+    @click="expand"
+  >
+    <svg
+      viewBox="0 0 20 20"
+      class="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.6"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M11.5 3.5h5v5M8.5 16.5h-5v-5M16.5 3.5l-5 5M3.5 16.5l5-5" />
+    </svg>
+    Allarga la mappa
+  </button>
+  <button
+    v-if="expanded"
+    ref="collapseButton"
+    type="button"
+    :class="[pill, 'absolute right-3 bottom-4 left-3 justify-center']"
+    @click="collapse"
+    @keydown.esc="collapse"
+  >
+    Torna alla scheda
+  </button>
+
   <section
+    v-show="!expanded"
     ref="panel"
     tabindex="-1"
     class="pointer-events-auto absolute flex flex-col overflow-hidden bg-page focus:outline-none"
     :class="
-      !isDesktop
-        ? 'inset-0'
-        : narrow
-          ? 'top-4 right-4 bottom-4 w-[35rem] rounded-2xl border border-hairline shadow-[0_18px_40px_-16px_rgba(31,41,51,0.45)]'
-          : 'top-4 bottom-4 left-1/2 w-[min(50.5rem,calc(100%-2rem))] -translate-x-1/2 rounded-2xl border border-hairline shadow-[0_18px_40px_-16px_rgba(31,41,51,0.45)]'
+      withStrip
+        ? 'inset-x-0 top-[11.25rem] bottom-0 rounded-t-2xl shadow-[0_-8px_24px_-12px_rgba(31,41,51,0.45)]'
+        : !isDesktop
+          ? 'inset-0'
+          : narrow
+            ? 'top-4 right-4 bottom-4 w-[35rem] rounded-2xl border border-hairline shadow-[0_18px_40px_-16px_rgba(31,41,51,0.45)]'
+            : 'top-4 bottom-4 left-1/2 w-[min(50.5rem,calc(100%-2rem))] -translate-x-1/2 rounded-2xl border border-hairline shadow-[0_18px_40px_-16px_rgba(31,41,51,0.45)]'
     "
     @keydown="onKeydown"
   >

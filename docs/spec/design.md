@@ -311,9 +311,9 @@ more than the frame is a decision for the build (see below).
 ## The map under every page
 
 > **Decided 2026-09-11. Built in part:** D13, D15, D16 and D17 on 2026-09-18,
-> then D14, D20 and D21 the same day (see "What the first build decided" and
-> "The menu, the list, the credits" at the end of this section); D18 and D19
-> not yet. The confirmed output of a brainstorming
+> then D14, D20, D21 and D18 the same day (see "What the first build
+> decided", "The menu, the list, the credits" and "The phone's strip" at the
+> end of this section); D19 not yet. The confirmed output of a brainstorming
 > session with the author, produced the way the rest of this file was: one
 > question at a time, a committed guess and the strongest case against it.
 > Each requirement below records the counter-case that lost, because that is
@@ -588,4 +588,25 @@ the polls are reached from:
   carried — the one-line description, the card types, the polls, *Collabora
   con noi*, the editorial rule — and no invented endorsement. There is no
   footer anywhere now.
+
+### The phone's strip — built 2026-09-18
+
+D18 as specified, and what the build had to decide:
+
+- **The strip is the page's gap, not a second map.** On a phone a card with a
+  place (`meta.panel: 'narrow'`) opens as a panel that starts 180 px below the
+  menu; the shell's one map shows through above it, is not `inert`, and frames
+  the place inside that strip. No card keeps a map of its own any more, on any
+  screen — the detail views carry the stops and pin labels in words ("qui
+  sopra" on a phone, "qui accanto" on a wide screen).
+- **Enlarged is a step in the URL**, `?mappa=1`: *Allarga la mappa* pushes it,
+  so Back undoes it; *Torna alla scheda* goes back when the enlarged map was a
+  step of this visit and drops the query in place when it arrived that way (a
+  shared link). Focus moves to whichever of the two buttons undoes the state
+  the reader is in, since the one they pressed has just gone.
+- **The cover moves below the title on a phone**, as D18 says; the wide screen
+  keeps it first (D5).
+- **The wordmark no longer wraps.** The first build of D14 let the browser
+  squeeze it inside a 390 px pill, where it broke into four lines and made the
+  menu a third of the screen — found while building this strip, fixed here.
 

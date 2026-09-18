@@ -23,6 +23,8 @@ const { isDesktop } = useIsDesktop()
 const NARROW_PANEL = 560
 const HOME_COLUMN = 416
 const GAP = 48
+// The phone's strip above a card with a place (D18) — RoutePanel's 11.25rem.
+const PHONE_STRIP = 180
 
 // The map runs under the floating menu, so what it frames starts below it.
 const menuBottom = () => {
@@ -39,17 +41,24 @@ const focusPadding = computed<{ topLeft: [number, number]; bottomRight: [number,
   if (isDesktop.value && route.meta.fullBleed) {
     return { topLeft: [HOME_COLUMN + 16 + GAP, top], bottomRight: [GAP, GAP] }
   }
+  if (!isDesktop.value && route.meta.panel === 'narrow') {
+    // D18: framed inside the strip above the article — or, expanded, the
+    // whole screen above the "Torna alla scheda" button.
+    const phoneTop = menuBottom() + 16
+    if (route.query.mappa === '1') return { topLeft: [16, phoneTop], bottomRight: [16, 80] }
+    const below = window.innerHeight - (menuBottom() + PHONE_STRIP) + 16
+    return { topLeft: [16, phoneTop], bottomRight: [16, below] }
+  }
   return { topLeft: [GAP, top], bottomRight: [GAP, GAP] }
 })
 
 // Out of reach while a page covers it — a wide panel veils it, and on a phone
-// every panel is the whole screen. `inert` rather than only hidden from view:
-// a map the reader cannot see must not be a stop in their tab order.
+// every page but a card with a place is the whole screen. `inert` rather than
+// only hidden from view: a map the reader cannot see must not be a stop in
+// their tab order. A card with a place leaves the map in view — beside it on a
+// wide screen, in the strip above it on a phone (D18).
 const covered = computed(
-  () =>
-    route.name !== undefined &&
-    !route.meta.fullBleed &&
-    (!isDesktop.value || route.meta.panel !== 'narrow'),
+  () => route.name !== undefined && !route.meta.fullBleed && route.meta.panel !== 'narrow',
 )
 
 // D20: the text lists are ADR-0005's equivalent of the pins, so they stay one

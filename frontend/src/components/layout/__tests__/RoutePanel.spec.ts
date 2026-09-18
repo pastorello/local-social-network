@@ -6,7 +6,7 @@ import RoutePanel from '../RoutePanel.vue'
 
 const stub = { template: '<div />' }
 
-const mountPanel = async (shape: 'narrow' | 'wide' = 'wide') => {
+const mountPanel = async (shape: 'narrow' | 'wide' = 'wide', path = '/chiese') => {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
@@ -14,7 +14,7 @@ const mountPanel = async (shape: 'narrow' | 'wide' = 'wide') => {
       { path: '/chiese', name: 'chieselist', component: stub },
     ],
   })
-  router.push('/chiese')
+  router.push(path)
   await router.isReady()
   const wrapper = mount(RoutePanel, {
     props: { shape },
@@ -26,10 +26,20 @@ const mountPanel = async (shape: 'narrow' | 'wide' = 'wide') => {
   return { wrapper, router }
 }
 
+const stubPhone = () => {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    configurable: true,
+    value: () => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} }),
+  })
+}
+
 describe('RoutePanel (spec/design.md D15/D17)', () => {
   afterEach(() => {
     document.body.innerHTML = ''
     window.history.replaceState(null, '')
+    // @ts-expect-error — putting jsdom back the way it was found
+    delete window.matchMedia
   })
 
   it('takes the reader’s focus when it opens, so the next Tab is inside it', async () => {
@@ -76,5 +86,48 @@ describe('RoutePanel (spec/design.md D15/D17)', () => {
 
     const narrow = await mountPanel('narrow')
     expect(narrow.wrapper.find('div[aria-hidden="true"]').exists()).toBe(false)
+  })
+})
+
+describe('RoutePanel on a phone (spec/design.md D18)', () => {
+  afterEach(() => {
+    document.body.innerHTML = ''
+    window.history.replaceState(null, '')
+    // @ts-expect-error — putting jsdom back the way it was found
+    delete window.matchMedia
+  })
+
+  it('leaves a strip of the map above a card with a place, with a way to enlarge it', async () => {
+    stubPhone()
+    const { wrapper, router } = await mountPanel('narrow')
+
+    expect(wrapper.get('section').classes()).toContain('top-[11.25rem]')
+    await wrapper.get('button:not([aria-label])').trigger('click')
+    await flushPromises()
+
+    // The enlarged map is a step in the URL, so Back undoes it.
+    expect(router.currentRoute.value.query.mappa).toBe('1')
+    expect(wrapper.get('section').isVisible()).toBe(false)
+    expect(wrapper.text()).toContain('Torna alla scheda')
+    expect(document.activeElement?.textContent).toContain('Torna alla scheda')
+  })
+
+  it('comes back to the card from a shared link to the enlarged map', async () => {
+    stubPhone()
+    const { wrapper, router } = await mountPanel('narrow', '/chiese?mappa=1')
+
+    await wrapper.get('button:not([aria-label])').trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.query.mappa).toBeUndefined()
+    expect(wrapper.get('section').isVisible()).toBe(true)
+  })
+
+  it('is the whole screen for a page without a place', async () => {
+    stubPhone()
+    const { wrapper } = await mountPanel('wide')
+
+    expect(wrapper.get('section').classes()).toContain('inset-0')
+    expect(wrapper.text()).not.toContain('Allarga la mappa')
   })
 })

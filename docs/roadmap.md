@@ -277,9 +277,9 @@ already specified. **Neither is scheduled against items 2–4** — where they g
 is the author's call:
 
 - **The map under every page** — [spec/design.md](./spec/design.md) D13–D21.
-  **D13–D17, D20, D21 built 2026-09-18** (the map in the shell, pages as
-  panels, the map reacting, the two panel shapes, the pill menu, the list one
-  tap away, *Il progetto*); D18 and D19 follow.
+  **D13–D18, D20, D21 built 2026-09-18** (the map in the shell, pages as
+  panels, the map reacting, the two panel shapes, the phone's map strip, the
+  pill menu, the list one tap away, *Il progetto*); D19 follows.
   The layout reopened: the map is the ground of every page, pages open over it
   as panels, the map reacts to what is opened, and it becomes the
   collaborator's editor. Not a restyle — it moves the map into the shell,
