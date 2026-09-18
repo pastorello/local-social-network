@@ -22,13 +22,26 @@ describe('the collaborator', () => {
     login()
   })
 
-  it('writes a card, publishes it, and finds it in the list', () => {
+  it('writes a card, places it on the map under the panel, publishes it, and finds it', () => {
     const title = uniqueTitle()
 
     cy.visit('/chiese/nuova')
     cy.get('#type-form-title').type(title)
     // Tiptap renders a contenteditable rather than a textarea.
     cy.get('.tiptap').type('Un testo scritto dal test end-to-end.')
+
+    // design.md D19: the map under the panel is the editor. Opening the map
+    // tab says so over the map, and a click on the map is the card's pin.
+    cy.contains('[role="tab"]', 'Mappa').click()
+    cy.get('[role="status"]').should('contain', 'Clicca sulla mappa')
+    cy.get('.leaflet-container').click(300, 400)
+    cy.get('input[aria-label="Nome del punto 1"]').type('Ingresso')
+    // A church has one pin: the map now says so instead of taking another.
+    cy.get('[role="status"]').should('contain', 'toglilo per sceglierne un altro')
+    cy.contains('[role="status"] button', 'Fatto').click()
+
+    // "Fatto" leaves the map tab for the next one, and the map stops editing.
+    cy.get('[role="status"]').should('not.exist')
     cy.get('#is-published').check()
     cy.contains('button', 'Crea scheda').click()
 
@@ -36,6 +49,8 @@ describe('the collaborator', () => {
     cy.location('pathname').should('match', /^\/chiese\/[0-9a-f-]+$/)
     cy.contains('h1', title)
     cy.contains('Un testo scritto dal test end-to-end.')
+    cy.contains('È evidenziato sulla mappa')
+    cy.contains('li', 'Ingresso')
 
     cy.visit('/chiese')
     cy.contains('a', title).should('exist')
@@ -47,9 +62,18 @@ describe('the collaborator', () => {
     cy.visit('/chiese/nuova')
     cy.get('#type-form-title').type(title)
     cy.get('.tiptap').type('Bozza.')
+    // The keyboard path to a place (design.md D19, WCAG 2.1.1): the map
+    // excluded from the a11y gate is exactly why this is tested on its own.
+    cy.contains('[role="tab"]', 'Mappa').click()
+    cy.get('#map-pins-manual-lat').type('41.2087')
+    cy.get('#map-pins-manual-lng').type('13.5868')
+    cy.get('#map-pins-manual-label').type('Portale')
+    cy.contains('button', 'Aggiungi punto').click()
+    cy.get('input[aria-label="Nome del punto 1"]').should('have.value', 'Portale')
     // `is-published` deliberately left unchecked.
     cy.contains('button', 'Crea scheda').click()
     cy.contains('h1', title)
+    cy.contains('li', 'Portale')
 
     cy.url().then((cardUrl) => {
       cy.get('button[aria-label^="Il tuo account"]').click()
@@ -69,6 +93,7 @@ describe('the collaborator', () => {
     cy.visit('/chiese/nuova')
     cy.get('#type-form-title').type(title)
     cy.get('.tiptap').type('Testo in italiano.')
+    cy.contains('[role="tab"]', 'Pubblicazione').click()
     cy.get('#is-published').check()
     cy.contains('button', 'Crea scheda').click()
     cy.contains('h1', title)

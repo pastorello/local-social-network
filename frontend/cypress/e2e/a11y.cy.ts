@@ -209,11 +209,22 @@ describe("the collaborator's surfaces meet WCAG 2.1 AA", { testIsolation: false 
     check('/chiese/nuova')
   })
 
+  // design.md D19: the map tab lends the map to the form — the banner over the
+  // map and the points field are new controls, so the gate measures them.
+  it('the authoring form drawing on the map, with its banner', () => {
+    cy.visit('/chiese/nuova')
+    cy.contains('[role="tab"]', 'Mappa').click()
+    cy.get('[role="status"]').should('contain', 'Clicca sulla mappa')
+
+    check('/chiese/nuova (mappa)')
+  })
+
   // The images strip only exists once there are images, so the gate never saw
   // it until this case attached one: new controls that no run measures are
   // exactly what a gate is supposed to stop happening (2026-09-07).
   it('the authoring form with images attached, where the cover is chosen', () => {
     cy.visit('/chiese/nuova')
+    cy.contains('[role="tab"]', 'Immagini').click()
     cy.get('#type-form-images').selectFile([
       'cypress/fixtures/foto.jpg',
       'cypress/fixtures/foto.jpg',

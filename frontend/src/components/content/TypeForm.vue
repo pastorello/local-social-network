@@ -8,7 +8,8 @@ import type { ContentItem, MapPoint } from '@/definitions/interfaces/Content'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import FormInput from '@/components/forms/FormInput.vue'
 import RichTextEditor from '@/components/content/RichTextEditor.vue'
-import MapPinsEditor from '@/components/content/MapPinsEditor.vue'
+import MapPointsField from '@/components/forms/MapPointsField.vue'
+import FormTabs, { type FormTab } from '@/components/forms/FormTabs.vue'
 import CardImagesField from '@/components/forms/CardImagesField.vue'
 import FormField from '@/components/forms/FormField.vue'
 import { extractFieldErrors, extractFormErrors } from '@/lib/apiErrors'
@@ -70,11 +71,35 @@ onMounted(async () => {
   }
 })
 
+// The sections as tabs (design.md D19). The map's tab is where the card's
+// place is drawn — on the map under the panel, not in a map of its own.
+const tab = ref('contenuto')
+const tabOf = (field: string): string => {
+  if (['images', 'image_order', 'remove_image_ids'].includes(field)) return 'immagini'
+  if (field === 'pins') return 'mappa'
+  if (field === 'is_published') return 'pubblicazione'
+  return 'contenuto'
+}
+const tabs = computed<FormTab[]>(() => {
+  const withErrors = new Set<string>(Object.keys(fieldErrors.value).map(tabOf))
+  const all = [
+    { key: 'contenuto', label: 'Contenuto' },
+    { key: 'immagini', label: 'Immagini' },
+    ...(props.config.mapMode === 'pins' ? [{ key: 'mappa', label: 'Mappa' }] : []),
+    { key: 'pubblicazione', label: 'Pubblicazione' },
+  ]
+  return all.map((entry) => ({ ...entry, hasError: withErrors.has(entry.key) }))
+})
+
 const submitForm = async () => {
   formErrors.value = []
   if (!title.value.trim()) formErrors.value.push('Il titolo è obbligatorio.')
   if (!bodyHtml.value.trim()) formErrors.value.push('Il testo è obbligatorio.')
-  if (formErrors.value.length > 0) return
+  if (formErrors.value.length > 0) {
+    // Both are on the first tab: show the reader the fields the message is about.
+    tab.value = 'contenuto'
+    return
+  }
 
   const formData = new FormData()
   formData.append('title', title.value.trim())
@@ -106,6 +131,9 @@ const submitForm = async () => {
   } catch (error) {
     formErrors.value = extractFormErrors(error)
     fieldErrors.value = extractFieldErrors(error)
+    // A rejected field may be on a tab that is not open: open the first one.
+    const firstRejected = Object.keys(fieldErrors.value)[0]
+    if (firstRejected) tab.value = tabOf(firstRejected)
   } finally {
     submitting.value = false
   }
@@ -115,147 +143,185 @@ const submitForm = async () => {
 <template>
   <form class="space-y-8" v-on:submit.prevent="submitForm">
     <!-- Sections rather than one long stack: writing a card and giving it a
-    place are different jobs, and desktop-first (D2) means there is room to
-    say so. -->
-    <fieldset class="space-y-5">
-      <legend class="mb-4 font-display text-title text-ink">Contenuto</legend>
+    place are different jobs. Since D19 they are tabs, because the panel is
+    beside the map and a long stack would be an endless scroll. -->
+    <FormTabs v-model="tab" :tabs="tabs" id-prefix="type-form" />
 
-      <!-- On a translation the title is the translated name, which the
+    <div
+      v-show="tab === 'contenuto'"
+      id="type-form-panel-contenuto"
+      role="tabpanel"
+      aria-labelledby="type-form-tab-contenuto"
+    >
+      <fieldset class="space-y-5">
+        <legend class="sr-only">Contenuto</legend>
+
+        <!-- On a translation the title is the translated name, which the
       article shows *under* the Italian one (2026-09-09) — so the label says
       that, rather than asking for a "title" the reader will never see as the
       heading. -->
-      <FormField
-        field-id="type-form-title"
-        :label="isTranslation ? 'Nome tradotto' : 'Titolo'"
-        :hint="isTranslation ? 'Il titolo resta quello italiano: questo compare sotto.' : undefined"
-        :errors="fieldErrors.title"
-      >
-        <template #default="{ describedBy, invalid }">
-          <FormInput
-            id="type-form-title"
-            type="text"
-            v-model="title"
-            :invalid="invalid"
-            :aria-describedby="describedBy"
-            :placeholder="config.titlePlaceholder ?? `Es. ${config.singularLabel}`"
-          />
-        </template>
-      </FormField>
-
-      <FormField
-        field-id="type-form-body"
-        label="Testo"
-        hint="Grassetto, corsivo, titoli, elenchi e link. Niente HTML incollato: viene ripulito dal server."
-        :errors="fieldErrors.body_html"
-      >
-        <template #default="{ describedBy }">
-          <RichTextEditor
-            v-model="bodyHtml"
-            label="Testo della scheda"
-            :input-id="'type-form-body'"
-            :described-by="describedBy"
-          />
-        </template>
-      </FormField>
-
-      <FormField
-        v-for="field in config.extraFields"
-        :key="field.key"
-        :field-id="`type-form-${field.key}`"
-        :label="field.label"
-        :errors="fieldErrors[field.key]"
-      >
-        <template #default="{ describedBy, invalid }">
-          <FormInput
-            v-if="field.kind === 'input'"
-            :id="`type-form-${field.key}`"
-            type="text"
-            v-model="extraValues[field.key]"
-            :invalid="invalid"
-            :aria-describedby="describedBy"
-            :placeholder="field.placeholder"
-          />
-          <select
-            v-else-if="field.kind === 'select'"
-            :id="`type-form-${field.key}`"
-            v-model="extraValues[field.key]"
-            :aria-describedby="describedBy"
-            :aria-invalid="invalid || undefined"
-            class="w-full rounded-lg border bg-surface px-4 py-3 text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
-            :class="invalid ? 'border-status-open' : 'border-field'"
-          >
-            <option value="" disabled>{{ field.placeholder ?? 'Scegli' }}</option>
-            <option
-              v-for="option in selectOptions[field.key] ?? []"
-              :key="option.slug"
-              :value="option.slug"
-            >
-              {{ option.name }}
-            </option>
-          </select>
-          <textarea
-            v-else
-            :id="`type-form-${field.key}`"
-            v-model="extraValues[field.key]"
-            rows="5"
-            :aria-describedby="describedBy"
-            :aria-invalid="invalid || undefined"
-            class="w-full rounded-lg border bg-surface px-4 py-3 text-ink placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
-            :class="invalid ? 'border-status-open' : 'border-field'"
-            :placeholder="field.placeholder"
-          ></textarea>
-        </template>
-      </FormField>
-    </fieldset>
-
-    <fieldset class="space-y-4">
-      <legend class="mb-4 font-display text-title text-ink">Immagini</legend>
-      <template v-if="isTranslation">
-        <p class="text-body text-muted">
-          Le fotografie sono quelle della scheda originale, per ogni lingua. Si modificano da lì.
-        </p>
-        <ul v-if="sharedImages.length" class="flex flex-wrap gap-3">
-          <li v-for="image in sharedImages" :key="image.id">
-            <img
-              :src="image.imageURL"
-              :alt="image.caption || title"
-              class="h-20 w-20 rounded-lg object-cover"
+        <FormField
+          field-id="type-form-title"
+          :label="isTranslation ? 'Nome tradotto' : 'Titolo'"
+          :hint="
+            isTranslation ? 'Il titolo resta quello italiano: questo compare sotto.' : undefined
+          "
+          :errors="fieldErrors.title"
+        >
+          <template #default="{ describedBy, invalid }">
+            <FormInput
+              id="type-form-title"
+              type="text"
+              v-model="title"
+              :invalid="invalid"
+              :aria-describedby="describedBy"
+              :placeholder="config.titlePlaceholder ?? `Es. ${config.singularLabel}`"
             />
-          </li>
-        </ul>
-      </template>
-      <CardImagesField
-        v-else
-        field-id="type-form-images"
-        :hint-suffix="config.imagesHint"
-        v-model:entries="imageEntries"
-        v-model:removed-ids="removedImageIds"
-        :errors="fieldErrors.images"
-      />
-    </fieldset>
+          </template>
+        </FormField>
 
-    <fieldset v-if="config.mapMode === 'pins'" class="space-y-4">
-      <legend class="mb-4 font-display text-title text-ink">
-        {{ config.maxPoints === 1 ? 'Il punto sulla mappa' : 'I punti sulla mappa' }}
-      </legend>
-      <p v-if="isTranslation" class="text-body text-muted">
-        Il luogo è quello della scheda originale. Si sposta da lì.
-      </p>
-      <MapPinsEditor v-model="pins" :max="config.maxPoints ?? 1" :readonly="isTranslation" />
-    </fieldset>
+        <FormField
+          field-id="type-form-body"
+          label="Testo"
+          hint="Grassetto, corsivo, titoli, elenchi e link. Niente HTML incollato: viene ripulito dal server."
+          :errors="fieldErrors.body_html"
+        >
+          <template #default="{ describedBy }">
+            <RichTextEditor
+              v-model="bodyHtml"
+              label="Testo della scheda"
+              :input-id="'type-form-body'"
+              :described-by="describedBy"
+            />
+          </template>
+        </FormField>
 
-    <fieldset class="space-y-4">
-      <legend class="mb-4 font-display text-title text-ink">Pubblicazione</legend>
-      <div class="flex items-start gap-3 rounded-lg border border-hairline bg-surface p-4">
-        <input id="is-published" type="checkbox" v-model="isPublished" class="mt-1 h-4 w-4" />
-        <label for="is-published" class="text-ink">
-          Pubblica subito
-          <span class="block text-sm text-muted">
-            Una bozza è visibile solo a te e agli amministratori.
-          </span>
-        </label>
-      </div>
-    </fieldset>
+        <FormField
+          v-for="field in config.extraFields"
+          :key="field.key"
+          :field-id="`type-form-${field.key}`"
+          :label="field.label"
+          :errors="fieldErrors[field.key]"
+        >
+          <template #default="{ describedBy, invalid }">
+            <FormInput
+              v-if="field.kind === 'input'"
+              :id="`type-form-${field.key}`"
+              type="text"
+              v-model="extraValues[field.key]"
+              :invalid="invalid"
+              :aria-describedby="describedBy"
+              :placeholder="field.placeholder"
+            />
+            <select
+              v-else-if="field.kind === 'select'"
+              :id="`type-form-${field.key}`"
+              v-model="extraValues[field.key]"
+              :aria-describedby="describedBy"
+              :aria-invalid="invalid || undefined"
+              class="w-full rounded-lg border bg-surface px-4 py-3 text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+              :class="invalid ? 'border-status-open' : 'border-field'"
+            >
+              <option value="" disabled>{{ field.placeholder ?? 'Scegli' }}</option>
+              <option
+                v-for="option in selectOptions[field.key] ?? []"
+                :key="option.slug"
+                :value="option.slug"
+              >
+                {{ option.name }}
+              </option>
+            </select>
+            <textarea
+              v-else
+              :id="`type-form-${field.key}`"
+              v-model="extraValues[field.key]"
+              rows="5"
+              :aria-describedby="describedBy"
+              :aria-invalid="invalid || undefined"
+              class="w-full rounded-lg border bg-surface px-4 py-3 text-ink placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+              :class="invalid ? 'border-status-open' : 'border-field'"
+              :placeholder="field.placeholder"
+            ></textarea>
+          </template>
+        </FormField>
+      </fieldset>
+    </div>
+
+    <div
+      v-show="tab === 'immagini'"
+      id="type-form-panel-immagini"
+      role="tabpanel"
+      aria-labelledby="type-form-tab-immagini"
+    >
+      <fieldset class="space-y-4">
+        <legend class="sr-only">Immagini</legend>
+        <template v-if="isTranslation">
+          <p class="text-body text-muted">
+            Le fotografie sono quelle della scheda originale, per ogni lingua. Si modificano da lì.
+          </p>
+          <ul v-if="sharedImages.length" class="flex flex-wrap gap-3">
+            <li v-for="image in sharedImages" :key="image.id">
+              <img
+                :src="image.imageURL"
+                :alt="image.caption || title"
+                class="h-20 w-20 rounded-lg object-cover"
+              />
+            </li>
+          </ul>
+        </template>
+        <CardImagesField
+          v-else
+          field-id="type-form-images"
+          :hint-suffix="config.imagesHint"
+          v-model:entries="imageEntries"
+          v-model:removed-ids="removedImageIds"
+          :errors="fieldErrors.images"
+        />
+      </fieldset>
+    </div>
+
+    <div
+      v-if="config.mapMode === 'pins'"
+      v-show="tab === 'mappa'"
+      id="type-form-panel-mappa"
+      role="tabpanel"
+      aria-labelledby="type-form-tab-mappa"
+    >
+      <fieldset class="space-y-4">
+        <legend class="sr-only">
+          {{ config.maxPoints === 1 ? 'Il punto sulla mappa' : 'I punti sulla mappa' }}
+        </legend>
+        <MapPointsField
+          v-model="pins"
+          kind="pins"
+          :max="config.maxPoints ?? 1"
+          :readonly="isTranslation"
+          :drawing="tab === 'mappa'"
+          id-prefix="map-pins"
+          @done="tab = 'pubblicazione'"
+        />
+      </fieldset>
+    </div>
+
+    <div
+      v-show="tab === 'pubblicazione'"
+      id="type-form-panel-pubblicazione"
+      role="tabpanel"
+      aria-labelledby="type-form-tab-pubblicazione"
+    >
+      <fieldset class="space-y-4">
+        <legend class="sr-only">Pubblicazione</legend>
+        <div class="flex items-start gap-3 rounded-lg border border-hairline bg-surface p-4">
+          <input id="is-published" type="checkbox" v-model="isPublished" class="mt-1 h-4 w-4" />
+          <label for="is-published" class="text-ink">
+            Pubblica subito
+            <span class="block text-sm text-muted">
+              Una bozza è visibile solo a te e agli amministratori.
+            </span>
+          </label>
+        </div>
+      </fieldset>
+    </div>
 
     <div
       v-if="formErrors.length > 0"

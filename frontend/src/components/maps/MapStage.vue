@@ -76,6 +76,12 @@ const onPinClick = (id: string) => router.push(`/reports/${id}`)
 const onFeatureClick = (feature: { type: string; id: string }) =>
   router.push(layerRoute(feature.type, feature.id))
 const onMapClick = (coords: { lat: number; lng: number }) => {
+  // A form drawing on the map takes the click (D19); otherwise it is a report
+  // being placed.
+  if (mapStore.editor) {
+    mapStore.editorAdd(coords)
+    return
+  }
   mapStore.draftCoords = coords
 }
 
@@ -93,14 +99,31 @@ onMounted(mapStore.load)
       :features="mapStore.visibleFeatures"
       :overlays="mapStore.visibleOverlays"
       :placing="mapStore.placing"
-      :focus="mapStore.focus"
+      :focus="mapStore.editor ? null : mapStore.focus"
+      :editor="mapStore.editor"
       :focus-padding="focusPadding"
       @map-click="onMapClick"
       @pin-click="onPinClick"
       @feature-click="onFeatureClick"
     />
+    <!-- D19: a map that sometimes takes clicks as edits and sometimes does not
+    must never leave it ambiguous which it is doing now. -->
+    <div
+      v-if="mapStore.editor"
+      role="status"
+      class="absolute top-[calc(var(--header-h,0px)+0.5rem)] right-3 left-14 z-1000 flex items-center justify-between gap-3 rounded-full bg-ink py-1.5 pr-1.5 pl-4 text-sm font-semibold text-white shadow-md lg:top-auto lg:right-auto lg:bottom-4 lg:left-4"
+    >
+      <span>{{ mapStore.editor.label }}</span>
+      <button
+        type="button"
+        class="h-9 cursor-pointer rounded-full bg-surface px-4 text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+        @click="mapStore.editorDone()"
+      >
+        Fatto
+      </button>
+    </div>
     <RouterLink
-      v-if="offerList"
+      v-if="offerList && !mapStore.editor"
       to="/"
       class="absolute bottom-4 left-4 z-1000 flex h-10 items-center gap-2 rounded-full bg-ink px-4 text-sm font-semibold text-white shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
     >

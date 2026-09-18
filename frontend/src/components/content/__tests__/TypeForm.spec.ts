@@ -14,14 +14,12 @@ import {
 } from '@/definitions/typeConfigs'
 import type { ContentItem } from '@/definitions/interfaces/Content'
 
-// MapPinsEditor mounts a real Leaflet map, which isn't viable under
-// jsdom/Vitest (no map component in this codebase has a unit test either —
-// see FesteRouteEditor.vue/ReportsMap.vue) — stubbed here so TypeForm's own
-// fields can be tested without it. RichTextEditor is stubbed too, same
+// The card's place is drawn on the map under the panel since design.md D19, so
+// the form mounts no map of its own. RichTextEditor is stubbed, same
 // reasoning as FesteForm.spec.ts.
 vi.mock('axios')
 
-const globalStubs = { MapPinsEditor: true, RichTextEditor: true }
+const globalStubs = { RichTextEditor: true }
 
 const baseItem: ContentItem = {
   id: '1',
@@ -78,7 +76,9 @@ describe.each([
       global: { plugins: [createPinia()], stubs: globalStubs },
     })
 
-    await wrapper.find('button[type="button"]').trigger('click')
+    // By its words: since D19 the form opens with its tabs, which are buttons too.
+    const cancel = wrapper.findAll('button[type="button"]').find((b) => b.text() === 'Annulla')
+    await cancel!.trigger('click')
 
     expect(wrapper.emitted('cancel')).toBeTruthy()
   })
