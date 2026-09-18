@@ -131,4 +131,28 @@ describe('the reader, on a phone', () => {
 
     cy.contains('h1', PUBLISHED)
   })
+
+  // design.md D18: a card with a place opens under a strip of the map, the
+  // same map, already on the place; enlarging it is a step Back undoes.
+  it('reads a card under a strip of the map, and enlarges the map and comes back', () => {
+    cy.visit('/')
+    cy.get('section[aria-label="Luoghi sulla mappa"]').within(() => {
+      cy.contains('a', PUBLISHED).click()
+    })
+
+    cy.contains('h1', PUBLISHED)
+    // The map is in view above the card, so it is not inert, and the card
+    // keeps no map of its own.
+    cy.get('.leaflet-container').should('have.length', 1)
+    cy.get('.leaflet-container').closest('[inert]').should('not.exist')
+
+    cy.contains('button', 'Allarga la mappa').click()
+    cy.location('search').should('eq', '?mappa=1')
+    cy.contains('h1', PUBLISHED).should('not.be.visible')
+    cy.focused().should('contain', 'Torna alla scheda')
+
+    cy.go('back')
+    cy.location('search').should('eq', '')
+    cy.contains('h1', PUBLISHED).should('be.visible')
+  })
 })

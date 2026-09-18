@@ -61,7 +61,9 @@ const menuLink =
     aria-label="Principale"
     class="fixed top-3 left-1/2 z-1100 flex max-w-[calc(100%-1.5rem)] -translate-x-1/2 items-center gap-1 rounded-full border border-hairline bg-surface py-1.5 pr-1.5 pl-4 shadow-md lg:gap-2 lg:pl-5"
   >
-    <SiteTitle class="mr-1 lg:mr-2" />
+    <!-- Never wrapped, never shrunk: in a pill 390px wide the wordmark was the
+    item the browser squeezed, and it broke into four lines (2026-09-18). -->
+    <SiteTitle class="mr-1 shrink-0 whitespace-nowrap lg:mr-2" />
     <span class="h-6 w-px bg-hairline" aria-hidden="true"></span>
 
     <template v-if="isDesktop">

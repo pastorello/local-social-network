@@ -7,7 +7,6 @@ import PanelBox from '@/components/boxes/PanelBox.vue'
 import ViewContainer from '@/components/boxes/ViewContainer.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import CardArticle from '@/components/content/CardArticle.vue'
-import FesteRouteEditor from '@/components/content/FesteRouteEditor.vue'
 import FesteForm from '@/components/content/FesteForm.vue'
 import { useIsDesktop } from '@/composables/useBreakpoint'
 import { useMapFocus } from '@/composables/useMapFocus'
@@ -142,19 +141,19 @@ watch(
           <template #map>
             <section v-if="feste.route.length > 0" class="mb-10">
               <h2 class="mb-3 font-display text-title text-ink">Il percorso</h2>
-              <!-- Wide screen: the route is drawn on the map beside the panel
-              (D16), so the panel keeps only the stops, in words — the text
-              path the map does not offer. Phone: the card keeps its own map. -->
-              <template v-if="isDesktop">
-                <p class="mb-3 text-muted">È evidenziato sulla mappa, qui accanto.</p>
-                <ol class="space-y-2">
-                  <li v-for="(point, index) in feste.route" :key="index" class="flex gap-2">
-                    <span class="font-semibold">{{ index + 1 }}.</span>
-                    <span>{{ point.label || 'Tappa senza nome' }}</span>
-                  </li>
-                </ol>
-              </template>
-              <FesteRouteEditor v-else :model-value="feste.route" readonly />
+              <!-- The route is drawn on the map — beside the panel on a wide
+              screen, in the strip above it on a phone (D16/D18) — so the panel
+              keeps only the stops, in words: the text path the map does not
+              offer. -->
+              <p class="mb-3 text-muted">
+                È evidenziato sulla mappa, {{ isDesktop ? 'qui accanto' : 'qui sopra' }}.
+              </p>
+              <ol class="space-y-2">
+                <li v-for="(point, index) in feste.route" :key="index" class="flex gap-2">
+                  <span class="font-semibold">{{ index + 1 }}.</span>
+                  <span>{{ point.label || 'Tappa senza nome' }}</span>
+                </li>
+              </ol>
             </section>
           </template>
 

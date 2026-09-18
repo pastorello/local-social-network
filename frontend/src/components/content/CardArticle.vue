@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import UserAvatar from '@/components/cards/UserAvatar.vue'
 import RichText from '@/components/content/RichText.vue'
 import LanguageSwitch from '@/components/content/LanguageSwitch.vue'
+import { useIsDesktop } from '@/composables/useBreakpoint'
 import type { CardImage, TranslationRef } from '@/definitions/interfaces/Content'
 import type User from '@/definitions/interfaces/User'
 
@@ -37,6 +38,12 @@ const props = defineProps<{
 // D5: the first image is the cover. The rest stay a gallery below the text,
 // so the article opens on a picture instead of on a wall of words.
 const cover = computed(() => props.images[0] ?? null)
+
+// On a phone a card with a place opens under a strip of the map (design.md
+// D18); the cover moves below the title there, so the strip and the cover do
+// not stack and push the title to mid-screen. D5's rule — the first image is
+// the cover — is unchanged; only its position moves.
+const { isDesktop } = useIsDesktop()
 const gallery = computed(() => props.images.slice(1))
 
 const createdAtFormatted = computed(() =>
@@ -55,7 +62,7 @@ const createdAtFormatted = computed(() =>
     <!-- The wrapper carries the bleed, not the image: a negative margin plus
     `calc(100% + 2rem)` on the <img> itself overflows to one side once the
     article is centred. -->
-    <div v-if="cover" class="-mx-4 mb-6 sm:mx-0">
+    <div v-if="cover && isDesktop" class="-mx-4 mb-6 sm:mx-0">
       <img
         :src="cover.imageURL"
         :alt="cover.caption || title"
@@ -95,6 +102,14 @@ const createdAtFormatted = computed(() =>
         >
       </p>
     </header>
+
+    <div v-if="cover && !isDesktop" class="-mx-4 mb-8">
+      <img
+        :src="cover.imageURL"
+        :alt="cover.caption || title"
+        class="aspect-[3/2] w-full object-cover"
+      />
+    </div>
 
     <!-- The measure is the point: reading text kept near 65 characters is
     half of what makes a sans read as an article rather than an interface. -->

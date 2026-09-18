@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { RouterLinkStub } from '@vue/test-utils'
 
@@ -54,5 +54,41 @@ describe('CardArticle', () => {
 
     expect(wrapper.find('h1').text()).toBe('Santuario della Montagna Spaccata')
     expect(wrapper.findAll('p').some((p) => p.text().includes('Sanctuary'))).toBe(false)
+  })
+})
+
+// design.md D18: on a phone a card with a place opens under a strip of the
+// map, so the cover moves below the title — the two stacked would push the
+// title to mid-screen. On a wide screen it stays first (D5).
+describe('CardArticle — where the cover goes', () => {
+  const images = [{ id: 1, imageURL: 'https://example.test/cover.jpg', caption: '' }]
+
+  afterEach(() => {
+    // @ts-expect-error — putting jsdom back the way it was found
+    delete window.matchMedia
+  })
+
+  // Compared as elements, not as text: the component's own comments mention
+  // "<img>", and a string search finds the comment first.
+  const order = (wrapper: ReturnType<typeof mountArticle>) => {
+    const cover = wrapper.get('img').element
+    const title = wrapper.get('h1').element
+    return cover.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING
+      ? 'cover first'
+      : 'title first'
+  }
+
+  it('opens on the cover on a wide screen', () => {
+    expect(order(mountArticle({ images }))).toBe('cover first')
+  })
+
+  it('puts the title first on a phone', () => {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      configurable: true,
+      value: () => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} }),
+    })
+
+    expect(order(mountArticle({ images }))).toBe('title first')
   })
 })
