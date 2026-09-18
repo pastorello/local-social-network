@@ -298,6 +298,10 @@ is the author's call:
   [spec/content.md](./spec/content.md)), since every stop is a card —
   **built 2026-09-18**, the first item of the queue the author handed over
   that day.
+  **The itinerary itself is built too, 2026-09-18**: the backend in #73, the
+  welcome page, the tours list, the guided mode and the collaborator's editor
+  right after it. What it lacks is what the whole archive lacks — tours
+  written by the people who know the town.
 
 - **Geolocation** — "you are here" plus what is around you while walking
   Gaeta. The author wants it and it fits the product; it is a **feature, not a

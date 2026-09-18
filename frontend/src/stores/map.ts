@@ -23,6 +23,8 @@ export interface MapFocus {
   route: MapPoint[]
   // A report is not a card type: it brings its status colour instead.
   color?: string
+  // A tour's stops are numbered on the map (spec itinerari.md I11).
+  numbered?: boolean
 }
 
 // The map as the collaborator's editor (spec/design.md D19): a form that is
@@ -30,18 +32,23 @@ export interface MapFocus {
 // The form owns the data — the map only draws the draft it is handed — so
 // what is edited is always the form's, and cancelling the form cancels it.
 export interface MapEditor {
-  // A route is ordered and joined by a line; pins are an unordered, capped bag.
-  kind: 'route' | 'pins'
+  // A route is ordered and joined by a line; pins are an unordered, capped bag;
+  // stops (an itinerary, spec itinerari.md I8) are cards picked by clicking
+  // their pins — a click on empty map adds nothing.
+  kind: 'route' | 'pins' | 'stops'
   points: MapPoint[]
   max: number
   // What the banner over the map says is being drawn.
   label: string
+  // Stops of a percorso are joined in order; a raccolta's are not.
+  joined?: boolean
 }
 
 // Handles, not data (the same reasoning as stores/toast.ts's timers): the
 // callbacks of the one form that is drawing, kept out of reactive state.
 let onEditorAdd: ((point: { lat: number; lng: number }) => void) | null = null
 let onEditorDone: (() => void) | null = null
+let onEditorPick: ((feature: { type: string; id: string }) => void) | null = null
 
 export const useMapStore = defineStore('map', {
   state: () => ({
@@ -164,10 +171,12 @@ export const useMapStore = defineStore('map', {
       editor: MapEditor,
       onAdd: (point: { lat: number; lng: number }) => void,
       onDone: () => void,
+      onPick: ((feature: { type: string; id: string }) => void) | null = null,
     ) {
       this.editor = editor
       onEditorAdd = onAdd
       onEditorDone = onDone
+      onEditorPick = onPick
     },
 
     updateEditorPoints(points: MapPoint[]) {
@@ -178,6 +187,13 @@ export const useMapStore = defineStore('map', {
       this.editor = null
       onEditorAdd = null
       onEditorDone = null
+      onEditorPick = null
+    },
+
+    // A card's pin clicked while an itinerary is picking its stops: the card
+    // becomes the next stop instead of opening.
+    editorPick(feature: { type: string; id: string }) {
+      onEditorPick?.(feature)
     },
 
     // A click on the map while a form is drawing: the form decides what it

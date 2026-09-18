@@ -1,7 +1,7 @@
 # Itinerari — curated tours for a visitor's stay
 
-> **Decided 2026-09-11. Backend built 2026-09-18** (see "What the build
-> decided" at the end); the reader's pages and the collaborator's editor follow. The confirmed output of a session with the
+> **Decided 2026-09-11. Built 2026-09-18** — backend, then the reader's pages
+> and the collaborator's editor (see "What the build decided" at the end). The confirmed output of a session with the
 > author, one question at a time, each a committed guess against the strongest
 > case for the opposite; every requirement below records the case that lost.
 > It needs a new card type, **luoghi**, which is specified in
@@ -197,4 +197,37 @@ left open:
   test says so.
 - **Django admin** has an inline for the stops (with card autocomplete), so a
   tour can be assembled there before the collaborator's editor exists.
+
+## What the build decided — frontend, 2026-09-18
+
+- **The landing page is `/benvenuto`** — the working name kept, and from now
+  on the one address that must not change (see "Left to the build"). It asks
+  "Che cosa ti va di fare?" and lists only the intents with a published tour,
+  each linking to `/itinerari?intento=…`; with none, it says the tours are in
+  preparation and points at the map. No greeting per host, nothing stored.
+- **The list is the generic one.** `/itinerari` is `TypeListView` with
+  `itinerarioConfig`, the intents as its filter chips — `IntentSerializer`
+  carries a `name_plural` equal to `name` so the list reads intents the way it
+  reads luoghi's genres.
+- **Itinerari is in the menu**, between Schede and Il progetto (and in the
+  phone's Menu): a tour is how a guest starts, not one card type among
+  eight, so it is not a Schede entry.
+- **The guided mode's position is in the URL** (`?tappa=N`): a reload or a
+  shared link lands on the same stop, and nothing about the guest is kept.
+  Only a percorso is guided — a raccolta has no order to follow. Each stop
+  shows its note, *Come arrivarci* (a Google Maps walking link from the
+  previous stop, or from wherever the guest is for the first) and *Leggi la
+  scheda*. **No walking time** is shown: Google computes it when the link is
+  opened, and a number of ours would be a second, worse estimate.
+- **The map shows the tour** (I11) through the same focus every card uses:
+  numbered stops, and the drawn path — or, for a percorso without one, the
+  stops joined in order. In the guided mode, only the leg being walked.
+- **The editor is the map** (D19, I8). The form's *Tappe* tab lends the map a
+  `stops` editor: a click on any card's pin makes it the next stop, and the
+  map does not dim the other cards while it does, since they are what is
+  being chosen from. The keyboard path is a list of every card with a place,
+  grouped by type (WCAG 2.1.1). A stop whose card has several pins gets a
+  "Dove" choice; each stop a note, ↑/↓ and remove. *Il tragitto* (percorso
+  only) draws the path with the same field a festa's route uses. At most 40
+  stops.
 

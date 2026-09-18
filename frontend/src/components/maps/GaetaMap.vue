@@ -117,7 +117,9 @@ const renderFeatures = () => {
 
   // While a page is open the rest of the city steps back (D16) — still there,
   // still clickable, but not competing with what the reader is reading about.
-  const dimmed = hasFocusGeometry() || !!props.editor
+  // Picking stops is done on the cards' own pins, so they stay at full
+  // strength then; any other drawing dims them.
+  const dimmed = hasFocusGeometry() || (!!props.editor && props.editor.kind !== 'stops')
   const fillOpacity = dimmed ? 0.3 : 0.9
   const lineOpacity = dimmed ? 0.3 : 0.85
 
@@ -208,17 +210,20 @@ const renderFocus = () => {
       }).bindTooltip(point.label || ''),
     )
   }
-  for (const point of props.focus.points) {
-    focusLayer.addLayer(
-      L.circleMarker([point.lat, point.lng], {
-        radius: 11,
-        color: surface,
-        weight: 3,
-        fillColor: color,
-        fillOpacity: 1,
-      }),
-    )
-  }
+  props.focus.points.forEach((point, index) => {
+    const marker = L.circleMarker([point.lat, point.lng], {
+      radius: 11,
+      color: surface,
+      weight: 3,
+      fillColor: color,
+      fillOpacity: 1,
+    })
+    // A tour's stops carry their number on the map, as in its list.
+    if (props.focus?.numbered) {
+      marker.bindTooltip(String(index + 1), { permanent: true, direction: 'top' })
+    }
+    focusLayer?.addLayer(marker)
+  })
   focusLayer.addTo(map)
 }
 
@@ -256,24 +261,28 @@ const renderEditor = () => {
   editorLayer = L.layerGroup()
   const points = props.editor.points
 
-  if (props.editor.kind === 'route' && points.length > 1) {
+  const joined = props.editor.kind === 'route' || !!props.editor.joined
+  const numbered = props.editor.kind !== 'pins'
+  if (joined && points.length > 1) {
     const line = points.map((point) => [point.lat, point.lng] as [number, number])
     editorLayer.addLayer(L.polyline(line, { color: surface, weight: 10, opacity: 0.9 }))
     editorLayer.addLayer(L.polyline(line, { color: accent, weight: 5 }))
   }
   points.forEach((point, index) => {
-    const name =
-      props.editor?.kind === 'route'
-        ? `${index + 1}${point.label ? `. ${point.label}` : ''}`
-        : point.label || `Punto ${index + 1}`
+    const name = numbered
+      ? `${index + 1}${point.label ? `. ${point.label}` : ''}`
+      : point.label || `Punto ${index + 1}`
     editorLayer?.addLayer(
       L.circleMarker([point.lat, point.lng], {
-        radius: props.editor?.kind === 'route' ? 8 : 11,
+        radius: numbered ? 8 : 11,
         color: surface,
         weight: 3,
         fillColor: accent,
         fillOpacity: 1,
-      }).bindTooltip(name, { permanent: props.editor?.kind === 'route', direction: 'top' }),
+        // A stop is drawn over its card's own pin: it must not swallow the
+        // click that would pick that card again.
+        interactive: props.editor?.kind !== 'stops',
+      }).bindTooltip(name, { permanent: numbered, direction: 'top' }),
     )
   })
   editorLayer.addTo(map)
@@ -430,7 +439,7 @@ watch(
     renderEditor()
     // Dim the rest while drawing, and frame what the form already has — once,
     // when drawing starts, not on every point added.
-    if (!!editor !== !!previous) {
+    if (!!editor !== !!previous || editor?.kind !== previous?.kind) {
       renderFeatures()
       frameEditor()
     }

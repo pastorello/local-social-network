@@ -144,7 +144,7 @@ onMounted(() => {
 
       <nav
         v-if="config.listFilter && visibleOptions.length"
-        :aria-label="`Filtra ${config.label.toLowerCase()} per genere`"
+        :aria-label="config.listFilter.label"
         class="mb-8"
       >
         <ul class="flex flex-wrap gap-2">

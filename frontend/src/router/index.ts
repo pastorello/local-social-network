@@ -7,6 +7,7 @@ import {
   personaggioConfig,
   ricettaConfig,
   luogoConfig,
+  itinerarioConfig,
 } from '../definitions/typeConfigs'
 
 const router = createRouter({
@@ -206,6 +207,35 @@ const router = createRouter({
       name: luogoConfig.routeNames.detail,
       component: () => import('../views/TypeDetailView.vue'),
       props: { config: luogoConfig },
+      meta: { requiresAuth: false, panel: 'narrow' },
+    },
+    {
+      // The one address printed on every B&B's card (spec itinerari.md I6):
+      // "Che cosa ti va di fare?". It must never move.
+      path: '/benvenuto',
+      name: 'benvenuto',
+      component: () => import('../views/WelcomeView.vue'),
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/itinerari',
+      name: itinerarioConfig.routeNames.list,
+      component: () => import('../views/TypeListView.vue'),
+      props: { config: itinerarioConfig },
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/itinerari/nuovo',
+      name: itinerarioConfig.routeNames.create,
+      component: () => import('../views/ItineraryCreateView.vue'),
+      meta: { requiresAuth: true, panel: 'narrow' },
+    },
+    {
+      // Narrow: an open tour draws its stops and path on the map beside it,
+      // and its guided mode (?tappa=N) walks it there (I7, I11).
+      path: '/itinerari/:id',
+      name: itinerarioConfig.routeNames.detail,
+      component: () => import('../views/ItineraryDetailView.vue'),
       meta: { requiresAuth: false, panel: 'narrow' },
     },
     {

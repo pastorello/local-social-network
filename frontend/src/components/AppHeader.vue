@@ -11,9 +11,10 @@ import UserAvatar from './cards/UserAvatar.vue'
 
 // The menu (spec/design.md D14): one pill at the top centre of every page,
 // floating over the map rather than a bar above it — the map is the ground of
-// every page (D13). The wordmark, Mappa, Schede, Il progetto, then Accedi or
-// the collaborator's avatar. The polls are reached from Il progetto; there is
-// no search in this phase; Itinerari arrives with its own phase.
+// every page (D13). The wordmark, Mappa, Schede, Itinerari, Il progetto, then
+// Accedi or the collaborator's avatar. The polls are reached from Il progetto;
+// there is no search in this phase. Itinerari (spec itinerari.md) is its own
+// item rather than a Schede entry: a tour is how a guest starts, not a card type.
 const userStore = useUserStore()
 const user = userStore.user
 const router = useRouter()
@@ -69,6 +70,7 @@ const menuLink =
     <template v-if="isDesktop">
       <RouterLink to="/" :class="item" :exact-active-class="active">Mappa</RouterLink>
       <SchedeMenu />
+      <RouterLink to="/itinerari" :class="item" :active-class="active">Itinerari</RouterLink>
       <RouterLink to="/il-progetto" :class="item" :active-class="active">Il progetto</RouterLink>
       <span class="h-6 w-px bg-hairline" aria-hidden="true"></span>
 
@@ -121,6 +123,7 @@ const menuLink =
           </svg>
         </template>
         <RouterLink to="/" :class="menuLink">Mappa</RouterLink>
+        <RouterLink to="/itinerari" :class="menuLink">Itinerari</RouterLink>
         <RouterLink to="/il-progetto" :class="menuLink">Il progetto</RouterLink>
         <template v-if="user.isAuthenticated && user.id">
           <RouterLink :to="{ name: 'profile', params: { id: user.id } }" :class="menuLink">
