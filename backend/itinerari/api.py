@@ -16,6 +16,7 @@ from content.api_helpers import (
     reject_media_on_translation,
     remove_images,
     require_authenticated,
+    require_original_published,
     require_author_or_admin,
     save_images,
     start_translation,
@@ -43,6 +44,9 @@ def _base_queryset():
         'card', 'card__author', 'card__translation_of', 'card__translation_of__itinerari',
     ).prefetch_related(
         'intents', 'card__images', 'card__map_features',
+        # visible_translations reads the card group's members; without these
+        # it cost a query per tour in the list.
+        'card__translations', 'card__translation_of__translations',
         Prefetch('stops', queryset=_stops_queryset()),
         # A translation shows the original's tour (itinerari/serializers.py).
         'card__translation_of__images', 'card__translation_of__map_features',
@@ -269,6 +273,7 @@ def itinerario_detail(request, pk):
     # The stops a publication would show: the new ones if any came, else the
     # current ones — publishing an unchanged tour checks what it already has.
     _require_publishable(is_published, stops if stops is not None else list(itinerario.stops.all()))
+    require_original_published(card, data.get('is_published', False))
 
     with transaction.atomic():
         for field in ('title', 'body_html', 'is_published'):

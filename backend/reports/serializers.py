@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from account.serializers import UserSerializer
 
+from common.coordinates import CoordinateField
 from common.images import ImageRejected, validate_image
 from .models import Category, IssueReport
 
@@ -50,8 +51,8 @@ class ReportWriteSerializer(serializers.ModelSerializer):
     category = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.filter(is_active=True)
     )
-    lat = serializers.FloatField(min_value=-90.0, max_value=90.0)
-    lng = serializers.FloatField(min_value=-180.0, max_value=180.0)
+    lat = CoordinateField('lat')
+    lng = CoordinateField('lng')
     photo = serializers.ImageField(required=False, allow_null=True)
 
     def validate_photo(self, photo):

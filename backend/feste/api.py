@@ -11,10 +11,11 @@ from account.models import User
 from common.pagination import StandardPagination
 from content.api_helpers import (
     reject_media_on_translation,
+    remove_images,
     require_authenticated,
     require_author_or_admin,
+    require_original_published,
     save_images,
-    remove_images,
     start_translation,
 )
 from content.models import Card, MapFeature
@@ -143,6 +144,7 @@ def feste_detail(request, pk):
 
     with transaction.atomic():
         card = feste.card
+        require_original_published(card, data.get('is_published', False))
         for field in ('title', 'body_html', 'is_published'):
             if field in data:
                 setattr(card, field, data[field])

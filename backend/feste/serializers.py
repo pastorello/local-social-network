@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from account.serializers import UserSerializer
+from common.coordinates import CoordinateField
 from content.models import MapFeature
 from content.serializers import CardImageSerializer, TranslationSerializer, media_source, visible_translations
 from content.fields import PlainTextField
@@ -17,8 +18,8 @@ class RoutePointSerializer(serializers.Serializer):
     """Validates one entry of the `route` JSON array a create/update request
     sends alongside the multipart form (see feste/api.py)."""
 
-    lat = serializers.FloatField(min_value=-90.0, max_value=90.0)
-    lng = serializers.FloatField(min_value=-180.0, max_value=180.0)
+    lat = CoordinateField('lat')
+    lng = CoordinateField('lng')
     label = serializers.CharField(max_length=200, required=False, allow_blank=True, default='')
 
 

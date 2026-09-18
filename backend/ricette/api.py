@@ -13,6 +13,7 @@ from content.api_helpers import (
     replace_points,
     require_authenticated,
     require_author_or_admin,
+    require_original_published,
     save_images,
     start_translation,
 )
@@ -112,6 +113,7 @@ def ricetta_detail(request, pk):
 
     with transaction.atomic():
         card = ricetta.card
+        require_original_published(card, data.get('is_published', False))
         for field in ('title', 'body_html', 'is_published'):
             if field in data:
                 setattr(card, field, data[field])

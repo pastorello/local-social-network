@@ -20,6 +20,17 @@ def card_type(card):
     return None
 
 
+def _live_point_index(stop):
+    """The stop's chosen point, if the card still has it. Its author may have
+    removed that pin since; `stop_point` then shows the first one, and handing
+    back the old index would make the form send it again and every save of the
+    tour fail with "il punto scelto non esiste"."""
+    if stop.point_index is None:
+        return None
+    points = [f for f in stop.card.map_features.all() if f.kind == MapFeature.POINT]
+    return stop.point_index if stop.point_index < len(points) else None
+
+
 def stop_point(card, point_index):
     """Where a stop is: the card's chosen point, else its first point, else —
     for a festa — the start of its route. The card's own map features, in
@@ -107,7 +118,7 @@ class ItinerarioReadSerializer(serializers.ModelSerializer):
                 'type': card_type(stop.card),
                 'title': stop.card.title,
                 'is_published': stop.card.is_published,
-                'point_index': stop.point_index,
+                'point_index': _live_point_index(stop),
                 'point': stop_point(stop.card, stop.point_index),
                 'note': stop.note,
             })
@@ -116,7 +127,9 @@ class ItinerarioReadSerializer(serializers.ModelSerializer):
     def get_route(self, obj):
         # The walked path between the stops (I8), stored as the card's route
         # like a festa's. A raccolta has none.
-        route = media_source(obj.card).map_features.filter(kind=MapFeature.ROUTE)
+        # Filtered in Python, not with .filter(): the features are prefetched,
+        # and a query here ran once per tour in the list.
+        route = [f for f in media_source(obj.card).map_features.all() if f.kind == MapFeature.ROUTE]
         return [{'lat': p.lat, 'lng': p.lng, 'label': p.label} for p in route]
 
     def get_images(self, obj):

@@ -13,6 +13,7 @@ from rest_framework.exceptions import NotAuthenticated, PermissionDenied, Valida
 from rest_framework import serializers
 
 from account.models import User
+from common.coordinates import CoordinateField
 from common.images import ImageRejected, validate_image
 
 from .models import Card, CardImage, MapFeature
@@ -31,8 +32,8 @@ class PointSerializer(serializers.Serializer):
     RoutePointSerializer, shared here since chiese/ricette/personaggi all
     need it and feste's route stays a different (ordered/connected) kind."""
 
-    lat = serializers.FloatField(min_value=-90.0, max_value=90.0)
-    lng = serializers.FloatField(min_value=-180.0, max_value=180.0)
+    lat = CoordinateField('lat')
+    lng = CoordinateField('lng')
     label = serializers.CharField(max_length=200, required=False, allow_blank=True, default='')
 
 
@@ -51,6 +52,17 @@ def require_author_or_admin(request, instance):
     """`instance` is any type's model instance — Feste/Chiesa/Ricetta/
     Personaggio/Termine — all of which expose `.card`."""
     require_author_or_admin_for_card(request, instance.card)
+
+
+def require_original_published(card, is_published):
+    """A translation is published after its original, never before: a reader
+    of a published translation sees the original's title, photographs and
+    place (T5), so publishing it first showed an Italian draft to everyone.
+    Every type's update path calls this before it writes `is_published`."""
+    if is_published and card.translation_of_id is not None and not card.translation_of.is_published:
+        raise ValidationError({
+            'is_published': ['Si pubblica dopo la scheda originale, che è ancora in bozza.']
+        })
 
 
 def start_translation(request, card, type_model, language, extra_defaults=None):
@@ -176,7 +188,19 @@ def remove_images(card, raw_ids):
         ids = json.loads(raw_ids)
     except (TypeError, ValueError):
         raise ValidationError({'remove_image_ids': ['Valore non valido.']}) from None
-    card.images.filter(id__in=ids).delete()
+    # A CardImage's pk is an integer, which the SPA may send as a number or as
+    # a string. Anything else — `["a"]`, an object — made the ORM raise a
+    # ValueError the error handler does not know: a 500.
+    def as_id(value):
+        if isinstance(value, int) and not isinstance(value, bool):
+            return value
+        if isinstance(value, str) and value.isdecimal():
+            return int(value)
+        raise ValidationError({'remove_image_ids': ['Valore non valido.']})
+
+    if not isinstance(ids, list):
+        raise ValidationError({'remove_image_ids': ['Valore non valido.']})
+    card.images.filter(id__in=[as_id(value) for value in ids]).delete()
 
 
 def parse_points(raw, field_name='pins', max_points=MAX_POINTS):
