@@ -77,3 +77,35 @@ finds the current reasoning instead of the stale one:
   caller that isn't `card.body_html`, or if any other component reaches for
   `v-html`/`innerHTML` — the safety argument above is specific to there being
   exactly one rendering path fed by exactly one sanitizing chokepoint.
+
+## Amendment (2026-09-18): the map was a second HTML sink all along
+
+The amendment above says `RichText.vue` is the only place markup reaches the
+DOM. **It was not**, and had not been since M2 (2026-07-17): Leaflet treats a
+tooltip given as a *string* as HTML (`Tooltip._updateContent` assigns it to
+`innerHTML`), and `GaetaMap.vue` handed it strings in eight places — card
+titles, pin and route labels, report titles, overlay and GeoJSON names. None
+of those is sanitized; only `body_html` is. A collaborator (or a stolen
+collaborator account) could publish a card titled
+`<img src=x onerror="…localStorage…">` and run it for every visitor who
+hovered the pin, the author included — whose refresh token is exactly what
+this ADR keeps in `localStorage`. Under v1's open signup, a report title did
+the same for anyone with an account. Found by a security audit on 2026-09-18
+(TD-44), reproduced in jsdom with the repo's own Leaflet.
+
+What guards it now, so the next audit finds the reasoning:
+
+- **Everything the map shows as text goes through
+  `frontend/src/lib/mapText.ts::mapText`**, which returns a node whose
+  `textContent` is the text; Leaflet appends a node as it is.
+- **`lib/__tests__/mapText.spec.ts` fails** if any `bindTooltip` in `src/` is
+  handed anything other than `mapText(…)`, and pins Leaflet's behaviour with a
+  control case — if Leaflet ever stops parsing strings, that test says so.
+- The decision still stands. The rule this amendment adds to the one above:
+  **a library that accepts "content" may be an HTML sink even when nothing in
+  our code says `innerHTML`**. Before adding a Leaflet popup, a `divIcon`, a
+  control with a label, or any widget that takes a string for display, check
+  whether it parses it — and route typed text through `mapText` or an
+  equivalent node.
+- The CSP noted above would have bounded this too. It is still open and still
+  not scheduled.

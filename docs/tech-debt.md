@@ -1419,3 +1419,26 @@ should go in with step 2.
 > code with the `DoesNotExist` above, and a second pinning the deactivated
 > case, since the SPA now depends on it being a 401 too. Drop the subclass once
 > upstream catches the exception.
+
+### TD-44 · The map rendered typed titles as HTML — stored XSS on every pin — **FIXED 2026-09-18** ✔
+
+> Found by the security-audit lens of the 2026-09-18 debugging sweep, and
+> confirmed by reading `leaflet-src.js` and by a jsdom run with the repo's own
+> Leaflet. Leaflet 1.9.4's `Tooltip._updateContent` assigns a string tooltip
+> to `innerHTML`, and `components/maps/GaetaMap.vue` passed strings to
+> `bindTooltip` in eight places — card titles, pin and route labels, report
+> titles, overlay and GeoJSON feature names, none of them sanitized. A card
+> titled `<img src=x onerror=…>` ran its script for every visitor who hovered
+> the pin (for the editor's permanent stop labels, without a hover), with the
+> JWTs ADR-0001 keeps in `localStorage` in reach. Present since M2
+> (2026-07-17), i.e. through v1's open signup as well; nothing is deployed,
+> so it never reached anyone.
+>
+> **Fixed the same day**: `lib/mapText.ts::mapText` wraps the text in a node
+> (`textContent`), and every call site uses it. `lib/__tests__/mapText.spec.ts`
+> pins three things — a hostile title stays text, a real Leaflet tooltip built
+> from `mapText` has no `<img>` while the bare-string control does, and no
+> `bindTooltip` anywhere in `src/` is handed anything else (shown failing
+> against the old `GaetaMap.vue`, all eight sites listed). ADR-0001 carries an
+> amendment, because its safety argument had counted exactly one sink.
+
