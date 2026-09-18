@@ -4,7 +4,7 @@
     {
       "name": "backend",
       "runtimeExecutable": "env",
-      "runtimeArgs": ["DJANGO_DEBUG=true", ".venv/bin/python", "backend/manage.py", "runserver", "127.0.0.1:8000", "--noreload"],
+      "runtimeArgs": ["DJANGO_DEBUG=true", "CORS_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173", ".venv/bin/python", "backend/manage.py", "runserver", "127.0.0.1:8000", "--noreload"],
       "port": 8000
     },
     {
