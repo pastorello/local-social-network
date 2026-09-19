@@ -11,11 +11,12 @@
   <div>
     <RouterLink
       to="/"
-      class="animate-fade-in-up block text-xl font-bold tracking-wider text-ink transition-colors duration-300 hover:text-sea"
+      class="animate-fade-in-up block text-lg font-bold tracking-wide text-ink lg:text-xl lg:tracking-wider transition-colors duration-300 hover:text-sea"
     >
-      <span class="relative inline-block text-2xl text-terracotta">V</span>ivere
+      <span class="relative inline-block text-xl text-terracotta lg:text-2xl">V</span>ivere
 
-      <span class="relative ml-2 inline-block text-2xl text-terracotta">G</span>aeta
+      <span class="relative ml-1.5 inline-block text-xl text-terracotta lg:ml-2 lg:text-2xl">G</span
+      >aeta
     </RouterLink>
   </div>
 </template>

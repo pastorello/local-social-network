@@ -93,14 +93,16 @@ describe('the menu (spec/design.md D14)', () => {
     expect(document.activeElement).toBe(trigger.element)
   })
 
-  it('on a phone keeps the wordmark and Schede in the pill and the rest behind Menu', async () => {
+  it('on a phone keeps the wordmark, Schede and Itinerari in the pill and the rest behind Menu', async () => {
     stubViewport(false)
     const wrapper = await mountHeader()
 
+    // Itinerari is in the pill itself: a guest from a QR code is on a phone.
+    // (Under 360px CSS hides it there and shows Menu's copy instead.)
+    expect(wrapper.find('a[data-pill-itinerari]').exists()).toBe(true)
     expect(wrapper.find('a[href="/il-progetto"]').exists()).toBe(false)
     await wrapper.get('button[aria-label="Menu"]').trigger('click')
 
-    expect(wrapper.find('a[href="/itinerari"]').exists()).toBe(true)
     expect(wrapper.find('a[href="/il-progetto"]').exists()).toBe(true)
     expect(wrapper.find('a[href="/login"]').exists()).toBe(true)
   })
