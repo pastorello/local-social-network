@@ -99,6 +99,8 @@ describe('TypeListView — what it counts', () => {
       is_published: true,
       images: [],
       duration: 'Mezza giornata',
+      form: 'percorso',
+      stops: [{}, {}, {}],
     }
     vi.mocked(axios.get).mockImplementation((url: string) =>
       Promise.resolve({
@@ -111,5 +113,6 @@ describe('TypeListView — what it counts', () => {
 
     expect(wrapper.text()).toContain('1 itinerario')
     expect(wrapper.text()).not.toContain('1 scheda')
+    expect(wrapper.text()).toContain('Mezza giornata · 3 tappe')
   })
 })

@@ -5,11 +5,17 @@ import type { MapPoint } from '@/definitions/interfaces/Content'
 // nothing of Google's is loaded on our page (TD-30, D6b); Google computes the
 // walk when the guest opens it. Without a previous stop the leg starts from
 // wherever the guest is, which is Google's default when no origin is given.
-export const legDirections = (from: MapPoint | null, to: MapPoint): string => {
+// `walking` for a percorso's legs; `null` leaves the mode to Google — a
+// raccolta's *Portami* may be a beach reached by car or bus.
+export const legDirections = (
+  from: MapPoint | null,
+  to: MapPoint,
+  mode: 'walking' | null = 'walking',
+): string => {
   const params = new URLSearchParams({ api: '1' })
   if (from) params.set('origin', `${from.lat},${from.lng}`)
   params.set('destination', `${to.lat},${to.lng}`)
-  params.set('travelmode', 'walking')
+  if (mode) params.set('travelmode', mode)
   return `https://www.google.com/maps/dir/?${params.toString()}`
 }
 

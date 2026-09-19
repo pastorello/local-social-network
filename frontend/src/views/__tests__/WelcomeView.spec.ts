@@ -30,7 +30,7 @@ describe('WelcomeView — the address on a B&B’s card (spec itinerari.md I6)',
   it('asks one question and offers only the intents that lead to a tour', async () => {
     vi.mocked(axios.get).mockResolvedValue({
       data: [
-        { slug: 'mare', name: 'Andare al mare', count: 1 },
+        { slug: 'mare', name: 'Andare al mare', description: 'Le spiagge', count: 1 },
         { slug: 'mangiare', name: 'Mangiare bene', count: 0 },
         { slug: 'citta', name: 'Scoprire la città', count: 2 },
       ],
@@ -41,6 +41,7 @@ describe('WelcomeView — the address on a B&B’s card (spec itinerari.md I6)',
     const hrefs = wrapper.findAll('li a').map((a) => a.attributes('href'))
     expect(hrefs).toEqual(['/itinerari?intento=mare', '/itinerari?intento=citta'])
     expect(wrapper.text()).toContain('2 itinerari')
+    expect(wrapper.text()).toContain('Le spiagge')
     expect(wrapper.find('a[href="/"]').text()).toBe('Oppure esplora la mappa')
   })
 

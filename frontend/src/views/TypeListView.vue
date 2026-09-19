@@ -98,7 +98,11 @@ const entries = computed(() =>
   items.value.map((item) => ({
     id: item.id,
     title: item.title,
-    summary: summaryField.value ? (item[summaryField.value] as string) : '',
+    summary: props.config.summaryOf
+      ? props.config.summaryOf(item)
+      : summaryField.value
+        ? (item[summaryField.value] as string)
+        : '',
     cover: item.images[0]?.imageURL ?? null,
     isPublished: item.is_published,
     to: { name: props.config.routeNames.detail, params: { id: item.id } },

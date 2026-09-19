@@ -13,6 +13,10 @@ class Intent(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField('nome', max_length=100, unique=True)
     slug = models.SlugField(max_length=100, unique=True)
+    # The line under the choice on the landing page ("Le spiagge, da Serapo a
+    # Sant'Agostino"), as the itinerari canvas drew it. Optional: an intent
+    # without one shows only its name and its count.
+    description = models.CharField('descrizione', max_length=200, blank=True, default='')
     position = models.PositiveIntegerField('posizione', default=0)
 
     class Meta:
