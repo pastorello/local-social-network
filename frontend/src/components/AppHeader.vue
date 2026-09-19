@@ -50,7 +50,7 @@ const logout = async () => {
 }
 
 const item =
-  'flex h-9 items-center rounded-full px-3 text-sm font-semibold whitespace-nowrap text-ink hover:bg-page focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea'
+  'flex h-9 items-center rounded-full px-2 lg:px-3 text-sm font-semibold whitespace-nowrap text-ink hover:bg-page focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea'
 const active = 'bg-sea/10 text-sea'
 const menuLink =
   'block px-4 py-2 text-sm text-ink hover:bg-page focus-visible:bg-page focus-visible:outline-none'
@@ -60,12 +60,12 @@ const menuLink =
   <nav
     ref="nav"
     aria-label="Principale"
-    class="fixed top-3 left-1/2 z-1100 flex max-w-[calc(100%-1.5rem)] -translate-x-1/2 items-center gap-1 rounded-full border border-hairline bg-surface py-1.5 pr-1.5 pl-4 shadow-md lg:gap-2 lg:pl-5"
+    class="fixed top-3 left-1/2 z-1100 flex max-w-[calc(100%-1.5rem)] -translate-x-1/2 items-center gap-0.5 rounded-full border border-hairline bg-surface py-1.5 pr-1.5 pl-3 shadow-md lg:gap-2 lg:pl-5"
   >
     <!-- Never wrapped, never shrunk: in a pill 390px wide the wordmark was the
     item the browser squeezed, and it broke into four lines (2026-09-18). -->
     <SiteTitle class="mr-1 shrink-0 whitespace-nowrap lg:mr-2" />
-    <span class="h-6 w-px bg-hairline" aria-hidden="true"></span>
+    <span class="hidden h-6 w-px bg-hairline lg:block" aria-hidden="true"></span>
 
     <template v-if="isDesktop">
       <RouterLink to="/" :class="item" :exact-active-class="active">Mappa</RouterLink>
@@ -102,9 +102,20 @@ const menuLink =
     </template>
 
     <!-- On a phone the pill holds what a reader reaches for first — the
-    wordmark home and the cards — and the rest sits behind one button. -->
+    wordmark home, the cards and the tours, since a guest arriving from a B&B's
+    QR code is on a phone (decided 2026-09-19) — and the rest sits behind one
+    button. -->
     <template v-else>
       <SchedeMenu />
+      <!-- Below 360px — the narrowest common phone, and above WCAG's 320px
+      reflow width — the pill has no room for it, and it moves into Menu. -->
+      <RouterLink
+        to="/itinerari"
+        :class="[item, 'max-[359px]:hidden']"
+        :active-class="active"
+        data-pill-itinerari
+        >Itinerari</RouterLink
+      >
       <NavDisclosure
         label="Menu"
         trigger-class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-ink hover:bg-page focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
@@ -123,7 +134,7 @@ const menuLink =
           </svg>
         </template>
         <RouterLink to="/" :class="menuLink">Mappa</RouterLink>
-        <RouterLink to="/itinerari" :class="menuLink">Itinerari</RouterLink>
+        <RouterLink to="/itinerari" :class="[menuLink, 'min-[360px]:hidden']">Itinerari</RouterLink>
         <RouterLink to="/il-progetto" :class="menuLink">Il progetto</RouterLink>
         <template v-if="user.isAuthenticated && user.id">
           <RouterLink :to="{ name: 'profile', params: { id: user.id } }" :class="menuLink">

@@ -653,3 +653,21 @@ D19, and what the build decided:
   uses its own placing mode on the same map, which works, and merging the two
   is a change to the v1 reports flow rather than to the layout.
 
+
+### Two decisions after the first week of use — 2026-09-19
+
+Taken by the author from what the 2026-09-18 debugging sweep showed on a
+phone, and built the same day:
+
+- **A tour is followed on its own.** D16 dims everything but the opened card;
+  for a tour that was not enough — the dimmed clusters' counts sat beside the
+  tour's numbered stops and read as more stop numbers. While a tour is open,
+  the map draws only its stops and its path (`MapStage.vue`, `tourOpen`); the
+  other cards and the reports come back when it closes. Every other card keeps
+  D16 as written.
+- **Itinerari is in the phone's pill** (amends D14): wordmark · Schede ·
+  Itinerari · Menu, as the itinerari canvas drew it, because a guest arriving
+  from a B&B's QR code is on a phone. The pill's phone spacing and wordmark
+  were tightened to make room (desktop unchanged); it fits from 360px, and
+  below that — down to WCAG's 320px reflow width — Itinerari moves back into
+  *Menu* rather than clipping.

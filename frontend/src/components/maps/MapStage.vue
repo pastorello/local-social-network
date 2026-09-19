@@ -75,6 +75,11 @@ const controlsLeft = computed(() =>
 // While a form draws on the map, nothing on it navigates: opening a pin would
 // unmount the form and lose what it holds. The click still reaches the map,
 // where the form decides what it means (D19).
+// A tour is followed on its own (decided 2026-09-19): while one is open the
+// map draws only its numbered stops and its path. Everything else was there,
+// dimmed, and the clusters' counts read as more stop numbers beside the tour's.
+const tourOpen = computed(() => !mapStore.editor && !!mapStore.focus?.numbered)
+
 const onPinClick = (id: string) => {
   if (mapStore.editor) return
   router.push(`/reports/${id}`)
@@ -109,8 +114,8 @@ onMounted(mapStore.load)
   <!-- Edge to edge, under the menu too (D14): the menu floats over the map. -->
   <div class="fixed inset-0 z-0" :inert="covered" :style="{ '--map-controls-left': controlsLeft }">
     <GaetaMap
-      :pins="mapStore.visiblePins"
-      :features="mapStore.visibleFeatures"
+      :pins="tourOpen ? [] : mapStore.visiblePins"
+      :features="tourOpen ? [] : mapStore.visibleFeatures"
       :overlays="mapStore.visibleOverlays"
       :placing="mapStore.placing"
       :focus="mapStore.editor ? null : mapStore.focus"

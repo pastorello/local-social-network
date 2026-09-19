@@ -62,7 +62,7 @@ onBeforeUnmount(() => {
     <!-- A pill item like its neighbours in the menu (spec/design.md D14). -->
     <button
       type="button"
-      class="flex h-9 cursor-pointer items-center gap-1 rounded-full px-3 text-sm font-semibold text-ink hover:bg-page focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+      class="flex h-9 cursor-pointer items-center gap-0.5 rounded-full px-2 text-sm lg:gap-1 lg:px-3 font-semibold text-ink hover:bg-page focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
       :class="{ 'bg-sea/10 text-sea': isActive }"
       aria-haspopup="menu"
       :aria-expanded="open"

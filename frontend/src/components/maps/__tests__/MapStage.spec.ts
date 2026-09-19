@@ -14,6 +14,7 @@ vi.mock('axios')
 // MapStage listens to.
 const GaetaMapStub = defineComponent({
   name: 'GaetaMap',
+  props: ['pins', 'features', 'overlays', 'placing', 'focus', 'editor', 'focusPadding'],
   emits: ['mapClick', 'pinClick', 'featureClick'],
   setup: () => () => h('div'),
 })
@@ -63,5 +64,51 @@ describe('MapStage while a form draws on the map (design.md D19)', () => {
     map.vm.$emit('pinClick', 'r1')
 
     expect(push).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('MapStage while a tour is open (decided 2026-09-19)', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.mocked(axios.get).mockResolvedValue({ data: [] })
+  })
+
+  it('draws only the tour: no other card, no report, no cluster', async () => {
+    const { map } = await mountStage()
+    const store = useMapStore()
+    store.features = [
+      {
+        id: 'c1',
+        type: 'chiese',
+        title: 'Duomo',
+        cover: null,
+        points: [{ lat: 41.2, lng: 13.5, label: '' }],
+        route: [],
+      },
+    ]
+    store.pins = [{ id: 'r1', title: 'Buca', status: 'open', lat: 41.21, lng: 13.57 }] as never
+    await flushPromises()
+    expect(map.props('features')).toHaveLength(1)
+
+    store.setFocus({
+      id: 't1',
+      type: 'itinerari',
+      points: [{ lat: 41.2, lng: 13.5, label: '' }],
+      route: [],
+      numbered: true,
+    })
+    await flushPromises()
+    expect(map.props('features')).toEqual([])
+    expect(map.props('pins')).toEqual([])
+
+    // A card that is not a tour keeps the others on the map, dimmed.
+    store.setFocus({
+      id: 'c1',
+      type: 'chiese',
+      points: [{ lat: 41.2, lng: 13.5, label: '' }],
+      route: [],
+    })
+    await flushPromises()
+    expect(map.props('features')).toHaveLength(1)
   })
 })
