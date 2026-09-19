@@ -31,6 +31,17 @@ def _live_point_index(stop):
     return stop.point_index if stop.point_index < len(points) else None
 
 
+def _stop_places(stop):
+    points = [f for f in stop.card.map_features.all() if f.kind == MapFeature.POINT]
+    index = _live_point_index(stop)
+    chosen = [points[index]] if index is not None else points
+    if not chosen:
+        # A festa has no pins, only its route: its place is where it starts.
+        start = stop_point(stop.card, None)
+        return [start] if start else []
+    return [{'lat': f.lat, 'lng': f.lng, 'label': f.label} for f in chosen]
+
+
 def stop_point(card, point_index):
     """Where a stop is: the card's chosen point, else its first point, else —
     for a festa — the start of its route. The card's own map features, in
@@ -65,7 +76,7 @@ class IntentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Intent
-        fields = ('slug', 'name', 'name_plural', 'count')
+        fields = ('slug', 'name', 'name_plural', 'description', 'count')
 
 
 class ItinerarioReadSerializer(serializers.ModelSerializer):
@@ -120,6 +131,12 @@ class ItinerarioReadSerializer(serializers.ModelSerializer):
                 'is_published': stop.card.is_published,
                 'point_index': _live_point_index(stop),
                 'point': stop_point(stop.card, stop.point_index),
+                # Every place the stop stands for: the chosen one, or — with no
+                # choice made — all of the card's pins, so a raccolta can list
+                # each bakery a dish is sold at (decided 2026-09-19).
+                'places': _stop_places(stop),
+                # A luogo says how to reach it; the raccolta shows it per stop.
+                'how_to_get_there': getattr(getattr(stop.card, 'luoghi', None), 'how_to_get_there', ''),
                 'note': stop.note,
             })
         return stops

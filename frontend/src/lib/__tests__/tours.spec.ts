@@ -18,6 +18,11 @@ describe('legDirections — "Come arrivarci" (spec itinerari.md I7)', () => {
     const url = new URL(legDirections(null, { lat: 41.21, lng: 13.57, label: '' }))
     expect(url.searchParams.has('origin')).toBe(false)
   })
+
+  it('can leave the way of travelling to Google, for a raccolta’s "Portami"', () => {
+    const url = new URL(legDirections(null, { lat: 41.21, lng: 13.57, label: '' }, null))
+    expect(url.searchParams.has('travelmode')).toBe(false)
+  })
 })
 
 describe('pointOf', () => {

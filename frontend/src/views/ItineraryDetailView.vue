@@ -92,6 +92,20 @@ useMapFocus(() => {
 // tells a screen reader where they are — or back to "Inizia il tour".
 const stepHeading = ref<HTMLElement | null>(null)
 const startButton = ref<{ $el: HTMLElement } | null>(null)
+// What a stop is, under its title (the itinerari canvas: "Chiesa",
+// "Monumento"). Singular, where the map's layers are plural.
+const TYPE_LABELS: Record<string, string> = {
+  chiese: 'Chiesa',
+  feste: 'Festa',
+  ricette: 'Ricetta',
+  personaggi: 'Personaggio storico',
+  luoghi: 'Luogo',
+}
+const typeLabel = (type: string) => TYPE_LABELS[type] ?? ''
+// The screen-reader half of "Portami": a leading space, set here because the
+// template's whitespace between the two halves is condensed away.
+const portamiLabel = (where: string) => ` a ${where} (apre Google Maps)`
+
 const goToStep = async (n: number | null) => {
   await router.push({ query: n ? { tappa: String(n) } : {} })
   await nextTick()
@@ -281,14 +295,45 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
                 >
                   {{ stop.title }}
                 </RouterLink>
-                <span v-if="stop.point?.label" class="text-sm text-muted">
+                <span v-if="isPercorso && stop.point?.label" class="text-sm text-muted">
                   · {{ stop.point.label }}</span
                 >
+                <p v-if="stop.type" class="text-sm text-muted">{{ typeLabel(stop.type) }}</p>
                 <!-- I4: only the author and admins ever receive such a stop. -->
                 <p v-if="!stop.is_published" class="text-sm font-semibold text-status-open">
                   Scheda in bozza: i lettori non vedono questa tappa.
                 </p>
                 <p v-if="stop.note" class="mt-1 whitespace-pre-line text-ink">{{ stop.note }}</p>
+                <!-- A raccolta is not walked in order, so each place carries its
+                own way there (the itinerari canvas, decided 2026-09-19): a dish
+                lists every bakery it is sold at, a beach says how to reach it. -->
+                <template v-if="!isPercorso">
+                  <p
+                    v-if="stop.how_to_get_there"
+                    class="mt-1 text-sm whitespace-pre-line text-muted"
+                  >
+                    {{ stop.how_to_get_there }}
+                  </p>
+                  <ul v-if="stop.places.length" class="mt-2 space-y-1">
+                    <li
+                      v-for="(place, placeIndex) in stop.places"
+                      :key="placeIndex"
+                      class="flex flex-wrap items-center gap-x-3 gap-y-1"
+                    >
+                      <span v-if="place.label" class="text-ink">{{ place.label }}</span>
+                      <a
+                        :href="legDirections(null, place, null)"
+                        target="_blank"
+                        rel="noopener"
+                        class="text-sm font-semibold text-sea underline underline-offset-4"
+                      >
+                        Portami<span class="sr-only">{{
+                          portamiLabel(place.label || stop.title)
+                        }}</span>
+                      </a>
+                    </li>
+                  </ul>
+                </template>
               </div>
             </li>
           </component>

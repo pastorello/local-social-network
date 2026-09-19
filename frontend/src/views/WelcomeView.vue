@@ -3,7 +3,7 @@ import axios from 'axios'
 import { computed, onMounted, ref } from 'vue'
 
 import MainTitle from '@/components/typography/MainTitle.vue'
-import type { Genre as Intent } from '@/definitions/interfaces/Luogo'
+import type { Intent } from '@/definitions/interfaces/Itinerario'
 
 // The landing page a B&B's card points at (spec itinerari.md I6): one address
 // for everyone — no code per host, no greeting by name, nothing that tracks
@@ -42,6 +42,7 @@ onMounted(async () => {
           class="flex h-full flex-col gap-1 rounded-2xl border border-hairline bg-surface p-5 hover:border-field focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
         >
           <span class="font-display text-title text-ink">{{ intent.name }}</span>
+          <span v-if="intent.description" class="text-ink">{{ intent.description }}</span>
           <span class="text-sm text-muted">
             {{ intent.count === 1 ? '1 itinerario' : `${intent.count} itinerari` }}
           </span>

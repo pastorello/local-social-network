@@ -34,6 +34,8 @@ const tour = {
       is_published: true,
       point_index: null,
       point: { lat: 41.2, lng: 13.5 },
+      places: [{ lat: 41.2, lng: 13.5, label: '' }],
+      how_to_get_there: '',
       note: '',
     },
     {
@@ -43,6 +45,11 @@ const tour = {
       is_published: true,
       point_index: null,
       point: { lat: 41.21, lng: 13.57 },
+      places: [
+        { lat: 41.21, lng: 13.57, label: 'Forno A' },
+        { lat: 41.22, lng: 13.58, label: 'Forno B' },
+      ],
+      how_to_get_there: 'In autobus dalla stazione.',
       note: 'Si parte dal porto.',
     },
   ],
@@ -124,6 +131,36 @@ describe('ItineraryDetailView (spec itinerari.md I7)', () => {
     await flushPromises()
     expect(document.activeElement?.textContent?.trim()).toBe('Inizia il tour')
     wrapper.unmount()
+  })
+
+  it('says what each stop is, under its title', async () => {
+    const { wrapper } = await mountAt('/itinerari/t1')
+
+    expect(wrapper.text()).toContain('Chiesa')
+    expect(wrapper.text()).toContain('Festa')
+  })
+
+  it('in a raccolta, gives every place of a stop its own way there', async () => {
+    vi.mocked(axios.get).mockResolvedValue({ data: { ...tour, form: 'raccolta' } })
+    const { wrapper } = await mountAt('/itinerari/t1')
+
+    const portami = wrapper
+      .findAll('a[target="_blank"]')
+      .filter((a) => a.text().startsWith('Portami'))
+    expect(portami).toHaveLength(3)
+    const toForno = new URL(portami[1]!.attributes('href')!)
+    expect(toForno.searchParams.get('destination')).toBe('41.21,13.57')
+    // Not necessarily on foot: the mode is Google's to choose.
+    expect(toForno.searchParams.has('travelmode')).toBe(false)
+    // The accessible name keeps its space: "Portami a Forno A", not "Portamia".
+    expect(portami[1]!.element.textContent?.trim()).toBe('Portami a Forno A (apre Google Maps)')
+    expect(wrapper.text()).toContain('In autobus dalla stazione.')
+  })
+
+  it('in a percorso, leaves the way there to the guided mode', async () => {
+    const { wrapper } = await mountAt('/itinerari/t1')
+
+    expect(wrapper.findAll('a').some((a) => a.text().startsWith('Portami'))).toBe(false)
   })
 
   it('does not guide a raccolta: it has no order to follow', async () => {

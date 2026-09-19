@@ -43,6 +43,8 @@ export interface TypeConfig {
   // How the list counts its rows, where "scheda" is the wrong word for them:
   // a guest reading "1 scheda" under *Scoprire la città* is looking at a tour.
   countNouns?: [singular: string, plural: string]
+  // The grid's one-line summary, where the first extra field is not enough.
+  summaryOf?: (item: Record<string, unknown>) => string
 }
 
 export const chiesaConfig: TypeConfig = {
@@ -169,6 +171,19 @@ export const itinerarioConfig: TypeConfig = {
   label: 'Itinerari',
   singularLabel: 'itinerario',
   countNouns: ['itinerario', 'itinerari'],
+  // "Mezza giornata · 5 tappe", as the itinerari canvas drew the list.
+  summaryOf: (item) => {
+    const stops = Array.isArray(item.stops) ? item.stops.length : 0
+    const count =
+      item.form === 'raccolta'
+        ? stops === 1
+          ? '1 luogo'
+          : `${stops} luoghi`
+        : stops === 1
+          ? '1 tappa'
+          : `${stops} tappe`
+    return [item.duration, stops ? count : ''].filter(Boolean).join(' · ')
+  },
   endpoint: '/api/itinerari/',
   routeNames: { list: 'itinerarilist', detail: 'itinerariodetail', create: 'itinerariocreate' },
   extraFields: [{ key: 'duration', label: 'Durata indicativa', kind: 'input' }],

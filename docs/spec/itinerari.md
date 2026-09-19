@@ -231,3 +231,25 @@ left open:
   only) draws the path with the same field a festa's route uses. At most 40
   stops.
 
+
+## What the canvas still asked for — built 2026-09-19
+
+The itinerari canvas drew four things the first build left out; the author
+asked for them on 2026-09-19.
+
+- **A line under each intent** on `/benvenuto` ("Le spiagge, da Serapo a
+  Sant'Agostino"): `Intent.description`, admin-edited, seeded with the
+  canvas's three lines where empty.
+- **The list says what a tour is**: "Mezza giornata · 5 tappe", or "· 7
+  luoghi" for a raccolta (`typeConfigs.ts`'s `summaryOf`).
+- **Each stop says what it is** under its title — Chiesa, Festa, Ricetta,
+  Personaggio storico, Luogo. Not the luogo's genre: a stop does not carry it.
+- **A raccolta gives every place its own way there** (decided with the author:
+  no new field). A stop whose *Dove* is left empty stands for **every** place
+  its card has, so "Tiella di Gaeta" lists each bakery with its own *Portami*;
+  choosing a *Dove* narrows it to that one, as before. A luogo's *Come
+  arrivarci* text shows under it ("In autobus dalla stazione"). *Portami*
+  leaves the travel mode to Google — a beach may be reached by car or bus;
+  the guided mode of a percorso stays on foot. A percorso does not change: a
+  walk needs one point per stop. **Limit:** the map marks such a stop at its
+  first place only.

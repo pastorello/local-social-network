@@ -13,7 +13,21 @@ export interface ItineraryStop {
   is_published: boolean
   point_index: number | null
   point: MapPoint | null
+  // Every place the stop stands for: the chosen point, or all of the card's
+  // pins when none was chosen (a dish and each bakery it is sold at).
+  places: MapPoint[]
+  // A luogo's own "come arrivarci"; empty for any other type.
+  how_to_get_there: string
   note: string
+}
+
+// "Che cosa ti va di fare?" (I5): an intent, with the line under it.
+export interface Intent {
+  slug: string
+  name: string
+  name_plural: string
+  description: string
+  count: number
 }
 
 export default interface Itinerario extends CardBase {

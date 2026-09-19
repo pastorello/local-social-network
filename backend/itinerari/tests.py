@@ -426,3 +426,37 @@ def test_a_stop_whose_pin_was_removed_does_not_lock_the_tour(auth_client, places
         format='multipart',
     )
     assert response.status_code == 200
+
+
+# --- what a raccolta shows per stop (the itinerari canvas, decided 2026-09-19) ---
+
+
+def test_the_intents_carry_their_line_for_the_landing_page(api_client):
+    intents = {i['slug']: i for i in api_client.get('/api/itinerari/intenti/').json()}
+
+    assert intents['mare']['description'] == 'Le spiagge, da Serapo a Sant’Agostino'
+
+
+def test_a_stop_with_no_place_chosen_stands_for_every_place_its_card_has(auth_client, places):
+    from luoghi.models import Genre, Luogo
+
+    spiaggia = Luogo.objects.create(
+        card=_card(places['chiesa'].author, 'Serapo'),
+        genre=Genre.objects.get(slug='spiaggia'),
+        how_to_get_there='A piedi dal centro, dieci minuti.',
+    )
+    MapFeature.objects.create(card=spiaggia.card, kind=MapFeature.POINT, position=0, lat=41.22, lng=13.56)
+    stops = [
+        {'card': str(places['tiella'].pk)},
+        {'card': str(places['tiella'].pk), 'point_index': 1},
+        {'card': str(places['festa'].pk)},
+        {'card': str(spiaggia.card.pk)},
+    ]
+
+    data = auth_client.post('/api/itinerari/', payload(stops, form='raccolta')).json()['stops']
+
+    assert [p['label'] for p in data[0]['places']] == ['Forno A', 'Forno B']
+    assert [p['label'] for p in data[1]['places']] == ['Forno B']
+    assert [p['label'] for p in data[2]['places']] == ['Scalzi']
+    assert data[3]['how_to_get_there'] == 'A piedi dal centro, dieci minuti.'
+    assert data[0]['how_to_get_there'] == ''
