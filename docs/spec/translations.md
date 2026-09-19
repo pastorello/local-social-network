@@ -125,3 +125,23 @@ sign, a map, a poster — all of them in Italian — and is lost. So:
 What this does not do is translate the *body* differently — the prose is the
 translator's, whole. Only the name is treated as an address rather than as
 text.
+
+## T8 — A translation is published with its original, never without — decided 2026-09-19
+
+A published translation shows its original's title, photographs and place
+(T5, T7), so it cannot be public while the original is not. Both halves:
+
+- **Not before.** Publishing a translation whose original is a draft is
+  refused ("Si pubblica dopo la scheda originale, che è ancora in bozza") —
+  found by the 2026-09-18 debugging sweep, built the same day
+  (`content/api_helpers.py::require_original_published`, every type).
+- **Not after.** Unpublishing the original **takes its translations down
+  too** — the author's decision on 2026-09-19. `Card.save()` does it, so
+  Django admin obeys it as well as every type's API. Deleting an original
+  unpublishes its translations rather than deleting them: `translation_of` is
+  `SET_NULL`, and without this they would stay up as originals of their own,
+  with no photographs and no place. Their text is the translator's to discard.
+
+Republishing the original does **not** republish its translations: each goes
+back up as its own decision, since the original may have changed while it was
+down.

@@ -2,6 +2,8 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
 
 from account.models import User
 
@@ -25,7 +27,9 @@ class Card(models.Model):
     author = models.ForeignKey(User, related_name='cards', on_delete=models.PROTECT)
     is_published = models.BooleanField(default=False)
 
-    # C4 plumbing only (spec translations.md) — nothing writes to these yet.
+    # Translations (C4, spec translations.md): a translation is a second Card
+    # pointing at its original. It is published only after it (T8, enforced in
+    # api_helpers.require_original_published) and comes down with it (save()).
     language = models.CharField(max_length=10, default='it')
     translation_of = models.ForeignKey(
         'self', null=True, blank=True, related_name='translations', on_delete=models.SET_NULL
@@ -39,6 +43,26 @@ class Card(models.Model):
 
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # T8 (decided 2026-09-19): unpublishing an original takes its
+        # translations down too — a published translation shows the original's
+        # title, photographs and place, so it cannot outlive it. Here rather
+        # than in each type's API so Django admin obeys it as well. A queryset
+        # `.update()` bypasses save() and this with it.
+        if not self.is_published and self.translation_of_id is None:
+            self.translations.filter(is_published=True).update(is_published=False)
+
+
+@receiver(pre_delete, sender=Card)
+def _unpublish_translations_of_a_deleted_original(sender, instance, **kwargs):
+    # `translation_of` is SET_NULL: deleting an original would otherwise leave
+    # its translations standing as published originals of their own, with no
+    # photographs or place. They are unpublished, not deleted — a collaborator's
+    # translated text is theirs to discard.
+    if instance.translation_of_id is None:
+        instance.translations.filter(is_published=True).update(is_published=False)
 
 
 class CardImage(models.Model):
