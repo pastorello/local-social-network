@@ -1,11 +1,17 @@
 # Runs the five quality gates from the definition of done (spec §9) on every
 # push to main and every pull request. Register item TD-01.
 #
-# Deliberately NOT here (see docs/tech-debt.md):
-#   - no deploy step — there is nothing to deploy to (roadmap item 2, parked)
+# Deliberately NOT here (see docs/tech-debt-archive.md for TD-01):
+#   - no deploy step — deployment is roadmap item 3 and happens on the author's
+#     signal, not as a CI stage. The prerequisites are code-complete; what is
+#     missing is a host, a mail provider and a sender domain.
 #   - no Postgres service — the suite runs on the SQLite fallback, which is what
 #     every developer runs locally. Testing against Postgres too is a deliberate
-#     later step, not an oversight.
+#     later step, not an oversight. Known cost, measured: TD-46's NaN
+#     coordinate behaved differently on the two engines (SQLite refused the
+#     insert, Postgres would have stored it and broken every response
+#     carrying it), so this gap can hide a production-only bug. The 2026-09-10
+#     deploy walk on Postgres 17 is what currently covers it, by hand.
 name: CI
 
 on:

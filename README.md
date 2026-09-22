@@ -124,8 +124,10 @@ in [docs/adr/](./docs/adr/README.md).
 |---|---|
 | [docs/spec/](./docs/spec/README.md) | **Product spec (v2)** — the cultural map: content types, roles, non-goals |
 | [docs/mvp-spec.md](./docs/mvp-spec.md) | v1 spec (delivered) — map reports + polls; historical record |
-| [docs/roadmap.md](./docs/roadmap.md) | What is planned and in what order |
-| [docs/tech-debt.md](./docs/tech-debt.md) | Measured debt register, with what is fixed and what is not |
+| [docs/roadmap.md](./docs/roadmap.md) | What is planned and in what order — **what is still ahead** |
+| [docs/roadmap-archive.md](./docs/roadmap-archive.md) | The phases that are done, with the reasoning that got them there |
+| [docs/tech-debt.md](./docs/tech-debt.md) | Measured debt register — **what is still open** |
+| [docs/tech-debt-archive.md](./docs/tech-debt-archive.md) | The debt that has been paid, with the evidence that proved each fix |
 | [docs/adr/](./docs/adr/README.md) | Architecture decision records |
 | [docs/deploy.md](./docs/deploy.md) | Deployment guide — walked end to end on a production-shaped stack (2026-09-10); nothing is deployed yet |
 | [CLAUDE.md](./CLAUDE.md) | Architecture, conventions and gotchas for humans and agents |
@@ -135,7 +137,9 @@ in [docs/adr/](./docs/adr/README.md).
 Everything the v2 spec asks for is built and tested — the five build phases
 (accounts, the content core, the card types, translations, the map), the
 design pass, the map under every page, luoghi and itinerari (2026-09-18). The
-debt register is closed except for two items it keeps open on purpose. What is
-missing is **content**: the archive is empty until its collaborators write it.
+debt register is closed but for four items: two it keeps open on purpose, and
+two test-coverage gaps found when the register was re-walked on 2026-09-22.
+What is missing is **content**: the archive is empty until its collaborators
+write it.
 Nothing is deployed; deployment waits on a host and a mail provider, and on the
 author's signal. See [docs/roadmap.md](./docs/roadmap.md).

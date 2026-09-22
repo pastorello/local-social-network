@@ -2,7 +2,11 @@
 
 ## Status
 
-Accepted
+Accepted, with **two amendments** recorded at the foot of this file: the
+no-HTML premise this decision leaned on stopped holding at C2 (2026-08-22,
+rich text), and the map turned out to be a second HTML sink (2026-09-18,
+TD-44). The decision itself is unchanged; what changed is what has to be true
+around it.
 
 ## Date
 
