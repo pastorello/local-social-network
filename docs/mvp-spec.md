@@ -87,7 +87,7 @@ A civic engagement platform for small cities (pilot: Gaeta, LT). Citizens report
 |---|---|---|
 | Frontend | **Vue 3 (Composition API) + TypeScript strict** | ≈⅔ of SFCs already TS; the 2 Pinia stores + 9 script blocks are converted in M0 (A6) |
 | State | Pinia | Confirmed (A3); stores become typed TS in M0 |
-| Map | **Leaflet + OpenStreetMap tiles** | `components/maps/ReportsMap.vue` + markercluster, centered on Gaeta (the pre-MVP `CityMap.vue` was replaced in M2) |
+| Map | **Leaflet + OpenStreetMap tiles** | `components/maps/ReportsMap.vue` + markercluster, centered on Gaeta (the pre-MVP `CityMap.vue` was replaced in M2; v2's C5 renamed this one `GaetaMap.vue`, since it draws more than reports) |
 | Backend | **Django + Django REST Framework** | Existing |
 | DB | PostgreSQL from M0 (Docker Compose) | SQLite fallback for bare-metal dev; plain lat/lng columns; PostGIS is overkill for MVP |
 | Auth | **JWT via djangorestframework-simplejwt (existing — keep)** | Decided after audit (A2); hardened in M4: 60-min access, 30-day rotating refresh + blacklist, transparent 401-refresh in the SPA |
@@ -184,7 +184,11 @@ and quality audit followed on 2026-08-19 and its findings are tracked in
 Read "delivered" narrowly: it means *this document* is implemented. It does not
 mean the product is ready for people outside the project to use. Hosting was
 never part of it — `docs/deploy.md` makes the app deployable, but choosing where
-and paying for it is a decision the author takes when the product is worth it,
-and the design work that would make it worth it has not been done yet. That gap
-is item 1 of the [roadmap](./roadmap.md) — the active one, since 2026-08-27 —
-and it is deliberately named there rather than hidden behind "MVP complete".
+and paying for it is a decision the author takes when the product is worth it.
+When this was written, the design work that would make it worth it had not been
+done; it was item 1 of the [roadmap](./roadmap.md), and it was **completed
+2026-08-31** (the record is in
+[roadmap-archive.md](./roadmap-archive.md)). What still stands between the app
+and a public URL is roadmap item 3 — a host, a mail provider, a sender domain —
+and item 4, the content. Both are deliberately named there rather than hidden
+behind "MVP complete".
