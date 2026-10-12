@@ -1090,7 +1090,8 @@ proven**; 16 have no test at all. The ones that carry real risk:
   duplicates). One `@pytest.mark.parametrize` over `ALLOWED_TRANSITIONS`
   asserting every legal edge 200s and every illegal one 400s closes this
   permanently and replaces four hand-written tests.
-  **Still open 2026-09-22 — now TD-47.** Thirteen months of work later the word
+  **Still open 2026-09-22 — now TD-47, paid 2026-10-12** (at the foot of this
+  file). Thirteen months of work later the word
   appears in the backend suite exactly once, in a `maps` docstring about
   uploads.
 - ~~**PNG and WEBP are never proven to round-trip.**~~ **Paid** — `images.py`
@@ -1679,3 +1680,35 @@ one met at 7.0 is an outage.
 > `Itinerario` add page with a brand-new card in one go is not exercised (the
 > author creates tours in the SPA); and a queryset `.update(is_published=True)`
 > in a shell bypasses every rule, as it always has.
+
+### TD-47 · The `rejected` report status had no test at all — **FIXED 2026-10-12** ✔
+
+> Carried from the 2026-08-19 "coverage gaps" list and **verified still true on
+> 2026-09-22**: the word appears in the whole backend suite exactly once, in a
+> `maps` docstring about uploads. It never appears as the source or the target of
+> a status transition.
+>
+> `rejected` is the moderation lever — spam, duplicates — and it is the one branch
+> of `ALLOWED_TRANSITIONS` nothing exercises. The 480-test suite is green and says
+> nothing about it.
+>
+> **The fix the original finding proposed still stands**, and is cheap: one
+> `@pytest.mark.parametrize` over `ALLOWED_TRANSITIONS` asserting every legal edge
+> 200s and every illegal one 400s. It closes this permanently and replaces four
+> hand-written tests, so the diff is close to neutral.
+>
+> **Fixed as proposed, with one change to the proposal.** `reports/tests.py`
+> now walks the whole 4×4 grid of statuses through the API — sixteen cases,
+> each asserting the answer *and* what is stored — against the five legal
+> edges **written out in the test** (`LEGAL_TRANSITIONS`), not read from
+> `ALLOWED_TRANSITIONS`: a test that derived its expectations from the map it
+> tests would agree with any typo in it. A second test asserts the model's map
+> equals that list. Proved by sabotage: dropping `acknowledged → rejected` and
+> adding `rejected → open` turned three tests red. It replaced
+> `test_admin_moves_report_forward` and
+> `test_admin_cannot_move_backwards_or_from_terminal`; the author-edit test is
+> now parametrized over the three non-open statuses, `rejected` included, and
+> checks delete as well as edit. The SPA's own copy of the map
+> (`lib/reportStatus.ts::ADMIN_TRANSITIONS`, which decides the admin's
+> buttons) had no test either and now has `reportStatus.spec.ts`, with the
+> same edges written out.
