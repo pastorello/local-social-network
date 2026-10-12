@@ -80,10 +80,14 @@ const menuLink =
         trigger-class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
       >
         <template #trigger>
+          <!-- Decorative here: the button's own name says whose account it
+          is, and the initials it shows would otherwise be visible text missing
+          from that name (WCAG 2.5.3). -->
           <UserAvatar
             :src="user.avatarURL"
             :name="user.name"
             class="h-9 w-9 rounded-full object-cover"
+            aria-hidden="true"
           />
         </template>
         <RouterLink :to="{ name: 'profile', params: { id: user.id } }" :class="menuLink">

@@ -75,6 +75,10 @@ onBeforeUnmount(() => {
       role="toolbar"
       aria-label="Formattazione"
     >
+      <!-- Each name contains the button's visible text (WCAG 2.5.3, label in
+      name): someone using speech input says what they see — "H2", "Lista" —
+      and that has to match. The bullet and the "1." are decoration, hidden so
+      they are not part of the visible text the name must carry. -->
       <button
         type="button"
         class="cursor-pointer rounded px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
@@ -108,7 +112,7 @@ onBeforeUnmount(() => {
       <button
         type="button"
         class="cursor-pointer rounded px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
-        aria-label="Titolo di livello 2"
+        aria-label="Titolo H2"
         :aria-pressed="editor.isActive('heading', { level: 2 })"
         :class="
           editor.isActive('heading', { level: 2 }) ? 'bg-sea text-white' : 'bg-surface text-ink'
@@ -120,7 +124,7 @@ onBeforeUnmount(() => {
       <button
         type="button"
         class="cursor-pointer rounded px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
-        aria-label="Titolo di livello 3"
+        aria-label="Titolo H3"
         :aria-pressed="editor.isActive('heading', { level: 3 })"
         :class="
           editor.isActive('heading', { level: 3 }) ? 'bg-sea text-white' : 'bg-surface text-ink'
@@ -132,22 +136,22 @@ onBeforeUnmount(() => {
       <button
         type="button"
         class="cursor-pointer rounded px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
-        aria-label="Elenco puntato"
+        aria-label="Lista puntata"
         :aria-pressed="editor.isActive('bulletList')"
         :class="editor.isActive('bulletList') ? 'bg-sea text-white' : 'bg-surface text-ink'"
         @click="editor.chain().focus().toggleBulletList().run()"
       >
-        • Lista
+        <span aria-hidden="true">•</span> Lista
       </button>
       <button
         type="button"
         class="cursor-pointer rounded px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
-        aria-label="Elenco numerato"
+        aria-label="Lista numerata"
         :aria-pressed="editor.isActive('orderedList')"
         :class="editor.isActive('orderedList') ? 'bg-sea text-white' : 'bg-surface text-ink'"
         @click="editor.chain().focus().toggleOrderedList().run()"
       >
-        1. Lista
+        <span aria-hidden="true">1.</span> Lista
       </button>
       <button
         type="button"
