@@ -23,12 +23,13 @@ const { isDesktop } = useIsDesktop()
 
 // WCAG 2.5.3, label in name: without a photograph the button shows the
 // initials, and someone using speech input says what they see — so the
-// initials are part of its name. A photograph shows no text, and the name
-// stays the plain sentence.
+// initials are part of its name. Not in parentheses: axe drops a
+// parenthetical before comparing, and so may a speech engine. A photograph
+// shows no text, and the name stays the plain sentence.
 const accountLabel = () => {
   const base = `Il tuo account: ${user.name}`
   const shown = user.avatarURL ? '' : initials(user.name)
-  return shown ? `${base} (${shown})` : base
+  return shown ? `${base} — ${shown}` : base
 }
 
 // Everything below the menu needs to know where it ends — pages open as panels

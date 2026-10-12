@@ -79,7 +79,7 @@ onBeforeUnmount(() => {
       name): someone using speech input says what they see — "H2", "1. Lista"
       — and that has to match. The bullet is punctuation, which the rule does
       not count; the "1." is text, so it is in the name. aria-hidden does not
-      take text out of what is visible. -->
+      take text out of what axe counts as visible. -->
       <button
         type="button"
         class="cursor-pointer rounded px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"

@@ -85,7 +85,7 @@ describe('the menu (spec/design.md D14)', () => {
   // WCAG 2.5.3: someone using speech input says what they see on the button.
   it('names the account button with the initials it shows, and without them for a photo', async () => {
     const initials = await mountHeader(true)
-    expect(initials.find('button[aria-label="Il tuo account: Maria Conte (MC)"]').exists()).toBe(
+    expect(initials.find('button[aria-label="Il tuo account: Maria Conte — MC"]').exists()).toBe(
       true,
     )
 
