@@ -215,6 +215,24 @@ def test_citizen_sees_results_after_voting(make_client, citizen, make_poll):
     assert data['total_votes'] == 1
 
 
+def test_voting_in_one_poll_reveals_only_that_polls_results(make_client, citizen, make_poll):
+    """F3.3 is per poll: a vote in A says nothing about B, whose results stay
+    hidden from this voter — in its detail and in the list (TD-48)."""
+    voted = make_poll(question='Spiagge?')
+    other = make_poll(question='Parcheggi?')
+    client = make_client(citizen)
+    client.post(f'/api/polls/{voted.id}/vote/', {'option': option_id(voted)})
+
+    detail = client.get(f'/api/polls/{other.id}/').json()
+    listed = {poll['id']: poll for poll in client.get('/api/polls/').json()['results']}
+
+    assert detail['results_visible'] is False
+    assert detail['total_votes'] is None
+    assert [option['votes_count'] for option in detail['options']] == [None, None]
+    assert listed[str(other.id)]['total_votes'] is None
+    assert listed[str(voted.id)]['total_votes'] == 1
+
+
 def test_everyone_sees_results_once_closed(api_client, make_client, citizen, make_poll):
     poll = make_poll()
     make_client(citizen).post(f'/api/polls/{poll.id}/vote/', {'option': option_id(poll)})
