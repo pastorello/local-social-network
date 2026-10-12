@@ -79,7 +79,7 @@ not mean).
   polygons, historical maps are `ImageOverlay` rasters. TD-02 (double bundle)
   was paid at the head of C5, before the map gained layers, as planned.
 - **Auth**: JWT as today ([../adr/0001-jwt-in-localstorage.md](../adr/0001-jwt-in-localstorage.md),
-  to be revised for rich text). The collaboration flow adds models and admin
+  amended for rich text in C2 and for the map's tooltips on 2026-09-18). The collaboration flow adds models and admin
   UI, not a new auth system.
 - **Quality bar unchanged**: v1's gates (pytest, ruff, Vitest, ESLint, build,
   Cypress in CI) and working agreement carry over.
