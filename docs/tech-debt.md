@@ -80,6 +80,20 @@ rediscovers them by running `npm outdated` and "fixes" them:
   (`ERR_PACKAGE_PATH_NOT_EXPORTED`). `npm run build` is the type-check gate, so
   this waits on vue-tsc.
 
+**Two `npm audit` findings with no compatible fix** (2026-10-12, after the
+patch sweep took the count from 10 — one critical, `shell-quote` — to these).
+Both are build- and lint-time code fed this repo's own files, so neither is
+reachable from a reader's browser or from the API; recorded so nobody runs
+`npm audit fix --force`, which "fixes" both by **downgrading** a direct
+dependency across a breaking change:
+
+- **`braces`, every version** (high, stack exhaustion on a crafted glob),
+  through `fast-glob` in `@vue/eslint-config-typescript`. No fixed release
+  exists; it goes when the lint config drops it.
+- **`postcss-selector-parser` 6.0.10** (moderate, quadratic parsing), through
+  `@tailwindcss/typography` 0.5.x, which pins the 6.x line. Goes with a
+  typography release on 7.x.
+
 ---
 
 ## Not debt, recorded so it is not re-audited
