@@ -86,7 +86,7 @@ fails safe (see [ADR-0002](./docs/adr/0002-debug-off-secret-key-required.md)).
 | `python -m pytest` | Backend tests — **516**, a few seconds (from `backend/`) |
 | `python -m ruff check .` | Backend lint |
 | `npm run dev` | Vite dev server on :5173 (from `frontend/`) |
-| `npm run test:unit -- run` | Frontend unit tests — **244** |
+| `npm run test:unit -- run` | Frontend unit tests — **247** |
 | `npm run test:e2e` | Cypress against a production build — **47** (needs the API running, seeded by `seed_e2e`; see CLAUDE.md) |
 | `npm run lint` | oxlint then eslint, both with `--fix` |
 | `npm run build` | Type-check (`vue-tsc`) + production build |

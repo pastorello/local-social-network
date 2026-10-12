@@ -23,7 +23,7 @@
 |---|---|---|
 | Backend tests | `python -m pytest` | **516 passed** in 9.1s |
 | Backend lint | `python -m ruff check .` | clean |
-| Frontend tests | `npm run test:unit -- run` | **244 passed**, 48 files, ~10s |
+| Frontend tests | `npm run test:unit -- run` | **247 passed**, 51 files, ~10s |
 | Frontend lint | `npx oxlint` · `npx eslint .` | clean |
 | Format | `npx prettier --check .` | clean |
 | Build | `npm run build` | green, ~0.9s |
@@ -31,7 +31,8 @@
 
 Every row above was run again on 2026-10-12 — first with no code landed since
 2026-09-22 and every count matching, then after the fixes for TD-50, TD-49,
-TD-47 and TD-48, whose tests are the difference — except the last, which needs a seeded API
+TD-47, TD-48 and TD-31's residual, whose tests are the difference — except
+the last, which needs a seeded API
 on `:8000` and a production build; it is counted from the specs and taken from
 CI. The 2026-08-19 baseline — 142 backend tests, 43 frontend, 4 e2e — is in the
 archive, for the scale of the difference rather than for nostalgia.
@@ -78,21 +79,6 @@ rediscovers them by running `npm outdated` and "fixes" them:
 - **typescript 6 → 7.** `vue-tsc` cannot load it
   (`ERR_PACKAGE_PATH_NOT_EXPORTED`). `npm run build` is the type-check gate, so
   this waits on vue-tsc.
-
-## TD-31 (residual) · Three frontend paper cuts, never closed
-
-Nine of TD-31's findings were fixed on 2026-08-20; these three were named as
-left open in the same entry and then nobody came back. All three are small, and
-the honest reason to do them is the file you are already in, not a session of
-their own:
-
-- **`PanelBox.vue` builds `classObject` as a plain non-reactive object** from a
-  destructured prop. Harmless today — no caller passes `size` — and that is
-  exactly the trap: `ActionButton.vue` does the same thing correctly with
-  `computed`, so the inconsistency reads as intentional.
-- **`UsersView.vue` re-implements `SearchBar.vue` verbatim.**
-- **`EditProfileView.vue` hand-rolls file handling** instead of
-  `useFileUpload.ts`, and therefore has no preview.
 
 ---
 

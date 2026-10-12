@@ -118,7 +118,11 @@ class Overlay(models.Model):
 
     # Vector only.
     geojson = models.JSONField(null=True, blank=True)
-    color = models.CharField(max_length=7, default='#7c3aed')
+    # The palette's sea (`--color-sea` in the SPA's main.css), not a layer's
+    # colour: the old default, #7c3aed, was the retired brand purple and all
+    # but the personaggi layer's, so a boundary read as a run of their pins.
+    # A default only — the admin picks each overlay's colour.
+    color = models.CharField(max_length=7, default='#0f5f73')
 
     # Raster only: the image plus the bounding box it is georeferenced to.
     image = models.ImageField(upload_to='overlays', blank=True)

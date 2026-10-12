@@ -45,8 +45,6 @@ const sentBody = (call: 'post' | 'patch') => vi.mocked(axios[call]).mock.calls[0
 describe('ReportForm', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    // useFileUpload previews the photo through an object URL.
-    URL.createObjectURL = vi.fn(() => 'blob:anteprima')
   })
 
   it('renders the fields with the available categories', () => {

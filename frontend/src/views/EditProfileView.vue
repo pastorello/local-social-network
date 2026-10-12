@@ -13,6 +13,7 @@ import FormField from '@/components/forms/FormField.vue'
 import FormInput from '@/components/forms/FormInput.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
 import ViewContainer from '@/components/boxes/ViewContainer.vue'
+import { useFileUpload } from '@/composables/useFileUpload'
 import { extractFieldErrors, extractFormErrors } from '@/lib/apiErrors'
 
 const router = useRouter()
@@ -23,7 +24,9 @@ const form = ref({
   email: userStore.user.email ?? '',
   name: userStore.user.name ?? '',
 })
-const fileInput = ref<HTMLInputElement | null>(null)
+// The shared upload helper rather than a hand-rolled ref (TD-31), which is
+// also what gives the avatar a preview before it is saved.
+const { url: avatarPreview, fileInput, onFileChange } = useFileUpload()
 const errors = ref<string[]>([])
 const fieldErrors = ref<Record<string, string[]>>({})
 
@@ -135,6 +138,13 @@ const submitForm = () => {
                 accept="image/jpeg,image/png,image/webp"
                 :aria-describedby="describedBy"
                 :aria-invalid="invalid || undefined"
+                @change="onFileChange"
+              />
+              <img
+                v-if="avatarPreview"
+                :src="avatarPreview"
+                class="mt-3 h-20 w-20 rounded-full object-cover"
+                alt="Anteprima del nuovo avatar"
               />
             </template>
           </FormField>
