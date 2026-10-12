@@ -1,7 +1,7 @@
 # Technical debt register
 
 > **What is open, and nothing else.** Fifty items have been recorded
-> since the first audit on 2026-08-19; forty-five are paid and live, with their
+> since the first audit on 2026-08-19; forty-six are paid and live, with their
 > evidence, in [tech-debt-archive.md](./tech-debt-archive.md). Read that file
 > for how a defect got in and what proved the fix. Read **this** one before
 > proposing work.
@@ -21,7 +21,7 @@
 
 | Gate | Command | Result |
 |---|---|---|
-| Backend tests | `python -m pytest` | **487 passed** in 9.0s |
+| Backend tests | `python -m pytest` | **498 passed** in 9.9s |
 | Backend lint | `python -m ruff check .` | clean |
 | Frontend tests | `npm run test:unit -- run` | **228 passed**, 47 files, ~10s |
 | Frontend lint | `npx oxlint` · `npx eslint .` | clean |
@@ -30,8 +30,9 @@
 | E2E | `npm run test:e2e` | **8 spec files, 47 tests** — green in CI |
 
 Every row above was run again on 2026-10-12 — first with no code landed since
-2026-09-22 and every count matching, then after TD-50's fix, whose seven
-backend tests and one frontend test are the difference — except the last, which needs a seeded API
+2026-09-22 and every count matching, then after TD-50's and TD-49's fixes,
+whose eighteen backend tests and one frontend test are the difference —
+except the last, which needs a seeded API
 on `:8000` and a production build; it is counted from the specs and taken from
 CI. The 2026-08-19 baseline — 142 backend tests, 43 frontend, 4 e2e — is in the
 archive, for the scale of the difference rather than for nostalgia.
@@ -138,28 +139,6 @@ Three smaller things ride along, same family, same session:
   import was meant to avoid.
 
 ---
-
-## TD-49 · The admin's tour-stop inline bypasses every stop rule
-
-Found 2026-10-12 re-walking the archive for open residuals: **TD-45's fix
-recorded this as "not covered" and the 2026-09-22 split then archived it with
-the paid item**, so the open register never listed it. Verified by reading,
-not by running.
-
-`itinerari/admin.py::StopInline` is a bare `TabularInline` with an
-autocomplete on `card`. Everything `itinerari/api.py::_parse_stops` and I4
-enforce — a stop is a card with a place (`maps.CARD_TYPES`), never a
-translation, never a tour, a draft only for its author or an admin, a
-`point_index` inside the card's pins, and no publishing while a stop is a
-draft — is skipped on this path. Admins only, so the exposure is the author's
-own mistakes, not a stranger's: a dialetto word as a stop renders with no
-place and a broken *Leggi la scheda* link, exactly the symptom TD-45 fixed on
-the API.
-
-**Fix:** move the per-stop rules into `Stop.clean()` (or a formset `clean()`
-for the cross-stop ones) so the admin and the API share them, or make the
-inline read-only and leave authoring to the SPA. Either is small; the first
-keeps the admin useful for repairs.
 
 ---
 
