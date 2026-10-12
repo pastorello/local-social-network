@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 import axios from 'axios'
 
@@ -17,16 +17,38 @@ const categories = [
   { id: 'cat-2', name: 'Verde pubblico', color: '#22c55e' },
 ]
 
-const mountForm = () =>
+const mountForm = (props: Record<string, unknown> = {}) =>
   mount(ReportForm, {
     props: {
       categories,
       coords: { lat: 41.21, lng: 13.56 },
+      ...props,
     },
     global: { plugins: [createPinia()] },
   })
 
+const fillIn = async (wrapper: ReturnType<typeof mountForm>) => {
+  await wrapper.get('#report-title').setValue('  Buca in via Indipendenza  ')
+  await wrapper.get('#report-description').setValue('Una buca profonda vicino al civico 12.')
+  await wrapper.get('#report-category').setValue('cat-2')
+}
+
+// jsdom has no file picker: put the file where the form reads it from.
+const pickPhoto = async (wrapper: ReturnType<typeof mountForm>, file: File) => {
+  const input = wrapper.get('#report-photo')
+  Object.defineProperty(input.element, 'files', { value: [file], configurable: true })
+  await input.trigger('change')
+}
+
+const sentBody = (call: 'post' | 'patch') => vi.mocked(axios[call]).mock.calls[0]![1] as FormData
+
 describe('ReportForm', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    // useFileUpload previews the photo through an object URL.
+    URL.createObjectURL = vi.fn(() => 'blob:anteprima')
+  })
+
   it('renders the fields with the available categories', () => {
     const wrapper = mountForm()
 
@@ -76,5 +98,70 @@ describe('ReportForm', () => {
 
     expect(wrapper.text()).toContain('non è più modificabile')
     expect(wrapper.text()).not.toContain('Si è verificato un errore')
+  })
+
+  // TD-48: the form a reader files with, and until now nothing asserted what it
+  // sends — field names, the coordinates as strings, the photo only when there
+  // is one, multipart.
+  it('files a new report with the place it was opened on', async () => {
+    const saved = { id: 'r1', title: 'Buca in via Indipendenza' }
+    vi.mocked(axios.post).mockResolvedValueOnce({ data: saved })
+    const wrapper = mountForm()
+
+    await fillIn(wrapper)
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+
+    expect(axios.post).toHaveBeenCalledTimes(1)
+    const [url, , config] = vi.mocked(axios.post).mock.calls[0]!
+    expect(url).toBe('/api/reports/')
+    expect(config).toEqual({ headers: { 'Content-Type': 'multipart/form-data' } })
+    const body = sentBody('post')
+    expect(body.get('title')).toBe('Buca in via Indipendenza')
+    expect(body.get('description')).toBe('Una buca profonda vicino al civico 12.')
+    expect(body.get('category')).toBe('cat-2')
+    expect(body.get('lat')).toBe('41.21')
+    expect(body.get('lng')).toBe('13.56')
+    expect(body.has('photo')).toBe(false)
+    expect(wrapper.emitted('saved')).toEqual([[saved]])
+  })
+
+  it('sends the photo when one is picked', async () => {
+    vi.mocked(axios.post).mockResolvedValueOnce({ data: { id: 'r1' } })
+    const wrapper = mountForm()
+    const photo = new File(['jpeg'], 'buca.jpg', { type: 'image/jpeg' })
+
+    await fillIn(wrapper)
+    await pickPhoto(wrapper, photo)
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+
+    const sent = sentBody('post').get('photo') as File
+    expect(sent.name).toBe('buca.jpg')
+    expect(sent.type).toBe('image/jpeg')
+  })
+
+  it('edits an existing report in place', async () => {
+    vi.mocked(axios.patch).mockResolvedValueOnce({ data: { id: 'r9' } })
+    const report = {
+      id: 'r9',
+      title: 'Lampione spento',
+      description: 'Da una settimana.',
+      category: categories[0],
+    }
+    const wrapper = mountForm({ report })
+
+    expect(wrapper.text()).toContain('Salva modifiche')
+    await wrapper.get('#report-title').setValue('Lampione spento in piazza')
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+
+    expect(axios.post).not.toHaveBeenCalled()
+    expect(vi.mocked(axios.patch).mock.calls[0]![0]).toBe('/api/reports/r9/')
+    const body = sentBody('patch')
+    expect(body.get('title')).toBe('Lampione spento in piazza')
+    expect(body.get('description')).toBe('Da una settimana.')
+    expect(body.get('category')).toBe('cat-1')
+    expect(wrapper.emitted('saved')).toHaveLength(1)
   })
 })

@@ -1120,7 +1120,8 @@ proven**; 16 have no test at all. The ones that carry real risk:
   `ReportForm.vue:41-49` — field names, `lat`/`lng` stringification, the
   conditional photo append, the multipart header — is unverified at every level.
   Largest frontend gap by product value.
-  **Still open 2026-09-22 — now TD-48.** Both specs still assert only
+  **Still open 2026-09-22 — now TD-48, paid 2026-10-12** (at the foot of this
+  file). Both specs still assert only
   `expect(axios.post).not.toHaveBeenCalled()`. The card forms that came later
   (`TypeForm`, `ItineraryForm`) do assert the FormData they send; these two
   were never retrofitted.
@@ -1128,7 +1129,8 @@ proven**; 16 have no test at all. The ones that carry real risk:
   token" walks 401 → refresh → replay end to end); ~~no unit test for the
   router guard~~ (`login.cy.ts` asserts the bounce to `/login`, `session.cy.ts`
   the authenticated hard reload — e2e rather than unit, which is the right
-  level for a guard). **Still open**, both small and both carried into TD-48:
+  level for a guard). **Still open** on 2026-09-22, both small and both carried into TD-48 — paid with it
+  on 2026-10-12:
   no test that voting in poll A leaves poll B's counts `null`, and nothing
   covers M4's `?redirect` *return* leg — the bounce to login is tested, the
   landing back on the page you asked for is not.
@@ -1138,7 +1140,8 @@ Test-quality defects: selectors coupled to Tailwind classes
 `StatusBadge.spec.ts:17-18` hard-codes `rgb(239, 68, 68)` instead of importing
 `STATUS_META`; `auth.spec.ts` mocks `interceptors.response.use` itself, so
 "the interceptor is actually installed" is provable only by e2e.
-**All three still stand on 2026-09-22**, and the `StatusBadge` one has already
+**All three still stood on 2026-09-22** (the first two were paid with TD-48 on
+2026-10-12; the third is left to `session.cy.ts`), and the `StatusBadge` one has already
 cost something: the hard-coded values were rewritten by hand when ADR-0005's
 contrast pass changed the shades (they read `rgb(185, 28, 28)` /
 `rgb(21, 128, 61)` now), which is the maintenance the import was meant to
@@ -1712,3 +1715,60 @@ one met at 7.0 is an outage.
 > (`lib/reportStatus.ts::ADMIN_TRANSITIONS`, which decides the admin's
 > buttons) had no test either and now has `reportStatus.spec.ts`, with the
 > same edges written out.
+
+### TD-48 · The two oldest forms were the two unverified ones — **FIXED 2026-10-12** ✔
+
+> `ReportForm` and `PollForm` still have **no success-path test**. Both specs mock
+> `axios` and assert only `expect(axios.post).not.toHaveBeenCalled()` — the
+> failure path. So `ReportForm`'s FormData assembly (field names, `lat`/`lng`
+> stringification, the conditional photo append, the multipart header) is
+> unverified at every level, and it is the form a reader uses.
+>
+> What makes this worth a number rather than a shrug: **every form written since
+> does assert what it sends** — `TypeForm` and `ItineraryForm` both read the
+> `FormData` back out of the mock. These two were simply never retrofitted, which
+> is how the oldest code ends up the least covered.
+>
+> Three smaller things ride along, same family, same session:
+>
+> - **Nothing asserts that voting in poll A leaves poll B's counts `null`.** F3.3
+>   is per-poll; the tests are per-poll too, so the isolation is assumed.
+> - **`?redirect`'s return leg is untested.** The bounce *to* login is covered
+>   (`login.cy.ts`); landing back on the page you asked for after signing in is
+>   not.
+> - **Test-quality defects, all three still standing:** `PollForm.spec.ts` selects
+>   on Tailwind classes (`.underline`, `.bg-gray-200`) where `:36` in the same
+>   file shows the right `aria-label` pattern; `StatusBadge.spec.ts` hard-codes
+>   `rgb(…)` instead of importing `STATUS_META` — and that one has already cost
+>   something, since the literals had to be rewritten by hand when ADR-0005's
+>   contrast pass changed the shades, which is precisely the maintenance the
+>   import was meant to avoid.
+>
+> ---
+>
+> **Fixed, riders included.**
+>
+> - `ReportForm.spec.ts` now files a report and reads the `FormData` back:
+>   the URL, the multipart header, every field name, the title trimmed, `lat`
+>   and `lng` as strings, no `photo` without one and the picked file with
+>   one, the `saved` emit; and an edit `PATCH`es the report's own URL with
+>   the pre-filled values.
+> - `PollForm.spec.ts` asserts the body it posts — question and options
+>   trimmed, a blank option dropped, `closes_at` null or the ISO instant of
+>   the picked local time — and selects buttons by their words, not by
+>   `.underline` and `.bg-gray-200`.
+> - `StatusBadge.spec.ts` reads labels and shades from `STATUS_META` and
+>   covers all four statuses, `rejected` included, plus that no two share a
+>   shade.
+> - `LoginView.spec.ts` covers the `?redirect` return leg — with a query
+>   string in the target, and the plain `/login` that lands on the map —
+>   shown failing against a `LoginView` that always pushes `/`. A unit test
+>   rather than a Cypress case, which would have spent a ninth of the e2e
+>   run's ten logins a minute (TD-18).
+> - `polls/tests.py` asserts that voting in one poll leaves another's counts
+>   `null`, in its detail and in the list.
+>
+> **Left as it is:** the third test-quality defect the first audit named,
+> `auth.spec.ts` mocking `interceptors.response.use` itself — that the
+> interceptor is installed is proved end to end by `session.cy.ts`, which is
+> the right level for it.

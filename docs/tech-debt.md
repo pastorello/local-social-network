@@ -1,7 +1,7 @@
 # Technical debt register
 
 > **What is open, and nothing else.** Fifty items have been recorded
-> since the first audit on 2026-08-19; forty-seven are paid and live, with their
+> since the first audit on 2026-08-19; forty-eight are paid and live, with their
 > evidence, in [tech-debt-archive.md](./tech-debt-archive.md). Read that file
 > for how a defect got in and what proved the fix. Read **this** one before
 > proposing work.
@@ -21,17 +21,17 @@
 
 | Gate | Command | Result |
 |---|---|---|
-| Backend tests | `python -m pytest` | **515 passed** in 9.1s |
+| Backend tests | `python -m pytest` | **516 passed** in 9.1s |
 | Backend lint | `python -m ruff check .` | clean |
-| Frontend tests | `npm run test:unit -- run` | **230 passed**, 48 files, ~10s |
+| Frontend tests | `npm run test:unit -- run` | **244 passed**, 48 files, ~10s |
 | Frontend lint | `npx oxlint` · `npx eslint .` | clean |
 | Format | `npx prettier --check .` | clean |
 | Build | `npm run build` | green, ~0.9s |
 | E2E | `npm run test:e2e` | **8 spec files, 47 tests** — green in CI |
 
 Every row above was run again on 2026-10-12 — first with no code landed since
-2026-09-22 and every count matching, then after the fixes for TD-50, TD-49
-and TD-47, whose tests are the difference — except the last, which needs a seeded API
+2026-09-22 and every count matching, then after the fixes for TD-50, TD-49,
+TD-47 and TD-48, whose tests are the difference — except the last, which needs a seeded API
 on `:8000` and a production build; it is counted from the specs and taken from
 CI. The 2026-08-19 baseline — 142 backend tests, 43 frontend, 4 e2e — is in the
 archive, for the scale of the difference rather than for nostalgia.
@@ -93,36 +93,6 @@ their own:
 - **`UsersView.vue` re-implements `SearchBar.vue` verbatim.**
 - **`EditProfileView.vue` hand-rolls file handling** instead of
   `useFileUpload.ts`, and therefore has no preview.
-
-## TD-48 · The two oldest forms are the two unverified ones
-
-`ReportForm` and `PollForm` still have **no success-path test**. Both specs mock
-`axios` and assert only `expect(axios.post).not.toHaveBeenCalled()` — the
-failure path. So `ReportForm`'s FormData assembly (field names, `lat`/`lng`
-stringification, the conditional photo append, the multipart header) is
-unverified at every level, and it is the form a reader uses.
-
-What makes this worth a number rather than a shrug: **every form written since
-does assert what it sends** — `TypeForm` and `ItineraryForm` both read the
-`FormData` back out of the mock. These two were simply never retrofitted, which
-is how the oldest code ends up the least covered.
-
-Three smaller things ride along, same family, same session:
-
-- **Nothing asserts that voting in poll A leaves poll B's counts `null`.** F3.3
-  is per-poll; the tests are per-poll too, so the isolation is assumed.
-- **`?redirect`'s return leg is untested.** The bounce *to* login is covered
-  (`login.cy.ts`); landing back on the page you asked for after signing in is
-  not.
-- **Test-quality defects, all three still standing:** `PollForm.spec.ts` selects
-  on Tailwind classes (`.underline`, `.bg-gray-200`) where `:36` in the same
-  file shows the right `aria-label` pattern; `StatusBadge.spec.ts` hard-codes
-  `rgb(…)` instead of importing `STATUS_META` — and that one has already cost
-  something, since the literals had to be rewritten by hand when ADR-0005's
-  contrast pass changed the shades, which is precisely the maintenance the
-  import was meant to avoid.
-
----
 
 ---
 
