@@ -20,42 +20,51 @@ def card_type(card):
     return None
 
 
-def _live_point_index(stop):
-    """The stop's chosen point, if the card still has it. Its author may have
-    removed that pin since; `stop_point` then shows the first one, and handing
-    back the old index would make the form send it again and every save of the
-    tour fail with "il punto scelto non esiste"."""
-    if stop.point_index is None:
+def _card_points(card):
+    # Filtered in Python: the features are prefetched with the stop's card.
+    return [f for f in card.map_features.all() if f.kind == MapFeature.POINT]
+
+
+def _chosen_point(stop, points):
+    """The pin the stop names, found among the card's prefetched pins rather
+    than through `stop.point`, which would be a query per stop. None when no
+    pin was chosen or the chosen one was deleted since (`SET_NULL`)."""
+    if stop.point_id is None:
         return None
-    points = [f for f in stop.card.map_features.all() if f.kind == MapFeature.POINT]
-    return stop.point_index if stop.point_index < len(points) else None
+    return next((f for f in points if f.pk == stop.point_id), None)
+
+
+def _live_point_index(stop):
+    """What the form's select holds: the chosen pin's place in the card's list
+    *now*, which moves when an earlier pin is removed (TD-50) — the stop does
+    not. None when the pin is gone, so the form sends nothing stale back."""
+    points = _card_points(stop.card)
+    chosen = _chosen_point(stop, points)
+    return points.index(chosen) if chosen is not None else None
 
 
 def _stop_places(stop):
-    points = [f for f in stop.card.map_features.all() if f.kind == MapFeature.POINT]
-    index = _live_point_index(stop)
-    chosen = [points[index]] if index is not None else points
-    if not chosen:
+    points = _card_points(stop.card)
+    chosen = _chosen_point(stop, points)
+    if chosen is not None:
+        points = [chosen]
+    if not points:
         # A festa has no pins, only its route: its place is where it starts.
-        start = stop_point(stop.card, None)
+        start = stop_point(stop.card)
         return [start] if start else []
-    return [{'lat': f.lat, 'lng': f.lng, 'label': f.label} for f in chosen]
+    return [{'lat': f.lat, 'lng': f.lng, 'label': f.label} for f in points]
 
 
-def stop_point(card, point_index):
-    """Where a stop is: the card's chosen point, else its first point, else —
+def stop_point(card, chosen=None):
+    """Where a stop is: the card's chosen pin, else its first point, else —
     for a festa — the start of its route. The card's own map features, in
     their stored order (prefetched by the caller)."""
     features = list(card.map_features.all())
     points = [f for f in features if f.kind == MapFeature.POINT]
     route = [f for f in features if f.kind == MapFeature.ROUTE]
-    if point_index is not None and point_index < len(points):
-        chosen = points[point_index]
-    elif points:
-        chosen = points[0]
-    elif route:
-        chosen = route[0]
-    else:
+    if chosen is None:
+        chosen = points[0] if points else route[0] if route else None
+    if chosen is None:
         return None
     return {'lat': chosen.lat, 'lng': chosen.lng, 'label': chosen.label}
 
@@ -130,7 +139,7 @@ class ItinerarioReadSerializer(serializers.ModelSerializer):
                 'title': stop.card.title,
                 'is_published': stop.card.is_published,
                 'point_index': _live_point_index(stop),
-                'point': stop_point(stop.card, stop.point_index),
+                'point': stop_point(stop.card, _chosen_point(stop, _card_points(stop.card))),
                 # Every place the stop stands for: the chosen one, or — with no
                 # choice made — all of the card's pins, so a raccolta can list
                 # each bakery a dish is sold at (decided 2026-09-19).

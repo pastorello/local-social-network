@@ -172,7 +172,10 @@ left open:
   (`raccolta`/`percorso`), `duration` (free text) and `intents` (many-to-many);
   `Intent` is the admin-managed list, seeded with the three (I5) and addressed
   by slug (`?intento=mare`); `Stop` is an ordered row holding a card, an
-  optional `point_index` into that card's pins, and a plain-text note.
+  optional chosen pin of that card, and a plain-text note. *(The pin is held
+  by reference, not by its position in the card's list, since 2026-10-12 —
+  TD-50: removing an earlier pin used to move the stop onto its neighbour. The
+  API still exchanges it as `point_index`.)*
 - **A stop must have a place.** I3 says "any type"; a dialect word or a book
   has nothing to walk to, nothing for *Come arrivarci* to point at, so a card
   with no map feature is refused as a stop ("non ha un luogo sulla mappa").

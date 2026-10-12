@@ -35,6 +35,10 @@ class PointSerializer(serializers.Serializer):
     lat = CoordinateField('lat')
     lng = CoordinateField('lng')
     label = serializers.CharField(max_length=200, required=False, allow_blank=True, default='')
+    # The stored pin this entry is, as the read side gave it (TD-50); absent
+    # for a pin added in this edit. Read only by `replace_points`, and only as
+    # a hint: an id that is not one of this card's pins makes a new pin.
+    id = serializers.JSONField(required=False, default=None)
 
 
 def require_authenticated(request):
@@ -223,12 +227,37 @@ def parse_points(raw, field_name='pins', max_points=MAX_POINTS):
     return serializer.validated_data
 
 
+def _pin_id(value):
+    if isinstance(value, int) and not isinstance(value, bool):
+        return value
+    if isinstance(value, str) and value.isdecimal():
+        return int(value)
+    return None
+
+
 def replace_points(card, points):
+    """Make the card's pins exactly `points`, in that order — as a diff by id,
+    not a delete-and-recreate (TD-50). A pin sent back with its id stays the
+    same row, so a tour stop that names it still does after the author removes
+    a pin before it or corrects its coordinates; a pin left out is deleted, and
+    the stops on it fall back to the card's first pin (`Stop.point` is
+    SET_NULL). An id that is not one of this card's pins, or one already used
+    in this request, is a new pin: like `image_order`, the order arranges and
+    never reaches another card's rows."""
     if points is None:
         return
     reject_media_on_translation(card, field_name='pins')
-    card.map_features.filter(kind=MapFeature.POINT).delete()
-    MapFeature.objects.bulk_create([
-        MapFeature(card=card, kind=MapFeature.POINT, position=i, lat=p['lat'], lng=p['lng'], label=p['label'])
-        for i, p in enumerate(points)
-    ])
+    existing = {feature.pk: feature for feature in card.map_features.filter(kind=MapFeature.POINT)}
+    kept, created = [], []
+    for position, point in enumerate(points):
+        feature = existing.pop(_pin_id(point.get('id')), None)
+        if feature is None:
+            feature = MapFeature(card=card, kind=MapFeature.POINT)
+            created.append(feature)
+        else:
+            kept.append(feature)
+        feature.position = position
+        feature.lat, feature.lng, feature.label = point['lat'], point['lng'], point['label']
+    MapFeature.objects.filter(pk__in=existing).delete()
+    MapFeature.objects.bulk_update(kept, ['position', 'lat', 'lng', 'label'])
+    MapFeature.objects.bulk_create(created)

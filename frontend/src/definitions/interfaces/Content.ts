@@ -3,6 +3,10 @@ import type User from './User'
 // Shared by every content type (feste included, though Feste.ts keeps its
 // own literal copy since it predates this file and isn't worth touching).
 export interface MapPoint {
+  // A stored pin's id, sent back on save so the pin keeps its row and a tour
+  // stop on it stays on it (TD-50). Absent on a point added in this edit, and
+  // on a festa's route, whose points nothing names.
+  id?: number
   lat: number
   lng: number
   label: string

@@ -2,7 +2,7 @@ import uuid
 
 from django.db import models
 
-from content.models import Card
+from content.models import Card, MapFeature
 
 
 class Intent(models.Model):
@@ -69,9 +69,17 @@ class Stop(models.Model):
     card = models.ForeignKey(
         Card, related_name='itinerary_stops', on_delete=models.CASCADE, verbose_name='scheda'
     )
-    # Which of the card's point pins, in its own order; null is the card's
-    # first point (or, for a festa, the start of its route).
-    point_index = models.PositiveIntegerField('punto', null=True, blank=True)
+    # Which of the card's point pins — that pin, not a position in the card's
+    # list, so removing an earlier pin or correcting this one does not move
+    # the stop (TD-50; `replace_points` keeps a pin's row when the form sends
+    # its id back). Null is the card's first point (or, for a festa, the start
+    # of its route), which is also where a stop lands when its pin is deleted.
+    # The API still speaks `point_index`, resolved here on write and back on
+    # read, because that is what the form's select holds.
+    point = models.ForeignKey(
+        MapFeature, related_name='stops', null=True, blank=True,
+        on_delete=models.SET_NULL, verbose_name='punto',
+    )
     note = models.TextField('nota', blank=True, default='')
 
     class Meta:
