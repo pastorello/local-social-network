@@ -141,7 +141,8 @@ def _parse_stops(raw, user, kept=()):
         if not isinstance(note, str) or len(note) > 2000:
             raise ValidationError({'stops': ['Nota della tappa non valida.']})
         note = note.replace('\r\n', '\n').replace('\r', '\n')
-        stops.append(Stop(position=position, card=card, point_index=point_index, note=note))
+        point = points[point_index] if point_index is not None else None
+        stops.append(Stop(position=position, card=card, point=point, note=note))
     return stops
 
 

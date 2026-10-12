@@ -18,7 +18,7 @@ set accurate to the file and symbol, with a handful of stale numbers and
 sentences fixed in place, and re-walking the archive for "not covered" lines
 found two more pieces of debt, both on tour stops (TD-49, TD-50). The
 engineering on the board is now those two and TD-47/TD-48 — four small
-items, none blocking. Item 4 is still the bottleneck.
+items, none blocking. *(TD-50 was paid the same day.)* Item 4 is still the bottleneck.
 
 **Where things stand (2026-09-22).** Unchanged in substance since 2026-09-18,
 below. The registers were split in two that day — this file and

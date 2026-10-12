@@ -229,3 +229,37 @@ describe('the genre choice (luoghi)', () => {
     expect((wrapper.get('#type-form-genre').element as HTMLSelectElement).value).toBe('castello')
   })
 })
+
+describe('the pins go back with their ids (TD-50)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  // A tour stop names a pin by its id; the server keeps a pin's row only when
+  // the form sends that id back, so a stop on the second bakery stays there
+  // when the first is removed or the second is renamed.
+  it('sends each stored pin with its id, after a remove and a rename', async () => {
+    vi.mocked(axios.patch).mockResolvedValue({ data: { id: '1' } })
+    const item = {
+      ...baseItem,
+      pins: [
+        { id: 11, lat: 41.214, lng: 13.57, label: 'Forno A' },
+        { id: 12, lat: 41.215, lng: 13.572, label: 'Forno B' },
+      ],
+    }
+    const wrapper = mount(TypeForm, {
+      props: { config: ricettaConfig, item },
+      global: { plugins: [createPinia()], stubs: globalStubs },
+    })
+
+    await wrapper.findAll('button[aria-label^="Rimuovi"]')[0]!.trigger('click')
+    await wrapper.findAll('input[aria-label^="Nome"]')[0]!.setValue('Forno B, sul corso')
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+
+    const body = vi.mocked(axios.patch).mock.calls[0]![1] as FormData
+    expect(JSON.parse(body.get('pins') as string)).toEqual([
+      { id: 12, lat: 41.215, lng: 13.572, label: 'Forno B, sul corso' },
+    ])
+  })
+})

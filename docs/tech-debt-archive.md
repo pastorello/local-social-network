@@ -16,7 +16,8 @@
 > not. (Two more were minted in the same pass — TD-47 and TD-48 — not from a
 > new audit but from re-walking the coverage gaps the first audit had named
 > and nobody had gone back to. Forty-eight recorded, forty-four here.
-> TD-49 and TD-50 followed on 2026-10-12; both are open.) Nothing
+> TD-49 and TD-50 followed on 2026-10-12; TD-50 was paid the same day and is
+> at the foot of this file, TD-49 is open.) Nothing
 > was reworded in the move; the items that were still open left this file for
 > the active one, and their place here is a pointer.
 >
@@ -1590,3 +1591,43 @@ one met at 7.0 is an outage.
 >   500 from the ORM. Now a 400 on that field; ids as numbers or digit
 >   strings, as the SPA sends them.
 
+### TD-50 · A tour stop's chosen pin was positional, so it moved when the card's pins changed — **FIXED 2026-10-12** ✔
+
+> Found 2026-10-12 (first noticed in passing in a 2026-09-22 design draft);
+> **confirmed by running** a throwaway test against the API: a tour stop on the Tiella's *Forno B*
+> (`point_index: 1`), then the recipe's author removes *Forno A* — the stop now
+> reads *Forno C*, with no error and nothing flagged to the tour's author.
+>
+> `Stop.point_index` is an index into the card's point pins, and
+> `content/api_helpers.py::replace_points` deletes and recreates every pin on
+> every save. Pins are an unordered bag (`MapPointsField`, `kind="pins"`), so any
+> removal before the chosen pin shifts it onto a neighbour; an index past the
+> end falls back to the first pin (TD-46's fix, which stopped the 400 but not
+> the drift). Today it touches only ricette and personaggi — a church and a
+> luogo have one pin — and no published tour exists, which is why it is cheap
+> now and will not be later.
+>
+> **Fix, smallest first:** keep `replace_points` but give it a stable identity
+> to diff on (the pin's id sent back by the form, or a `key`), updating rows in
+> place instead of delete-and-recreate, and point `Stop` at the `MapFeature` by
+> FK with `on_delete=SET_NULL` — so a removed pin reads as "no pin chosen" and
+> the author can be told. Eight `replace_points` call sites across four apps
+> plus the pins editor's wire format; budget half a day to a day, with the
+> probe above as the first failing test.
+>
+> **Fixed the same day.** `Stop.point` is a FK to the pin (`SET_NULL`), filled
+> from the old index by `itinerari/migrations/0005_stop_point_is_the_pin.py`
+> (reversible; walked both ways in a throwaway migration test). Every type's
+> read side now returns each pin's `id`, the form sends it back, and
+> `content/api_helpers.py::replace_points` is a diff by id — a pin sent with its
+> id keeps its row, a pin left out is deleted, an id that is not this card's or
+> is repeated makes a new pin. The API keeps `point_index` on the wire,
+> resolved to the pin on write and recomputed on read, so the tour form did
+> not change. Seven backend tests (`content/test_replace_points.py`, three in
+> `itinerari/tests.py` — the removal one shown failing against the old code)
+> and one in `TypeForm.spec.ts` that the form sends the ids back.
+> **Not covered:** a client that omits the ids (none exists — the SPA is the
+> only writer) still recreates every pin, and its stops fall back to the
+> card's first pin rather than moving to a neighbour. Nothing tells a tour's
+> author that a stop lost its pin; the stop is still listed, on the card's
+> first pin.

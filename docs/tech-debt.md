@@ -1,7 +1,7 @@
 # Technical debt register
 
 > **What is open, and nothing else.** Fifty items have been recorded
-> since the first audit on 2026-08-19; forty-four are paid and live, with their
+> since the first audit on 2026-08-19; forty-five are paid and live, with their
 > evidence, in [tech-debt-archive.md](./tech-debt-archive.md). Read that file
 > for how a defect got in and what proved the fix. Read **this** one before
 > proposing work.
@@ -21,16 +21,17 @@
 
 | Gate | Command | Result |
 |---|---|---|
-| Backend tests | `python -m pytest` | **480 passed** in 8.6s |
+| Backend tests | `python -m pytest` | **487 passed** in 9.0s |
 | Backend lint | `python -m ruff check .` | clean |
-| Frontend tests | `npm run test:unit -- run` | **227 passed**, 47 files, ~10s |
+| Frontend tests | `npm run test:unit -- run` | **228 passed**, 47 files, ~10s |
 | Frontend lint | `npx oxlint` · `npx eslint .` | clean |
 | Format | `npx prettier --check .` | clean |
 | Build | `npm run build` | green, ~0.9s |
 | E2E | `npm run test:e2e` | **8 spec files, 47 tests** — green in CI |
 
-Every row above was run again on 2026-10-12 (no code had landed since
-2026-09-22, and every count matched) except the last, which needs a seeded API
+Every row above was run again on 2026-10-12 — first with no code landed since
+2026-09-22 and every count matching, then after TD-50's fix, whose seven
+backend tests and one frontend test are the difference — except the last, which needs a seeded API
 on `:8000` and a production build; it is counted from the specs and taken from
 CI. The 2026-08-19 baseline — 142 backend tests, 43 frontend, 4 e2e — is in the
 archive, for the scale of the difference rather than for nostalgia.
@@ -159,30 +160,6 @@ the API.
 for the cross-stop ones) so the admin and the API share them, or make the
 inline read-only and leave authoring to the SPA. Either is small; the first
 keeps the admin useful for repairs.
-
-## TD-50 · A tour stop's chosen pin is positional, so it moves when the card's pins change
-
-Found 2026-10-12 (first noticed in passing in a 2026-09-22 design draft);
-**confirmed by running** a throwaway test against the API: a tour stop on the Tiella's *Forno B*
-(`point_index: 1`), then the recipe's author removes *Forno A* — the stop now
-reads *Forno C*, with no error and nothing flagged to the tour's author.
-
-`Stop.point_index` is an index into the card's point pins, and
-`content/api_helpers.py::replace_points` deletes and recreates every pin on
-every save. Pins are an unordered bag (`MapPointsField`, `kind="pins"`), so any
-removal before the chosen pin shifts it onto a neighbour; an index past the
-end falls back to the first pin (TD-46's fix, which stopped the 400 but not
-the drift). Today it touches only ricette and personaggi — a church and a
-luogo have one pin — and no published tour exists, which is why it is cheap
-now and will not be later.
-
-**Fix, smallest first:** keep `replace_points` but give it a stable identity
-to diff on (the pin's id sent back by the form, or a `key`), updating rows in
-place instead of delete-and-recreate, and point `Stop` at the `MapFeature` by
-FK with `on_delete=SET_NULL` — so a removed pin reads as "no pin chosen" and
-the author can be told. Eight `replace_points` call sites across four apps
-plus the pins editor's wire format; budget half a day to a day, with the
-probe above as the first failing test.
 
 ---
 

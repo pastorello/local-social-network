@@ -83,10 +83,10 @@ fails safe (see [ADR-0002](./docs/adr/0002-debug-off-secret-key-required.md)).
 |---|---|
 | `scripts/dev` | API :8000 + SPA :5173 bare metal, one Ctrl-C stops both |
 | `docker compose up --build` | Postgres + API :8000 + SPA :5173 |
-| `python -m pytest` | Backend tests — **480**, a few seconds (from `backend/`) |
+| `python -m pytest` | Backend tests — **487**, a few seconds (from `backend/`) |
 | `python -m ruff check .` | Backend lint |
 | `npm run dev` | Vite dev server on :5173 (from `frontend/`) |
-| `npm run test:unit -- run` | Frontend unit tests — **227** |
+| `npm run test:unit -- run` | Frontend unit tests — **228** |
 | `npm run test:e2e` | Cypress against a production build — **47** (needs the API running, seeded by `seed_e2e`; see CLAUDE.md) |
 | `npm run lint` | oxlint then eslint, both with `--fix` |
 | `npm run build` | Type-check (`vue-tsc`) + production build |
@@ -137,9 +137,9 @@ in [docs/adr/](./docs/adr/README.md).
 Everything the v2 spec asks for is built and tested — the five build phases
 (accounts, the content core, the card types, translations, the map), the
 design pass, the map under every page, luoghi and itinerari (2026-09-18). The
-debt register is closed but for six items: two it keeps open on purpose, two
-test-coverage gaps found when the register was re-walked on 2026-09-22, and two
-small tour-stop defects found on 2026-10-12.
+debt register is closed but for five items: two it keeps open on purpose, two
+test-coverage gaps found when the register was re-walked on 2026-09-22, and one
+small tour-stop defect found on 2026-10-12.
 What is missing is **content**: the archive is empty until its collaborators
 write it.
 Nothing is deployed; deployment waits on a host and a mail provider, and on the

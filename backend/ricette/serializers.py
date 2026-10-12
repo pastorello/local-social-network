@@ -10,7 +10,9 @@ from .models import Ricetta
 
 
 def _map_point(feature):
-    return {'lat': feature.lat, 'lng': feature.lng, 'label': feature.label}
+    # The id goes back with the pin when the form saves, so the pin stays the
+    # same row and a tour stop on it stays on it (TD-50).
+    return {'id': feature.pk, 'lat': feature.lat, 'lng': feature.lng, 'label': feature.label}
 
 
 class RicettaReadSerializer(serializers.ModelSerializer):

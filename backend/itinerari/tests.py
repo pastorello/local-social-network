@@ -217,6 +217,66 @@ def test_a_tour_is_not_a_stop_not_even_of_itself(auth_client, places):
     assert as_new_stop.status_code == 400
     assert as_own_stop.status_code == 400
 
+# --- the chosen pin is that pin, not a position (TD-50) ---
+
+
+def _tour_on_forno_b(client, tiella):
+    response = client.post('/api/itinerari/', payload([{'card': str(tiella.pk), 'point_index': 1}]))
+    assert response.json()['stops'][0]['point']['label'] == 'Forno B'
+    return response.json()['id']
+
+
+def _save_pins(client, card, pins):
+    """What the form sends: the pins it read, ids included, as edited."""
+    response = client.patch(f'/api/ricette/{card.pk}/', {'pins': json.dumps(pins)}, format='multipart')
+    assert response.status_code == 200, response.content
+    return response
+
+
+def test_a_stop_keeps_its_pin_when_an_earlier_pin_is_removed(auth_client, places):
+    tiella = places['tiella']
+    tour_id = _tour_on_forno_b(auth_client, tiella)
+    pins = auth_client.get(f'/api/ricette/{tiella.pk}/').json()['pins']
+
+    _save_pins(auth_client, tiella, pins[1:] + [{'lat': 41.22, 'lng': 13.58, 'label': 'Forno C'}])
+
+    stop = auth_client.get(f'/api/itinerari/{tour_id}/').json()['stops'][0]
+    assert stop['point']['label'] == 'Forno B'
+    # The index the form will send back is the pin's new place in the list.
+    assert stop['point_index'] == 0
+
+
+def test_a_stop_follows_its_pin_when_the_pin_is_corrected(auth_client, places):
+    tiella = places['tiella']
+    tour_id = _tour_on_forno_b(auth_client, tiella)
+    pins = auth_client.get(f'/api/ricette/{tiella.pk}/').json()['pins']
+    pins[1] = {**pins[1], 'lat': 41.2155, 'label': 'Forno B, sul corso'}
+
+    _save_pins(auth_client, tiella, pins)
+
+    point = auth_client.get(f'/api/itinerari/{tour_id}/').json()['stops'][0]['point']
+    assert point == {'lat': 41.2155, 'lng': 13.5720, 'label': 'Forno B, sul corso'}
+
+
+def test_a_stop_whose_pin_is_removed_falls_back_to_the_cards_first(auth_client, places):
+    tiella = places['tiella']
+    tour_id = _tour_on_forno_b(auth_client, tiella)
+    pins = auth_client.get(f'/api/ricette/{tiella.pk}/').json()['pins']
+
+    _save_pins(auth_client, tiella, pins[:1])
+
+    stop = auth_client.get(f'/api/itinerari/{tour_id}/').json()['stops'][0]
+    assert stop['point_index'] is None
+    assert stop['point']['label'] == 'Forno A'
+    # And the tour still saves with what it read back.
+    resaved = auth_client.patch(
+        f'/api/itinerari/{tour_id}/',
+        {'stops': json.dumps([{'card': stop['card'], 'point_index': stop['point_index']}])},
+        format='multipart',
+    )
+    assert resaved.status_code == 200
+
+
 # --- I4: a published tour never shows a stop the reader cannot open ---
 
 

@@ -14,6 +14,8 @@ class StopInline(admin.TabularInline):
     model = Stop
     extra = 0
     autocomplete_fields = ('card',)
+    # A pin by id, not a select of every pin of every card in the archive.
+    raw_id_fields = ('point',)
     ordering = ('position',)
 
 
