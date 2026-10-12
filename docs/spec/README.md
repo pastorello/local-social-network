@@ -65,6 +65,7 @@ not mean).
 | Steering tier & political tooling | [politics.md](./politics.md) | tier delivered (C1); its first consumer is C5's seggi overlay (2026-08-27); the tooling is future, out of current build |
 | Design & visual direction | [design.md](./design.md) | interviewed 2026-08-27, built 2026-08-31; **layout reopened 2026-09-11** (D13–D21), built 2026-09-18 |
 | Itinerari — curated tours for a visitor's stay | [itinerari.md](./itinerari.md) | decided 2026-09-11; built 2026-09-18 — backend, the guest's pages and the collaborator's editor |
+| *Che si fa a Gaeta?* — what is open and on, for a given day and area | [cosa-fare.md](./cosa-fare.md) | **draft, not decided** — proposed 2026-09-22, committed 2026-10-12; the author answered two of its questions (§0.2b, §0.7); ADR-0008 must come before any code |
 
 ## Architecture (shared across areas)
 
