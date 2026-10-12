@@ -199,7 +199,10 @@ left open:
 - **Not a map layer** (I11): `/api/map/features/` does not include tours; a
   test says so.
 - **Django admin** has an inline for the stops (with card autocomplete), so a
-  tour can be assembled there before the collaborator's editor exists.
+  tour can be assembled there before the collaborator's editor exists. *(Since
+  2026-10-12 — TD-49 — it obeys the same stop rules and I4 as the API, through
+  `itinerari/rules.py`, and so does publishing a tour from the generic card
+  form.)*
 
 ## What the build decided — frontend, 2026-09-18
 

@@ -16,8 +16,8 @@
 > not. (Two more were minted in the same pass — TD-47 and TD-48 — not from a
 > new audit but from re-walking the coverage gaps the first audit had named
 > and nobody had gone back to. Forty-eight recorded, forty-four here.
-> TD-49 and TD-50 followed on 2026-10-12; TD-50 was paid the same day and is
-> at the foot of this file, TD-49 is open.) Nothing
+> TD-49 and TD-50 followed on 2026-10-12; both were paid the same day and are
+> at the foot of this file.) Nothing
 > was reworded in the move; the items that were still open left this file for
 > the active one, and their place here is a pointer.
 >
@@ -1562,7 +1562,8 @@ one met at 7.0 is an outage.
 > **Not covered**: the Django admin's stop inline (`itinerari/admin.py`)
 > still bypasses these checks and I4 — admins only, recorded here rather than
 > fixed. *(Still open, and the 2026-09-22 split archived it with the paid
-> item; it is **TD-49** in the active register since 2026-10-12.)*
+> item; it became **TD-49** on 2026-10-12 and was paid the same day — at the
+> foot of this file.)*
 
 ### TD-46 · Five write-path and read-path gaps the 2026-09-18 sweep found — **FIXED 2026-09-18** ✔
 
@@ -1631,3 +1632,50 @@ one met at 7.0 is an outage.
 > card's first pin rather than moving to a neighbour. Nothing tells a tour's
 > author that a stop lost its pin; the stop is still listed, on the card's
 > first pin.
+
+### TD-49 · The admin's tour-stop inline bypassed every stop rule — **FIXED 2026-10-12** ✔
+
+> Found 2026-10-12 re-walking the archive for open residuals: **TD-45's fix
+> recorded this as "not covered" and the 2026-09-22 split then archived it with
+> the paid item**, so the open register never listed it. Verified by reading,
+> not by running.
+>
+> `itinerari/admin.py::StopInline` is a bare `TabularInline` with an
+> autocomplete on `card`. Everything `itinerari/api.py::_parse_stops` and I4
+> enforce — a stop is a card with a place (`maps.CARD_TYPES`), never a
+> translation, never a tour, a draft only for its author or an admin, a
+> `point_index` inside the card's pins, and no publishing while a stop is a
+> draft — is skipped on this path. Admins only, so the exposure is the author's
+> own mistakes, not a stranger's: a dialetto word as a stop renders with no
+> place and a broken *Leggi la scheda* link, exactly the symptom TD-45 fixed on
+> the API.
+>
+> **Fix:** move the per-stop rules into `Stop.clean()` (or a formset `clean()`
+> for the cross-stop ones) so the admin and the API share them, or make the
+> inline read-only and leave authoring to the SPA. Either is small; the first
+> keeps the admin useful for repairs.
+>
+> **Fixed the same day, with I4 on the card form too.** Reading the admin for
+> the fix found a second way around I4: a tour's `is_published` lives on its
+> `Card`, edited in `CardAdmin`, which knew nothing of stops — and nothing of
+> T8's original-first rule either. So:
+>
+> - `itinerari/rules.py` holds the stop rules and I4 as functions returning a
+>   message; `api.py` calls them instead of carrying its own copies (same
+>   messages, so no API test changed).
+> - `itinerari/admin.py::StopInlineFormSet` applies them to the inline: a stop
+>   is a card with a place and an original, its pin is its own card's, a
+>   translated tour has no stops of its own, and a published tour takes no
+>   draft stop. An admin may still use any card, draft or not, on a draft tour
+>   — the API's rule for admins.
+> - `content/publishing.py` is a registry of publish checks that
+>   `CardAdmin`'s form runs when a card is saved published. The core cannot
+>   import its types (ADR-0004), so `content` registers T8 itself and
+>   `itinerari`'s `AppConfig.ready()` registers I4.
+>
+> Eleven tests in `itinerari/test_admin.py`, driven through the real admin
+> pages; the eight that assert a refusal were shown failing against the old
+> admin, and the three controls pass on both. **Not covered:** the
+> `Itinerario` add page with a brand-new card in one go is not exercised (the
+> author creates tours in the SPA); and a queryset `.update(is_published=True)`
+> in a shell bypasses every rule, as it always has.

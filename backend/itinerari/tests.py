@@ -217,6 +217,7 @@ def test_a_tour_is_not_a_stop_not_even_of_itself(auth_client, places):
     assert as_new_stop.status_code == 400
     assert as_own_stop.status_code == 400
 
+
 # --- the chosen pin is that pin, not a position (TD-50) ---
 
 

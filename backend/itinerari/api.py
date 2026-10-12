@@ -25,7 +25,8 @@ from content.models import Card, MapFeature
 from maps.api import CARD_TYPES
 
 from .models import Intent, Itinerario, Stop
-from .serializers import IntentSerializer, ItinerarioReadSerializer, ItinerarioWriteSerializer, card_type
+from .rules import publish_problem, stop_card_problem
+from .serializers import IntentSerializer, ItinerarioReadSerializer, ItinerarioWriteSerializer
 
 # A generous cap: a day out with forty stops is not a day out, and the limit
 # keeps a malformed request from writing a thousand rows.
@@ -124,13 +125,10 @@ def _parse_stops(raw, user, kept=()):
         )
         if not visible:
             raise ValidationError({'stops': ['Una delle schede non esiste.']})
-        if card.translation_of_id is not None:
-            raise ValidationError({'stops': [f'«{card.title}» è una traduzione: la tappa è la scheda originale.']})
+        problem = stop_card_problem(card)
+        if problem:
+            raise ValidationError({'stops': [problem]})
         points = [f for f in card.map_features.all() if f.kind == MapFeature.POINT]
-        # A card of a type with no place, and another tour — which has a drawn
-        # path but is not somewhere to go — are not stops.
-        if card_type(card) is None or not card.map_features.all():
-            raise ValidationError({'stops': [f'«{card.title}» non ha un luogo sulla mappa, quindi non può essere una tappa.']})
         point_index = entry.get('point_index')
         if point_index is not None and (
             not isinstance(point_index, int) or isinstance(point_index, bool)
@@ -149,15 +147,9 @@ def _parse_stops(raw, user, kept=()):
 def _require_publishable(is_published, stops):
     """I4: a tour is published only when every one of its stops can be opened
     by the reader it is published to."""
-    if not is_published:
-        return
-    drafts = [stop.card.title for stop in stops if not stop.card.is_published]
-    if drafts:
-        raise ValidationError({
-            'is_published': [
-                'Si pubblica quando tutte le tappe sono pubblicate. In bozza: ' + ', '.join(f'«{t}»' for t in drafts) + '.'
-            ]
-        })
+    problem = publish_problem(is_published, [stop.card for stop in stops])
+    if problem:
+        raise ValidationError({'is_published': [problem]})
 
 
 def _replace_stops(itinerario, stops):
