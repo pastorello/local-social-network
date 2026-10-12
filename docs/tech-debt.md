@@ -1,7 +1,7 @@
 # Technical debt register
 
 > **What is open, and nothing else.** Fifty items have been recorded
-> since the first audit on 2026-08-19; forty-six are paid and live, with their
+> since the first audit on 2026-08-19; forty-seven are paid and live, with their
 > evidence, in [tech-debt-archive.md](./tech-debt-archive.md). Read that file
 > for how a defect got in and what proved the fix. Read **this** one before
 > proposing work.
@@ -21,24 +21,24 @@
 
 | Gate | Command | Result |
 |---|---|---|
-| Backend tests | `python -m pytest` | **498 passed** in 9.9s |
+| Backend tests | `python -m pytest` | **515 passed** in 9.1s |
 | Backend lint | `python -m ruff check .` | clean |
-| Frontend tests | `npm run test:unit -- run` | **228 passed**, 47 files, ~10s |
+| Frontend tests | `npm run test:unit -- run` | **230 passed**, 48 files, ~10s |
 | Frontend lint | `npx oxlint` · `npx eslint .` | clean |
 | Format | `npx prettier --check .` | clean |
 | Build | `npm run build` | green, ~0.9s |
 | E2E | `npm run test:e2e` | **8 spec files, 47 tests** — green in CI |
 
 Every row above was run again on 2026-10-12 — first with no code landed since
-2026-09-22 and every count matching, then after TD-50's and TD-49's fixes,
-whose eighteen backend tests and one frontend test are the difference —
-except the last, which needs a seeded API
+2026-09-22 and every count matching, then after the fixes for TD-50, TD-49
+and TD-47, whose tests are the difference — except the last, which needs a seeded API
 on `:8000` and a production build; it is counted from the specs and taken from
 CI. The 2026-08-19 baseline — 142 backend tests, 43 frontend, 4 e2e — is in the
 archive, for the scale of the difference rather than for nostalgia.
 
 **Green gates are not covered behaviour.** That sentence opened this register on
-day one and TD-47 below is why it is still here.
+day one, and TD-47 — a whole status nothing exercised under a green suite,
+paid 2026-10-12 — is why it is still here.
 
 ---
 
@@ -93,22 +93,6 @@ their own:
 - **`UsersView.vue` re-implements `SearchBar.vue` verbatim.**
 - **`EditProfileView.vue` hand-rolls file handling** instead of
   `useFileUpload.ts`, and therefore has no preview.
-
-## TD-47 · The `rejected` report status has no test at all
-
-Carried from the 2026-08-19 "coverage gaps" list and **verified still true on
-2026-09-22**: the word appears in the whole backend suite exactly once, in a
-`maps` docstring about uploads. It never appears as the source or the target of
-a status transition.
-
-`rejected` is the moderation lever — spam, duplicates — and it is the one branch
-of `ALLOWED_TRANSITIONS` nothing exercises. The 480-test suite is green and says
-nothing about it.
-
-**The fix the original finding proposed still stands**, and is cheap: one
-`@pytest.mark.parametrize` over `ALLOWED_TRANSITIONS` asserting every legal edge
-200s and every illegal one 400s. It closes this permanently and replaces four
-hand-written tests, so the diff is close to neutral.
 
 ## TD-48 · The two oldest forms are the two unverified ones
 

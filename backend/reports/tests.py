@@ -311,13 +311,20 @@ def test_author_edits_own_open_report(make_client, citizen, make_report):
     assert report.title == 'Titolo corretto'
 
 
-def test_author_cannot_edit_once_acknowledged(make_client, citizen, make_report):
-    report = make_report(status=IssueReport.ACKNOWLEDGED)
+@pytest.mark.parametrize('status', ['acknowledged', 'resolved', 'rejected'])
+def test_author_cannot_edit_or_delete_once_out_of_open(make_client, citizen, make_report, status):
+    """F2.8: only while open — a rejected report is not one its author can
+    quietly rewrite or withdraw after moderation (TD-47)."""
+    report = make_report(status=status)
     client = make_client(citizen)
 
-    response = client.patch(f'/api/reports/{report.id}/', {'title': 'Troppo tardi'})
+    edited = client.patch(f'/api/reports/{report.id}/', {'title': 'Troppo tardi'})
+    deleted = client.delete(f'/api/reports/{report.id}/')
 
-    assert response.status_code == 403
+    assert edited.status_code == 403
+    assert deleted.status_code == 403
+    report.refresh_from_db()
+    assert report.title == 'Buca in via Indipendenza'
 
 
 def test_non_author_cannot_edit(make_client, other_citizen, make_report):
@@ -424,27 +431,50 @@ def test_anonymous_cannot_change_status(api_client, make_report):
     assert response.status_code == 401
 
 
-def test_admin_moves_report_forward(make_client, admin, make_report):
-    report = make_report()
-    client = make_client(admin)
+# Every edge F2.3 allows, written out rather than read from
+# `IssueReport.ALLOWED_TRANSITIONS`: a test that derived its expectations from
+# the map it tests would agree with any typo in it (TD-47). `rejected` is the
+# moderation lever — spam, duplicates — and until this grid nothing exercised
+# it, as a source or as a target.
+LEGAL_TRANSITIONS = {
+    ('open', 'acknowledged'),
+    ('open', 'resolved'),
+    ('open', 'rejected'),
+    ('acknowledged', 'resolved'),
+    ('acknowledged', 'rejected'),
+}
+STATUSES = ('open', 'acknowledged', 'resolved', 'rejected')
 
-    response = client.patch(f'/api/reports/{report.id}/status/', {'status': 'acknowledged'})
 
-    assert response.status_code == 200
-    assert response.json()['status'] == 'acknowledged'
+# Stacked so an id reads source-target: `[rejected-open]` is rejected → open.
+@pytest.mark.parametrize('target', STATUSES)
+@pytest.mark.parametrize('source', STATUSES)
+def test_every_status_transition_is_allowed_or_refused_as_f2_3_says(
+    make_client, admin, make_report, source, target
+):
+    report = make_report(status=source)
 
-    onward = client.patch(f'/api/reports/{report.id}/status/', {'status': 'resolved'})
-    assert onward.json()['status'] == 'resolved'
+    response = make_client(admin).patch(f'/api/reports/{report.id}/status/', {'status': target})
+
+    report.refresh_from_db()
+    if (source, target) in LEGAL_TRANSITIONS:
+        assert response.status_code == 200
+        assert response.json()['status'] == target
+        assert report.status == target
+    else:
+        assert response.status_code == 400
+        assert 'status' in response.json()['fields']
+        assert report.status == source
 
 
-def test_admin_cannot_move_backwards_or_from_terminal(make_client, admin, make_report):
-    report = make_report(status=IssueReport.RESOLVED)
-    client = make_client(admin)
-
-    response = client.patch(f'/api/reports/{report.id}/status/', {'status': 'open'})
-
-    assert response.status_code == 400
-    assert 'status' in response.json()['fields']
+def test_the_model_allows_exactly_the_edges_the_spec_does():
+    edges = {
+        (source, target)
+        for source, targets in IssueReport.ALLOWED_TRANSITIONS.items()
+        for target in targets
+    }
+    assert edges == LEGAL_TRANSITIONS
+    assert set(IssueReport.ALLOWED_TRANSITIONS) == set(STATUSES)
 
 
 def test_admin_rejects_invalid_status_value(make_client, admin, make_report):
