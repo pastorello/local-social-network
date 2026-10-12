@@ -493,7 +493,12 @@ card type and an editorial decision before a technical one.
   the places that sell a ricetta, kept current by collaborators. A wrong
   opening time is worse than none — a tourist walks to a church that is shut
   — and this file already names standing in front of a closed church as the
-  moment the product is for. A "feste this month" filter is a separate
+  moment the product is for. *(Amended 2026-10-12 by
+  [ADR-0008](../adr/0008-opening-hours-as-dated-testimony.md), on the author's
+  decision of 2026-09-24: chiese and luoghi may carry what is known about
+  getting in as **free text with the date it was written**, always shown with
+  that date. "Open now", a structured schedule, and any filter on hours stay
+  refused, for exactly the reason given here.)* A "feste this month" filter is a separate
   question: it would need a structured date beside the free-text recurrence.
 - **The Maps JavaScript API** (route optimisation, 3D). Paid, needs a key,
   and loads Google's script on every view — what TD-30 and D6b took out.

@@ -17,8 +17,11 @@
 > to 2026-10-12; it is in the repo now so it cannot be lost and so the next
 > session can argue with it in a diff. What it records as the author's own
 > answers (§0.2b and §0.7, 2026-09-24) are his; everything else is a proposal.
-> **ADR-0008 is not written.** Before any code, it is the first deliverable,
-> because §0.5 reopens design.md's refusal of opening hours.
+> **ADR-0008 is written** (2026-10-12,
+> [0008-opening-hours-as-dated-testimony.md](../adr/0008-opening-hours-as-dated-testimony.md)),
+> and the author has made this module the next phase. Where this draft and the
+> ADR disagree, the ADR wins — in particular §0.5's replacement text for
+> design.md, written before §0.2b relaxed the refusal, is superseded by it.
 >
 > What changed in the repo while it was untracked, so the text below is read
 > against today's code rather than September's: the four debt items it names as
@@ -384,6 +387,10 @@ behaviour.
 > they can still see on the page. What answers the closed church is not the
 > schedule but the prose beside it: `Chiesa.from_outside`, *«Se la trovi
 > chiusa»*, and a telephone number.
+
+*(Superseded: ADR-0008 was written on 2026-10-12 from §0.2b, which came after this
+section and admits dated free-text hours. The replacement entry above is not the
+one design.md carries.)*
 
 **This is ADR-0008**, written before any code: it reverses a recorded decision,
 touches itinerari.md's restatement of it, and adds a column that will hold
