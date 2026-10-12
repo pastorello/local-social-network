@@ -8,6 +8,7 @@ import NavDisclosure from './buttons/NavDisclosure.vue'
 import SchedeMenu from './buttons/SchedeMenu.vue'
 import SiteTitle from './typography/SiteTitle.vue'
 import UserAvatar from './cards/UserAvatar.vue'
+import { initials } from '@/lib/initials'
 
 // The menu (spec/design.md D14): one pill at the top centre of every page,
 // floating over the map rather than a bar above it — the map is the ground of
@@ -19,6 +20,16 @@ const userStore = useUserStore()
 const user = userStore.user
 const router = useRouter()
 const { isDesktop } = useIsDesktop()
+
+// WCAG 2.5.3, label in name: without a photograph the button shows the
+// initials, and someone using speech input says what they see — so the
+// initials are part of its name. A photograph shows no text, and the name
+// stays the plain sentence.
+const accountLabel = () => {
+  const base = `Il tuo account: ${user.name}`
+  const shown = user.avatarURL ? '' : initials(user.name)
+  return shown ? `${base} (${shown})` : base
+}
 
 // Everything below the menu needs to know where it ends — pages open as panels
 // under it, the home's chrome starts under it — and that is not one number:
@@ -76,13 +87,12 @@ const menuLink =
 
       <NavDisclosure
         v-if="user.isAuthenticated && user.id"
-        :label="`Il tuo account: ${user.name}`"
+        :label="accountLabel()"
         trigger-class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
       >
         <template #trigger>
           <!-- Decorative here: the button's own name says whose account it
-          is, and the initials it shows would otherwise be visible text missing
-          from that name (WCAG 2.5.3). -->
+          is, initials included when they are what it shows. -->
           <UserAvatar
             :src="user.avatarURL"
             :name="user.name"

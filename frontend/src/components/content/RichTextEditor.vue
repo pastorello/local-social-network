@@ -76,9 +76,10 @@ onBeforeUnmount(() => {
       aria-label="Formattazione"
     >
       <!-- Each name contains the button's visible text (WCAG 2.5.3, label in
-      name): someone using speech input says what they see — "H2", "Lista" —
-      and that has to match. The bullet and the "1." are decoration, hidden so
-      they are not part of the visible text the name must carry. -->
+      name): someone using speech input says what they see — "H2", "1. Lista"
+      — and that has to match. The bullet is punctuation, which the rule does
+      not count; the "1." is text, so it is in the name. aria-hidden does not
+      take text out of what is visible. -->
       <button
         type="button"
         class="cursor-pointer rounded px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
@@ -146,12 +147,12 @@ onBeforeUnmount(() => {
       <button
         type="button"
         class="cursor-pointer rounded px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
-        aria-label="Lista numerata"
+        aria-label="1. Lista numerata"
         :aria-pressed="editor.isActive('orderedList')"
         :class="editor.isActive('orderedList') ? 'bg-sea text-white' : 'bg-surface text-ink'"
         @click="editor.chain().focus().toggleOrderedList().run()"
       >
-        <span aria-hidden="true">1.</span> Lista
+        1. Lista
       </button>
       <button
         type="button"
