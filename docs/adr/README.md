@@ -22,3 +22,4 @@ records what was decided *then*.
 | [0005](0005-wcag-2.1-aa-accessibility-bar.md) | Vivere Gaeta targets WCAG 2.1 Level AA, whole app, with a remediation plan | Accepted |
 | [0006](0006-overlay-visibility-gate.md) | Overlay visibility is a server-side gate, default-confidential (spec C5) | Accepted |
 | [0007](0007-serving-media-from-the-app.md) | Media is served by the app, hardened, on any host (amends 0003) | Accepted |
+| [0008](0008-opening-hours-as-dated-testimony.md) | Opening hours enter the archive as dated testimony, never as a schedule (amends design.md's refusal) | Accepted |

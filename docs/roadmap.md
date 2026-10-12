@@ -213,9 +213,13 @@ done:
   [spec/cosa-fare.md](./spec/cosa-fare.md), proposed 2026-09-22 and committed
   on 2026-10-12. The author has settled one thing in it — opening hours get a
   field that is honest while empty and is filled over time, never collected as
-  a project (§0.2b) — and that reopens design.md's refusal of opening hours,
-  so **ADR-0008 comes before any code**. Its own conclusion is the one to keep
-  in view: the page is blocked on content (item 4), not on a schema.
+  a project (§0.2b) — and that reopens design.md's refusal of opening hours.
+  **On 2026-10-12 the author made it the next phase, and
+  [ADR-0008](./adr/0008-opening-hours-as-dated-testimony.md) records the
+  availability decision**: dated free-text testimony, no schedule, no filter,
+  no "open now". The draft's other questions (the day and area controls, how a
+  festa enters a day's index) are still open. Its own conclusion is the one to
+  keep in view: the page is blocked on content (item 4), not on a schema.
 - **Geolocation** — "you are here" plus what is around you while walking
   Gaeta. The author wants it and it fits the product; it is a **feature, not a
   style**: browser permission, HTTPS (so it depends on item 3), sane handling

@@ -149,7 +149,10 @@ walking directions are handed to the app that already does them.
 - **A QR code per B&B** — see I6.
 - **English at launch** — see I9.
 - **Opening hours and "open now"** — already declined in design.md for the
-  same reason: a wrong opening time is worse than none.
+  same reason: a wrong opening time is worse than none. *(Since 2026-10-12,
+  [ADR-0008](../adr/0008-opening-hours-as-dated-testimony.md): a card may show
+  dated, free-text hours, but a tour still never filters, orders or times
+  itself by them, and "open now" stays refused.)*
 
 ## Left to the build
 
