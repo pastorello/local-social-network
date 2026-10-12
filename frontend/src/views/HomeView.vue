@@ -173,7 +173,7 @@ onMounted(mapStore.load)
       <PanelBox>
         <MainTitle>La mappa di Gaeta</MainTitle>
         <p class="mb-4 text-muted">
-          Feste, chiese, ricette e personaggi della città, sulla mappa. Scegli cosa vedere.
+          Luoghi, chiese, feste, ricette e personaggi della città, sulla mappa. Scegli cosa vedere.
         </p>
 
         <LayerToggles

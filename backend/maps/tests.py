@@ -291,7 +291,7 @@ def test_admin_form_rejects_a_non_image_upload():
     form = OverlayAdminForm(
         data={
             'name': 'Gaeta 1820', 'kind': Overlay.RASTER, 'visibility': Overlay.PUBLIC,
-            'position': 0, 'opacity': 0.6, 'color': '#7c3aed',
+            'position': 0, 'opacity': 0.6, 'color': '#0f5f73',
             'south': 41.20, 'west': 13.55, 'north': 41.23, 'east': 13.58,
         },
         files={'image': SimpleUploadedFile('exploit.png', b'<svg/>', content_type='image/png')},
@@ -404,7 +404,7 @@ def test_an_oversized_scan_is_refused_once_not_twice():
     form = OverlayAdminForm(
         data={
             'name': 'Gaeta 1820', 'kind': Overlay.RASTER, 'visibility': Overlay.PUBLIC,
-            'position': 0, 'opacity': 0.6, 'color': '#7c3aed',
+            'position': 0, 'opacity': 0.6, 'color': '#0f5f73',
             'south': 41.20, 'west': 13.55, 'north': 41.23, 'east': 13.58,
         },
         files={'image': oversized},

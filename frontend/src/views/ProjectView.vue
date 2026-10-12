@@ -32,8 +32,8 @@ const heading = 'mb-3 text-xs font-semibold tracking-[0.12em] text-muted upperca
         ><span class="text-terracotta">V</span>ivere
         <span class="text-terracotta">G</span>aeta</span
       >
-      è un archivio culturale di Gaeta: feste, chiese, ricette, personaggi e dialetto, raccontati da
-      chi la città la vive.
+      è un archivio culturale di Gaeta: luoghi, chiese, feste, ricette, personaggi, dialetto e
+      libri, raccontati da chi la città la vive.
     </p>
 
     <div class="mt-10 grid gap-8 border-t border-hairline pt-8 sm:grid-cols-3">

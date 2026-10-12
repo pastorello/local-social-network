@@ -19,8 +19,8 @@ sentences fixed in place, and re-walking the archive for "not covered" lines
 found two more pieces of debt, both on tour stops (TD-49, TD-50). The
 engineering on the board is now those two and TD-47/TD-48 — four small
 items, none blocking. *(All four were paid the same day — TD-50, TD-49,
-TD-47, TD-48 — so the engineering left on the board is a dependency sweep and
-small paper cuts.)* Item 4 is still the bottleneck.
+TD-47, TD-48 — and the dependency sweep and TD-31's paper cuts followed, so
+no engineering is left on the board that does not wait on the author.)* Item 4 is still the bottleneck.
 
 **Where things stand (2026-09-22).** Unchanged in substance since 2026-09-18,
 below. The registers were split in two that day — this file and

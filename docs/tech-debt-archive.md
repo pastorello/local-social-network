@@ -988,7 +988,11 @@ New:
   duplication in `UsersView`, and `EditProfileView` hand-rolling file handling
   instead of `useFileUpload`. They moved to the active register as **TD-31
   (residual)** on 2026-09-22, so the closed nine and the open three stop being
-  read as one half-done item. Original text: **TD-31 ·
+  read as one half-done item. **All three paid 2026-10-12**: `PanelBox`'s
+  classes are a `computed` (a test changes `size` and watches the padding
+  follow — red against the old file), `UsersView` uses `SearchBar`, and
+  `EditProfileView` uses `useFileUpload`, which is what gives the avatar its
+  preview; each has a test. Original text: **TD-31 ·
   Frontend paper cuts.** `SiteTitle.vue:3-4` uses `<a href="/">`
   instead of `<RouterLink>`, so clicking the brand does a full page reload and
   re-runs the whole auth bootstrap. `stores/toast.ts:19-36` fires three untracked
