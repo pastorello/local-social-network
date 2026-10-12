@@ -57,7 +57,7 @@
     "jsdom": "^30.0.1",
     "npm-run-all2": "^9.0.3",
     "oxlint": "~1.81.0",
-    "prettier": "3.9.6",
+    "prettier": "3.9.10",
     "start-server-and-test": "^3.0.12",
     "tailwindcss": "^4.2.2",
     "typescript": "~6.0.3",

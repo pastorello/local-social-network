@@ -17,7 +17,7 @@ const makeRouter = () =>
     ],
   })
 
-const mountHeader = async (signedIn = false) => {
+const mountHeader = async (signedIn = false, avatarURL: string | null = null) => {
   const pinia = createPinia()
   setActivePinia(pinia)
   if (signedIn) {
@@ -25,6 +25,7 @@ const mountHeader = async (signedIn = false) => {
     user.isAuthenticated = true
     user.id = 'u1'
     user.name = 'Maria Conte'
+    user.avatarURL = avatarURL
   }
   const router = makeRouter()
   router.push('/')
@@ -69,7 +70,7 @@ describe('the menu (spec/design.md D14)', () => {
   it('puts a signed-in collaborator’s profile, the users and Esci behind the avatar', async () => {
     const wrapper = await mountHeader(true)
 
-    const trigger = wrapper.get('button[aria-label="Il tuo account: Maria Conte"]')
+    const trigger = wrapper.get('button[aria-label^="Il tuo account: Maria Conte"]')
     expect(trigger.attributes('aria-expanded')).toBe('false')
     expect(wrapper.text()).not.toContain('Esci')
 
@@ -81,9 +82,20 @@ describe('the menu (spec/design.md D14)', () => {
     expect(wrapper.text()).toContain('Esci')
   })
 
+  // WCAG 2.5.3: someone using speech input says what they see on the button.
+  it('names the account button with the initials it shows, and without them for a photo', async () => {
+    const initials = await mountHeader(true)
+    expect(initials.find('button[aria-label="Il tuo account: Maria Conte — MC"]').exists()).toBe(
+      true,
+    )
+
+    const photo = await mountHeader(true, '/media/avatars/maria.jpg')
+    expect(photo.find('button[aria-label="Il tuo account: Maria Conte"]').exists()).toBe(true)
+  })
+
   it('closes the account menu on Escape and gives focus back to the avatar', async () => {
     const wrapper = await mountHeader(true)
-    const trigger = wrapper.get('button[aria-label="Il tuo account: Maria Conte"]')
+    const trigger = wrapper.get('button[aria-label^="Il tuo account: Maria Conte"]')
     await trigger.trigger('click')
 
     await wrapper.get('a[href="/users"]').trigger('keydown', { key: 'Escape' })
