@@ -15,7 +15,8 @@
 > recorded were closed and a planner could no longer see the two that were
 > not. (Two more were minted in the same pass — TD-47 and TD-48 — not from a
 > new audit but from re-walking the coverage gaps the first audit had named
-> and nobody had gone back to. Forty-eight recorded, forty-four here.) Nothing
+> and nobody had gone back to. Forty-eight recorded, forty-four here.
+> TD-49 and TD-50 followed on 2026-10-12; both are open.) Nothing
 > was reworded in the move; the items that were still open left this file for
 > the active one, and their place here is a pointer.
 >
@@ -267,7 +268,10 @@ genuine runtime advisory lands, it will be buried in dev-server noise.
 > collaboration request — accepting the invite and setting a password needs the
 > token out of an e-mail, which means reading the outbox or adding a test-only
 > hook. That is a decision to take on purpose, not a thing to bolt onto a
-> coverage pass.
+> coverage pass. *(Taken on purpose later: `collabora.cy.ts` now follows a
+> request through the admin's approval to a collaborator who signs in, reading
+> the invite from `E2E_MAIL_DIR` — see CLAUDE.md's CI section. Note added
+> 2026-10-12.)*
 
 Original text: `frontend/cypress/e2e/` contains **only `login.cy.ts`**. The three
 flows that *are* the product — filing a report on the map, upvoting, voting in a
@@ -1556,7 +1560,8 @@ one met at 7.0 is an outage.
 > Four tests; the two about the defect shown failing against the old code.
 > **Not covered**: the Django admin's stop inline (`itinerari/admin.py`)
 > still bypasses these checks and I4 — admins only, recorded here rather than
-> fixed.
+> fixed. *(Still open, and the 2026-09-22 split archived it with the paid
+> item; it is **TD-49** in the active register since 2026-10-12.)*
 
 ### TD-46 · Five write-path and read-path gaps the 2026-09-18 sweep found — **FIXED 2026-09-18** ✔
 
@@ -1573,6 +1578,8 @@ one met at 7.0 is an outage.
 >   draft's title, photographs and place to everyone (T5). Every type's update
 >   path calls `content/api_helpers.py::require_original_published`. Not
 >   covered: unpublishing an original leaves its published translations up.
+>   *(Paid 2026-09-19 as spec translations.md T8, #83: `Card.save()` and a
+>   `pre_delete` receiver take the translations down.)*
 > - **A stop whose pin was removed** made every save of its tour fail with 400:
 >   the read side fell back to the first pin but returned the stale
 >   `point_index`, and the form sent it back. It now reads as `null`.

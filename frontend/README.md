@@ -35,7 +35,10 @@ npm run test:e2e:dev
 ```
 
 This runs the end-to-end tests against the Vite development server.
-It is much faster than the production build.
+It is much faster than the production build. Either way the specs need the API
+running on `:8000`, seeded with `python manage.py seed_e2e` and with
+`CORS_ALLOWED_ORIGINS` allowing the Cypress origin — the exact commands are in
+the CI section of [CLAUDE.md](../CLAUDE.md).
 
 But it's still recommended to test the production build with `test:e2e` before deploying (e.g. in CI environments):
 

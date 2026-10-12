@@ -36,8 +36,9 @@ router.afterEach(async (to, from) => {
 </script>
 
 <template>
-  <!-- WCAG 2.4.1. The header is seven tab stops — wordmark, four nav items,
-  avatar, logout — and they come before the page on every route. This is the
+  <!-- WCAG 2.4.1. The header is up to six tab stops — wordmark, four nav items,
+  the avatar (Esci is inside its disclosure) — and they come before the page on
+  every route. This is the
   way past all of it, and it is the first focusable thing in the document
   because that is the only position from which it helps. Visible only when
   focused: it is for the reader who is tabbing, and it would otherwise sit over

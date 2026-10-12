@@ -12,6 +12,14 @@ to these phases by number, so 3, 4, 5 and 8 keep theirs and the gaps are where
 the finished ones used to sit. A roadmap that renumbers itself is a roadmap
 nothing else can cite.
 
+**Where things stand (2026-10-12).** Nothing has landed since 2026-09-22 and
+the gates re-run with identical counts. A docs-against-code pass found the doc
+set accurate to the file and symbol, with a handful of stale numbers and
+sentences fixed in place, and re-walking the archive for "not covered" lines
+found two more pieces of debt, both on tour stops (TD-49, TD-50). The
+engineering on the board is now those two and TD-47/TD-48 — four small
+items, none blocking. Item 4 is still the bottleneck.
+
 **Where things stand (2026-09-22).** Unchanged in substance since 2026-09-18,
 below. The registers were split in two that day — this file and
 [tech-debt.md](./tech-debt.md) now hold only what is open — and re-walking the
