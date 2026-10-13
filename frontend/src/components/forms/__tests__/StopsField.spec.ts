@@ -15,6 +15,7 @@ const features = [
     cover: null,
     points: [{ lat: 41.21, lng: 13.57, label: '' }],
     route: [],
+    zones: [],
   },
   {
     id: 'lu1',
@@ -26,6 +27,7 @@ const features = [
       { lat: 41.22, lng: 13.58, label: 'Porto' },
     ],
     route: [],
+    zones: [],
   },
 ]
 

@@ -95,6 +95,8 @@ def test_map_features_is_public_and_groups_points_by_card(api_client, make_card)
         'cover': None,
         'points': [{'lat': GAETA_LAT, 'lng': GAETA_LNG, 'label': 'Ingresso'}],
         'route': [],
+        # The map's default centre falls in the seeded draft of Porto Salvo.
+        'zones': ['porto-salvo'],
     }]
 
 
@@ -170,7 +172,8 @@ def test_map_features_stays_one_query(api_client, make_card, django_assert_num_q
         add_point(card)
         CardImage.objects.create(card=card, image=image_upload(), position=0)
 
-    with django_assert_num_queries(2):  # the features, plus the image prefetch
+    # The features, the image prefetch, and the zones — read once, not per card.
+    with django_assert_num_queries(3):
         assert len(api_client.get('/api/map/features/').json()) == 4
 
 

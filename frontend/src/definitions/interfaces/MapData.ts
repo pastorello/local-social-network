@@ -12,6 +12,18 @@ export interface MapCardFeature {
   cover: string | null
   points: MapPoint[]
   route: MapPoint[]
+  // The editorial zones it is in (spec cosa-fare.md Part −1, D2): a place by
+  // its pin, a festa where its procession stops. Empty outside every zone.
+  zones: string[]
+}
+
+// GET /api/map/zone/ — an editorial zone, not an official boundary (D2).
+// `count` is the published places (chiese and luoghi) in it.
+export interface Zone {
+  slug: string
+  name: string
+  geometry: { type: 'Polygon' | 'MultiPolygon'; coordinates: unknown }
+  count: number
 }
 
 // GET /api/map/overlays/ (spec map.md M3). The list is already filtered by
