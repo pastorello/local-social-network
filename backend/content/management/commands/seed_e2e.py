@@ -17,7 +17,7 @@ from django.db import transaction
 
 from account.models import CollaborationRequest, User
 from chiese.models import Chiesa
-from content.models import Card, MapFeature
+from content.models import Availability, Card, MapFeature
 from feste.models import Feste
 from itinerari.models import Intent, Itinerario, Stop
 from maps.models import Overlay
@@ -83,8 +83,19 @@ class Command(BaseCommand):
         self._clear_invite_journeys()
 
         published = self._card(PUBLISHED_CHIESA, collaborator, is_published=True)
-        Chiesa.objects.get_or_create(card=published)
+        Chiesa.objects.update_or_create(
+            card=published,
+            defaults={'from_outside': 'Il campanile si vede dal sagrato; il porto è a cinquanta metri.'},
+        )
         self._point(published, 'Ingresso')
+        # What is known about getting in (ADR-0008), so the article the a11y
+        # gate reads carries the block a reader of a filled church card sees.
+        Availability.objects.update_or_create(card=published, defaults={
+            'state': Availability.SERVICES,
+            'hours': 'Domenica alle 11, per la messa.',
+            'keeper': 'Parrocchia E2E',
+            'keeper_phone': '0771 000000',
+        })
 
         # A draft must stay invisible to a reader — the one fixture that cannot
         # be created through the public API without making it the flow itself.

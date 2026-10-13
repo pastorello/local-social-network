@@ -263,3 +263,87 @@ describe('the pins go back with their ids (TD-50)', () => {
     ])
   })
 })
+
+describe('the Visita tab (ADR-0008, cosa-fare.md D7)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(axios.get).mockResolvedValue({ data: [] })
+  })
+
+  const mountType = (config: typeof chiesaConfig, item?: ContentItem) =>
+    mount(TypeForm, {
+      props: { config, item },
+      global: { plugins: [createPinia()], stubs: globalStubs },
+    })
+
+  it('appears only on the types with a door', () => {
+    expect(mountType(chiesaConfig).find('#type-form-tab-visita').exists()).toBe(true)
+    expect(mountType(luogoConfig).find('#type-form-tab-visita').exists()).toBe(true)
+    expect(mountType(ricettaConfig).find('#type-form-tab-visita').exists()).toBe(false)
+  })
+
+  it('sends what is known about getting in, without a date, and «Se la trovi chiusa»', async () => {
+    vi.mocked(axios.patch).mockResolvedValue({ data: { id: '1' } })
+    const item = {
+      ...baseItem,
+      from_outside: '',
+      availability: {
+        state: 'unknown',
+        hours: '',
+        hours_updated: '2026-03-12',
+        keeper: '',
+        keeper_phone: '',
+      },
+    }
+    const wrapper = mountType(chiesaConfig, item)
+
+    await wrapper.get('#type-form-visit-state').setValue('services')
+    await wrapper.get('#type-form-visit-hours').setValue('Domenica alle 11.')
+    await wrapper.get('#type-form-visit-keeper').setValue('Parrocchia della Cattedrale')
+    await wrapper.get('#type-form-visit-phone').setValue('0771 462255')
+    await wrapper.get('#type-form-from-outside').setValue('Il campanile si vede dal porto.')
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+
+    const body = vi.mocked(axios.patch).mock.calls[0]![1] as FormData
+    expect(JSON.parse(body.get('availability') as string)).toEqual({
+      state: 'services',
+      hours: 'Domenica alle 11.',
+      keeper: 'Parrocchia della Cattedrale',
+      keeper_phone: '0771 462255',
+    })
+    expect(body.get('from_outside')).toBe('Il campanile si vede dal porto.')
+  })
+
+  it('offers "no door" to an open-air place and never to a church', () => {
+    const values = (config: typeof chiesaConfig) =>
+      mountType(config)
+        .findAll('#type-form-visit-state option')
+        .map((option) => option.attributes('value'))
+
+    expect(values(luogoConfig)).toContain('no_door')
+    expect(values(chiesaConfig)).not.toContain('no_door')
+    expect(mountType(luogoConfig).find('#type-form-from-outside').exists()).toBe(false)
+  })
+
+  it('on a translation, shows them as the original’s and sends only its own words', async () => {
+    vi.mocked(axios.patch).mockResolvedValue({ data: { id: '2' } })
+    const wrapper = mountType(chiesaConfig, {
+      ...baseItem,
+      id: '2',
+      language: 'en',
+      translation_of: '1',
+      from_outside: '',
+    })
+
+    expect(wrapper.find('#type-form-visit-state').exists()).toBe(false)
+    expect(wrapper.text()).toContain('Orari e custode sono quelli della scheda originale')
+    await wrapper.get('#type-form-from-outside').setValue('The bell tower.')
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+
+    const body = vi.mocked(axios.patch).mock.calls[0]![1] as FormData
+    expect(body.has('availability')).toBe(false)
+    expect(body.get('from_outside')).toBe('The bell tower.')
+  })
+})

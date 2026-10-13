@@ -45,6 +45,11 @@ export interface TypeConfig {
   countNouns?: [singular: string, plural: string]
   // The grid's one-line summary, where the first extra field is not enough.
   summaryOf?: (item: Record<string, unknown>) => string
+  // A type with a door (ADR-0008): its form gets a *Visita* tab — what is
+  // known about getting in — and, with `fromOutside`, «Se la trovi chiusa»
+  // (cosa-fare.md D7). `noDoor` offers the open-air state, which a church
+  // never is.
+  visit?: { fromOutside: boolean; noDoor: boolean }
 }
 
 export const chiesaConfig: TypeConfig = {
@@ -56,6 +61,7 @@ export const chiesaConfig: TypeConfig = {
   extraFields: [],
   mapMode: 'pins',
   maxPoints: 1,
+  visit: { fromOutside: true, noDoor: false },
 }
 
 export const ricettaConfig: TypeConfig = {
@@ -155,6 +161,7 @@ export const luogoConfig: TypeConfig = {
   ],
   mapMode: 'pins',
   maxPoints: 1,
+  visit: { fromOutside: false, noDoor: true },
   listFilter: {
     param: 'genere',
     optionsEndpoint: '/api/luoghi/generi/',

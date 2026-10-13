@@ -6,7 +6,7 @@ from rest_framework import serializers
 
 from account.models import User
 
-from .models import CardImage
+from .models import Availability, CardImage
 
 
 class CardImageSerializer(serializers.ModelSerializer):
@@ -71,3 +71,23 @@ def visible_translations(card, request):
         siblings = [sibling for sibling in siblings if sibling.is_published]
 
     return siblings
+
+
+def availability_of(card):
+    """What a reader sees about getting in (ADR-0008): the original's row, in
+    every language (T5). A card with no row reads exactly like a row nobody
+    has filled — `unknown`, empty, no date — so "no row" can never be read as
+    anything but *we do not know*."""
+    row = getattr(media_source(card), 'availability', None)
+    if row is None:
+        return {
+            'state': Availability.UNKNOWN, 'hours': '', 'hours_updated': None,
+            'keeper': '', 'keeper_phone': '',
+        }
+    return {
+        'state': row.state,
+        'hours': row.hours,
+        'hours_updated': row.hours_updated.isoformat() if row.hours_updated else None,
+        'keeper': row.keeper,
+        'keeper_phone': row.keeper_phone,
+    }

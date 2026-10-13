@@ -1,13 +1,25 @@
 from django import forms
 from django.contrib import admin
 
-from content.models import Card, CardImage
+from content.models import Availability, Card, CardImage
 from content.publishing import publish_problems
 
 
 class CardImageInline(admin.TabularInline):
     model = CardImage
     extra = 0
+
+
+class AvailabilityInline(admin.StackedInline):
+    """What is known about getting in (ADR-0008). Its `clean()` refuses a card
+    of a type with no door, and a translation, which shows its original's;
+    the date is the server's, so it is shown and never edited."""
+
+    model = Availability
+    extra = 0
+    max_num = 1
+    can_delete = True
+    readonly_fields = ('hours_updated',)
 
 
 class CardAdminForm(forms.ModelForm):
@@ -38,5 +50,5 @@ class CardAdmin(admin.ModelAdmin):
     list_filter = ('is_published',)
     search_fields = ('title',)
     readonly_fields = ('created_at', 'updated_at')
-    inlines = (CardImageInline,)
+    inlines = (CardImageInline, AvailabilityInline)
     form = CardAdminForm

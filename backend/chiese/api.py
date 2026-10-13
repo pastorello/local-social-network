@@ -7,12 +7,14 @@ from django.shortcuts import get_object_or_404
 from account.models import User
 from common.pagination import StandardPagination
 from content.api_helpers import (
+    parse_availability,
     parse_points,
     remove_images,
     replace_points,
     require_authenticated,
     require_author_or_admin,
     require_original_published,
+    save_availability,
     save_images,
     start_translation,
 )
@@ -28,7 +30,11 @@ MAX_PINS = 1
 
 
 def _base_queryset():
-    return Chiesa.objects.select_related('card', 'card__author', 'card__translation_of').prefetch_related(
+    return Chiesa.objects.select_related(
+        'card', 'card__author', 'card__translation_of',
+        # What is known about getting in is the original's (ADR-0008, T5).
+        'card__availability', 'card__translation_of__availability',
+    ).prefetch_related(
         'card__images', 'card__map_features',
         # A translation shows the original's photographs and geometry
         # (content/serializers.py::media_source), so the original's are part of
@@ -47,15 +53,17 @@ def chiesa_list(request):
         write_serializer.is_valid(raise_exception=True)
         data = write_serializer.validated_data
         pins = parse_points(request.data.get('pins'), max_points=MAX_PINS)
+        availability = parse_availability(request.data.get('availability'))
 
         with transaction.atomic():
             card = Card.objects.create(
                 title=data['title'], body_html=data['body_html'],
                 author=request.user, is_published=data['is_published'],
             )
-            chiesa = Chiesa.objects.create(card=card)
+            chiesa = Chiesa.objects.create(card=card, from_outside=data['from_outside'])
             save_images(card, request.FILES.getlist('images'), request.data.get('image_order'))
             replace_points(card, pins)
+            save_availability(card, availability)
 
         chiesa = _base_queryset().get(pk=chiesa.pk)
         return Response(ChiesaReadSerializer(chiesa, context={'request': request}).data, status=201)
@@ -111,6 +119,7 @@ def chiesa_detail(request, pk):
     write_serializer.is_valid(raise_exception=True)
     data = write_serializer.validated_data
     pins = parse_points(request.data.get('pins'), max_points=MAX_PINS)
+    availability = parse_availability(request.data.get('availability'))
 
     with transaction.atomic():
         card = chiesa.card
@@ -119,6 +128,11 @@ def chiesa_detail(request, pk):
             if field in data:
                 setattr(card, field, data[field])
         card.save()
+
+        if 'from_outside' in data:
+            chiesa.from_outside = data['from_outside']
+            chiesa.save()
+        save_availability(card, availability)
 
         remove_images(card, request.data.get('remove_image_ids'))
         save_images(card, request.FILES.getlist('images'), request.data.get('image_order'))

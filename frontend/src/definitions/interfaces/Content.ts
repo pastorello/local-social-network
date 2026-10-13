@@ -53,4 +53,19 @@ export interface CardBase {
 // Loosely typed on purpose: TypeForm.vue/TypeListView.vue/etc. are
 // config-driven and work across chiese/ricette/personaggi/dialetto, whose
 // extra fields differ per type (see definitions/typeConfigs.ts).
+// What is known about getting into a place (ADR-0008), on chiese and luoghi —
+// mirrors content/serializers.py::availability_of. A card nobody has filled in
+// reads exactly like this with `state: 'unknown'` and empty strings: there is
+// no "open" anywhere in it, by design.
+export type AvailabilityState = 'unknown' | 'services' | 'on_request' | 'works' | 'no_door'
+
+export interface Availability {
+  state: AvailabilityState
+  hours: string
+  // ISO date the server set when `hours` last changed; null with no hours.
+  hours_updated: string | null
+  keeper: string
+  keeper_phone: string
+}
+
 export type ContentItem = CardBase & Record<string, unknown>

@@ -16,7 +16,8 @@ from account.models import User
 from common.coordinates import CoordinateField
 from common.images import ImageRejected, validate_image
 
-from .models import Card, CardImage, MapFeature
+from .fields import PlainTextField
+from .models import Availability, Card, CardImage, MapFeature
 
 MAX_POINTS = 50
 
@@ -261,3 +262,52 @@ def replace_points(card, points):
     MapFeature.objects.filter(pk__in=existing).delete()
     MapFeature.objects.bulk_update(kept, ['position', 'lat', 'lng', 'label'])
     MapFeature.objects.bulk_create(created)
+
+
+class AvailabilitySerializer(serializers.ModelSerializer):
+    """One `availability` JSON object beside the multipart form, like `pins`.
+    `hours_updated` is not in it: the server sets it (ADR-0008)."""
+
+    hours = PlainTextField(max_length=2000, required=False, allow_blank=True, default='')
+
+    class Meta:
+        model = Availability
+        fields = ('state', 'hours', 'keeper', 'keeper_phone')
+
+
+def parse_availability(raw):
+    """`availability` arrives as a JSON-encoded object. None when the field is
+    absent — leave the stored row alone — or the validated dict."""
+    if raw is None:
+        return None
+    try:
+        value = json.loads(raw)
+    except (TypeError, ValueError):
+        raise ValidationError({'availability': ['Valore non valido.']}) from None
+    if not isinstance(value, dict):
+        raise ValidationError({'availability': ['Valore non valido.']})
+    serializer = AvailabilitySerializer(data=value)
+    if not serializer.is_valid():
+        raise ValidationError({'availability': [
+            message for messages in serializer.errors.values() for message in messages
+        ]})
+    return serializer.validated_data
+
+
+AVAILABILITY_BELONGS_TO_ORIGINAL = 'Gli orari e il custode appartengono alla scheda originale.'
+
+
+def save_availability(card, data):
+    """Write what a card's form sent about getting in (ADR-0008). Refused on a
+    translation, which shows its original's (T5), and on a church marked as
+    having no door. Absent `data` leaves the row alone."""
+    if data is None:
+        return
+    if card.translation_of_id is not None:
+        raise ValidationError({'availability': [AVAILABILITY_BELONGS_TO_ORIGINAL]})
+    if data['state'] == Availability.NO_DOOR and hasattr(card, 'chiese'):
+        raise ValidationError({'availability': ['Una chiesa ha sempre una porta.']})
+    row = Availability.objects.filter(card=card).first() or Availability(card=card)
+    for field, value in data.items():
+        setattr(row, field, value)
+    row.save()

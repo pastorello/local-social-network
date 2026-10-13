@@ -4,7 +4,9 @@ from account.serializers import UserSerializer
 from content.fields import PlainTextField
 from content.models import MapFeature
 from content.sanitize import sanitize_html
-from content.serializers import CardImageSerializer, TranslationSerializer, media_source, visible_translations
+from content.serializers import (
+    CardImageSerializer, TranslationSerializer, availability_of, media_source, visible_translations,
+)
 
 from .models import Genre, Luogo
 
@@ -41,6 +43,10 @@ class LuogoReadSerializer(serializers.ModelSerializer):
     pins = serializers.SerializerMethodField()
     translations = serializers.SerializerMethodField()
     original_title = serializers.SerializerMethodField()
+    availability = serializers.SerializerMethodField()
+
+    def get_availability(self, obj):
+        return availability_of(obj.card)
 
     # A translation shows the original's genre, as it shows the original's pin
     # (spec translations.md T5): what kind of place it is belongs to the place,
@@ -73,7 +79,7 @@ class LuogoReadSerializer(serializers.ModelSerializer):
         model = Luogo
         fields = (
             'id', 'title', 'body_html', 'author', 'is_published',
-            'genre', 'genre_label', 'how_to_get_there',
+            'genre', 'genre_label', 'how_to_get_there', 'availability',
             'images', 'pins', 'language', 'translation_of', 'original_title', 'translations',
             'created_at', 'updated_at',
         )
