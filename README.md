@@ -44,7 +44,7 @@ direction is [docs/spec/](./docs/spec/README.md) (v2, 2026-08-21).
 ```sh
 git clone https://github.com/pastorello/local-social-network.git
 cd local-social-network
-docker compose up --build
+docker compose up --build --renew-anon-volumes
 ```
 
 - SPA: http://localhost:5173
@@ -82,7 +82,7 @@ fails safe (see [ADR-0002](./docs/adr/0002-debug-off-secret-key-required.md)).
 | Command | What it does |
 |---|---|
 | `scripts/dev` | API :8000 + SPA :5173 bare metal, one Ctrl-C stops both |
-| `docker compose up --build` | Postgres + API :8000 + SPA :5173 |
+| `docker compose up --build --renew-anon-volumes` | Postgres + API :8000 + SPA :5173 — `-V` so a dependency change reaches the SPA's `node_modules` (TD-51) |
 | `python -m pytest` | Backend tests — **547**, a few seconds (from `backend/`) |
 | `python -m ruff check .` | Backend lint |
 | `npm run dev` | Vite dev server on :5173 (from `frontend/`) |

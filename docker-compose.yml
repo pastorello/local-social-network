@@ -14,7 +14,11 @@ services:
       retries: 10
 
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      # DEBUG installs the toolbar, a dev dependency (TD-24, TD-51).
+      args:
+        REQUIREMENTS: requirements-dev.txt
     ports:
       - "8000:8000"
     environment:
@@ -46,7 +50,10 @@ services:
       VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://127.0.0.1:8000}
     volumes:
       - ./frontend:/app
-      # keep the image's node_modules instead of the host's
+      # keep the image's node_modules instead of the host's. Compose carries an
+      # anonymous volume over when it recreates the container, so after a
+      # dependency change `--build` alone keeps the old one: start the stack
+      # with `--renew-anon-volumes` (-V), as the README does (TD-51).
       - /app/node_modules
     depends_on:
       - backend
