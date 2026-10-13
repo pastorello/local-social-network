@@ -12,6 +12,14 @@ to these phases by number, so 3, 4, 5 and 8 keep theirs and the gaps are where
 the finished ones used to sit. A roadmap that renumbers itself is a roadmap
 nothing else can cite.
 
+**Where things stand (2026-10-13).** *«Cosa si può fare qui»* is decided and
+built in a day — the spec's Part −1 (#98), then four PRs (#99–#102):
+ADR-0008's availability and *«Se la trovi chiusa»*, the editorial zones, the
+page at `/cosa-fare`, and `seed_demo` to see it full. Item 5 says what it
+still waits on: six zone drafts the author corrects, and content. The gates
+re-run at 547 backend, 268 frontend and 49 e2e tests, and TD-37, re-measured,
+turned out not to describe the job it names.
+
 **Where things stand (2026-10-12).** Nothing has landed since 2026-09-22 and
 the gates re-run with identical counts. A docs-against-code pass found the doc
 set accurate to the file and symbol, with a handful of stale numbers and
@@ -219,8 +227,9 @@ done:
   availability decision**: dated free-text testimony, no schedule, no filter,
   no "open now". **The rest was decided on 2026-10-13** (the spec's Part −1):
   `/cosa-fare`, *«Cosa si può fare qui»* — editorial zones and the activities
-  in them, no day picker until something knows what happens on a day; three
-  PRs, about three days. It is built now, on a near-empty archive, and its
+  in them, no day picker until something knows what happens on a day; planned
+  as three PRs and about three days, **built the same day in four** (#99–#102,
+  `seed_demo` the fourth). It is built now, on a near-empty archive, and its
   invitation on `/benvenuto` opens itself once a zone has a published place —
   so the page still waits on content (item 4), but the code does not.
 - **Geolocation** — "you are here" plus what is around you while walking

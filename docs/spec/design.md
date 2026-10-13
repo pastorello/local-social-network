@@ -676,3 +676,8 @@ phone, and built the same day:
   were tightened to make room (desktop unchanged); it fits from 360px, and
   below that — down to WCAG's 320px reflow width — Itinerari moves back into
   *Menu* rather than clipping.
+- **Cosa fare is in the wide pill and in the phone's Menu** (amends D14,
+  2026-10-13, [cosa-fare.md](./cosa-fare.md) D6): wordmark · Mappa · Schede ·
+  Itinerari · *Cosa fare* · Il progetto on a wide screen; the phone pill is
+  unchanged and *Cosa fare* sits behind *Menu*. A guest from the QR code meets
+  it on `/benvenuto` instead, once a zone has a published place.

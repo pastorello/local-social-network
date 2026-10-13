@@ -17,22 +17,21 @@
 > **Adding an item:** next number is **TD-51**, continuous across both files.
 > It goes here; it moves to the archive when it is paid, with what proved it.
 
-## The gates — re-run 2026-10-12
+## The gates — re-run 2026-10-13
 
 | Gate | Command | Result |
 |---|---|---|
-| Backend tests | `python -m pytest` | **516 passed** in 9.1s |
+| Backend tests | `python -m pytest` | **547 passed** in ~32s (run beside the frontend gates) |
 | Backend lint | `python -m ruff check .` | clean |
-| Frontend tests | `npm run test:unit -- run` | **247 passed**, 51 files, ~10s |
+| Frontend tests | `npm run test:unit -- run` | **268 passed**, 55 files |
 | Frontend lint | `npx oxlint` · `npx eslint .` | clean |
 | Format | `npx prettier --check .` | clean |
-| Build | `npm run build` | green, ~0.9s |
-| E2E | `npm run test:e2e` | **8 spec files, 47 tests** — green in CI |
+| Build | `npm run build` | green, ~2s |
+| E2E | `npm run test:e2e` | **8 spec files, 49 tests** — green in CI |
 
-Every row above was run again on 2026-10-12 — first with no code landed since
-2026-09-22 and every count matching, then after the fixes for TD-50, TD-49,
-TD-47, TD-48 and TD-31's residual, whose tests are the difference — except
-the last, which needs a seeded API
+Every row above was run again on 2026-10-13, after «Cosa si può fare qui»
+landed (#99–#102, whose tests are the difference from 2026-10-12's 516 / 247 /
+47) — except the last, which needs a seeded API
 on `:8000` and a production build; it is counted from the specs and taken from
 CI. The 2026-08-19 baseline — 142 backend tests, 43 frontend, 4 e2e — is in the
 archive, for the scale of the difference rather than for nostalgia.
@@ -58,6 +57,16 @@ seconds; the job takes **9m21s**, against 1m10s for the frontend job and 26s for
 the backend. The difference is setup — Python, backend dependencies, Node, the
 Cypress binary, and a production build — not the specs, so **adding specs is
 close to free** and speeding the job up means caching or reordering that setup.
+
+**Re-measured 2026-10-13, and the premise did not hold.** The last twelve runs
+on `main` (2026-10-12/13) took **92 to 202 seconds** for the whole e2e job, the
+Cypress run 1m18s of it in the latest. `.github/workflows/ci.yml` has changed
+only in comments since 2026-09-11, and pip, npm and the Cypress binary were
+cached before the 9m21s was observed — so whatever made that run slow,
+probably a cold cache, it was not the job's shape. What is left is a job of
+about three minutes, under a minute longer than the frontend's. Kept open only
+until the author decides whether to withdraw it; it is not a candidate for
+work.
 
 Left alone deliberately: nothing waits on it, and a CI change made for tidiness
 is a change to the one thing that guards every other change. Worth doing if it
