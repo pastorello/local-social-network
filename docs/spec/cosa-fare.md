@@ -99,7 +99,9 @@ the `Europe/Rome` helper Part I §4 describes.
 One line about today's light survives — *«Oggi il sole tramonta alle 18:27»* —
 because it needs no day picker: it is today, in Gaeta (`lib/when.ts::todayInGaeta`,
 pinned to `Europe/Rome`, never a bare `new Date()`). It is the first thing cut
-if the page runs long.
+if the page runs long. *(Cut in PR 3, 2026-10-13: the page ships without it,
+and `lib/when.ts` and `lib/sun.ts` do not exist — the helper named here and in
+Parts I–II is the design for the day it comes back, not code to look for.)*
 
 ## D2 — Editorial zones, drawn once, named the way Gaeta names them
 
@@ -204,10 +206,10 @@ designed look (D7 of design.md, a tint of its layer colour).
 
 | PR | What | Cost |
 |---|---|---|
-| 1 | ADR-0008's `content.Availability` (chiese, luoghi) + `Chiesa.from_outside`; admin, API, form controls, reader copy; the invariant tests | about a day — **built 2026-10-13** |
+| 1 | ADR-0008's `content.Availability` (chiese, luoghi) + `Chiesa.from_outside`; admin, API, form controls, reader copy; the invariant tests | about a day — **built 2026-10-13** (#99) |
 | 2 | `Zona` (admin-managed polygons, the six drafted), membership by D2's rule, `/api/map/zone/` with counts; *Camminare* seeded | about a day — **built 2026-10-13** (#100) |
-| 3 | `/cosa-fare`: zone chips, sections, the three blocks, the map's set, the empty state, the self-opening invitation on `/benvenuto`, Menu and pill links; axe cases and one keyboard case | about a day — **built 2026-10-13**; the light line (D1) was cut, as D1 allowed |
-| — | `seed_demo` | half a day, beside PR 3 — **built 2026-10-13** |
+| 3 | `/cosa-fare`: zone chips, sections, the three blocks, the map's set, the empty state, the self-opening invitation on `/benvenuto`, Menu and pill links; axe cases and one keyboard case | about a day — **built 2026-10-13**; the light line (D1) was cut, as D1 allowed (#101) |
+| — | `seed_demo` | half a day, beside PR 3 — **built 2026-10-13** (#102) |
 
 ## What this retires
 
