@@ -1600,6 +1600,43 @@ one met at 7.0 is an outage.
 >   500 from the ORM. Now a 400 on that field; ids as numbers or digit
 >   strings, as the SPA sends them.
 
+### TD-51 · The documented `docker compose up --build` had not started the app since 2026-08-20 — **FIXED 2026-10-13** ✔
+
+> Found 2026-10-13 by the author, opening `http://localhost:5173` on his own
+> compose stack: Vite's overlay, *«Can't resolve '@tailwindcss/typography'»*.
+> Two faults, independent, and either one alone leaves the app unusable:
+>
+> - **The API had been down for three weeks.** TD-24 (2026-08-20, #17) moved
+>   `django-debug-toolbar` to `requirements-dev.txt` and installs the app only
+>   under `DEBUG` — but `backend/Dockerfile` installs `requirements.txt`, and
+>   the root compose file runs with `DJANGO_DEBUG=true`. The image built before
+>   that change still had the toolbar, so nothing failed until the stack was
+>   rebuilt on 2026-09-18: from then on the backend container exited on start
+>   with `ModuleNotFoundError: No module named 'debug_toolbar'`. CI never runs
+>   the compose stack, and the 2026-09-10 deploy walk used the production
+>   compose file, with `DEBUG` off — the one configuration this does not touch.
+> - **The SPA ran on a dependency tree from before C2.** The frontend service
+>   mounts an anonymous volume over `/app/node_modules` so the host's macOS
+>   modules do not shadow the image's. Compose carries an anonymous volume
+>   over when it recreates a container, so `--build` rebuilt an image with
+>   `@tailwindcss/typography` in it and then served the old volume, which did
+>   not have it. The documented command could not pick up a dependency change.
+>
+> **Fixed:** `backend/Dockerfile` takes a `REQUIREMENTS` build argument,
+> defaulting to the runtime set — so `deploy/docker-compose.yml`, which builds
+> the same Dockerfile, is unchanged — and the root compose file passes
+> `requirements-dev.txt`. The documented command is now
+> `docker compose up --build --renew-anon-volumes`, in the README, in
+> `CLAUDE.md` and beside the volume in the compose file. **Proved** by building
+> both images under a separate compose project (the author's stack and database
+> untouched): the dev backend imports the toolbar 8.0.0 and passes
+> `manage.py check` with `DJANGO_DEBUG=true`; the default build still has
+> neither the toolbar nor pytest; the frontend image carries `typography`.
+>
+> **Not done:** a CI job that starts the compose stack. It would have caught
+> the first fault, but it is a fourth job guarding a path only the author uses
+> — the cost TD-37 was about, in reverse.
+
 ### TD-50 · A tour stop's chosen pin was positional, so it moved when the card's pins changed — **FIXED 2026-10-12** ✔
 
 > Found 2026-10-12 (first noticed in passing in a 2026-09-22 design draft);

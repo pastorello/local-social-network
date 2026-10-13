@@ -1,7 +1,7 @@
 # Technical debt register
 
-> **What is open, and nothing else.** Fifty items have been recorded
-> since the first audit on 2026-08-19; forty-eight are paid and live, with their
+> **What is open, and nothing else.** Fifty-one items have been recorded
+> since the first audit on 2026-08-19; forty-nine are paid and live, with their
 > evidence, in [tech-debt-archive.md](./tech-debt-archive.md). Read that file
 > for how a defect got in and what proved the fix. Read **this** one before
 > proposing work.
@@ -14,7 +14,7 @@
 > coverage gaps nobody had re-walked, half of which had been paid in passing.
 > All three are corrected in the archive rather than deleted.
 >
-> **Adding an item:** next number is **TD-51**, continuous across both files.
+> **Adding an item:** next number is **TD-52**, continuous across both files.
 > It goes here; it moves to the archive when it is paid, with what proved it.
 
 ## The gates — re-run 2026-10-13
