@@ -1,6 +1,6 @@
 # «Che si fa a Gaeta?» — a proposal for the day
 
-> **Proposed 2026-09-22. Nothing here is decided and nothing is built.** This is
+> **Proposed 2026-09-22.** *(Decided since: Part −1, 2026-10-13.)* This is
 > the file to argue with, written before any code per the repo's rule that scope
 > changes start in the spec (the `libri` precedent, content.md). It follows the
 > house shape — a committed answer, then the counter-case that lost — so that
@@ -12,6 +12,10 @@
 > existing specs, the data model and the web (2026-09-22). Five questions at the
 > foot (§4) are the ones he has to answer; everything else follows from them.
 
+> **Decided 2026-10-13 — read Part −1 first.** The author answered the open
+> questions one at a time; Part −1 records the seven decisions and the build
+> order, and it supersedes everything below where they disagree.
+>
 > **Committed 2026-10-12 as a draft spec, at the author's request — still not a
 > decision, and nothing in it is scheduled.** It sat untracked from 2026-09-22
 > to 2026-10-12; it is in the repo now so it cannot be lost and so the next
@@ -67,6 +71,157 @@
 >
 > **The revision is Part I below.** It supersedes points 1–3 of this note
 > wherever they disagree.
+
+---
+
+# Part −1 — Decided, 2026-10-13
+
+> **This part is operative. It supersedes everything below wherever they
+> disagree**, and Parts 0, I and II stay as the argument that got here. It is
+> the output of an interview with the author, one question at a time, on
+> 2026-10-12/13, after ADR-0008 had settled availability. Seven decisions,
+> then what they cost and what they retire.
+
+## D1 — No day and no time band in the first version
+
+The page is **«Cosa si può fare qui»**: a zone and the activities in it. There
+is no day picker and no *fascia* — no `?giorno=`, `?dalle=`, `?alle=`.
+
+The reason is ADR-0008 followed through. Once hours may never filter, the day
+and the band had almost nothing left to act on: hours are shown, not used;
+Part I §3 had already made a tour "compatible" with any window it could start
+in; and a festa's `recurrence` is free text, so nothing knows whether it falls
+today. What remained was the light. **The day picker arrives with the first
+thing that knows what happens on a given day** — K2's per-year occurrence row
+for feste, or eventi (Q5) — and it is additive then: three URL parameters and
+the `Europe/Rome` helper Part I §4 describes.
+
+One line about today's light survives — *«Oggi il sole tramonta alle 18:27»* —
+because it needs no day picker: it is today, in Gaeta (`lib/when.ts::todayInGaeta`,
+pinned to `Europe/Rome`, never a bare `new Date()`). It is the first thing cut
+if the page runs long.
+
+## D2 — Editorial zones, drawn once, named the way Gaeta names them
+
+**There is no official division of Gaeta into quartieri online** (checked
+2026-10-12). The statute (art. 8) provides elected *comitati di quartiere* and
+leaves the rest to a *regolamento per la partecipazione popolare* that is not
+published; ISTAT has census sections (official, unnamed, dozens) and no
+sub-municipal areas for a town of 19,000; OpenStreetMap has five named
+**points** and no boundaries. The author will ask the Comune.
+
+So the zones are **ours, and say so**: *«Zone indicative, non confini
+ufficiali»* is printed on the page. The first set takes OSM's five names plus
+Monte Orlando — **Serapo, Gaeta Medievale, Porto Salvo, Piana di
+Sant'Agostino, Montagna Spaccata, Monte Orlando** — with polygons drafted by
+the build on the OSM map and corrected by the author. They are admin-managed
+data, not code, so a seventh zone or a moved boundary is an edit. If the
+Comune's perimetrazione turns up, it becomes an **overlay** (the mechanism
+exists, ADR-0006), not the zones: comitati divide residents, and a guest thinks
+in places — Monte Orlando has no residents and is a zone of its own.
+
+**A card joins a zone by where it is, never by a collaborator's choice**:
+a place by its pin; a festa when its route passes through; a percorso where it
+**starts**; a raccolta wherever **any** of its stops is. A place outside every
+polygon is never dropped — it is listed under *«Altrove a Gaeta»*.
+
+## D3 — What a zone lists
+
+- **Rows: luoghi and chiese** — the places you can go to. Each row carries its
+  availability (ADR-0008: dated hours and the keeper, when known; nothing when
+  not).
+- **«Itinerari che passano di qui»** — a block of its own, by D2's rule.
+- **«Le feste di questa zona»** — a block of its own, the feste whose route
+  passes through, with `recurrence` printed as its author wrote it. The page
+  does not claim a festa is today.
+- **«Da mangiare»** — **one block for all of Gaeta**, the ricette, not filtered
+  by zone. A ricetta is a dish, not a door, and its pins are shops: listing
+  them by zone would make this page a directory of businesses, which is
+  design.md's Patronage question and not a render decision.
+- **Out:** personaggi, dialetto and libri. A historical figure is not a thing
+  to do; the monument that may be worth it is a luogo already.
+
+## D4 — The sections are activities, with a fourth: *Camminare*
+
+The same words as `/benvenuto`'s *«Che cosa ti va di fare?»*: **Andare al
+mare** (spiaggia) · **Scoprire la città** (chiese; castello, monumento,
+luogo-storico, museo) · **Camminare** (punto-panoramico,
+area-per-passeggiate, parco) — and **Mangiare** is D3's ricette block. The
+mapping is a frontend constant (`lib/intents.ts`); a genre added in Django
+admin and not yet mapped renders under *«Altro da vedere»*, never nowhere.
+*Camminare* is one seed row in `itinerari`; `/benvenuto` shows it only once a
+published tour carries it, so adding it changes nothing a guest sees today.
+
+## D5 — Defaults the author did not object to
+
+- **Alphabetical inside each section, and printed** (*«in ordine
+  alfabetico»*): the one order nobody can buy or move (Part I §4).
+- **The shell's map draws exactly the page's set**, unnumbered — numbers would
+  read as a route (CF16). `stores/map.ts` gains one nullable set of card ids
+  for it; it does not write the reader's layer toggles.
+- **An empty zone says so** — *«In questa zona l'archivio non ha ancora
+  niente»* — and offers the zones that have something.
+
+## D6 — Where it lives, and how a guest finds it
+
+**`/cosa-fare`**, h1 **«Cosa si può fare qui»**. The way in is **`/benvenuto`**:
+a second invitation beside the intents (*«Oppure guarda cosa c'è in una
+zona»*), so a guest from the QR code chooses between "give me a tour" and "show
+me what is here". On a phone it is also in the pill's **Menu**; on a wide
+screen, in the pill itself. The phone pill is unchanged (the 2026-09-19
+decision stands).
+
+## D7 — The closed church: «Se la trovi chiusa», church by church
+
+`Chiesa.from_outside`, free text, plain-text on the wire (TD-36), translated
+per card, shown after the body under the heading *«Se la trovi chiusa»* and
+only when filled. Help text for the form: *«Questa scheda la legge qualcuno che
+è già lì e ha trovato la porta chiusa. Scrivi che cosa ha davanti e che cosa
+può fare nei dieci minuti che gli restano. Fatti, non consolazioni — e niente
+orari.»* **No standing paragraph shared by every church**: the author's reason
+is that the answer differs deeply from one church to the next. Churches only,
+for now; museums and the castle can take the same field the day one needs it.
+
+## D8 — Build now; the invitation opens itself
+
+Built now, on a nearly empty archive, because the engineering is ready and
+nothing else is on the board. **The invitation on `/benvenuto` appears only
+when at least one zone has at least one published place** — the same rule
+`/benvenuto` already applies to intents with no tour. Until then `/cosa-fare`
+exists at its address, testable, and no guest reaches it by accident.
+
+**Demo content, for seeing the page full:** a DEBUG-only management command,
+`seed_demo`, in `seed_e2e`'s shape — refused outside DEBUG, every card titled
+`[DEMO] …`, removable by the same command. It lives in the development database
+only and is never the archive's content. Real content keeps content.md's
+seeding rules (drafts, own words, *Fonti* and *Da verificare*, no images, no
+invented geometry). **No generated images of real places, not even as
+placeholders**: a picture of a real place that is not that place reads as a
+photograph the moment it is screenshotted. A card with no image already has a
+designed look (D7 of design.md, a tint of its layer colour).
+
+## The build, in order
+
+| PR | What | Cost |
+|---|---|---|
+| 1 | ADR-0008's `content.Availability` (chiese, luoghi) + `Chiesa.from_outside`; admin, API, form controls, reader copy; the invariant tests | about a day |
+| 2 | `Zona` (admin-managed polygons, the six drafted), membership by D2's rule, `/api/map/zone/` with counts; *Camminare* seeded | about a day |
+| 3 | `/cosa-fare`: zone chips, sections, the three blocks, the map's set, the empty state, the self-opening invitation on `/benvenuto`, Menu and pill links; axe cases and one keyboard case | about a day |
+| — | `seed_demo` | half a day, beside PR 3 |
+
+## What this retires
+
+- **Part I §3** (tours compatible with a time window) — deferred with D1, not
+  rejected; it is the design for the day the window exists.
+- **Part I §2 and §0.3's closures-and-states machinery as a filter** — ADR-0008
+  shows availability, it never removes or groups by it, so §4's *«2 luoghi sono
+  chiusi il lunedì — Mostrali lo stesso»* and the *«Non sappiamo se sono
+  aperti»* sub-group do not ship.
+- **QR1–QR3** — answered: `closing_day` withdrawn (§0.3), the church question by
+  D7 and ADR-0008, the grouping by D4.
+- **Q2, Q4, Q5** — Q2 by D3 (a dish, not a door), Q4 by D2 (named zones; point
+  and radius stay the fallback if names fail a guest), Q5 unchanged (eventi:
+  not a card, after the deploy).
 
 ---
 

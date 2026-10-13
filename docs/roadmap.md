@@ -217,9 +217,12 @@ done:
   **On 2026-10-12 the author made it the next phase, and
   [ADR-0008](./adr/0008-opening-hours-as-dated-testimony.md) records the
   availability decision**: dated free-text testimony, no schedule, no filter,
-  no "open now". The draft's other questions (the day and area controls, how a
-  festa enters a day's index) are still open. Its own conclusion is the one to
-  keep in view: the page is blocked on content (item 4), not on a schema.
+  no "open now". **The rest was decided on 2026-10-13** (the spec's Part −1):
+  `/cosa-fare`, *«Cosa si può fare qui»* — editorial zones and the activities
+  in them, no day picker until something knows what happens on a day; three
+  PRs, about three days. It is built now, on a near-empty archive, and its
+  invitation on `/benvenuto` opens itself once a zone has a published place —
+  so the page still waits on content (item 4), but the code does not.
 - **Geolocation** — "you are here" plus what is around you while walking
   Gaeta. The author wants it and it fits the product; it is a **feature, not a
   style**: browser permission, HTTPS (so it depends on item 3), sane handling
