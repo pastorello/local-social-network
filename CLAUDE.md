@@ -106,6 +106,13 @@ shells `export` it, and pytest is exempt via the `TESTING` flag (which is also
 why the HTTPS hardening block carries `and not TESTING` — without it
 `SECURE_SSL_REDIRECT` answers the test client with a 301).
 
+**To see the archive full while it is empty**, `python manage.py seed_demo`
+(DEBUG only, spec cosa-fare.md Part −1 D8) publishes fifteen invented cards
+titled `[DEMO] …` across the six draft zones — places, churches with sample
+hours, a festa, two ricette, two tours — and no images, on purpose;
+`seed_demo --remove` takes away exactly those. They are not content: real
+cards follow content.md's seeding rules.
+
 Create a superuser via `python manage.py shell`:
 
 ```python

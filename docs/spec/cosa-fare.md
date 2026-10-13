@@ -207,7 +207,7 @@ designed look (D7 of design.md, a tint of its layer colour).
 | 1 | ADR-0008's `content.Availability` (chiese, luoghi) + `Chiesa.from_outside`; admin, API, form controls, reader copy; the invariant tests | about a day — **built 2026-10-13** |
 | 2 | `Zona` (admin-managed polygons, the six drafted), membership by D2's rule, `/api/map/zone/` with counts; *Camminare* seeded | about a day — **built 2026-10-13** (#100) |
 | 3 | `/cosa-fare`: zone chips, sections, the three blocks, the map's set, the empty state, the self-opening invitation on `/benvenuto`, Menu and pill links; axe cases and one keyboard case | about a day — **built 2026-10-13**; the light line (D1) was cut, as D1 allowed |
-| — | `seed_demo` | half a day, beside PR 3 |
+| — | `seed_demo` | half a day, beside PR 3 — **built 2026-10-13** |
 
 ## What this retires
 
