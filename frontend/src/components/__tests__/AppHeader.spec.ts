@@ -61,6 +61,9 @@ describe('the menu (spec/design.md D14)', () => {
     expect(nav.text()).toContain('Mappa')
     expect(nav.text()).toContain('Schede')
     expect(nav.find('a[href="/itinerari"]').text()).toBe('Itinerari')
+    // «Cosa si può fare qui» (spec cosa-fare.md Part −1, D6): in the pill on a
+    // wide screen, behind Menu on a phone.
+    expect(nav.find('a[href="/cosa-fare"]').text()).toBe('Cosa fare')
     expect(nav.find('a[href="/il-progetto"]').exists()).toBe(true)
     expect(nav.find('a[href="/login"]').text()).toBe('Accedi')
     expect(nav.find('a[href="/polls"]').exists()).toBe(false)

@@ -80,6 +80,11 @@ export const useMapStore = defineStore('map', {
     placing: false,
     draftCoords: null as { lat: number; lng: number } | null,
     focus: null as MapFocus | null,
+    // The cards a page wants the map to show and nothing else — «Cosa si può
+    // fare qui» draws exactly its list (cosa-fare.md D5). Unnumbered, unlike a
+    // tour's focus, and separate from `activeLayers`, which are the reader's
+    // toggles and must outlive the page.
+    restrictTo: null as string[] | null,
     editor: null as MapEditor | null,
     loaded: false,
   }),
@@ -171,6 +176,10 @@ export const useMapStore = defineStore('map', {
 
     setFocus(focus: MapFocus | null) {
       this.focus = focus
+    },
+
+    setRestriction(ids: string[] | null) {
+      this.restrictTo = ids
     },
 
     startEditing(

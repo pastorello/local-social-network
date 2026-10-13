@@ -4,6 +4,7 @@ import { computed, onMounted, ref } from 'vue'
 
 import MainTitle from '@/components/typography/MainTitle.vue'
 import type { Intent } from '@/definitions/interfaces/Itinerario'
+import type { Zone } from '@/definitions/interfaces/MapData'
 
 // The landing page a B&B's card points at (spec itinerari.md I6): one address
 // for everyone — no code per host, no greeting by name, nothing that tracks
@@ -14,14 +15,20 @@ const loading = ref(true)
 
 const withTours = computed(() => intents.value.filter((intent) => intent.count > 0))
 
+// «Cosa si può fare qui» is offered only once a zone has a published place
+// (spec cosa-fare.md Part −1, D8): the same rule as the intents above — no
+// door onto an empty room.
+const zones = ref<Zone[]>([])
+const zonesWithPlaces = computed(() => zones.value.some((zone) => zone.count > 0))
+
 onMounted(async () => {
-  try {
-    intents.value = (await axios.get<Intent[]>('/api/itinerari/intenti/')).data
-  } catch (error) {
-    console.log('error:', error)
-  } finally {
-    loading.value = false
-  }
+  const [intentsResult, zonesResult] = await Promise.allSettled([
+    axios.get<Intent[]>('/api/itinerari/intenti/'),
+    axios.get<Zone[]>('/api/map/zone/'),
+  ])
+  if (intentsResult.status === 'fulfilled') intents.value = intentsResult.value.data
+  if (zonesResult.status === 'fulfilled') zones.value = zonesResult.value.data
+  loading.value = false
 })
 </script>
 
@@ -52,6 +59,15 @@ onMounted(async () => {
     <p v-else-if="!loading" class="mt-8 text-muted">
       Gli itinerari sono in preparazione. Intanto, la mappa racconta la città.
     </p>
+
+    <RouterLink
+      v-if="zonesWithPlaces"
+      :to="{ name: 'cosafare' }"
+      class="mt-8 flex flex-col gap-1 rounded-2xl border border-hairline bg-surface p-5 hover:border-field focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+    >
+      <span class="font-display text-title text-ink">Oppure guarda cosa c'è in una zona</span>
+      <span class="text-ink">Serapo, il centro medievale, Monte Orlando…</span>
+    </RouterLink>
 
     <RouterLink
       to="/"

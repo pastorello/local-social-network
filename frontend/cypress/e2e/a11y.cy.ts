@@ -153,6 +153,37 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
     check('/itinerari/:id?tappa=1')
   })
 
+  // «Cosa si può fare qui» (spec cosa-fare.md Part −1): the guest's second
+  // way in from /benvenuto. The seeded church is at the map's centre, which is
+  // in the seeded draft of Porto Salvo.
+  it('Cosa si può fare qui, a zone on a wide screen and the chooser on a phone', () => {
+    cy.viewport(1280, 800)
+    cy.visit('/cosa-fare?zona=porto-salvo')
+    cy.contains('h1', 'Cosa si può fare qui')
+    cy.contains('a', 'Chiesa E2E pubblicata')
+    check('/cosa-fare?zona=porto-salvo')
+
+    cy.viewport(390, 844)
+    cy.visit('/cosa-fare')
+    cy.contains('Scegli una zona')
+    check('/cosa-fare')
+  })
+
+  it('Cosa si può fare qui: the zones are links a keyboard reaches and follows', () => {
+    cy.viewport(1280, 800)
+    cy.visit('/cosa-fare')
+    // Real links, so Tab reaches them and Enter follows them natively — which
+    // Cypress cannot simulate, so what is asserted is what makes it true: a
+    // focusable <a> per zone whose address is the choice.
+    cy.get('nav[aria-label="Zone"] a').first().focus()
+    cy.focused().should('have.prop', 'tagName', 'A').and('contain', 'Gaeta Medievale')
+    cy.get('nav[aria-label="Zone"]')
+      .contains('a', 'Porto Salvo')
+      .should('have.attr', 'href', '/cosa-fare?zona=porto-salvo')
+    cy.visit('/cosa-fare?zona=porto-salvo')
+    cy.get('nav[aria-label="Zone"] a[aria-current="page"]').should('contain', 'Porto Salvo')
+  })
+
   it('the public request form, where a would-be collaborator arrives', () => {
     cy.viewport(1280, 800)
     cy.visit('/collabora')

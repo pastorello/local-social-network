@@ -1,4 +1,4 @@
-import type { MapPoint } from './Content'
+import type { AvailabilityState, MapPoint } from './Content'
 
 // One published card that has a place on the map (spec map.md M2), as
 // returned by GET /api/map/features/. `type` is the card type's key — the
@@ -15,6 +15,12 @@ export interface MapCardFeature {
   // The editorial zones it is in (spec cosa-fare.md Part −1, D2): a place by
   // its pin, a festa where its procession stops. Empty outside every zone.
   zones: string[]
+  // A luogo's genre slug (null for every other type) — what «Cosa si può fare
+  // qui» files it under (D4).
+  genre?: string | null
+  // How one gets in, only when someone knows (ADR-0008); never the hours,
+  // which are read on the card with their date.
+  access?: AvailabilityState | null
 }
 
 // GET /api/map/zone/ — an editorial zone, not an official boundary (D2).

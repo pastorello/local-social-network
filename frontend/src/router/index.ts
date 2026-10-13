@@ -218,6 +218,14 @@ const router = createRouter({
       meta: { requiresAuth: false },
     },
     {
+      // «Cosa si può fare qui» (spec cosa-fare.md Part −1): a zone and what is
+      // in it. Narrow, so the map beside it shows exactly the list (D5).
+      path: '/cosa-fare',
+      name: 'cosafare',
+      component: () => import('../views/CosaFareView.vue'),
+      meta: { requiresAuth: false, panel: 'narrow' },
+    },
+    {
       path: '/itinerari',
       name: itinerarioConfig.routeNames.list,
       component: () => import('../views/TypeListView.vue'),

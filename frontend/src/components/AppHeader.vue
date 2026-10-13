@@ -83,6 +83,7 @@ const menuLink =
       <RouterLink to="/" :class="item" :exact-active-class="active">Mappa</RouterLink>
       <SchedeMenu />
       <RouterLink to="/itinerari" :class="item" :active-class="active">Itinerari</RouterLink>
+      <RouterLink to="/cosa-fare" :class="item" :active-class="active">Cosa fare</RouterLink>
       <RouterLink to="/il-progetto" :class="item" :active-class="active">Il progetto</RouterLink>
       <span class="h-6 w-px bg-hairline" aria-hidden="true"></span>
 
@@ -150,6 +151,7 @@ const menuLink =
         </template>
         <RouterLink to="/" :class="menuLink">Mappa</RouterLink>
         <RouterLink to="/itinerari" :class="[menuLink, 'min-[360px]:hidden']">Itinerari</RouterLink>
+        <RouterLink to="/cosa-fare" :class="menuLink">Cosa fare</RouterLink>
         <RouterLink to="/il-progetto" :class="menuLink">Il progetto</RouterLink>
         <template v-if="user.isAuthenticated && user.id">
           <RouterLink :to="{ name: 'profile', params: { id: user.id } }" :class="menuLink">
