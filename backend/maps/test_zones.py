@@ -189,3 +189,26 @@ def test_the_tour_list_reads_the_zones_once(api_client, citizen, django_assert_m
 
     assert [row['zones'] for row in rows] == [['serapo']] * 4
     assert json.dumps(rows)  # serializable as it stands
+
+
+# --- what the page files a place by (D3/D4, ADR-0008) ---
+
+
+def test_a_feature_carries_its_genre_and_a_known_access_only(api_client, citizen):
+    from content.models import Availability
+
+    serapo = _card(citizen, 'Spiaggia di Serapo')
+    Luogo.objects.create(card=serapo, genre=Genre.objects.get(slug='spiaggia'))
+    _pin(serapo, *INSIDE['serapo'])
+    duomo = _chiesa(citizen, 'Duomo', INSIDE['gaeta-medievale'])
+    Availability.objects.create(card=duomo, state=Availability.SERVICES, hours='Domenica alle 11.')
+    _chiesa(citizen, 'Senza niente', INSIDE['gaeta-medievale'])
+
+    entries = {e['title']: e for e in api_client.get('/api/map/features/').json()}
+
+    assert (entries['Spiaggia di Serapo']['genre'], entries['Spiaggia di Serapo']['access']) == ('spiaggia', None)
+    assert (entries['Duomo']['genre'], entries['Duomo']['access']) == (None, 'services')
+    # Unknown is not sent as a state: absence and "we do not know" are one thing.
+    assert entries['Senza niente']['access'] is None
+    # The hours are never on the map's payload: they belong with their date.
+    assert 'hours' not in entries['Duomo']

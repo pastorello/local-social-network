@@ -113,3 +113,36 @@ describe('MapStage while a tour is open (decided 2026-09-19)', () => {
     expect(map.props('features')).toHaveLength(1)
   })
 })
+
+describe('MapStage while a page lists a set (spec cosa-fare.md Part −1, D5)', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.mocked(axios.get).mockResolvedValue({ data: [] })
+  })
+
+  it('draws exactly that set — no other card, no report — and everything again after', async () => {
+    const { map } = await mountStage()
+    const store = useMapStore()
+    const card = (id: string) => ({
+      id,
+      type: 'chiese',
+      title: id,
+      cover: null,
+      points: [{ lat: 41.2, lng: 13.5, label: '' }],
+      route: [],
+      zones: [],
+    })
+    store.features = [card('c1'), card('c2')]
+    store.pins = [{ id: 'r1', title: 'Buca', status: 'open', lat: 41.21, lng: 13.57 }] as never
+
+    store.setRestriction(['c2'])
+    await flushPromises()
+    expect(map.props('features').map((f: { id: string }) => f.id)).toEqual(['c2'])
+    expect(map.props('pins')).toEqual([])
+
+    store.setRestriction(null)
+    await flushPromises()
+    expect(map.props('features')).toHaveLength(2)
+    expect(map.props('pins')).toHaveLength(1)
+  })
+})

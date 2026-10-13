@@ -95,6 +95,8 @@ def test_map_features_is_public_and_groups_points_by_card(api_client, make_card)
         'cover': None,
         'points': [{'lat': GAETA_LAT, 'lng': GAETA_LNG, 'label': 'Ingresso'}],
         'route': [],
+        'genre': None,
+        'access': None,
         # The map's default centre falls in the seeded draft of Porto Salvo.
         'zones': ['porto-salvo'],
     }]

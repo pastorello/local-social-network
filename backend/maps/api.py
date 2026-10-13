@@ -45,7 +45,13 @@ def map_features(request):
     features = (
         MapFeature.objects
         .filter(card__is_published=True, card__translation_of__isnull=True)
-        .select_related('card', *(f'card__{type_key}' for type_key in CARD_TYPES))
+        .select_related(
+            'card', *(f'card__{type_key}' for type_key in CARD_TYPES),
+            # «Cosa si può fare qui» files a luogo under an activity by its
+            # genre and shows what is known about getting in (cosa-fare.md
+            # Part −1, D3/D4; ADR-0008) — joined here, not a query per row.
+            'card__luoghi__genre', 'card__availability',
+        )
         .prefetch_related('card__images')
         .order_by('card_id', 'position', 'id')
     )
@@ -61,10 +67,17 @@ def map_features(request):
             # `.all()[:1]` rather than `.first()`: the prefetch is already in
             # memory, and .first() would hit the database once per card.
             cover = next(iter(card.images.all()), None)
+            luogo = getattr(card, 'luoghi', None)
+            availability = getattr(card, 'availability', None)
             entry = cards[card.id] = {
                 'id': str(card.id), 'type': type_key, 'title': card.title,
                 'cover': cover.get_image_url() if cover else None,
                 'points': [], 'route': [],
+                'genre': luogo.genre.slug if luogo else None,
+                # The state only, and only when known: the hours are read on
+                # the card itself, always with their date (ADR-0008).
+                'access': availability.state
+                if availability and availability.state != availability.UNKNOWN else None,
             }
         target = 'route' if feature.kind == MapFeature.ROUTE else 'points'
         entry[target].append({'lat': feature.lat, 'lng': feature.lng, 'label': feature.label})

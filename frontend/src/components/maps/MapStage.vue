@@ -80,6 +80,16 @@ const controlsLeft = computed(() =>
 // dimmed, and the clusters' counts read as more stop numbers beside the tour's.
 const tourOpen = computed(() => !mapStore.editor && !!mapStore.focus?.numbered)
 
+// A page that lists a set of cards (cosa-fare.md D5) has the map draw that
+// set and nothing else — no other card, no report — while it is open.
+const restricted = computed(() => !mapStore.editor && mapStore.restrictTo !== null)
+const shownFeatures = computed(() => {
+  if (tourOpen.value) return []
+  if (!restricted.value) return mapStore.visibleFeatures
+  const ids = new Set(mapStore.restrictTo)
+  return mapStore.visibleFeatures.filter((feature) => ids.has(feature.id))
+})
+
 const onPinClick = (id: string) => {
   if (mapStore.editor) return
   router.push(`/reports/${id}`)
@@ -114,8 +124,8 @@ onMounted(mapStore.load)
   <!-- Edge to edge, under the menu too (D14): the menu floats over the map. -->
   <div class="fixed inset-0 z-0" :inert="covered" :style="{ '--map-controls-left': controlsLeft }">
     <GaetaMap
-      :pins="tourOpen ? [] : mapStore.visiblePins"
-      :features="tourOpen ? [] : mapStore.visibleFeatures"
+      :pins="tourOpen || restricted ? [] : mapStore.visiblePins"
+      :features="shownFeatures"
       :overlays="mapStore.visibleOverlays"
       :placing="mapStore.placing"
       :focus="mapStore.editor ? null : mapStore.focus"
