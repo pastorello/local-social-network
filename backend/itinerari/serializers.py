@@ -7,6 +7,8 @@ from content.models import MapFeature
 from content.sanitize import sanitize_html
 from content.serializers import CardImageSerializer, TranslationSerializer, media_source, visible_translations
 from maps.api import CARD_TYPES
+from maps.models import Zona
+from maps.zones import zones_containing_any
 
 from .models import Intent, Itinerario
 
@@ -106,6 +108,7 @@ class ItinerarioReadSerializer(serializers.ModelSerializer):
     images = serializers.SerializerMethodField()
     translations = serializers.SerializerMethodField()
     original_title = serializers.SerializerMethodField()
+    zones = serializers.SerializerMethodField()
 
     # A translation shows its original's stops, path, form and intents, as it
     # shows its original's photographs (translations.md T5): the tour is the
@@ -150,6 +153,24 @@ class ItinerarioReadSerializer(serializers.ModelSerializer):
             })
         return stops
 
+    def get_zones(self, obj):
+        """The editorial zones the tour belongs to (spec cosa-fare.md Part −1,
+        D2), from the stops a reader is shown: a percorso where it *starts*, a
+        raccolta wherever *any* of its stops is — a raccolta has no order, so
+        its "first" stop is only the one clicked first."""
+        if 'zones' not in self.context:
+            self.context['zones'] = list(Zona.objects.all())
+        zones = self.context['zones']
+        tour = self._original(obj)
+        stops = [stop for stop in tour.stops.all() if stop.card.is_published]
+        if not stops:
+            return []
+        if tour.form == Itinerario.PERCORSO:
+            start = stops[0]
+            point = stop_point(start.card, _chosen_point(start, _card_points(start.card)))
+            return zones_containing_any(zones, [point] if point else [])
+        return zones_containing_any(zones, [place for stop in stops for place in _stop_places(stop)])
+
     def get_route(self, obj):
         # The walked path between the stops (I8), stored as the card's route
         # like a festa's. A raccolta has none.
@@ -173,7 +194,7 @@ class ItinerarioReadSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'body_html', 'author', 'is_published',
             'form', 'duration', 'intents', 'intent_labels', 'stops', 'route',
-            'images', 'language', 'translation_of', 'original_title', 'translations',
+            'images', 'language', 'translation_of', 'original_title', 'translations', 'zones',
             'created_at', 'updated_at',
         )
 

@@ -38,4 +38,7 @@ export default interface Itinerario extends CardBase {
   stops: ItineraryStop[]
   // The walked path between the stops (I8); empty for a raccolta.
   route: MapPoint[]
+  // The editorial zones it belongs to (spec cosa-fare.md Part −1, D2): a
+  // percorso where it starts, a raccolta wherever any published stop is.
+  zones: string[]
 }

@@ -3,7 +3,7 @@ from django.contrib import admin
 
 from common.images import ImageRejected, validate_image
 
-from .models import Overlay
+from .models import Overlay, Zona
 
 
 class OverlayAdminForm(forms.ModelForm):
@@ -52,3 +52,15 @@ class OverlayAdmin(admin.ModelAdmin):
         ('Vector (GeoJSON)', {'fields': ('geojson', 'color')}),
         ('Raster (mappa storica)', {'fields': ('image', 'south', 'west', 'north', 'east')}),
     )
+
+
+@admin.register(Zona)
+class ZonaAdmin(admin.ModelAdmin):
+    """The editorial zones (spec cosa-fare.md Part −1, D2). The six seeded on
+    2026-10-13 are drafts drawn by hand: correct them here. A card joins a
+    zone by where its pin is, so moving a boundary moves cards between zones
+    with no other edit."""
+
+    list_display = ('name', 'slug', 'position')
+    list_editable = ('position',)
+    prepopulated_fields = {'slug': ('name',)}

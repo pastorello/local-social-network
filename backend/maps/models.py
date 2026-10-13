@@ -194,3 +194,62 @@ class Overlay(models.Model):
 
         if errors:
             raise ValidationError(errors)
+
+
+ZONE_GEOMETRY_TYPES = ('Polygon', 'MultiPolygon')
+
+
+class Zona(models.Model):
+    """An editorial zone of Gaeta (spec cosa-fare.md Part −1, D2) — *not* an
+    official boundary: there is none published, and the page says so. Drawn
+    once, named the way Gaeta names its places, and edited here by the
+    author. A card is in a zone by where it is (`maps/zones.py`), never by a
+    collaborator's choice."""
+
+    slug = models.SlugField(max_length=60, unique=True)
+    name = models.CharField('nome', max_length=80)
+    position = models.PositiveIntegerField('posizione', default=0)
+    # A bare GeoJSON geometry, [longitude, latitude]. A Feature or a
+    # FeatureCollection is refused: one zone, one outline.
+    geometry = models.JSONField(
+        'confine',
+        help_text=(
+            'Una geometria GeoJSON di tipo Polygon o MultiPolygon, con le coordinate in '
+            'ordine [longitudine, latitudine]. Per correggerla a vista: copiala su '
+            'geojson.io, sposta i vertici, e incolla qui il risultato.'
+        ),
+    )
+
+    class Meta:
+        ordering = ('position', 'name')
+        verbose_name = 'zona'
+        verbose_name_plural = 'zone'
+
+    def __str__(self):
+        return self.name
+
+    def clean(self):
+        geometry = self.geometry
+        if not isinstance(geometry, dict) or geometry.get('type') not in ZONE_GEOMETRY_TYPES:
+            raise ValidationError({'geometry': 'Serve una geometria GeoJSON Polygon o MultiPolygon.'})
+        polygons = (
+            [geometry.get('coordinates')] if geometry['type'] == 'Polygon'
+            else geometry.get('coordinates')
+        )
+        if not isinstance(polygons, list) or not polygons or not all(
+            isinstance(rings, list) and rings
+            and all(isinstance(ring, list) and len(ring) >= 4 for ring in rings)
+            for rings in polygons
+        ):
+            raise ValidationError({
+                'geometry': 'Ogni anello del confine deve avere almeno quattro punti (il primo ripetuto in fondo).'
+            })
+        if len(str(geometry)) > MAX_GEOJSON_BYTES:
+            raise ValidationError({'geometry': 'Il confine è troppo grande: semplificalo.'})
+        if (outlier := implausible_position(geometry)) is not None:
+            lng, lat = outlier
+            raise ValidationError({'geometry': (
+                f'Le coordinate non sono da queste parti: il primo punto fuori zona è '
+                f'longitudine {lng}, latitudine {lat}. Il GeoJSON vuole l’ordine '
+                f'[longitudine, latitudine].'
+            )})

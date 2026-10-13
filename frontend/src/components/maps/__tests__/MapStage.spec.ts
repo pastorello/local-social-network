@@ -84,6 +84,7 @@ describe('MapStage while a tour is open (decided 2026-09-19)', () => {
         cover: null,
         points: [{ lat: 41.2, lng: 13.5, label: '' }],
         route: [],
+        zones: [],
       },
     ]
     store.pins = [{ id: 'r1', title: 'Buca', status: 'open', lat: 41.21, lng: 13.57 }] as never

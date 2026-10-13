@@ -4,13 +4,18 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from content.models import MapFeature
 
-from .models import Overlay
+from .models import Overlay, Zona
 from .serializers import OverlaySerializer
+from .zones import zones_containing_any, zones_of_feature
 
 # Reverse OneToOne accessor -> the key the SPA uses for the layer and for the
 # card's own route (`/chiese/<id>`). dialetto and libri are absent on purpose:
 # the spec's footprint table gives them none, so they never reach this endpoint.
 CARD_TYPES = ('feste', 'chiese', 'ricette', 'personaggi', 'luoghi')
+
+# The rows of «Cosa si può fare qui» (spec cosa-fare.md Part −1, D3): the places
+# one goes to. A zone's count is of these, not of every card it holds.
+ZONE_PLACE_TYPES = ('chiese', 'luoghi')
 
 
 def _card_type(card):
@@ -64,7 +69,48 @@ def map_features(request):
         target = 'route' if feature.kind == MapFeature.ROUTE else 'points'
         entry[target].append({'lat': feature.lat, 'lng': feature.lng, 'label': feature.label})
 
+    # Which editorial zones each card is in (D2), so the SPA can compose a
+    # zone's page from this one payload it already holds.
+    zones = list(Zona.objects.all())
+    for entry in cards.values():
+        entry['zones'] = zones_of_feature(zones, entry['type'], entry['points'], entry['route'])
+
     return Response(list(cards.values()))
+
+
+@api_view(['GET'])
+@permission_classes([])
+def zone_list(request):
+    """The editorial zones (spec cosa-fare.md Part −1, D2), in the author's
+    order, each with its outline and how many published places — chiese and
+    luoghi, D3's rows — are in it. Unpaginated: a handful of rows, read whole
+    by the zone chips. A zone with no place still comes back; the page decides
+    how to say it is empty."""
+    zones = list(Zona.objects.all())
+    places = (
+        MapFeature.objects
+        .filter(
+            kind=MapFeature.POINT, card__is_published=True, card__translation_of__isnull=True,
+        )
+        .select_related(*(f'card__{type_key}' for type_key in ZONE_PLACE_TYPES))
+    )
+    points_by_card = {}
+    for feature in places:
+        # Only the two types it selected: asking about the other three would
+        # be a query per pin.
+        if any(hasattr(feature.card, type_key) for type_key in ZONE_PLACE_TYPES):
+            points_by_card.setdefault(feature.card_id, []).append({'lat': feature.lat, 'lng': feature.lng})
+    counts = dict.fromkeys((zone.slug for zone in zones), 0)
+    for points in points_by_card.values():
+        for slug in zones_containing_any(zones, points):
+            counts[slug] += 1
+    return Response([
+        {
+            'slug': zone.slug, 'name': zone.name, 'geometry': zone.geometry,
+            'count': counts[zone.slug],
+        }
+        for zone in zones
+    ])
 
 
 @api_view(['GET'])
