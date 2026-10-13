@@ -204,7 +204,7 @@ designed look (D7 of design.md, a tint of its layer colour).
 
 | PR | What | Cost |
 |---|---|---|
-| 1 | ADR-0008's `content.Availability` (chiese, luoghi) + `Chiesa.from_outside`; admin, API, form controls, reader copy; the invariant tests | about a day |
+| 1 | ADR-0008's `content.Availability` (chiese, luoghi) + `Chiesa.from_outside`; admin, API, form controls, reader copy; the invariant tests | about a day — **built 2026-10-13** |
 | 2 | `Zona` (admin-managed polygons, the six drafted), membership by D2's rule, `/api/map/zone/` with counts; *Camminare* seeded | about a day |
 | 3 | `/cosa-fare`: zone chips, sections, the three blocks, the map's set, the empty state, the self-opening invitation on `/benvenuto`, Menu and pill links; axe cases and one keyboard case | about a day |
 | — | `seed_demo` | half a day, beside PR 3 |

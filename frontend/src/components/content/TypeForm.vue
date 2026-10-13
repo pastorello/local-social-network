@@ -4,7 +4,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 
 import { useToastStore } from '@/stores/toast'
 import type { TypeConfig } from '@/definitions/typeConfigs'
-import type { ContentItem, MapPoint } from '@/definitions/interfaces/Content'
+import type { Availability, ContentItem, MapPoint } from '@/definitions/interfaces/Content'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import FormInput from '@/components/forms/FormInput.vue'
 import RichTextEditor from '@/components/content/RichTextEditor.vue'
@@ -14,6 +14,7 @@ import CardImagesField from '@/components/forms/CardImagesField.vue'
 import FormField from '@/components/forms/FormField.vue'
 import { extractFieldErrors, extractFormErrors } from '@/lib/apiErrors'
 import { appendImages, toEntries, type CardImageEntry } from '@/lib/cardImages'
+import { STATE_OPTIONS, emptyAvailability } from '@/lib/availability'
 
 const props = defineProps<{
   config: TypeConfig
@@ -41,6 +42,19 @@ const removedImageIds = ref<(string | number)[]>([])
 // this only keeps the form from offering something that would be rejected.
 const isTranslation = computed(() => props.item?.translation_of != null)
 const sharedImages = computed(() => props.item?.images ?? [])
+
+// A type with a door (ADR-0008): what is known about getting in, which is the
+// original's in every language — so a translation shows it and cannot edit
+// it, like the photographs — and, on a church, «Se la trovi chiusa», which is
+// written per language (cosa-fare.md D7).
+const visit = reactive<Availability>({
+  ...emptyAvailability(),
+  ...(props.item?.availability as Availability | undefined),
+})
+const stateOptions = computed(() =>
+  STATE_OPTIONS.filter((option) => option.value !== 'no_door' || props.config.visit?.noDoor),
+)
+const fromOutside = ref((props.item?.from_outside as string | undefined) ?? '')
 
 const extraValues = reactive<Record<string, string>>(
   Object.fromEntries(
@@ -77,6 +91,7 @@ const tab = ref('contenuto')
 const tabOf = (field: string): string => {
   if (['images', 'image_order', 'remove_image_ids'].includes(field)) return 'immagini'
   if (field === 'pins') return 'mappa'
+  if (field === 'availability' || field === 'from_outside') return 'visita'
   if (field === 'is_published') return 'pubblicazione'
   return 'contenuto'
 }
@@ -86,6 +101,7 @@ const tabs = computed<FormTab[]>(() => {
     { key: 'contenuto', label: 'Contenuto' },
     { key: 'immagini', label: 'Immagini' },
     ...(props.config.mapMode === 'pins' ? [{ key: 'mappa', label: 'Mappa' }] : []),
+    ...(props.config.visit ? [{ key: 'visita', label: 'Visita' }] : []),
     { key: 'pubblicazione', label: 'Pubblicazione' },
   ]
   return all.map((entry) => ({ ...entry, hasError: withErrors.has(entry.key) }))
@@ -113,6 +129,14 @@ const submitForm = async () => {
   }
   if (!isTranslation.value) {
     appendImages(formData, imageEntries.value, removedImageIds.value)
+  }
+  if (props.config.visit) {
+    if (!isTranslation.value) {
+      // The date is not sent: the server sets it when the hours change.
+      const { state, hours, keeper, keeper_phone } = visit
+      formData.append('availability', JSON.stringify({ state, hours, keeper, keeper_phone }))
+    }
+    if (props.config.visit.fromOutside) formData.append('from_outside', fromOutside.value)
   }
 
   submitting.value = true
@@ -300,6 +324,109 @@ const submitForm = async () => {
           id-prefix="map-pins"
           @done="tab = 'pubblicazione'"
         />
+      </fieldset>
+    </div>
+
+    <div
+      v-if="config.visit"
+      v-show="tab === 'visita'"
+      id="type-form-panel-visita"
+      role="tabpanel"
+      aria-labelledby="type-form-tab-visita"
+    >
+      <fieldset class="space-y-5">
+        <legend class="sr-only">Visita</legend>
+        <!-- ADR-0008: what is written here is shown with the day it was
+        written, never as a promise — so the form asks for what the writer
+        knows, and empty is a correct answer. -->
+        <p v-if="isTranslation" class="text-body text-muted">
+          Orari e custode sono quelli della scheda originale, per ogni lingua. Si modificano da lì.
+        </p>
+        <template v-else>
+          <p class="text-body text-muted">
+            Scrivi solo quello che sai. Se non lo sai, lascia vuoto: vuoto è meglio di sbagliato, e
+            la scheda funziona lo stesso.
+          </p>
+          <FormField
+            field-id="type-form-visit-state"
+            label="Come si entra"
+            :errors="fieldErrors.availability"
+          >
+            <template #default="{ describedBy, invalid }">
+              <select
+                id="type-form-visit-state"
+                v-model="visit.state"
+                :aria-describedby="describedBy"
+                :aria-invalid="invalid || undefined"
+                class="w-full rounded-lg border bg-surface px-4 py-3 text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+                :class="invalid ? 'border-status-open' : 'border-field'"
+              >
+                <option v-for="option in stateOptions" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+            </template>
+          </FormField>
+          <FormField
+            field-id="type-form-visit-hours"
+            label="Orari"
+            hint="Come li diresti a voce. Accanto comparirà la data di oggi: chi legge saprà quando sono stati segnalati."
+          >
+            <template #default="{ describedBy }">
+              <textarea
+                id="type-form-visit-hours"
+                v-model="visit.hours"
+                rows="3"
+                :aria-describedby="describedBy"
+                class="w-full rounded-lg border border-field bg-surface px-4 py-3 text-ink placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+                placeholder="Es. Lun-Sab 10:30-12:30 e 16:00-17:00; domenica solo per la messa delle 11"
+              ></textarea>
+            </template>
+          </FormField>
+          <FormField field-id="type-form-visit-keeper" label="Chi ha le chiavi">
+            <template #default="{ describedBy }">
+              <FormInput
+                id="type-form-visit-keeper"
+                type="text"
+                v-model="visit.keeper"
+                :aria-describedby="describedBy"
+                placeholder="Es. Parrocchia della Cattedrale"
+              />
+            </template>
+          </FormField>
+          <FormField field-id="type-form-visit-phone" label="Telefono">
+            <template #default="{ describedBy }">
+              <FormInput
+                id="type-form-visit-phone"
+                type="tel"
+                v-model="visit.keeper_phone"
+                :aria-describedby="describedBy"
+                placeholder="Es. 0771 462255"
+              />
+            </template>
+          </FormField>
+        </template>
+
+        <FormField
+          v-if="config.visit.fromOutside"
+          field-id="type-form-from-outside"
+          label="Se la trovi chiusa"
+          hint="La legge qualcuno che è già lì e ha trovato la porta chiusa. Scrivi che cosa ha davanti e che cosa può fare nei dieci minuti che gli restano. Fatti, non consolazioni — e niente orari."
+          :errors="fieldErrors.from_outside"
+        >
+          <template #default="{ describedBy, invalid }">
+            <textarea
+              id="type-form-from-outside"
+              v-model="fromOutside"
+              rows="4"
+              :aria-describedby="describedBy"
+              :aria-invalid="invalid || undefined"
+              class="w-full rounded-lg border bg-surface px-4 py-3 text-ink placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+              :class="invalid ? 'border-status-open' : 'border-field'"
+              placeholder="Es. La facciata e il campanile si vedono dal sagrato; a cinquanta metri c'è il belvedere sul porto."
+            ></textarea>
+          </template>
+        </FormField>
       </fieldset>
     </div>
 

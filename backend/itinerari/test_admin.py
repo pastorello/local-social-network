@@ -83,6 +83,11 @@ def _publish_card(client, card):
         'images-INITIAL_FORMS': '0',
         'images-MIN_NUM_FORMS': '0',
         'images-MAX_NUM_FORMS': '1000',
+        # The card form's second inline, what is known about getting in (ADR-0008).
+        'availability-TOTAL_FORMS': '0',
+        'availability-INITIAL_FORMS': '0',
+        'availability-MIN_NUM_FORMS': '0',
+        'availability-MAX_NUM_FORMS': '1',
     }
     return client.post(f'/admin/content/card/{card.pk}/change/', data)
 

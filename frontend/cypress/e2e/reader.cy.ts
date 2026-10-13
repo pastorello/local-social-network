@@ -67,6 +67,15 @@ describe('the reader, on a wide screen', () => {
     cy.location('pathname').should('match', /^\/chiese\/[0-9a-f-]+$/)
     cy.contains('h1', PUBLISHED)
     cy.contains('Collaboratore E2E')
+
+    // ADR-0008: what is known about getting in, the hours with the day they
+    // were reported — and never a claim that the church is open.
+    cy.contains('h2', 'Visitare')
+    cy.contains('Domenica alle 11, per la messa.')
+    cy.contains(/Orari segnalati il \d{1,2} \w+ \d{4} — telefona per sicurezza\./)
+    cy.get('a[href="tel:0771000000"]').should('contain', '0771 000000')
+    // cosa-fare.md D7, for the reader who found the door shut.
+    cy.contains('h2', 'Se la trovi chiusa')
   })
 
   it('is not shown anyone else’s draft', () => {

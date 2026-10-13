@@ -2,7 +2,10 @@ from rest_framework import serializers
 
 from account.serializers import UserSerializer
 from content.models import MapFeature
-from content.serializers import CardImageSerializer, TranslationSerializer, media_source, visible_translations
+from content.fields import PlainTextField
+from content.serializers import (
+    CardImageSerializer, TranslationSerializer, availability_of, media_source, visible_translations,
+)
 from content.sanitize import sanitize_html
 
 from .models import Chiesa
@@ -28,6 +31,10 @@ class ChiesaReadSerializer(serializers.ModelSerializer):
     pins = serializers.SerializerMethodField()
     translations = serializers.SerializerMethodField()
     original_title = serializers.SerializerMethodField()
+    availability = serializers.SerializerMethodField()
+
+    def get_availability(self, obj):
+        return availability_of(obj.card)
 
     def get_images(self, obj):
         return CardImageSerializer(media_source(obj.card).images.all(), many=True).data
@@ -51,7 +58,7 @@ class ChiesaReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Chiesa
         fields = (
-            'id', 'title', 'body_html', 'author', 'is_published',
+            'id', 'title', 'body_html', 'author', 'is_published', 'from_outside', 'availability',
             'images', 'pins', 'language', 'translation_of', 'original_title', 'translations',
             'created_at', 'updated_at',
         )
@@ -64,6 +71,7 @@ class ChiesaWriteSerializer(serializers.Serializer):
 
     title = serializers.CharField(max_length=200)
     body_html = serializers.CharField(allow_blank=True)
+    from_outside = PlainTextField(required=False, allow_blank=True, default='')
     is_published = serializers.BooleanField(required=False, default=False)
 
     def validate_body_html(self, value):

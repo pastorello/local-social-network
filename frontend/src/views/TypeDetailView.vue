@@ -12,10 +12,11 @@ import { useMapFocus } from '@/composables/useMapFocus'
 import { useMapStore } from '@/stores/map'
 import TypeForm from '@/components/content/TypeForm.vue'
 import TranslateControl from '@/components/content/TranslateControl.vue'
+import VisitInfo from '@/components/content/VisitInfo.vue'
 import { useUserStore } from '@/stores/user'
 import { useToastStore } from '@/stores/toast'
 import type { TypeConfig } from '@/definitions/typeConfigs'
-import type { ContentItem, MapPoint } from '@/definitions/interfaces/Content'
+import type { Availability, ContentItem, MapPoint } from '@/definitions/interfaces/Content'
 
 const props = defineProps<{ config: TypeConfig }>()
 
@@ -46,6 +47,15 @@ useMapFocus(() =>
   item.value && props.config.mapMode === 'pins' && pins.value.length
     ? { id: item.value.id, type: props.config.key, points: pins.value, route: [] }
     : null,
+)
+
+// A type with a door (ADR-0008): what is known about getting in, and — for a
+// church — «Se la trovi chiusa» (cosa-fare.md D7).
+const availability = computed(() =>
+  props.config.visit ? (item.value?.availability as Availability | undefined) : undefined,
+)
+const fromOutside = computed(() =>
+  props.config.visit?.fromOutside ? ((item.value?.from_outside as string | undefined) ?? '') : '',
 )
 
 const filledFields = computed(() =>
@@ -142,6 +152,18 @@ watch(
                 </dd>
               </div>
             </dl>
+
+            <VisitInfo :availability="availability" />
+
+            <!-- For the reader already at the door (cosa-fare.md D7): after the
+            text, and only when someone wrote it — a reader who got in skips
+            nothing. -->
+            <section v-if="fromOutside" class="mb-10">
+              <h2 class="mb-3 font-display text-title text-ink">Se la trovi chiusa</h2>
+              <p class="max-w-[65ch] whitespace-pre-line text-reading text-ink">
+                {{ fromOutside }}
+              </p>
+            </section>
           </template>
 
           <template #map>

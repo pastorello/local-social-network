@@ -1,7 +1,11 @@
 import uuid
+from zoneinfo import ZoneInfo
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 from django.db import models
+from django.utils import timezone
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 
@@ -107,3 +111,85 @@ class MapFeature(models.Model):
 
     class Meta:
         ordering = ('position',)
+
+
+# The card types that have a door (ADR-0008): the only ones that may carry an
+# Availability row. Type knowledge in the core, by name, in the same
+# `hasattr(card, type)` idiom `maps.CARD_TYPES` uses — the core must not import
+# its types (ADR-0004).
+ACCESS_TYPES = ('chiese', 'luoghi')
+
+GAETA = ZoneInfo('Europe/Rome')
+
+
+def today_in_gaeta():
+    """The date in Gaeta. `TIME_ZONE` is UTC, so `localdate()` is yesterday in
+    Gaeta between midnight and two in the summer (cosa-fare.md Part I §4)."""
+    return timezone.now().astimezone(GAETA).date()
+
+
+class Availability(models.Model):
+    """What is known about getting into a place — ADR-0008, read it before
+    changing anything here. Its invariants are the point: no row means
+    *unknown*, never open; nothing in it is a time the code reads; `hours` is
+    a dated testimony shown with its date, never parsed, never a filter.
+
+    One row per card, owned by the original (spec translations.md T5): a
+    translation shows its original's and has none of its own."""
+
+    UNKNOWN = 'unknown'
+    SERVICES = 'services'
+    ON_REQUEST = 'on_request'
+    WORKS = 'works'
+    NO_DOOR = 'no_door'
+
+    # None of these means "open", and none may ever be added that does.
+    STATE_CHOICES = (
+        (UNKNOWN, 'Non sappiamo'),
+        (SERVICES, 'Si entra solo durante le funzioni'),
+        (ON_REQUEST, 'Si visita su richiesta'),
+        (WORKS, 'Chiuso per lavori'),
+        (NO_DOOR, "All'aperto, senza porta"),
+    )
+
+    card = models.OneToOneField(
+        Card, related_name='availability', on_delete=models.CASCADE, primary_key=True
+    )
+    state = models.CharField(max_length=16, choices=STATE_CHOICES, default=UNKNOWN)
+    hours = models.TextField('orari', blank=True, default='')
+    # Set by `save()` whenever `hours` changes, never written by a form: it is
+    # what turns an old line into an old fact rather than a stale promise.
+    hours_updated = models.DateField('orari segnalati il', null=True, blank=True, editable=False)
+    keeper = models.CharField('chi ha le chiavi', max_length=140, blank=True, default='')
+    keeper_phone = models.CharField(
+        'telefono', max_length=32, blank=True, default='',
+        validators=[RegexValidator(r'^[0-9+()./\s-]*$', 'Numero di telefono non valido.')],
+    )
+
+    class Meta:
+        verbose_name = 'accesso'
+        verbose_name_plural = 'accessi'
+
+    def __str__(self):
+        return f'{self.card.title}: {self.get_state_display()}'
+
+    def clean(self):
+        card = self.card
+        if not any(hasattr(card, type_key) for type_key in ACCESS_TYPES):
+            raise ValidationError('Solo chiese e luoghi hanno orari e custode.')
+        if card.translation_of_id is not None:
+            raise ValidationError('Gli orari e il custode appartengono alla scheda originale.')
+        if self.state == self.NO_DOOR and hasattr(card, 'chiese'):
+            raise ValidationError({'state': 'Una chiesa ha sempre una porta.'})
+
+    def save(self, *args, **kwargs):
+        previous = (
+            Availability.objects.filter(pk=self.pk).values_list('hours', flat=True).first()
+            if self.pk else None
+        )
+        if not self.hours.strip():
+            self.hours = ''
+            self.hours_updated = None
+        elif self.hours != previous:
+            self.hours_updated = today_in_gaeta()
+        super().save(*args, **kwargs)

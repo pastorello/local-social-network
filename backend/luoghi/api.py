@@ -8,12 +8,14 @@ from rest_framework.response import Response
 from account.models import User
 from common.pagination import StandardPagination
 from content.api_helpers import (
+    parse_availability,
     parse_points,
     remove_images,
     replace_points,
     require_authenticated,
     require_author_or_admin,
     require_original_published,
+    save_availability,
     save_images,
     start_translation,
 )
@@ -40,6 +42,8 @@ def _base_queryset():
         'card', 'card__author', 'card__translation_of', 'genre',
         # A translation shows its original's genre (luoghi/serializers.py).
         'card__translation_of__luoghi__genre',
+        # What is known about getting in is the original's (ADR-0008, T5).
+        'card__availability', 'card__translation_of__availability',
     ).prefetch_related(
         'card__images', 'card__map_features',
         'card__translation_of__images', 'card__translation_of__map_features',
@@ -56,6 +60,7 @@ def luogo_list(request):
         write_serializer.is_valid(raise_exception=True)
         data = write_serializer.validated_data
         pins = parse_points(request.data.get('pins'), max_points=MAX_PINS)
+        availability = parse_availability(request.data.get('availability'))
 
         with transaction.atomic():
             card = Card.objects.create(
@@ -67,6 +72,7 @@ def luogo_list(request):
             )
             save_images(card, request.FILES.getlist('images'), request.data.get('image_order'))
             replace_points(card, pins)
+            save_availability(card, availability)
 
         luogo = _base_queryset().get(pk=luogo.pk)
         return Response(LuogoReadSerializer(luogo, context={'request': request}).data, status=201)
@@ -135,6 +141,7 @@ def luogo_detail(request, pk):
     write_serializer.is_valid(raise_exception=True)
     data = write_serializer.validated_data
     pins = parse_points(request.data.get('pins'), max_points=MAX_PINS)
+    availability = parse_availability(request.data.get('availability'))
 
     with transaction.atomic():
         card = luogo.card
@@ -148,6 +155,7 @@ def luogo_detail(request, pk):
             if field in data:
                 setattr(luogo, field, data[field])
         luogo.save()
+        save_availability(card, availability)
 
         remove_images(card, request.data.get('remove_image_ids'))
         save_images(card, request.FILES.getlist('images'), request.data.get('image_order'))
