@@ -1,0 +1,27 @@
+{
+  "type": "chiese",
+  "title": "Tempio di San Francesco",
+  "body_html": [
+    "<p>Sul fianco di Monte Orlando, sopra il centro storico, è la chiesa che si vede da lontano. Secondo la tradizione San Francesco, in viaggio nel sud, fondò qui un piccolo convento nel 1222; la chiesa grande fu cominciata nel 1283 con il sostegno di Carlo II d’Angiò.</p>",
+    "<p>L’aspetto di oggi è ottocentesco. Durante l’esilio a Gaeta, papa Pio IX promosse un restauro radicale in stile neogotico, diretto dall’architetto Giacomo Guarinelli e pagato da Ferdinando II delle Due Sicilie: interrotti dall’assedio del 1860, i lavori finirono nel 1874.</p>",
+    "<p>Si sale da una scalinata monumentale che si apre in due rampe curve, con al centro la statua della Religione di Luigi Persico (1853). Sotto il portico ci sono Carlo II e Ferdinando II; in cima alla facciata, San Francesco.</p>",
+    "<h2>Fonti</h2>",
+    "<ul>",
+    "<li><a href=\"https://it.wikipedia.org/wiki/Tempio_di_San_Francesco\" rel=\"noopener noreferrer\">Wikipedia, Tempio di San Francesco (Gaeta)</a></li>",
+    "</ul>",
+    "<h2>Da verificare</h2>",
+    "<ul>",
+    "<li>Bozza compilata da fonti pubbliche, non da chi conosce il posto: va riletta prima di pubblicarla. Poi questa sezione si toglie; le fonti possono restare.</li>",
+    "<li>La fondazione del 1222: Wikipedia la presenta come storica, altrove è detta tradizione. Nel testo è «secondo la tradizione» finché una fonte francescana non la conferma.</li>",
+    "<li>L’inizio del restauro: 1850 in una fonte, «seconda metà degli anni Cinquanta» in un’altra.</li>",
+    "<li>Orari e accesso.</li>",
+    "</ul>"
+  ],
+  "pins": [
+    {
+      "lat": 41.21084,
+      "lng": 13.58094,
+      "label": "San Francesco"
+    }
+  ]
+}

@@ -164,7 +164,8 @@ build questions into input ones:
   showed about why they are needed — are in
   [spec/content.md](./spec/content.md#seeding-the-archive-from-public-sources--2026-09-11).
   Seeded drafts are material for the author's reading, not a substitute for
-  it.
+  it. **Since 2026-10-14 they are in git** (`backend/content/drafts/`, loaded
+  by `seed_drafts`), so they no longer depend on one database file surviving.
 - **At least one published itinerary** (added 2026-09-18, with the tours).
   `/benvenuto` is the one address printed on a B&B's card, and it lists only
   the intents that have a published tour — so with none it tells a guest the

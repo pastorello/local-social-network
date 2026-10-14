@@ -1,0 +1,29 @@
+{
+  "type": "chiese",
+  "title": "Cattedrale dei Santi Erasmo e Marciano",
+  "body_html": [
+    "<p>È la cattedrale di Gaeta, dedicata ai due patroni e a Santa Maria Assunta. La consacrò papa Pasquale II nel 1106, ma dell’edificio dell’XI secolo restano tracce: la cosiddetta settima navata e frammenti del pavimento cosmatesco.</p>",
+    "<p>Da lontano la si riconosce dal campanile romanico, alto 57 metri: fu cominciato nel 1148 e finito nel 1279 con la cupola ottagonale.</p>",
+    "<p>Dentro, sulla parete di fondo, c’è il Martirio di Sant’Erasmo di Carlo Saraceni, dipinto intorno al 1610. Sotto l’altare, nel soccorpo, sono custodite le reliquie dei patroni.</p>",
+    "<h2>Fonti</h2>",
+    "<ul>",
+    "<li><a href=\"https://it.wikipedia.org/wiki/Cattedrale_dei_Santi_Erasmo_e_Marciano_e_di_Santa_Maria_Assunta\" rel=\"noopener noreferrer\">Wikipedia, Cattedrale dei Santi Erasmo e Marciano</a></li>",
+    "<li><a href=\"https://www.cattedralegaeta.it/la-cattedrale/santi-patroni/\" rel=\"noopener noreferrer\">Basilica Cattedrale di Gaeta, i Santi patroni</a></li>",
+    "</ul>",
+    "<h2>Da verificare</h2>",
+    "<ul>",
+    "<li>Bozza compilata da fonti pubbliche, non da chi conosce il posto: va riletta prima di pubblicarla. Poi questa sezione si toglie; le fonti possono restare.</li>",
+    "<li>Il giorno della consacrazione del 1106: Wikipedia dice 22 gennaio, il sito della Cattedrale 3 febbraio.</li>",
+    "<li>Il progetto del campanile: Wikipedia lo attribuisce al maestro romano Nicolangelo; non confermato altrove, per questo non è nel testo.</li>",
+    "<li>Il pin è messo dalle coordinate di Wikipedia: controllare che cada sull’ingresso.</li>",
+    "<li>Orari di apertura e di visita al campanile e al soccorpo.</li>",
+    "</ul>"
+  ],
+  "pins": [
+    {
+      "lat": 41.2087,
+      "lng": 13.5868,
+      "label": "Cattedrale"
+    }
+  ]
+}

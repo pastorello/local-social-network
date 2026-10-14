@@ -1,0 +1,27 @@
+{
+  "type": "feste",
+  "title": "Festa dei Santi Erasmo e Marciano",
+  "body_html": [
+    "<p>Erasmo e Marciano sono i patroni di Gaeta e della sua Arcidiocesi, e il 2 giugno è il giorno in cui la città li porta per strada. Il loro culto è legato a Gaeta dal IX secolo, quando la città era un ducato indipendente che viveva di mare.</p>",
+    "<p>La storia comincia a Formia. Quando nell’842 i Saraceni la distrussero, le reliquie di Erasmo furono portate a Gaeta e nascoste; il vescovo Bono le ritrovò nel 917, e da allora la città batté moneta con l’immagine del santo. Le reliquie di Marciano, che la tradizione vuole primo vescovo di Siracusa, arrivarono dal mare. Oggi riposano nel soccorpo, la cripta sotto l’altare della Cattedrale che porta i loro nomi.</p>",
+    "<p>La festa si tiene in due tempi. La sera del 1° giugno il sindaco porta ai Santi fiori e ceri; il 2, dopo la messa pontificale, i busti reliquiari attraversano le vie del centro. Intorno, le strade si vestono a festa e si riempiono di bancarelle.</p>",
+    "<h2>Fonti</h2>",
+    "<ul>",
+    "<li><a href=\"https://www.cattedralegaeta.it/la-cattedrale/santi-patroni/\" rel=\"noopener noreferrer\">Basilica Cattedrale di Gaeta, i Santi patroni</a></li>",
+    "<li><a href=\"https://www.arcidiocesigaeta.it/festa-santi-patroni-erasmo-e-marciano-2025/\" rel=\"noopener noreferrer\">Arcidiocesi di Gaeta, la festa dei patroni 2025</a></li>",
+    "<li><a href=\"https://it.wikipedia.org/wiki/Cattedrale_dei_Santi_Erasmo_e_Marciano_e_di_Santa_Maria_Assunta\" rel=\"noopener noreferrer\">Wikipedia, Cattedrale dei Santi Erasmo e Marciano</a></li>",
+    "</ul>",
+    "<h2>Da verificare</h2>",
+    "<ul>",
+    "<li>Bozza compilata da fonti pubbliche, non da chi conosce il posto: va riletta prima di pubblicarla. Poi questa sezione si toglie; le fonti possono restare.</li>",
+    "<li>Chi era Erasmo: il sito della Cattedrale lo dice vescovo di Formia; la tradizione più diffusa lo vuole vescovo di Antiochia, martirizzato a Formia.</li>",
+    "<li>Chi portò le reliquie a Gaeta nell’842: Wikipedia nomina il vescovo Giovanni III, il sito della Cattedrale non lo dice.</li>",
+    "<li>Il percorso della processione: nessuna fonte dice quali vie. Va disegnato sulla mappa da chi l’ha camminato, non ricostruito.</li>",
+    "<li>Esiste una festa di Sant’Erasmo anche a Formia, e molte pagine web mescolano le due: controllare che niente qui venga da quella.</li>",
+    "</ul>"
+  ],
+  "fields": {
+    "recurrence": "Ogni anno il 2 giugno, con la vigilia del 1° giugno",
+    "programme": "Nei nove giorni prima: novena in Cattedrale.\n1° giugno, sera: messa della vigilia; il sindaco offre ai Santi fiori e ceri a nome della città.\n2 giugno: messa pontificale in Cattedrale, poi la processione dei busti reliquiari per le vie principali, con le autorità civili e militari.\nGli orari cambiano di anno in anno: il programma lo pubblicano l’Arcidiocesi e il Comune."
+  }
+}

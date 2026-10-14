@@ -1,0 +1,24 @@
+{
+  "type": "personaggi",
+  "title": "Papa Gelasio II",
+  "body_html": [
+    "<p>Nato a Gaeta intorno al 1060 come Giovanni, e per questo detto Giovanni di Gaeta, è il gaetano salito più in alto nella Chiesa del Medioevo. Monaco a Montecassino, divenne cancelliere della Sede apostolica e cardinale diacono di Santa Maria in Cosmedin.</p>",
+    "<p>Fu eletto papa il 24 gennaio 1118, nel pieno della lotta per le investiture, e il suo pontificato durò appena un anno. I Frangipane, schierati con l’imperatore Enrico V, lo aggredirono e lo imprigionarono; l’imperatore gli oppose l’antipapa Gregorio VIII. A settembre Gelasio lasciò Roma per mare, risalì la costa fino a Pisa e a Genova e riparò in Francia.</p>",
+    "<p>Morì all’abbazia di Cluny il 29 gennaio 1119, e lì fu sepolto.</p>",
+    "<h2>Fonti</h2>",
+    "<ul>",
+    "<li><a href=\"https://it.wikipedia.org/wiki/Papa_Gelasio_II\" rel=\"noopener noreferrer\">Wikipedia, Papa Gelasio II</a></li>",
+    "</ul>",
+    "<h2>Da verificare</h2>",
+    "<ul>",
+    "<li>Bozza compilata da fonti pubbliche, non da chi conosce il posto: va riletta prima di pubblicarla. Poi questa sezione si toglie; le fonti possono restare.</li>",
+    "<li>Il cognome: la fonte dà «Coniuolo», altre versioni circolano. Nel testo non c’è.</li>",
+    "<li>L’anno di nascita è incerto, e così l’anno in cui fu fatto cardinale (1082 o 1088).</li>",
+    "<li>Diverse fonti raccontano che, fuggito da Roma subito dopo l’elezione, fu consacrato proprio a Gaeta nel marzo 1118: la fonte consultata non lo dice. Se confermato, è il fatto che lo lega di più alla città.</li>",
+    "<li>Un luogo di Gaeta legato a lui (una lapide, la casa natale) per metterlo sulla mappa: nessuna fonte ne parla.</li>",
+    "</ul>"
+  ],
+  "fields": {
+    "life_dates": "Gaeta, 1060 circa – Cluny, 29 gennaio 1119"
+  }
+}
