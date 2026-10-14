@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch, watchEffect } from 'vue'
 
 // The mobile home's sheet (spec/design.md D3): the map fills the screen and
 // this sits over it, already open with content in it. Dragged up it is a list
@@ -23,6 +23,12 @@ const height = computed(() =>
   dragHeight.value !== null ? `${dragHeight.value}px` : SNAPS[snap.value]!.height,
 )
 const isOpen = computed(() => snap.value > 0)
+
+// The map keeps its OpenStreetMap credit just above the sheet's edge
+// (MapStage), so the sheet says how tall it is — as the same length it is
+// drawn with, so nothing has to be measured.
+watchEffect(() => document.documentElement.style.setProperty('--sheet-h', height.value))
+onBeforeUnmount(() => document.documentElement.style.removeProperty('--sheet-h'))
 
 // The drag is the fast path and has no keyboard equivalent, so the handle is
 // a real button that cycles the stops — same pattern as the manual lat/lng

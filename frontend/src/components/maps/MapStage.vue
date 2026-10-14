@@ -72,6 +72,29 @@ const controlsLeft = computed(() =>
   isDesktop.value && route.meta.fullBleed ? `${HOME_COLUMN + 16 + 16}px` : '0px',
 )
 
+// The bottom-right corner holds Leaflet's attribution — the OpenStreetMap
+// credit the tile policy requires to be visible — and on most layouts
+// something of ours sits on that corner. It moves to where the map is still
+// in view: left of the narrow panel; above "Allarga la mappa" in the phone's
+// strip (D18) and above "Torna alla scheda" once that strip is enlarged; and
+// on the phone's home, riding the sheet's edge (the sheet publishes its height
+// as `--sheet-h`) but never higher than just below "Livelli" — with the sheet
+// fully up the map is a sliver under the menu, and the credit goes behind the
+// sheet with it rather than under the button. Behind a wide panel it stays
+// where it is, veiled with the rest of the map.
+const controlsRight = computed(() =>
+  isDesktop.value && route.meta.panel === 'narrow' ? 'calc(36rem + 0.75rem)' : '0px',
+)
+const controlsBottom = computed(() => {
+  if (isDesktop.value) return '0px'
+  if (route.meta.fullBleed) {
+    return 'min(var(--sheet-h, 0px), calc(100% - var(--header-h, 0px) - 4.5rem))'
+  }
+  if (route.meta.panel !== 'narrow') return '0px'
+  // RoutePanel lays the strip out below the menu, hence the header's height.
+  return route.query.mappa === '1' ? '4.25rem' : 'calc(100% - var(--header-h, 0px) - 8.25rem)'
+})
+
 // While a form draws on the map, nothing on it navigates: opening a pin would
 // unmount the form and lose what it holds. The click still reaches the map,
 // where the form decides what it means (D19).
@@ -122,7 +145,15 @@ onMounted(mapStore.load)
 
 <template>
   <!-- Edge to edge, under the menu too (D14): the menu floats over the map. -->
-  <div class="fixed inset-0 z-0" :inert="covered" :style="{ '--map-controls-left': controlsLeft }">
+  <div
+    class="fixed inset-0 z-0"
+    :inert="covered"
+    :style="{
+      '--map-controls-left': controlsLeft,
+      '--map-controls-right': controlsRight,
+      '--map-controls-bottom': controlsBottom,
+    }"
+  >
     <GaetaMap
       :pins="tourOpen || restricted ? [] : mapStore.visiblePins"
       :features="shownFeatures"
@@ -181,5 +212,34 @@ div :deep(.leaflet-top) {
 
 div :deep(.leaflet-left) {
   left: var(--map-controls-left, 0px);
+}
+
+div :deep(.leaflet-right) {
+  right: var(--map-controls-right, 0px);
+}
+
+div :deep(.leaflet-bottom) {
+  bottom: var(--map-controls-bottom, 0px);
+}
+
+/* The OpenStreetMap credit, in the app's colours rather than Leaflet's: an
+   opaque surface, because Leaflet's 80% white lets a dark tile pull its blue
+   link under 4.5:1 (ADR-0005), and the link underlined, so it is told apart
+   from the text by more than its colour (1.4.1). */
+div :deep(.leaflet-control-attribution) {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border-top-left-radius: 0.375rem;
+}
+
+div :deep(.leaflet-control-attribution a) {
+  color: var(--color-sea);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+div :deep(.leaflet-control-attribution a:focus-visible) {
+  outline: 2px solid var(--color-sea);
+  outline-offset: 2px;
 }
 </style>

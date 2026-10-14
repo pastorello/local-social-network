@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import MainTitle from '@/components/typography/MainTitle.vue'
+import { OSM_COPYRIGHT_URL } from '@/lib/osm'
 
 // Il progetto (spec/design.md D21): the credits surface D11 asked for. It was a
 // footer until the map went under every page (D13) — there is no route left
@@ -71,10 +72,22 @@ const heading = 'mb-3 text-xs font-semibold tracking-[0.12em] text-muted upperca
       aria-label="Crediti"
       class="mt-10 flex flex-col gap-3 border-t border-hairline pt-6 text-sm text-muted sm:flex-row sm:items-baseline sm:justify-between"
     >
-      <p class="max-w-[60ch]">
-        Le schede di questo archivio sono scelte per merito editoriale: nessuna presenza è
-        acquistata.
-      </p>
+      <div class="max-w-[60ch] space-y-3">
+        <p>
+          Le schede di questo archivio sono scelte per merito editoriale: nessuna presenza è
+          acquistata.
+        </p>
+        <!-- The base map's credit, repeated where a reader looks for credits:
+        the map shows it in its corner, but a corner can be veiled by a page. -->
+        <p>
+          Mappa: © contributori di
+          <a
+            :href="OSM_COPYRIGHT_URL"
+            class="text-sea underline underline-offset-4 hover:text-sea-deep"
+            >OpenStreetMap</a
+          >, dati disponibili con licenza ODbL.
+        </p>
+      </div>
       <p>© {{ year }} Vivere Gaeta</p>
     </section>
   </article>
