@@ -33,6 +33,7 @@ import type { MapEditor, MapFocus } from '@/stores/map'
 import type { ReportPin } from '@/definitions/interfaces/Report'
 import { layerColor } from '@/lib/mapLayers'
 import { mapText } from '@/lib/mapText'
+import { OSM_ATTRIBUTION, OSM_TILE_URL } from '@/lib/osm'
 import { keepMarkersOutOfTabOrder } from '@/lib/leafletKeyboard'
 import { readToken } from '@/lib/tokens'
 import { statusColor } from '@/lib/reportStatus'
@@ -471,7 +472,8 @@ onBeforeUnmount(() => {
   <div ref="wrapper" class="h-full w-full" :class="{ 'cursor-crosshair': placing || editor }">
     <l-map v-model:zoom="zoom" :center="center" :use-global-leaflet="true" @ready="onReady">
       <l-tile-layer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        :url="OSM_TILE_URL"
+        :attribution="OSM_ATTRIBUTION"
         layer-type="base"
         name="OpenStreetMap"
       ></l-tile-layer>
