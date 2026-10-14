@@ -18,7 +18,8 @@ from ricette.models import Ricetta
 
 pytestmark = pytest.mark.django_db
 
-# A point inside each seeded draft, from the OSM nodes the drafts were drawn on.
+# A point inside each zone, from OpenStreetMap's nodes and beaches, in the
+# zones' own order (0005's six, then the two 0006 added).
 INSIDE = {
     'gaeta-medievale': (41.2085529, 13.5865835),
     'serapo': (41.2119628, 13.5637889),
@@ -26,9 +27,11 @@ INSIDE = {
     'montagna-spaccata': (41.2047639, 13.5702449),
     'porto-salvo': (41.2304464, 13.566365),
     'piana-di-sant-agostino': (41.2337326, 13.4946062),
+    'ariana': (41.2132, 13.5418),
+    'arenauta': (41.2190, 13.5315),
 }
-# Between Serapo and Sant'Agostino, on the beaches no draft covers yet.
-NOWHERE = (41.2200, 13.5300)
+# Monte Lauro, on the hills inside the comune: no zone reaches it.
+NOWHERE = (41.2484, 13.5426)
 
 
 def _card(author, title, is_published=True, **extra):
@@ -69,10 +72,10 @@ def test_a_multipolygon_holds_what_any_of_its_parts_does():
     assert not geometry_contains(multi, 41.5, 14.5)
 
 
-# --- the seeded drafts ---
+# --- the seeded zones ---
 
 
-def test_the_six_drafts_are_seeded_and_each_holds_its_own_place():
+def test_the_eight_zones_are_seeded_and_each_holds_its_own_place():
     zones = list(Zona.objects.all())
 
     assert [zone.slug for zone in zones] == list(INSIDE)
@@ -144,6 +147,7 @@ def test_a_zone_counts_published_places_only(api_client, citizen):
     assert counts == {
         'gaeta-medievale': 2, 'serapo': 1, 'monte-orlando': 0,
         'montagna-spaccata': 0, 'porto-salvo': 0, 'piana-di-sant-agostino': 0,
+        'ariana': 0, 'arenauta': 0,
     }
     assert body[0]['name'] == 'Gaeta Medievale'
     assert body[0]['geometry']['type'] == 'Polygon'

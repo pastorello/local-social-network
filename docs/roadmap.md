@@ -232,6 +232,10 @@ done:
   `seed_demo` the fourth). It is built now, on a near-empty archive, and its
   invitation on `/benvenuto` opens itself once a zone has a published place —
   so the page still waits on content (item 4), but the code does not.
+  **The zones were redrawn on OpenStreetMap on 2026-10-14** (`maps` migration
+  0006): on land, no overlaps, eight with Ariana and Arenauta. They stay
+  editorial until the Comune's map of the quartieri arrives — the author has
+  asked for it — and that map becomes an overlay, not the zones (D2).
 - **Geolocation** — "you are here" plus what is around you while walking
   Gaeta. The author wants it and it fits the product; it is a **feature, not a
   style**: browser permission, HTTPS (so it depends on item 3), sane handling

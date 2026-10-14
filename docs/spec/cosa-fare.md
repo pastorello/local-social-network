@@ -122,6 +122,21 @@ Comune's perimetrazione turns up, it becomes an **overlay** (the mechanism
 exists, ADR-0006), not the zones: comitati divide residents, and a guest thinks
 in places — Monte Orlando has no residents and is a zone of its own.
 
+**Redrawn on OpenStreetMap, 2026-10-14** (`maps/migrations/0006`). The hand-drawn
+drafts ran into the sea (17–54% of each) and left the beaches along the Flacca
+in no zone. The outlines are now cut on the comune's own OSM boundary, which
+follows the coastline, with a margin of about 40 m out to sea so that a pin on
+the shoreline is not lost; borders follow what a reader finds on the ground —
+the Parco Urbano Monte Orlando's perimeter, Porta Carlo III and Porta di Terra,
+Via Flacca, Corso Italia and Via Firenze, the headlands between beaches — and
+no two zones overlap. The author added **Ariana** (with Quaranta Remi) and
+**Arenauta** (with San Vito) as zones of their own, and kept **Porto Salvo** as
+the whole modern town, from Piazza XIX Maggio to Formia, rather than inventing a
+border through the Borgo — until the Comune's own map of the quartieri arrives.
+The migration redraws a zone only while it still holds 0005's draft, so a
+correction made in the admin survives it. The outlines are derived from OSM
+data and carry its licence (ODbL 1.0, © OpenStreetMap contributors).
+
 **A card joins a zone by where it is, never by a collaborator's choice**:
 a place by its pin; a festa when its route passes through; a percorso where it
 **starts**; a raccolta wherever **any** of its stops is. A place outside every

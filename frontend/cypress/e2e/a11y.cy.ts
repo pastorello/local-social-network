@@ -155,7 +155,7 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
 
   // «Cosa si può fare qui» (spec cosa-fare.md Part −1): the guest's second
   // way in from /benvenuto. The seeded church is at the map's centre, which is
-  // in the seeded draft of Porto Salvo.
+  // in the seeded zone of Porto Salvo.
   it('Cosa si può fare qui, a zone on a wide screen and the chooser on a phone', () => {
     cy.viewport(1280, 800)
     cy.visit('/cosa-fare?zona=porto-salvo')

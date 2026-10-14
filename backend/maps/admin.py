@@ -56,10 +56,10 @@ class OverlayAdmin(admin.ModelAdmin):
 
 @admin.register(Zona)
 class ZonaAdmin(admin.ModelAdmin):
-    """The editorial zones (spec cosa-fare.md Part −1, D2). The six seeded on
-    2026-10-13 are drafts drawn by hand: correct them here. A card joins a
-    zone by where its pin is, so moving a boundary moves cards between zones
-    with no other edit."""
+    """The editorial zones (spec cosa-fare.md Part −1, D2). Seeded on
+    2026-10-13 and redrawn on OpenStreetMap on 2026-10-14 (migration 0006),
+    still indicative: correct them here. A card joins a zone by where its pin
+    is, so moving a boundary moves cards between zones with no other edit."""
 
     list_display = ('name', 'slug', 'position')
     list_editable = ('position',)
