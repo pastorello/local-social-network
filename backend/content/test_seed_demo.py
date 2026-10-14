@@ -24,11 +24,50 @@ def test_it_fills_every_zone_with_marked_published_cards_and_no_images(settings,
     call_command('seed_demo')
 
     cards = Card.objects.all()
-    assert cards.count() == 15
+    assert cards.count() == 17
     assert all(card.title.startswith('[DEMO] ') and card.is_published for card in cards)
     assert not CardImage.objects.exists()
     counts = {zone['slug']: zone['count'] for zone in api_client.get('/api/map/zone/').json()}
     assert all(count > 0 for count in counts.values()), counts
+
+
+# Where each demo card is meant to land (maps/migrations/0006). None of them
+# is meant for «Altrove a Gaeta».
+EXPECTED_ZONES = {
+    'Spiaggia di prova': ['serapo'],
+    'Belvedere di prova': ['monte-orlando'],
+    'Sentiero di prova': ['monte-orlando'],
+    'Museo di prova': ['gaeta-medievale'],
+    'Torre di prova': ['gaeta-medievale'],
+    'Spiaggia lunga di prova': ['piana-di-sant-agostino'],
+    'Caletta di prova': ['ariana'],
+    'Spiaggia sotto la strada di prova': ['arenauta'],
+    'Giardino di prova': ['porto-salvo'],
+    'Chiesa di prova del centro': ['gaeta-medievale'],
+    'Santuario di prova': ['montagna-spaccata'],
+    'Chiesa di prova del borgo': ['porto-salvo'],
+    'Festa di prova': ['serapo', 'porto-salvo'],
+}
+
+
+def test_every_demo_place_lands_in_the_zone_it_was_put_in(settings, api_client):
+    settings.DEBUG = True
+
+    call_command('seed_demo')
+
+    zones = {
+        entry['title'].removeprefix('[DEMO] '): entry['zones']
+        for entry in api_client.get('/api/map/features/').json()
+    }
+    assert zones == EXPECTED_ZONES
+    tours = {
+        row['title'].removeprefix('[DEMO] '): row['zones']
+        for row in api_client.get('/api/itinerari/').json()['results']
+    }
+    assert tours == {
+        'Giro di prova nel centro': ['gaeta-medievale'],
+        'Raccolta di prova: il mare': ['serapo', 'piana-di-sant-agostino', 'ariana', 'arenauta'],
+    }
 
 
 def test_running_it_again_replaces_rather_than_doubles(settings):
@@ -37,7 +76,7 @@ def test_running_it_again_replaces_rather_than_doubles(settings):
     call_command('seed_demo')
     call_command('seed_demo')
 
-    assert Card.objects.count() == 15
+    assert Card.objects.count() == 17
 
 
 def test_remove_takes_only_what_it_made(settings, citizen):

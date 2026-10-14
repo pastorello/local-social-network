@@ -31,13 +31,15 @@ BODY = (
     'non racconta niente di vero. Si cancella con <code>seed_demo --remove</code>.</p>'
 )
 
-# A point inside each seeded draft zone (maps/migrations/0005_seed_zones.py).
+# A point inside each seeded zone (maps/migrations/0005 and 0006).
 SERAPO = (41.2119, 13.5638)
 MEDIEVALE = (41.2086, 13.5866)
 ORLANDO = (41.2071, 13.5767)
 SPACCATA = (41.2048, 13.5702)
 PORTO_SALVO = (41.2304, 13.5664)
 SANT_AGOSTINO = (41.2337, 13.4946)
+ARIANA = (41.2132, 13.5418)
+ARENAUTA = (41.2190, 13.5315)
 
 LUOGHI = (
     ('Spiaggia di prova', 'spiaggia', SERAPO, 'A piedi dal lungomare.'),
@@ -46,6 +48,8 @@ LUOGHI = (
     ('Museo di prova', 'museo', MEDIEVALE, ''),
     ('Torre di prova', 'monumento', MEDIEVALE, ''),
     ('Spiaggia lunga di prova', 'spiaggia', SANT_AGOSTINO, 'In auto, lungo la Flacca.'),
+    ('Caletta di prova', 'spiaggia', ARIANA, 'Scendendo dalla Flacca.'),
+    ('Spiaggia sotto la strada di prova', 'spiaggia', ARENAUTA, 'In auto, lungo la Flacca.'),
     ('Giardino di prova', 'parco', PORTO_SALVO, ''),
 )
 CHIESE = (
@@ -102,7 +106,8 @@ class Command(BaseCommand):
         self._tour(author, 'Giro di prova nel centro', Itinerario.PERCORSO, 'citta',
                    [places['Torre di prova'], places['Chiesa di prova del centro'], places['Museo di prova']])
         self._tour(author, 'Raccolta di prova: il mare', Itinerario.RACCOLTA, 'mare',
-                   [places['Spiaggia di prova'], places['Spiaggia lunga di prova']])
+                   [places['Spiaggia di prova'], places['Caletta di prova'],
+                    places['Spiaggia sotto la strada di prova'], places['Spiaggia lunga di prova']])
 
         count = Card.objects.filter(title__startswith=PREFIX).count()
         self.stdout.write(f'Seeded {count} demo card(s); replaced {removed}. Remove them with --remove.')
