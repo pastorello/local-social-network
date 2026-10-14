@@ -1,0 +1,37 @@
+{
+  "type": "luoghi",
+  "title": "Grotta del Turco",
+  "body_html": [
+    "<p>Sul versante di Monte Orlando che guarda Serapo, una delle fenditure della Montagna Spaccata scende fino al mare e finisce in una grotta dove l’acqua entra fra le pareti bianche. È la Grotta del Turco, e ci si arriva dal santuario della Santissima Trinità.</p>",
+    "<p>Si scende per una scalinata di circa trecento gradini, fra pareti umide. Per una decina d’anni la discesa è rimasta chiusa, per il rischio di frane dalla parete sopra: dal 15 agosto 2025, con i gradini rifatti e messi in sicurezza, si è tornati a scendere fino all’acqua. Si entra con un’offerta libera, che serve alla manutenzione.</p>",
+    "<p>La grotta si vede anche dal mare, in barca. Della leggenda della montagna spaccata e della Mano del Turco racconta la scheda del santuario.</p>",
+    "<h2>Fonti</h2>",
+    "<ul>",
+    "<li><a href=\"https://siviaggia.it/notizie/riapertura-grotta-del-turco-montagna-spaccata-gaeta/550496/\" rel=\"noopener noreferrer\">SiViaggia, «Riapre la Grotta del Turco e la Montagna Spaccata», agosto 2025</a></li>",
+    "<li><a href=\"https://www.parchilazio.it/schede-32058-the_riviera_di_ulisse_regional_park\" rel=\"noopener noreferrer\">Parchi del Lazio, Parco Riviera di Ulisse</a></li>",
+    "<li><a href=\"https://it.wikipedia.org/wiki/Santuario_della_Santissima_Trinit%C3%A0_(Gaeta)\" rel=\"noopener noreferrer\">Wikipedia, Santuario della Santissima Trinità (Gaeta)</a></li>",
+    "<li><a href=\"https://www.openstreetmap.org/node/1845213888\" rel=\"noopener noreferrer\">OpenStreetMap, Grotta del Turco e Montagna Spaccata</a> (© OpenStreetMap contributors, ODbL): posizione del pin</li>",
+    "</ul>",
+    "<h2>Da verificare</h2>",
+    "<ul>",
+    "<li>Bozza compilata da fonti pubbliche, non da chi conosce il posto: va riletta prima di pubblicarla. Poi questa sezione si toglie; le fonti possono restare.</li>",
+    "<li>Gli orari: da martedì a domenica, 9–12 e 14:30–17:30, secondo SiViaggia ad agosto 2025; OpenStreetMap ne ha un’altra versione per l’inverno. Confermarli col santuario prima di scriverli, con la loro data (ADR-0008).</li>",
+    "<li>Un articolo senza data dice che la scalinata si può scendere solo fino al 65° gradino, per lavori. Controllare lo stato di oggi.</li>",
+    "<li>Il genere: nessuno di quelli esistenti va bene per una grotta, e ho scelto «punto panoramico». Forse serve un genere «Grotta» o «Luogo naturale», che si aggiunge dall’admin.</li>",
+    "<li>Si sovrappone in parte alla scheda del santuario. Decidere se tenerle separate, come qui, o farne una sola.</li>",
+    "<li>L’accesso è difficile per chi ha problemi di mobilità, e con pioggia o vento può essere sospeso: lo dice una sola fonte.</li>",
+    "<li>Il pin è sul cancello in cima alla scalinata, dal punto di OpenStreetMap.</li>",
+    "</ul>"
+  ],
+  "fields": {
+    "genre": "punto-panoramico",
+    "how_to_get_there": "Dal santuario della Santissima Trinità, alla Montagna Spaccata, scendendo una scalinata di circa trecento gradini. Servono scarpe comode."
+  },
+  "pins": [
+    {
+      "lat": 41.20568,
+      "lng": 13.57127,
+      "label": "Ingresso alla scalinata"
+    }
+  ]
+}

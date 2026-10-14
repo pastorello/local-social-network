@@ -13,6 +13,8 @@ from chiese.models import Chiesa
 from content.management.commands.seed_drafts import DRAFTS_DIR, REDAZIONE_EMAIL
 from content.models import Availability, Card, CardImage, MapFeature
 from luoghi.models import Luogo
+from maps.models import Zona
+from maps.zones import zones_containing_any
 
 pytestmark = pytest.mark.django_db
 
@@ -62,6 +64,33 @@ def test_it_never_overwrites_a_card_that_is_already_there(tmp_path, citizen):
     assert list(Card.objects.all()) == [corrected]
     corrected.refresh_from_db()
     assert corrected.body_html == '<p>Corretto a mano.</p>' and corrected.is_published
+
+
+# Where each seeded luogo is meant to land (maps/migrations/0006): the batch of
+# 2026-10-14 was written to give every zone a real place.
+EXPECTED_LUOGHI_ZONES = {
+    'Castello angioino-aragonese': ['gaeta-medievale'],
+    'Mausoleo di Lucio Munazio Planco': ['monte-orlando'],
+    'Parco di Monte Orlando': ['monte-orlando'],
+    'Grotta del Turco': ['montagna-spaccata'],
+    'Spiaggia di Serapo': ['serapo'],
+    'Spiaggia dell’Ariana': ['ariana'],
+    'Spiaggia dei Quaranta Remi': ['ariana'],
+    'Spiaggia dell’Arenauta': ['arenauta'],
+    'Spiaggia di San Vito': ['arenauta'],
+    'Spiaggia di Sant’Agostino': ['piana-di-sant-agostino'],
+}
+
+
+def test_every_seeded_luogo_lands_in_the_zone_it_was_written_for():
+    call_command('seed_drafts')
+
+    zones = list(Zona.objects.all())
+    landed = {
+        luogo.card.title: zones_containing_any(zones, luogo.card.map_features.values('lat', 'lng'))
+        for luogo in Luogo.objects.select_related('card')
+    }
+    assert landed == EXPECTED_LUOGHI_ZONES
 
 
 def test_running_it_twice_creates_nothing_the_second_time():

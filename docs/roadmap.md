@@ -166,6 +166,7 @@ build questions into input ones:
   Seeded drafts are material for the author's reading, not a substitute for
   it. **Since 2026-10-14 they are in git** (`backend/content/drafts/`, loaded
   by `seed_drafts`), so they no longer depend on one database file surviving.
+  A second batch the same day added ten luoghi, one or more per zone.
 - **At least one published itinerary** (added 2026-09-18, with the tours).
   `/benvenuto` is the one address printed on a B&B's card, and it lists only
   the intents that have a published tour — so with none it tells a guest the

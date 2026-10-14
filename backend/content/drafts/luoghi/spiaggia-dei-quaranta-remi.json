@@ -1,0 +1,33 @@
+{
+  "type": "luoghi",
+  "title": "Spiaggia dei Quaranta Remi",
+  "body_html": [
+    "<p>Fra Fontania e l’Ariana, sotto la costa alta, c’è una piccola spiaggia che da terra non si raggiunge: si arriva solo dal mare, in barca o a nuoto. Con la Fontanina e la Strega Mugliera è una delle tre spiagge di Gaeta che si toccano soltanto dall’acqua.</p>",
+    "<p>Su questo tratto di costa si apre anche il Pozzo del Diavolo, una grotta fra Fontania e i Quaranta Remi, anch’essa raggiungibile solo via mare.</p>",
+    "<h2>Fonti</h2>",
+    "<ul>",
+    "<li><a href=\"https://it.wikipedia.org/wiki/Gaeta\" rel=\"noopener noreferrer\">Wikipedia, Gaeta</a>, l’elenco delle spiagge e le aree naturali</li>",
+    "<li><a href=\"https://www.openstreetmap.org/way/67405737\" rel=\"noopener noreferrer\">OpenStreetMap, spiaggia dei Quaranta Remi</a> (© OpenStreetMap contributors, ODbL): posizione del pin</li>",
+    "</ul>",
+    "<h2>Da verificare</h2>",
+    "<ul>",
+    "<li>Bozza compilata da fonti pubbliche, non da chi conosce il posto: va riletta prima di pubblicarla. Poi questa sezione si toglie; le fonti possono restare.</li>",
+    "<li>Una sola fonte vera, Wikipedia. Una guida turistica dice che ci si arriva anche a piedi: chi conosce il posto sa se è così.</li>",
+    "<li>Un’altra guida scrive «Quaranta Remi (o dell’Arenauta)», come se fossero la stessa spiaggia. Secondo Wikipedia e OpenStreetMap sono due spiagge diverse, e qui sono due schede.</li>",
+    "<li>Da dove viene il nome: nessuna fonte lo dice.</li>",
+    "<li>Il Pozzo del Diavolo ha anche un altro nome, «delle Chiavi», secondo Wikipedia. Non è nel testo.</li>",
+    "<li>Una spiaggia raggiungibile solo dal mare va bene come scheda per chi visita, o è meglio dentro un itinerario in barca?</li>",
+    "</ul>"
+  ],
+  "fields": {
+    "genre": "spiaggia",
+    "how_to_get_there": "Solo dal mare, in barca o a nuoto."
+  },
+  "pins": [
+    {
+      "lat": 41.21092,
+      "lng": 13.54451,
+      "label": "Quaranta Remi"
+    }
+  ]
+}
