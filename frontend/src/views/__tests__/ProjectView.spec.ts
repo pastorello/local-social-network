@@ -53,11 +53,12 @@ describe('Il progetto', () => {
     expect(wrapper.text()).not.toMatch(/patrocinio|sponsor/i)
   })
 
-  it('credits OpenStreetMap for the map, with its copyright page (ODbL)', async () => {
+  it('credits OpenStreetMap for the map and the zones, with its copyright page (ODbL)', async () => {
     const wrapper = await mountProject()
     const osm = wrapper.findAll('a').find((a) => a.text() === 'OpenStreetMap')
 
     expect(osm?.attributes('href')).toBe('https://www.openstreetmap.org/copyright')
+    expect(wrapper.text()).toContain('Mappa e zone')
     expect(wrapper.text()).toContain('ODbL')
   })
 

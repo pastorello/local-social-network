@@ -77,10 +77,12 @@ const heading = 'mb-3 text-xs font-semibold tracking-[0.12em] text-muted upperca
           Le schede di questo archivio sono scelte per merito editoriale: nessuna presenza è
           acquistata.
         </p>
-        <!-- The base map's credit, repeated where a reader looks for credits:
-        the map shows it in its corner, but a corner can be veiled by a page. -->
+        <!-- The OpenStreetMap credit, where a reader looks for credits: the
+        base map shows it in its corner, but a corner can be veiled by a page,
+        and the zones of «Cosa si può fare qui» are derived from OSM data too
+        (maps/migrations/0006) and have no corner of their own. -->
         <p>
-          Mappa: © contributori di
+          Mappa e zone: © contributori di
           <a
             :href="OSM_COPYRIGHT_URL"
             class="text-sea underline underline-offset-4 hover:text-sea-deep"
