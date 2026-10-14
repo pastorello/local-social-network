@@ -329,6 +329,18 @@ batch, and whoever publishes these, needs them:
   holds the truth and the file is only its origin. The command refuses what
   the rules below forbid — images, routes, dialect, tours, a published flag,
   a body without *Fonti* and *Da verificare*.
+- **The second batch, 2026-10-14: ten luoghi**, one or more in every zone of
+  «Cosa si può fare qui» that had no real place — the castle, the mausoleum
+  and the park of Monte Orlando, the Grotta del Turco, and six beaches from
+  Serapo to Sant'Agostino. Pins from OpenStreetMap, credited in each card's
+  *Fonti*; access state left unknown except "all'aperto, senza porta" on
+  three public beaches, flagged for confirmation; no hours, because none came
+  from a source that could date them (ADR-0008). What it found: the beaches
+  are documented almost only by bathing establishments' own pages, so their
+  cards say little on purpose; sources confuse Quaranta Remi with Arenauta,
+  and OSM has two beaches named Arenauta; and the genres have nothing for a
+  sea cave, so the Grotta del Turco went in as a *punto panoramico* until the
+  author decides whether a genre is missing.
 - **Not every type can be seeded.** Dialect words found on the web are not
   reliable, and a recommended book that does not exist is the worst mistake
   this archive could make. Dialetto is written by people who speak it (with

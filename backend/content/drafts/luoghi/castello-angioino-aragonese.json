@@ -1,0 +1,36 @@
+{
+  "type": "luoghi",
+  "title": "Castello angioino-aragonese",
+  "body_html": [
+    "<p>In cima al quartiere medievale, sulla collina che domina il porto, il castello di Gaeta è in realtà due edifici attaccati, costruiti a secoli di distanza: più in basso, verso ovest, il castello angioino; più in alto, verso est, quello aragonese.</p>",
+    "<p>Le origini sono incerte, forse una fortezza del VI o VII secolo. Le prime notizie sicure risalgono a Federico II di Svevia, che la fece fortificare negli anni Venti del Duecento; Carlo II d’Angiò la ampliò nel 1289. L’ala aragonese la volle Carlo V d’Asburgo dopo il 1536, negli anni in cui le sue opere fecero di Gaeta una delle piazzeforti più munite d’Europa. Nel torrione coperto dalla cupola, Ferdinando II delle Due Sicilie fece ricavare una cappella nel 1849.</p>",
+    "<p>Per più di un secolo l’ala angioina è stata un carcere militare. Fra gli ultimi detenuti ci furono due criminali di guerra nazisti: Herbert Kappler, responsabile dell’eccidio delle Fosse Ardeatine, e Walter Reder, legato alle stragi di Marzabotto e di Sant’Anna di Stazzema. Oggi l’ala angioina è affidata all’Università di Cassino e del Lazio Meridionale, che la usa per convegni; l’aragonese ospita la scuola nautica della Guardia di Finanza.</p>",
+    "<h2>Fonti</h2>",
+    "<ul>",
+    "<li><a href=\"https://it.wikipedia.org/wiki/Castello_di_Gaeta\" rel=\"noopener noreferrer\">Wikipedia, Castello di Gaeta</a></li>",
+    "<li><a href=\"https://it.wikipedia.org/wiki/Gaeta\" rel=\"noopener noreferrer\">Wikipedia, Gaeta</a>, la sezione sul castello</li>",
+    "<li><a href=\"https://www.artribune.com/turismo/2020/08/castello-angioino-gaeta/\" rel=\"noopener noreferrer\">Artribune, «Castello Angioino di Gaeta», agosto 2020</a></li>",
+    "<li><a href=\"https://www.openstreetmap.org/node/7976652885\" rel=\"noopener noreferrer\">OpenStreetMap, Castello Angioino-Aragonese</a> (© OpenStreetMap contributors, ODbL): posizione del pin</li>",
+    "</ul>",
+    "<h2>Da verificare</h2>",
+    "<ul>",
+    "<li>Bozza compilata da fonti pubbliche, non da chi conosce il posto: va riletta prima di pubblicarla. Poi questa sezione si toglie; le fonti possono restare.</li>",
+    "<li>Gli anni del carcere: Wikipedia (da G. Tallini) dice dal 1862 al 1980, Artribune dice che chiuse il 30 giugno 1990. Reder fu liberato nel 1985, quindi il 1980 sembra troppo presto. Per questo nel testo non ci sono date.</li>",
+    "<li>Federico II: 1223 in una pagina di Wikipedia, «tra il 1222 e il 1234» in un’altra. Nel testo è «negli anni Venti del Duecento».</li>",
+    "<li>Le visite: nel 2020 l’ala angioina era aperta dal venerdì alla domenica, con un accordo fra l’Università e il Gaeta Sporting Club (Artribune). Il portale italia.it parla invece di visite guidate solo in alcuni periodi. Da chiedere all’Università prima di scrivere orari, e con la loro data (ADR-0008).</li>",
+    "<li>Secondo Artribune, nel 1870 nell’ala aragonese fu imprigionato Giuseppe Mazzini, e quell’ala non si visita. È una sola fonte, per questo non è nel testo.</li>",
+    "<li>Il pin è sul punto «Castello Angioino-Aragonese» di OpenStreetMap: spostarlo sull’ingresso dei visitatori.</li>",
+    "</ul>"
+  ],
+  "fields": {
+    "genre": "castello",
+    "how_to_get_there": "In cima al quartiere medievale, sulla collina che domina il porto."
+  },
+  "pins": [
+    {
+      "lat": 41.20752,
+      "lng": 13.58455,
+      "label": "Castello"
+    }
+  ]
+}

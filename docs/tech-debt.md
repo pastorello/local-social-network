@@ -21,7 +21,7 @@
 
 | Gate | Command | Result |
 |---|---|---|
-| Backend tests | `python -m pytest` | **570 passed** in ~13s |
+| Backend tests | `python -m pytest` | **571 passed** in ~13s |
 | Backend lint | `python -m ruff check .` | clean |
 | Frontend tests | `npm run test:unit -- run` | **271 passed**, 56 files |
 | Frontend lint | `npx oxlint` · `npx eslint .` | clean |
@@ -29,7 +29,7 @@
 | Build | `npm run build` | green, ~2s |
 | E2E | `npm run test:e2e` | **8 spec files, 49 tests** — green in CI |
 
-Every row above was run again on 2026-10-14, after `seed_drafts` (17 tests)
+Every row above was run again on 2026-10-14, after `seed_drafts` (18 tests)
 and the OpenStreetMap credit (#106, 3) joined the 2026-10-13 count of 547 / 268
 — except the last, which needs a seeded API
 on `:8000` and a production build; it is counted from the specs and taken from
