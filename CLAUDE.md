@@ -113,6 +113,15 @@ hours, a festa, two ricette, two tours — and no images, on purpose;
 `seed_demo --remove` takes away exactly those. They are not content: real
 cards follow content.md's seeding rules.
 
+**The drafts written from public sources live in git**, one JSON file per card
+under `backend/content/drafts/<type>/`, and `python manage.py seed_drafts`
+creates them (2026-10-14, spec content.md's seeding section): unpublished,
+signed by `redazione@vivere-gaeta.local`, through each type's own write
+serializer and the shared point/availability parsers. **Not DEBUG-only** — it
+is the archive's raw material — and safe to re-run: a card whose type already
+holds an original with the same title is skipped, so edits made in the app are
+never overwritten. `--check` validates without writing.
+
 Create a superuser via `python manage.py shell`:
 
 ```python

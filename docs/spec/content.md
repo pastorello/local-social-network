@@ -317,6 +317,18 @@ batch, and whoever publishes these, needs them:
   coordinates. A procession's route cannot be reconstructed from "through the
   main streets": it is drawn by someone who has walked it, and until then the
   route stays empty.
+- **Kept in git, loaded by a command** (2026-10-14). The first batch lived
+  only in one developer's SQLite file, so a broken database would have taken
+  it along. Every seeded draft is now a JSON file under
+  `backend/content/drafts/<type>/`, and `python manage.py seed_drafts` turns
+  them into cards: drafts only, signed by *Redazione*, and **never over a card
+  that already exists** — same type and title is skipped whoever wrote it, so
+  a correction made in the app survives every later run. It is not DEBUG-only,
+  because a production database is meant to be born with these drafts. The
+  files are the drafts *as seeded*; once a card is edited in the app, the app
+  holds the truth and the file is only its origin. The command refuses what
+  the rules below forbid — images, routes, dialect, tours, a published flag,
+  a body without *Fonti* and *Da verificare*.
 - **Not every type can be seeded.** Dialect words found on the web are not
   reliable, and a recommended book that does not exist is the worst mistake
   this archive could make. Dialetto is written by people who speak it (with

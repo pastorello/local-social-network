@@ -1,0 +1,28 @@
+{
+  "type": "chiese",
+  "title": "Santuario della Montagna Spaccata",
+  "body_html": [
+    "<p>Sul versante di Monte Orlando che guarda Serapo, la roccia è aperta da una fenditura che scende fino al mare. Il santuario della Santissima Trinità, fondato dai benedettini nell’XI secolo, è costruito proprio lì sopra; oggi lo custodiscono i missionari del PIME.</p>",
+    "<p>La leggenda dice che la montagna si spaccò nel momento della morte di Cristo, quando il velo del tempio si squarciò. Scendendo nella fenditura si incontra la «Mano del Turco»: cinque dita impresse nella pietra, lasciate secondo la tradizione da un marinaio turco che non credeva al miracolo e sentì la roccia farsi molle sotto la mano.</p>",
+    "<p>Più in basso, un masso staccatosi nel 1434 è rimasto incastrato tra le pareti, sopra l’ingresso della Grotta del Turco; nel Cinquecento ci hanno costruito sopra una cappella. Da qui sono passati santi e papi, e la tradizione vuole che San Filippo Neri abbia vissuto per un periodo dentro la montagna.</p>",
+    "<h2>Fonti</h2>",
+    "<ul>",
+    "<li><a href=\"https://it.wikipedia.org/wiki/Santuario_della_Santissima_Trinit%C3%A0_(Gaeta)\" rel=\"noopener noreferrer\">Wikipedia, Santuario della Santissima Trinità (Gaeta)</a></li>",
+    "</ul>",
+    "<h2>Da verificare</h2>",
+    "<ul>",
+    "<li>Bozza compilata da fonti pubbliche, non da chi conosce il posto: va riletta prima di pubblicarla. Poi questa sezione si toglie; le fonti possono restare.</li>",
+    "<li>Una sola fonte consultata: il masso del 1434 e la cappella del Cinquecento vanno confermati.</li>",
+    "<li>San Filippo Neri e il suo giaciglio di pietra sono tradizione, non documento: lasciarlo detto così.</li>",
+    "<li>Accesso alla Grotta del Turco (la scala dal mare) e orari del santuario: da aggiungere, sono le prime cose che chiede chi ci va.</li>",
+    "<li>È anche una tappa naturale dell’itinerario di Monte Orlando.</li>",
+    "</ul>"
+  ],
+  "pins": [
+    {
+      "lat": 41.20683,
+      "lng": 13.57181,
+      "label": "Santuario della Santissima Trinità"
+    }
+  ]
+}
