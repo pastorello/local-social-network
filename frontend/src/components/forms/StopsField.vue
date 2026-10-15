@@ -32,8 +32,10 @@ const MAX_STOPS = 40
 const typeLabel = (key: string | null) =>
   CARD_LAYERS.find((layer) => layer.key === key)?.label ?? 'Scheda'
 
-// The cards a stop can be: the published ones with a place, as the map has
-// them. Grouped by type for the keyboard path.
+// The cards a stop can be: those with a place, as the map has them — the
+// author's own drafts too (map.md M5), which a tour may hold while it is a
+// draft; I4 refuses to publish it until they are published. Grouped by type
+// for the keyboard path.
 const candidates = computed(() =>
   CARD_LAYERS.map((layer) => ({
     label: layer.label,
@@ -237,7 +239,7 @@ const iconButton =
           <option value="">Scegli una scheda</option>
           <optgroup v-for="group in candidates" :key="group.label" :label="group.label">
             <option v-for="card in group.cards" :key="card.id" :value="card.id">
-              {{ card.title }}
+              {{ card.is_published ? card.title : `${card.title} (bozza)` }}
             </option>
           </optgroup>
         </select>

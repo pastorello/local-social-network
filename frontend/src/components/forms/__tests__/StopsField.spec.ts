@@ -12,6 +12,7 @@ const features = [
     id: 'ch1',
     type: 'chiese',
     title: 'Duomo',
+    is_published: true,
     cover: null,
     points: [{ lat: 41.21, lng: 13.57, label: '' }],
     route: [],
@@ -21,6 +22,7 @@ const features = [
     id: 'lu1',
     type: 'luoghi',
     title: 'Forno',
+    is_published: true,
     cover: null,
     points: [
       { lat: 41.2, lng: 13.5, label: 'Via Indipendenza' },

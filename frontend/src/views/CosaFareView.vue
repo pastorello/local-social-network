@@ -85,8 +85,17 @@ const inZone = (zoneSlugs: string[], slug: string): boolean =>
 // The chips: every drawn zone, and — only when something is outside them all —
 // «Altrove a Gaeta», so nothing the archive holds is unreachable from here.
 const elsewhereCount = computed(() => places.value.filter((p) => p.zones.length === 0).length)
+// A zone's count is of published places (what the public is told, map.md
+// M5); the reader's own drafts are added here only, so a zone that holds
+// nothing but their drafts can still be opened by them.
+const draftsIn = (slug: string) =>
+  places.value.filter((p) => !p.is_published && p.zones.includes(slug)).length
 const chips = computed(() => [
-  ...zones.value.map((zone) => ({ slug: zone.slug, name: zone.name, count: zone.count })),
+  ...zones.value.map((zone) => ({
+    slug: zone.slug,
+    name: zone.name,
+    count: zone.count + draftsIn(zone.slug),
+  })),
   ...(elsewhereCount.value
     ? [{ slug: ELSEWHERE, name: ELSEWHERE_NAME, count: elsewhereCount.value }]
     : []),
@@ -236,7 +245,7 @@ onBeforeUnmount(() => mapStore.setRestriction(null))
               :to="layerRoute(place.type, place.id)"
               class="font-semibold text-ink underline"
               >{{ place.title }}</RouterLink
-            >
+            ><span v-if="!place.is_published" class="text-xs text-muted"> · bozza</span>
             <p class="text-sm text-muted">
               {{ kindOf(place)
               }}<template v-if="place.access && STATE_SENTENCE[place.access]">

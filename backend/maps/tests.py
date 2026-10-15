@@ -92,6 +92,7 @@ def test_map_features_is_public_and_groups_points_by_card(api_client, make_card)
     assert response.status_code == 200
     assert response.json() == [{
         'id': str(card.id), 'type': 'chiese', 'title': 'Chiesa di Sant’Erasmo',
+        'is_published': True,
         'cover': None,
         'points': [{'lat': GAETA_LAT, 'lng': GAETA_LNG, 'label': 'Ingresso'}],
         'route': [],
@@ -114,12 +115,63 @@ def test_map_features_returns_a_feste_route_in_order(api_client, make_card):
     assert entry['points'] == []
 
 
-def test_map_features_hides_drafts(api_client, make_card):
+def test_map_features_hides_drafts_from_an_anonymous_reader(api_client, make_card):
     card = make_card(is_published=False)
     Chiesa.objects.create(card=card)
     add_point(card)
 
     assert api_client.get('/api/map/features/').json() == []
+
+
+# --- M5: drafts for whoever may already read them ---------------------------
+
+def draft_with_a_pin(make_card, title='Bozza'):
+    card = make_card(is_published=False, title=title)
+    Chiesa.objects.create(card=card)
+    add_point(card)
+    return card
+
+
+def test_an_author_sees_their_own_draft_marked_as_one(make_client, other_citizen, make_card):
+    draft = draft_with_a_pin(make_card)
+
+    entries = make_client(other_citizen).get('/api/map/features/').json()
+
+    assert [(entry['id'], entry['is_published']) for entry in entries] == [(str(draft.id), False)]
+
+
+def test_another_collaborator_does_not_see_someone_elses_draft(make_client, citizen, make_card):
+    # The rule a draft's own page follows: it 404s for them, so the map must
+    # not show them its title either.
+    draft_with_a_pin(make_card)
+
+    assert make_client(citizen).get('/api/map/features/').json() == []
+
+
+def test_an_admin_sees_every_draft(make_client, admin, make_card):
+    draft = draft_with_a_pin(make_card)
+
+    entries = make_client(admin).get('/api/map/features/').json()
+
+    assert [entry['id'] for entry in entries] == [str(draft.id)]
+
+
+def test_a_draft_translation_stays_off_the_map_for_its_author_too(make_client, other_citizen, make_card):
+    original = draft_with_a_pin(make_card, title='Chiesa')
+    translation = make_card(is_published=False, title='Church', translation_of=original, language='en')
+    Chiesa.objects.create(card=translation)
+
+    entries = make_client(other_citizen).get('/api/map/features/').json()
+
+    assert [entry['id'] for entry in entries] == [str(original.id)]
+
+
+def test_a_draft_never_moves_a_zone_count_not_even_for_its_author(make_client, other_citizen, admin, make_card):
+    draft_with_a_pin(make_card)
+
+    for client in (make_client(other_citizen), make_client(admin)):
+        counts = {zone['slug']: zone['count'] for zone in client.get('/api/map/zone/').json()}
+        assert set(counts.values()) == {0}
 
 
 def test_map_features_hides_translations(api_client, make_card):
