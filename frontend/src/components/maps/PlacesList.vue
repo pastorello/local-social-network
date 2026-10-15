@@ -35,7 +35,12 @@ const typeLabel = (key: string) => CARD_LAYERS.find((layer) => layer.key === key
         ></span>
 
         <span class="min-w-0">
-          <span class="block truncate font-semibold text-ink">{{ feature.title }}</span>
+          <span class="block truncate font-semibold text-ink"
+            >{{ feature.title
+            }}<span v-if="!feature.is_published" class="text-xs font-normal text-muted">
+              · bozza</span
+            ></span
+          >
           <span class="flex items-center gap-2 text-xs text-muted">
             <span
               class="inline-block h-2 w-2 rounded-full"

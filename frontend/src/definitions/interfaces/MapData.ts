@@ -7,6 +7,10 @@ export interface MapCardFeature {
   id: string
   type: string
   title: string
+  // False for a draft (spec map.md M5): the server adds the drafts this reader
+  // may already read — their own, or every one for an admin — and nobody
+  // else ever receives one. Drawn hollow, listed as *bozza*.
+  is_published: boolean
   // The card's first image (spec/design.md D5) — `null` when it has none, in
   // which case the SPA draws a type-coloured placeholder rather than nothing.
   cover: string | null

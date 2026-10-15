@@ -137,8 +137,12 @@ const onMapClick = (coords: { lat: number; lng: number }) => {
   mapStore.draftCoords = coords
 }
 
-// Logging in or out changes which overlays exist for this reader.
-watch(() => userStore.user.isAuthenticated, mapStore.fetchOverlays)
+// Logging in or out changes which overlays exist for this reader, and which
+// drafts are on the map (spec map.md M5).
+watch(
+  () => userStore.user.isAuthenticated,
+  () => Promise.all([mapStore.fetchOverlays(), mapStore.fetchFeatures()]),
+)
 
 onMounted(mapStore.load)
 </script>

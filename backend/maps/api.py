@@ -1,7 +1,9 @@
+from django.db.models import Q
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
+from account.models import User
 from content.models import MapFeature
 
 from .models import Overlay, Zona
@@ -25,6 +27,15 @@ def _card_type(card):
     return None
 
 
+def _visible_to(user):
+    published = Q(card__is_published=True)
+    if not user.is_authenticated:
+        return published
+    if user.role == User.ADMIN:
+        return Q()
+    return published | Q(card__author=user)
+
+
 @api_view(['GET'])
 @permission_classes([])
 def map_features(request):
@@ -41,10 +52,15 @@ def map_features(request):
     prefetch rather than a second round trip per card, and it is `null` for a
     card with no images at all; the SPA draws a type-coloured placeholder
     then, because a list of bare titles is dreary.
+
+    **The drafts this reader may already read come too** (spec map.md M5): an
+    author's own, and every draft for an admin — the rule a draft's own page
+    follows, which 404s for anyone else. Each entry says `is_published`, and
+    an anonymous reader gets what they always got.
     """
     features = (
         MapFeature.objects
-        .filter(card__is_published=True, card__translation_of__isnull=True)
+        .filter(_visible_to(request.user), card__translation_of__isnull=True)
         .select_related(
             'card', *(f'card__{type_key}' for type_key in CARD_TYPES),
             # «Cosa si può fare qui» files a luogo under an activity by its
@@ -71,6 +87,7 @@ def map_features(request):
             availability = getattr(card, 'availability', None)
             entry = cards[card.id] = {
                 'id': str(card.id), 'type': type_key, 'title': card.title,
+                'is_published': card.is_published,
                 'cover': cover.get_image_url() if cover else None,
                 'points': [], 'route': [],
                 'genre': luogo.genre.slug if luogo else None,

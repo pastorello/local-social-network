@@ -14,6 +14,7 @@ const feature = (over: Partial<MapCardFeature>): MapCardFeature => ({
   id: 'x',
   type: 'luoghi',
   title: 'X',
+  is_published: true,
   cover: null,
   points: [],
   route: [],
@@ -97,6 +98,28 @@ describe('CosaFareView — «Cosa si può fare qui» (spec cosa-fare.md Part −
     expect(chips).toEqual(['Serapo 3', 'Gaeta Medievale 1', 'Monte Orlando 0', 'Altrove a Gaeta 1'])
     expect(wrapper.text()).toContain('Zone indicative, non confini ufficiali.')
     expect(wrapper.text()).toContain('Scegli una zona')
+  })
+
+  it('lists the reader’s own drafts in their zone, marked, and counts them on its chip (map.md M5)', async () => {
+    const { wrapper } = await mountAt({ zona: 'monte-orlando' })
+    const store = useMapStore()
+    store.features = [
+      ...FEATURES,
+      feature({
+        id: 'd1',
+        title: 'Mausoleo',
+        genre: 'punto-panoramico',
+        zones: ['monte-orlando'],
+        is_published: false,
+      }),
+    ]
+    await flushPromises()
+
+    const chips = wrapper.findAll('nav[aria-label="Zone"] a').map((a) => a.text())
+    expect(chips).toContain('Monte Orlando 1')
+    const row = wrapper.findAll('li').find((li) => li.text().includes('Mausoleo'))
+    expect(row?.text()).toContain('bozza')
+    expect(wrapper.findAll('li').find((li) => li.text().includes('Belvedere'))).toBeUndefined()
   })
 
   it('lists a zone by activity, alphabetically, with what is known about getting in', async () => {

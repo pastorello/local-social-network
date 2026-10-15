@@ -17,20 +17,21 @@
 > **Adding an item:** next number is **TD-52**, continuous across both files.
 > It goes here; it moves to the archive when it is paid, with what proved it.
 
-## The gates — re-run 2026-10-14
+## The gates — re-run 2026-10-15
 
 | Gate | Command | Result |
 |---|---|---|
-| Backend tests | `python -m pytest` | **571 passed** in ~13s |
+| Backend tests | `python -m pytest` | **576 passed** in ~12s |
 | Backend lint | `python -m ruff check .` | clean |
-| Frontend tests | `npm run test:unit -- run` | **271 passed**, 56 files |
+| Frontend tests | `npm run test:unit -- run` | **274 passed**, 57 files |
 | Frontend lint | `npx oxlint` · `npx eslint .` | clean |
 | Format | `npx prettier --check .` | clean |
 | Build | `npm run build` | green, ~2s |
 | E2E | `npm run test:e2e` | **8 spec files, 49 tests** — green in CI |
 
-Every row above was run again on 2026-10-14, after `seed_drafts` (18 tests)
-and the OpenStreetMap credit (#106, 3) joined the 2026-10-13 count of 547 / 268
+Every row above was run again on 2026-10-15, after `seed_drafts` (18 tests),
+the OpenStreetMap credit (#106, 3) and drafts on the map (map.md M5, 5 + 3)
+joined the 2026-10-13 count of 547 / 268
 — except the last, which needs a seeded API
 on `:8000` and a production build; it is counted from the specs and taken from
 CI. The 2026-08-19 baseline — 142 backend tests, 43 frontend, 4 e2e — is in the

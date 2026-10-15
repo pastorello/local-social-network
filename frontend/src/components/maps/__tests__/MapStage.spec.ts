@@ -7,6 +7,7 @@ import axios from 'axios'
 
 import MapStage from '../MapStage.vue'
 import { useMapStore } from '@/stores/map'
+import { useUserStore } from '@/stores/user'
 
 vi.mock('axios')
 
@@ -81,6 +82,7 @@ describe('MapStage while a tour is open (decided 2026-09-19)', () => {
         id: 'c1',
         type: 'chiese',
         title: 'Duomo',
+        is_published: true,
         cover: null,
         points: [{ lat: 41.2, lng: 13.5, label: '' }],
         route: [],
@@ -127,6 +129,7 @@ describe('MapStage while a page lists a set (spec cosa-fare.md Part −1, D5)', 
       id,
       type: 'chiese',
       title: id,
+      is_published: true,
       cover: null,
       points: [{ lat: 41.2, lng: 13.5, label: '' }],
       route: [],
@@ -144,5 +147,27 @@ describe('MapStage while a page lists a set (spec cosa-fare.md Part −1, D5)', 
     await flushPromises()
     expect(map.props('features')).toHaveLength(2)
     expect(map.props('pins')).toHaveLength(1)
+  })
+})
+
+describe('MapStage follows the session (spec map.md M5)', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.mocked(axios.get).mockResolvedValue({ data: [] })
+  })
+
+  it('refetches the features — and with them the reader’s drafts — on sign-in and sign-out', async () => {
+    await mountStage()
+    const userStore = useUserStore()
+    vi.mocked(axios.get).mockClear()
+
+    userStore.user.isAuthenticated = true
+    await flushPromises()
+    userStore.user.isAuthenticated = false
+    await flushPromises()
+
+    const fetched = vi.mocked(axios.get).mock.calls.map(([url]) => url)
+    expect(fetched.filter((url) => url === '/api/map/features/')).toHaveLength(2)
+    expect(fetched.filter((url) => url === '/api/map/overlays/')).toHaveLength(2)
   })
 })

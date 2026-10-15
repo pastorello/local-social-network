@@ -125,21 +125,27 @@ const renderFeatures = () => {
   const fillOpacity = dimmed ? 0.3 : 0.9
   const lineOpacity = dimmed ? 0.3 : 0.85
 
+  const surface = readToken('--color-surface', '#ffffff')
   for (const feature of props.features ?? []) {
     if (dimmed && feature.id === props.focus?.id) continue
     const color = layerColor(feature.type)
     const open = () => emit('featureClick', { type: feature.type, id: feature.id })
+    // A draft (spec map.md M5) is hollow and dashed — told apart by its shape,
+    // not only by a paler colour — and says so in its tooltip.
+    const draft = !feature.is_published
+    const title = draft ? `${feature.title} (bozza)` : feature.title
 
     for (const point of feature.points) {
       const marker = L.circleMarker([point.lat, point.lng], {
         radius: 8,
-        color: readToken('--color-surface', '#ffffff'),
-        weight: 2,
+        color: draft ? color : surface,
+        weight: draft ? 2.5 : 2,
+        dashArray: draft ? '3 3' : undefined,
         opacity: dimmed ? 0.4 : 1,
-        fillColor: color,
+        fillColor: draft ? surface : color,
         fillOpacity,
       })
-      marker.bindTooltip(mapText(point.label ? `${feature.title} — ${point.label}` : feature.title))
+      marker.bindTooltip(mapText(point.label ? `${title} — ${point.label}` : title))
       marker.on('click', open)
       featureLayer.addLayer(marker)
     }
@@ -149,22 +155,22 @@ const renderFeatures = () => {
     if (feature.route.length > 1) {
       const polyline = L.polyline(
         feature.route.map((point) => [point.lat, point.lng] as [number, number]),
-        { color, weight: 4, opacity: lineOpacity },
+        { color, weight: 4, opacity: lineOpacity, dashArray: draft ? '8 8' : undefined },
       )
-      polyline.bindTooltip(mapText(feature.title))
+      polyline.bindTooltip(mapText(title))
       polyline.on('click', open)
       featureLayer.addLayer(polyline)
     }
     for (const point of feature.route) {
       const stop = L.circleMarker([point.lat, point.lng], {
         radius: 5,
-        color: readToken('--color-surface', '#ffffff'),
+        color: draft ? color : surface,
         weight: 2,
         opacity: dimmed ? 0.4 : 1,
-        fillColor: color,
+        fillColor: draft ? surface : color,
         fillOpacity: dimmed ? 0.3 : 1,
       })
-      stop.bindTooltip(mapText(point.label ? `${feature.title} — ${point.label}` : feature.title))
+      stop.bindTooltip(mapText(point.label ? `${title} — ${point.label}` : title))
       stop.on('click', open)
       featureLayer.addLayer(stop)
     }
