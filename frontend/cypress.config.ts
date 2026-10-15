@@ -7,6 +7,13 @@ export default defineConfig({
   e2e: {
     specPattern: 'cypress/e2e/**/*.{cy,spec}.{js,jsx,ts,tsx}',
     baseUrl: 'http://localhost:4173',
+    // OpenStreetMap's tile policy forbids headless bots, so nothing in this
+    // suite may reach openstreetmap.org. support/e2e.ts answers the tiles with
+    // a PNG in every test; this is what holds where no intercept is registered
+    // — a describe-level `before()` after a spec's first runs once intercepts
+    // have been cleared and before any `beforeEach` (a11y.cy.ts signs in from
+    // one), and there a tile gets Cypress's 503 instead of leaving the runner.
+    blockHosts: ['*.openstreetmap.org'],
     setupNodeEvents(on) {
       on('task', {
         // axe's findings are objects, and a failing assertion alone says only
