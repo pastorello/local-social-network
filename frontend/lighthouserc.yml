@@ -1,0 +1,53 @@
+# Lighthouse CI: the performance gate (.github/workflows/ci.yml, job
+# `lighthouse`). It runs from frontend/ after a production build, against the
+# seeded API on :8000 the e2e job uses: `npx @lhci/cli@0.15.1 autorun`.
+ci:
+  collect:
+    # 127.0.0.1, not localhost: inside a container `localhost` resolves to ::1
+    # first and vite preview then binds IPv6 only.
+    startServerCommand: npx vite preview --host 127.0.0.1 --port 4173 --strictPort
+    startServerReadyPattern: Local
+    # The reader's ways in, on a phone: /benvenuto is the address printed on
+    # the B&B cards, / is the map, /cosa-fare is where /benvenuto sends them.
+    # Every route draws the map under it (design.md D13), so these three
+    # measure the shell as well.
+    url:
+      - http://127.0.0.1:4173/benvenuto
+      - http://127.0.0.1:4173/
+      - http://127.0.0.1:4173/cosa-fare
+    # Three runs per page; every assertion below reads the median.
+    numberOfRuns: 3
+    settings:
+      # Lighthouse's default device is the reader this app is for (design.md:
+      # logged-out, mobile-first): a mid-range phone on simulated slow 4G.
+      onlyCategories: [performance]
+      # OpenStreetMap's tile policy forbids headless bots, so the tiles are
+      # never fetched here. The LCP this measures is therefore the app's own
+      # text; what a tile adds on top is in TD-52.
+      blockedUrlPatterns: ['*tile.openstreetmap.org*']
+      # Chrome will not start as root inside a container (act) without it; on
+      # GitHub's own runner it changes nothing.
+      chromeFlags: --no-sandbox
+  assert:
+    assertions:
+      # CLS at web.dev's "good" threshold. It does not depend on the machine:
+      # 0.02–0.072 on every run, on a Mac and in a Linux container alike.
+      cumulative-layout-shift: [error, { maxNumericValue: 0.1, aggregationMethod: median }]
+      # TBT and LCP are regression budgets, set over what a slower CPU measures
+      # rather than at "good": both scale with the machine Lighthouse runs on,
+      # and a gate that is red on a slow runner is a gate people learn to
+      # ignore. Medians when this was added (2026-10-15): TBT 7–8 ms and LCP
+      # 2.63–2.71 s on a Mac, TBT 75–192 ms and LCP 2.76–2.95 s in a Linux
+      # container (act). TBT is the lab stand-in for INP, which needs a
+      # reader's input to exist at all. LCP is over "good" (2.5 s) on both, and
+      # that is TD-52: lower these when it is paid, never raise them to make a
+      # run green. For scale, the editor's 124 KB (gzip) chunk would cost ~0.6 s
+      # of LCP just to download on the simulated network if it ever landed on
+      # the entry path.
+      total-blocking-time: [error, { maxNumericValue: 300, aggregationMethod: median }]
+      largest-contentful-paint: [error, { maxNumericValue: 3500, aggregationMethod: median }]
+  upload:
+    # The reports stay on the runner and go up as a workflow artifact — never
+    # to LHCI's temporary public storage, which publishes them at a public URL.
+    target: filesystem
+    outputDir: .lighthouseci/reports
