@@ -1,6 +1,22 @@
 import { describe, it, expect } from 'vitest'
 
-import { OSM_ATTRIBUTION, OSM_COPYRIGHT_URL } from '../osm'
+import { OSM_ATTRIBUTION, OSM_COPYRIGHT_URL, OSM_TILE_URL } from '../osm'
+
+// The tile policy's own words are "Use exactly:" this URL; the a/b/c
+// subdomains it replaced "may be slower or withdrawn without notice".
+describe('the OpenStreetMap tiles', () => {
+  it('come from the one host the tile policy names', () => {
+    expect(OSM_TILE_URL).toBe('https://tile.openstreetmap.org/{z}/{x}/{y}.png')
+  })
+
+  it('are preconnected from index.html, to that same host', () => {
+    const [html] = Object.values(
+      import.meta.glob<string>('/index.html', { query: '?raw', import: 'default', eager: true }),
+    )
+
+    expect(html).toContain(`<link rel="preconnect" href="${new URL(OSM_TILE_URL).origin}" />`)
+  })
+})
 
 // OpenStreetMap's tile policy and the ODbL ask for a visible credit that names
 // OpenStreetMap and links to its copyright page. No unit test mounts a real
