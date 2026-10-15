@@ -40,3 +40,6 @@ __screenshots__/
 
 # Vite
 *.timestamp-*-*.mjs
+
+# Lighthouse CI (lighthouserc.yml)
+/.lighthouseci/
