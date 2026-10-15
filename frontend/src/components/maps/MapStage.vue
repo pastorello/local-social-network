@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
+import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import GaetaMap from '@/components/maps/GaetaMap.vue'
 import { useIsDesktop } from '@/composables/useBreakpoint'
+import { afterFirstPaint } from '@/lib/firstPaint'
 import { layerRoute } from '@/lib/mapLayers'
 import { useMapStore } from '@/stores/map'
 import { useUserStore } from '@/stores/user'
@@ -17,6 +17,12 @@ const userStore = useUserStore()
 const route = useRoute()
 const router = useRouter()
 const { isDesktop } = useIsDesktop()
+
+// TD-52: Leaflet, its cluster plugin and vue-leaflet are 58% of what the
+// entry chunk used to hold, and no page's text needs them. So the map is its
+// own chunk, fetched once the reader has something to read — see onMounted.
+const GaetaMap = defineAsyncComponent(() => import('@/components/maps/GaetaMap.vue'))
+const drawMap = ref(false)
 
 // Must match RoutePanel's narrow panel and HomeView's floating column, so a
 // focused place is framed where the reader can actually see it (D16).
@@ -144,7 +150,21 @@ watch(
   () => Promise.all([mapStore.fetchOverlays(), mapStore.fetchFeatures()]),
 )
 
-onMounted(mapStore.load)
+onMounted(async () => {
+  // The map's data does not wait for the map.
+  const data = mapStore.load()
+  // The words first: the page's own component, then a paint, then the map.
+  await router.isReady()
+  await afterFirstPaint()
+  // A map under a page — hidden on a phone, veiled on a wide screen — must not
+  // compete with that page for a slow network either: it waits until its own
+  // data is in, or until the reader leaves for a page that shows it.
+  if (covered.value) {
+    const uncovered = new Promise((resolve) => watch(covered, resolve, { once: true }))
+    await Promise.race([data, uncovered])
+  }
+  drawMap.value = true
+})
 </script>
 
 <template>
@@ -159,6 +179,7 @@ onMounted(mapStore.load)
     }"
   >
     <GaetaMap
+      v-if="drawMap"
       :pins="tourOpen || restricted ? [] : mapStore.visiblePins"
       :features="shownFeatures"
       :overlays="mapStore.visibleOverlays"

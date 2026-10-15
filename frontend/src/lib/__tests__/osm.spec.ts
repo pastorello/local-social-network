@@ -34,16 +34,15 @@ describe('the OpenStreetMap credit', () => {
   })
 
   it('is given to every tile layer in src/', () => {
-    const sources = import.meta.glob<string>('/src/**/*.vue', {
-      query: '?raw',
-      import: 'default',
-      eager: true,
-    })
+    const sources = import.meta.glob<string>(
+      ['/src/**/*.vue', '/src/**/*.ts', '!/src/**/__tests__/**'],
+      { query: '?raw', import: 'default', eager: true },
+    )
     const layers = Object.entries(sources).flatMap(([path, source]) =>
-      [...source.matchAll(/<l-tile-layer[^>]*>/g)].map((match) => ({ path, tag: match[0] })),
+      [...source.matchAll(/L\.tileLayer\([^)]*\)/g)].map((match) => ({ path, call: match[0] })),
     )
     const uncredited = layers
-      .filter(({ tag }) => !tag.includes(':attribution="OSM_ATTRIBUTION"'))
+      .filter(({ call }) => !call.includes('attribution: OSM_ATTRIBUTION'))
       .map(({ path }) => path)
 
     expect(layers.length).toBeGreaterThan(0)

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, ref, watch } from 'vue'
-import { LMap, LTileLayer } from '@vue-leaflet/vue-leaflet'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 // Default import on purpose: leaflet ships CJS and leaflet.markercluster
 // mutates its exports object at runtime — a namespace import can be
 // snapshotted by the bundler before the plugin runs and lose
@@ -21,12 +20,6 @@ import 'leaflet/dist/leaflet.css'
 import 'leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
-
-// vue-leaflet must build the map from THIS leaflet instance (the one
-// markercluster augmented). With use-global-leaflet=false it imports a
-// second, separate copy of leaflet — and layers from one instance can't be
-// added to a map from the other (nothing renders, handlers never fire).
-;(globalThis as typeof globalThis & { L: typeof L }).L = L
 
 import type { MapCardFeature, Overlay } from '@/definitions/interfaces/MapData'
 import type { MapEditor, MapFocus } from '@/stores/map'
@@ -65,8 +58,8 @@ const emit = defineEmits<{
 }>()
 
 // Gaeta (spec F2.1: configured city center)
-const zoom = ref(14)
-const center = ref<[number, number]>([41.2172608, 13.5625165])
+const GAETA: [number, number] = [41.2172608, 13.5625165]
+const GAETA_ZOOM = 14
 
 // Overlays belong between the base tiles (200) and everything clickable
 // (overlayPane 400, markerPane 600): a historical raster is scenery, a
@@ -75,6 +68,7 @@ const RASTER_PANE = 'overlayRasterPane'
 const VECTOR_PANE = 'overlayVectorPane'
 
 const wrapper = ref<HTMLDivElement | null>(null)
+const container = ref<HTMLDivElement | null>(null)
 let map: LeafletMap | null = null
 let cluster: MarkerClusterGroup | null = null
 let featureLayer: LayerGroup | null = null
@@ -328,6 +322,10 @@ const buildOverlay = (overlay: Overlay): Layer | null => {
       fillColor: overlay.color,
       fillOpacity: overlay.opacity,
     }),
+    // A point in an overlay is a circle like every other pin on this map —
+    // Leaflet's default would be its marker image, which this app no longer
+    // ships (TD-52: vue-leaflet was what pointed Leaflet at it).
+    pointToLayer: (_point, latlng) => L.circleMarker(latlng, { radius: 6 }),
     onEachFeature: (geoFeature, layer) => {
       const name = (geoFeature.properties as Record<string, unknown> | null)?.name
       layer.bindTooltip(
@@ -469,20 +467,25 @@ watch(
   },
 )
 
+// Leaflet itself, not a wrapper (TD-52): vue-leaflet drew only this map and
+// its tiles, and it held the map back until three marker images it fetched
+// on its own had arrived — a round trip before any tile, for markers this map
+// never draws (every pin here is a circle).
+onMounted(() => {
+  if (!container.value) return
+  const leafletMap = L.map(container.value, { center: GAETA, zoom: GAETA_ZOOM })
+  L.tileLayer(OSM_TILE_URL, { attribution: OSM_ATTRIBUTION }).addTo(leafletMap)
+  onReady(leafletMap)
+})
+
 onBeforeUnmount(() => {
   resizeObserver?.disconnect()
+  map?.remove()
 })
 </script>
 
 <template>
   <div ref="wrapper" class="h-full w-full" :class="{ 'cursor-crosshair': placing || editor }">
-    <l-map v-model:zoom="zoom" :center="center" :use-global-leaflet="true" @ready="onReady">
-      <l-tile-layer
-        :url="OSM_TILE_URL"
-        :attribution="OSM_ATTRIBUTION"
-        layer-type="base"
-        name="OpenStreetMap"
-      ></l-tile-layer>
-    </l-map>
+    <div ref="container" class="h-full w-full"></div>
   </div>
 </template>

@@ -160,6 +160,11 @@ deploy step, since there is nothing to deploy to.
 > correct — plus card pins, a feste route polyline, a GeoJSON overlay and a
 > raster overlay whose opacity slider works. No console errors. Cypress's
 > production-build job is green.
+>
+> **2026-10-15: the alias is gone, with the library that needed it.** TD-52
+> removed `@vue-leaflet/vue-leaflet` — `GaetaMap` builds its map with Leaflet
+> directly — so nothing imports `leaflet/dist/leaflet-src.esm` any more, and
+> the one Leaflet in `dist/` now lives in the map's own chunk.
 
 ### TD-03 · Build tooling sits in `dependencies` — **FIXED 2026-08-20, and the finding's reasoning was wrong** ✔
 
@@ -1599,6 +1604,93 @@ one met at 7.0 is an outage.
 > - **A malformed `remove_image_ids`** (`["a"]`, an object, a boolean) was a
 >   500 from the ORM. Now a 400 on that field; ids as numbers or digit
 >   strings, as the SPA sends them.
+
+### TD-52 · Mobile LCP was over the 2.5 s "good" threshold — **FIXED 2026-10-15** ✔
+
+> Found 2026-10-15 by the Lighthouse gate on the day it was added
+> (`frontend/lighthouserc.yml`, #110): Lighthouse 12.6 on its simulated phone
+> (slow 4G, 4× CPU), with OpenStreetMap's tiles blocked because the tile
+> policy forbids headless bots — so what it measured was the app's own text.
+> **LCP 2.62–2.85 s on every page, FCP 2.2 s**, budgeted at 3.5 s until paid.
+> The table's first column — the tiles from three hosts, 3.6–4.2 s — was paid
+> in #110 itself, with one tile host and a preconnect.
+>
+> **Where the time went, read off the reports rather than guessed.** An SPA
+> paints nothing until its entry chunk has run, and Lantern — the simulation
+> behind those numbers — puts on the critical path every request that
+> *finished* before the LCP of the real, unthrottled load. That was 110 KB
+> (gzip) of entry chunk, 58% of it Leaflet, its cluster plugin and vue-leaflet,
+> which no page's text needs; the page's own lazy chunk a round trip after it;
+> the 35 KB font; and on `/` the map's four API calls.
+>
+> **Fixed in three moves, each measured before the next:**
+>
+> - **The map is a chunk of its own, fetched once the page has painted.**
+>   `MapStage` mounts `GaetaMap` through `defineAsyncComponent` after
+>   `lib/firstPaint.ts` reports the first contentful paint (the Paint Timing
+>   API; the frame after next where it is missing, and a second after the
+>   first frame should the entry never come — a tab opened in the background
+>   was checked: it gets its map when shown). After a frame the screen
+>   *showed*, on purpose: `requestAnimationFrame` + `setTimeout` fires when the
+>   main thread has painted, ~25 ms before the frame is presented, and with
+>   it the map's chunk fell inside the LCP window in four runs of five on
+>   `/cosa-fare` — a gate flipping between 1.88 and 2.35 s. While a page
+>   covers the map (on a phone, every page but the home and a card with a
+>   place) it also waits for the map's own data: a map nobody can see must not
+>   take a slow network from the page. The data itself is still fetched at
+>   mount.
+> - **The reader's three ways in are in the entry.** The home's empty route,
+>   `/benvenuto` and `/cosa-fare` are the router's only static views (+3 KB
+>   gzip on every page), so their text is in the first paint rather than a
+>   round trip later — which is also what makes "after the first paint" mean
+>   after the page, not after the menu.
+> - **vue-leaflet is gone.** It drew one map and one tile layer, and before
+>   creating the map it awaited three marker images through dynamic imports —
+>   a round trip before any tile, for markers this map never draws.
+>   `GaetaMap` calls `L.map` and `L.tileLayer` itself, and TD-02's alias, which
+>   existed only for vue-leaflet's fallback import, went with it. One visible
+>   consequence: a Point inside an overlay draws as a circle in the overlay's
+>   colour, where Leaflet's default would have been a marker image this app no
+>   longer points it at. No overlay has a point today.
+>
+> **Proved** on the gate's own terms, medians with the tiles blocked:
+>
+> | Page | before, Mac | after, Mac | before, `act` | after, `act` |
+> |---|---|---|---|---|
+> | `/benvenuto` | 2.80 s | 1.85 s | 2.71 s | 1.82 s |
+> | `/` | 2.81 s | 1.84 s | 2.70 s | 1.86 s |
+> | `/cosa-fare` | 2.83 s | 1.85 s | 2.74 s | 1.94 s |
+>
+> Mac: five runs per page with the gate's settings. `act`: the `lighthouse`
+> job itself, three runs per page, before and after on the same machine the
+> same afternoon — after, on this commit with the 2.5 s budget in force (an
+> earlier run of the same code: 1.76, 1.88 and 1.83 s). FCP 2.2 → 1.66 s everywhere, and FCP = LCP in every run
+> after. The entry chunk went from 110.7 to 54.0 KB (gzip) and the
+> render-blocking stylesheet from 16.4 to 9.7 KB, since Leaflet's CSS left
+> with the map; the map's chunk is 54.1 KB plus 6.6 KB of CSS, fetched after
+> the text. **TBT rose a little**: medians 52–91 ms → 84–206 ms under `act`, the
+> spread being the machine's load more than the code. Most of it, before and
+> after, is the entry chunk's evaluation and first render, which Lantern places
+> after its FCP estimate; Leaflet's start-up adds 5–50 ms, since it now runs
+> after the first paint, inside TBT's window. **One `act` run failed TBT**: a
+> 552 ms median on `/benvenuto` with Lighthouse's `benchmarkIndex` down to 165
+> while the machine was busy — the same load had pushed a run of the old build
+> to 389 ms. The budget stays 300 ms (see `lighthouserc.yml`).
+>
+> **What it cost the map** — measured, not assumed, with a stand-in tile
+> server (a 22 KB PNG served locally, never OpenStreetMap's) and otherwise the
+> same builds: LCP with tiles 4.19 → 4.07 s on `/`, 4.13 → 4.32 s on
+> `/cosa-fare`, and 3.98 → 4.52 s on `/benvenuto`, where on a phone the panel
+> covers the map and the tile Lighthouse counts is one nobody can see. The
+> stand-in is plain HTTP/1.1, so its absolute values are higher than #110's
+> OpenStreetMap column; only the differences mean anything. Without the
+> vue-leaflet move the map would have paid 0.4–0.7 s on every page.
+>
+> **Not taken:** the 35 KB font is on every page's path and is now the largest
+> single thing left — shrinking it means a subset made by hand outside
+> `@fontsource`, which is a design decision more than a performance one.
+> axios is 50 KB of the entry (minified). The stylesheet was not inlined;
+> Lighthouse's estimate for it fell from 450 ms to 150–300 ms on its own.
 
 ### TD-51 · The documented `docker compose up --build` had not started the app since 2026-08-20 — **FIXED 2026-10-13** ✔
 

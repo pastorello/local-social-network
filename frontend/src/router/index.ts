@@ -9,6 +9,13 @@ import {
   luogoConfig,
   itinerarioConfig,
 } from '../definitions/typeConfigs'
+// The reader's ways in — the map, the address on the B&B cards, and where it
+// leads — are in the entry chunk, not a round trip after it (TD-52): their
+// words are in the first paint, and the map waits for that paint. Every other
+// page loads on demand. They cost ~3 KB (gzip) on every page.
+import CosaFareView from '../views/CosaFareView.vue'
+import EmptyRoute from '../views/EmptyRoute.vue'
+import WelcomeView from '../views/WelcomeView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -21,7 +28,7 @@ const router = createRouter({
       // by this route, so it keeps its state and its elements while a panel is
       // open over it (D15: closing a panel gives focus back to what opened it).
       // The route renders nothing of its own.
-      component: () => import('../views/EmptyRoute.vue'),
+      component: EmptyRoute,
       meta: { requiresAuth: false, fullBleed: true },
     },
     {
@@ -214,7 +221,7 @@ const router = createRouter({
       // "Che cosa ti va di fare?". It must never move.
       path: '/benvenuto',
       name: 'benvenuto',
-      component: () => import('../views/WelcomeView.vue'),
+      component: WelcomeView,
       meta: { requiresAuth: false },
     },
     {
@@ -222,7 +229,7 @@ const router = createRouter({
       // in it. Narrow, so the map beside it shows exactly the list (D5).
       path: '/cosa-fare',
       name: 'cosafare',
-      component: () => import('../views/CosaFareView.vue'),
+      component: CosaFareView,
       meta: { requiresAuth: false, panel: 'narrow' },
     },
     {
