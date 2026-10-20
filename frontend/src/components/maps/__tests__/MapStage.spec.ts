@@ -11,6 +11,11 @@ import { useUserStore } from '@/stores/user'
 
 vi.mock('axios')
 
+// The map is drawn once the page has painted (TD-52); each test says when that
+// is. Painted at once unless a test holds it back.
+const paint = vi.hoisted(() => ({ done: () => Promise.resolve() }))
+vi.mock('@/lib/firstPaint', () => ({ afterFirstPaint: () => paint.done() }))
+
 // Stands in for Leaflet (jsdom cannot load it): it only relays the clicks
 // MapStage listens to.
 const GaetaMapStub = defineComponent({
@@ -20,19 +25,78 @@ const GaetaMapStub = defineComponent({
   setup: () => () => h('div'),
 })
 
-const mountStage = async () => {
-  const router = createRouter({
+const makeRouter = () =>
+  createRouter({
     history: createMemoryHistory(),
-    routes: [{ path: '/:any(.*)*', component: { render: () => null } }],
+    routes: [
+      { path: '/', name: 'home', component: { render: () => null }, meta: { fullBleed: true } },
+      // A wide page: on a phone it covers the map entirely.
+      { path: '/benvenuto', name: 'benvenuto', component: { render: () => null } },
+      { path: '/:any(.*)*', component: { render: () => null } },
+    ],
   })
-  await router.push('/chiese/nuova')
+
+const mountAt = async (path: string) => {
+  const router = makeRouter()
+  await router.push(path)
   const push = vi.spyOn(router, 'push')
   const wrapper = mount(MapStage, {
     global: { plugins: [router], stubs: { GaetaMap: GaetaMapStub } },
   })
   await flushPromises()
+  return { wrapper, push, router }
+}
+
+// The map is its own chunk (TD-52): wait for it to arrive.
+const mountStage = async () => {
+  const { wrapper, push } = await mountAt('/chiese/nuova')
+  await vi.waitUntil(() => wrapper.findComponent(GaetaMapStub).exists())
   return { map: wrapper.findComponent(GaetaMapStub), push }
 }
+
+describe('MapStage loads the map after the page (TD-52)', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.mocked(axios.get).mockResolvedValue({ data: [] })
+  })
+
+  it('does not draw the map before the page has painted, and fetches its data at once', async () => {
+    let painted = () => {}
+    paint.done = () => new Promise<void>((resolve) => (painted = resolve))
+    const { wrapper } = await mountAt('/chiese/nuova')
+
+    expect(wrapper.findComponent(GaetaMapStub).exists()).toBe(false)
+    expect(vi.mocked(axios.get)).toHaveBeenCalledWith('/api/map/features/')
+
+    painted()
+    await vi.waitUntil(() => wrapper.findComponent(GaetaMapStub).exists())
+    paint.done = () => Promise.resolve()
+  })
+
+  it('waits for the map’s data too while a page covers the map', async () => {
+    const pending: ((value: { data: [] }) => void)[] = []
+    vi.mocked(axios.get).mockImplementation(
+      () => new Promise((resolve) => pending.push(resolve as (typeof pending)[number])),
+    )
+    const { wrapper } = await mountAt('/benvenuto')
+    await new Promise((resolve) => setTimeout(resolve, 50))
+
+    expect(wrapper.findComponent(GaetaMapStub).exists()).toBe(false)
+
+    pending.forEach((answer) => answer({ data: [] }))
+    await vi.waitUntil(() => wrapper.findComponent(GaetaMapStub).exists())
+  })
+
+  it('stops waiting for the data when the reader leaves for a page that shows the map', async () => {
+    vi.mocked(axios.get).mockImplementation(() => new Promise(() => {}))
+    const { wrapper, router } = await mountAt('/benvenuto')
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(wrapper.findComponent(GaetaMapStub).exists()).toBe(false)
+
+    await router.push('/')
+    await vi.waitUntil(() => wrapper.findComponent(GaetaMapStub).exists())
+  })
+})
 
 describe('MapStage while a form draws on the map (design.md D19)', () => {
   beforeEach(() => {

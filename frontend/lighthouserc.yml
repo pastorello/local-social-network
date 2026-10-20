@@ -23,7 +23,7 @@ ci:
       onlyCategories: [performance]
       # OpenStreetMap's tile policy forbids headless bots, so the tiles are
       # never fetched here. The LCP this measures is therefore the app's own
-      # text; what a tile adds on top is in TD-52.
+      # text; what a tile adds on top is in TD-52, in the debt archive.
       blockedUrlPatterns: ['*tile.openstreetmap.org*']
       # Chrome will not start as root inside a container (act) without it; on
       # GitHub's own runner it changes nothing.
@@ -33,19 +33,30 @@ ci:
       # CLS at web.dev's "good" threshold. It does not depend on the machine:
       # 0.02–0.072 on every run, on a Mac and in a Linux container alike.
       cumulative-layout-shift: [error, { maxNumericValue: 0.1, aggregationMethod: median }]
-      # TBT and LCP are regression budgets, set over what a slower CPU measures
-      # rather than at "good": both scale with the machine Lighthouse runs on,
+      # LCP at web.dev's "good" threshold since TD-52 was paid (2026-10-15):
+      # the map became a chunk of its own, fetched after the page paints.
+      # Medians then: 1.84–1.85 s on a Mac and 1.76–1.94 s in a Linux
+      # container (act), from 2.80–2.83 s and 2.70–2.74 s the same afternoon.
+      # A page that needs more than 2.5 s to show its words is a regression;
+      # never raise this to make a run green.
+      largest-contentful-paint: [error, { maxNumericValue: 2500, aggregationMethod: median }]
+      # TBT stays a regression budget, set over what a slower CPU measures
+      # rather than at "good": it scales with the machine Lighthouse runs on,
       # and a gate that is red on a slow runner is a gate people learn to
-      # ignore. Medians when this was added (2026-10-15): TBT 7–8 ms and LCP
-      # 2.63–2.71 s on a Mac, TBT 75–192 ms and LCP 2.76–2.95 s in a Linux
-      # container (act). TBT is the lab stand-in for INP, which needs a
-      # reader's input to exist at all. LCP is over "good" (2.5 s) on both, and
-      # that is TD-52: lower these when it is paid, never raise them to make a
-      # run green. For scale, the editor's 124 KB (gzip) chunk would cost ~0.6 s
-      # of LCP just to download on the simulated network if it ever landed on
-      # the entry path.
+      # ignore. TBT is the lab stand-in for INP, which needs a reader's input to
+      # exist at all. Re-measured when TD-52 was paid: medians 5–14 ms on a Mac
+      # and 84–206 ms under act, depending on what else the machine was running
+      # (52–91 ms before, on a quiet one). Most of it, before and after, is one
+      # task — the entry chunk's evaluation and first render, which Lantern
+      # places after its FCP estimate; Leaflet's start-up now adds 5–50 ms of
+      # its own, since it comes after the first paint. On a heavily loaded
+      # machine (benchmarkIndex down to 165) one act run failed at a 552 ms
+      # median, and the same kind of load had pushed a run of the old build to
+      # 389 ms: this measures the runner as much as the app, which is why it
+      # stays 300 and not 200. For scale, the editor's 124 KB (gzip) chunk would
+      # cost ~0.6 s of LCP just to download on the simulated network if it ever
+      # landed on the entry path.
       total-blocking-time: [error, { maxNumericValue: 300, aggregationMethod: median }]
-      largest-contentful-paint: [error, { maxNumericValue: 3500, aggregationMethod: median }]
   upload:
     # The reports stay on the runner and go up as a workflow artifact — never
     # to LHCI's temporary public storage, which publishes them at a public URL.

@@ -1,7 +1,7 @@
 # Technical debt register
 
 > **What is open, and nothing else.** Fifty-two items have been recorded
-> since the first audit on 2026-08-19; forty-nine are paid and live, with their
+> since the first audit on 2026-08-19; fifty are paid and live, with their
 > evidence, in [tech-debt-archive.md](./tech-debt-archive.md). Read that file
 > for how a defect got in and what proved the fix. Read **this** one before
 > proposing work.
@@ -23,16 +23,16 @@
 |---|---|---|
 | Backend tests | `python -m pytest` | **576 passed** in ~12s |
 | Backend lint | `python -m ruff check .` | clean |
-| Frontend tests | `npm run test:unit -- run` | **276 passed**, 57 files |
+| Frontend tests | `npm run test:unit -- run` | **282 passed**, 58 files |
 | Frontend lint | `npx oxlint` · `npx eslint .` | clean |
 | Format | `npx prettier --check .` | clean |
 | Build | `npm run build` | green, ~2s |
 | E2E | `npm run test:e2e` | **8 spec files, 49 tests** — green in CI |
-| Performance | `npx @lhci/cli@0.15.1 autorun` | 3 pages × 3 runs, every budget met — LCP is under budget but not under "good" (TD-52) |
+| Performance | `npx @lhci/cli@0.15.1 autorun` | 3 pages × 3 runs, every budget met — LCP 1.82–1.94 s under `act`, under "good" since TD-52 |
 
 Every row above was run again on 2026-10-15, after `seed_drafts` (18 tests),
-the OpenStreetMap credit (#106, 3), drafts on the map (map.md M5, 5 + 3) and
-the tile host (2) joined the 2026-10-13 count of 547 / 268
+the OpenStreetMap credit (#106, 3), drafts on the map (map.md M5, 5 + 3), the
+tile host (2) and TD-52's map loading (6) joined the 2026-10-13 count of 547 / 268
 — except E2E, which needs a seeded API
 on `:8000` and a production build; it is counted from the specs and taken from
 CI. The performance row was run in a Linux container under `act`, since
@@ -74,40 +74,6 @@ work.
 Left alone deliberately: nothing waits on it, and a CI change made for tidiness
 is a change to the one thing that guards every other change. Worth doing if it
 ever becomes the reason somebody skips running the suite.
-
-## TD-52 · Mobile LCP is over the 2.5 s "good" threshold — open
-
-Measured 2026-10-15, when the Lighthouse gate was added (`frontend/lighthouserc.yml`):
-Lighthouse 12.6 on its default simulated phone (mid-range device, slow 4G),
-three runs on each page, against `seed_e2e`'s data. **Lab numbers, not field
-data** — nobody has loaded this app from Gaeta yet, because it is not deployed.
-
-| Page | LCP, a/b/c tile hosts | one tile host + preconnect | the app's own (tiles blocked) |
-|---|---|---|---|
-| `/benvenuto` | 3.91–4.02 s | 2.64–3.29 s | 2.62–2.84 s |
-| `/` | 3.57–3.61 s | 2.77–3.37 s | 2.62–2.63 s |
-| `/cosa-fare` | 3.58–4.20 s | 2.79–3.00 s | 2.70–2.85 s |
-
-**The first column is paid, in the same PR.** On every page the LCP element
-was a map tile, fetched from three hosts (`{s}.tile.openstreetmap.org`), each
-a new connection on a slow network: 1.1 s of load delay and up to 1.9 s of
-render delay. `lib/osm.ts` now uses the one host the tile policy names (which
-the policy requires anyway) and `index.html` preconnects to it.
-
-**What is left is the app's own first paint.** It is an SPA with no
-server-rendered HTML, so nothing paints until the entry chunk has run: FCP is
-2.2 s on all three pages, and LCP — a paragraph of text once the tiles are
-blocked — follows ~0.4 s later. Lighthouse's own leads, not yet tried: the
-render-blocking stylesheet (~450 ms estimated) and 53 KiB of unused JS in the
-107 KiB entry chunk. CLS (≤ 0.072) and TBT (≤ 51 ms) already clear "good".
-
-The table was measured on an M-series Mac (Lighthouse's `benchmarkIndex`
-~3,000). The same gate run in a Linux container under `act` (`benchmarkIndex`
-1,090–2,314, closer to a CI runner) measured median LCP 2.76–2.95 s and median
-TBT 75–192 ms: the slower the CPU, the further from "good". That is why the
-gate's budgets are 3.5 s and 300 ms rather than web.dev's thresholds. **Paid
-when the tiles-blocked median is under 2.5 s in CI; then lower the LCP budget
-to 2.5 s and re-measure TBT's.**
 
 ## TD-06 (residual) · Two upgrades held back on purpose
 
