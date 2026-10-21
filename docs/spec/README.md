@@ -116,8 +116,11 @@ supplies**, not build questions — C5 shipped the mechanism that consumes them
    uploads at 5 MB and 40 Mpx, raster overlays included — so a scanner's output
    of a large sheet needs downsampling first, which the how-to above says how to
    check.
-3. **Still open, deploy-time.** SMTP provider and sender domain for
-   invite/reset e-mail; development uses the console backend.
+3. ~~**Still open, deploy-time.** SMTP provider and sender domain for
+   invite/reset e-mail; development uses the console backend.~~ **Answered
+   2026-10-21** ([ADR-0009](../adr/0009-where-it-runs.md)): Brevo's free plan,
+   sending as `noreply@viveregaeta.it`; development still uses the console
+   backend.
 4. ~~When the accessibility question (v1 N5) gets answered.~~ **Answered
    2026-08-22**: WCAG 2.1 AA, whole app
    ([ADR-0005](../adr/0005-wcag-2.1-aa-accessibility-bar.md)), with a first
