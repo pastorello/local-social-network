@@ -11,6 +11,118 @@ in a cloud console.
 
 ---
 
+## The setup chosen on 2026-10-21 — OVHcloud and Brevo
+
+`viveregaeta.it` and one **VPS-1** at OVHcloud, mail through **Brevo's free
+plan**. The reasons, and what was turned down, are in
+[ADR-0009](./adr/0009-where-it-runs.md). This is the order to do it in;
+where a step is the same on any VPS, it points to Part 1 rather than repeating
+it.
+
+### 1. Buy the domain and the server (OVHcloud)
+
+One OVHcloud account holds both.
+
+- **The domain, `viveregaeta.it`.** The registrant's name must match their
+  **codice fiscale** exactly — NIC.it checks, and a mismatch fails the
+  registration — and NIC.it sends the registrant a verification e-mail that has
+  to be answered before the domain is active. Keep OVH's own DNS servers: the
+  zone stays at OVH, next to the server.
+- **The server, VPS-1**, in a main European region — **not a Local Zone**,
+  which leaves out NVMe and some features. Image: Ubuntu 24.04 LTS. Paste your
+  SSH public key into the order form, so the machine is born with key login
+  and no password to guess. Note its IPv4 address.
+
+### 2. Point the domain at the server (OVH's DNS zone)
+
+A new OVH domain comes with records pointing at OVH's parking page. In the
+domain's DNS zone, make the apex and `www` point at the VPS, and remove any
+other A, AAAA or CNAME record OVH created for those two names:
+
+| Type | Sub-domain | Target |
+|---|---|---|
+| A | *(empty — the domain itself)* | the VPS's IPv4 |
+| A | `www` | the same IPv4 — Caddy redirects it to the domain |
+
+**No AAAA record yet.** Let's Encrypt prefers IPv6 when a name has one, and an
+IPv6 path nobody has tested is the classic way to fail the first certificate.
+Add it once `curl -6 https://viveregaeta.it` works from somewhere else.
+
+OVH's default MX and SPF records can stay: Brevo's authentication needs
+neither, and they are what an OVH e-mail redirect (an `info@` that reaches your
+own inbox, optional) would use. **Wait until `dig +short viveregaeta.it`
+answers the VPS's address** before step 4 — Caddy asks for the certificate on
+its first start.
+
+### 3. Brevo — the sender
+
+1. A free account. It asks for no card.
+2. **Authenticate the domain** (Senders, domains & dedicated IPs → Domains →
+   add `viveregaeta.it`, manual setup). Brevo shows three kinds of record: a
+   TXT holding a `brevo-code` (proof you own the domain), DKIM (one TXT or two
+   CNAMEs, depending on the account) and a DMARC TXT. **Copy each into OVH's
+   zone exactly as Brevo prints it** — the values are per account, so none are
+   written here — and keep a single DMARC record. Then ask Brevo to verify;
+   it can take some hours.
+3. **Add the sender** `noreply@viveregaeta.it`, named *Vivere Gaeta*.
+4. **Create an SMTP key** (SMTP & API → SMTP). Note the server, the port and
+   the **login** shown there — the login is an identifier Brevo issues, not
+   your account e-mail.
+
+An invite in a spam folder is a collaborator who never gets in, which is why
+step 2 is not optional.
+
+### 4. The server
+
+```sh
+ssh ubuntu@<the VPS's IPv4>
+sudo apt update && sudo apt -y upgrade
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker ubuntu        # then log out and back in
+git clone https://github.com/pastorello/local-social-network.git
+cd local-social-network
+cp deploy/.env.example deploy/.env
+```
+
+Fill in `deploy/.env` — the example already carries the domain, Brevo's server
+and port and the sender:
+
+- `ACME_EMAIL` — your own address; Let's Encrypt writes there about expiry.
+- `DJANGO_SECRET_KEY` — Part 1's generator, **between single quotes**.
+- `POSTGRES_PASSWORD` — `openssl rand -hex 32` gives one with no character
+  Compose would read as a variable.
+- `EMAIL_HOST_USER` and `EMAIL_HOST_PASSWORD` — Brevo's SMTP login and SMTP
+  key from step 3, the key between single quotes.
+
+Then continue with Part 1 from *Then start it*: the first start, the logs, the
+first admin and its `role`. Nothing but SSH, 80 and 443 listens on the public
+address — `db` and `api` publish no ports — so there is no other door to close.
+
+### 5. Prove it works, as a collaborator would
+
+1. `https://viveregaeta.it/benvenuto` opens with a valid certificate, and both
+   `http://` and `www.` land on it.
+2. **The whole onboarding, with the real provider:** file a *Collabora con
+   noi* request from the site with a second address of yours, approve it in
+   `/admin/`, and the invite must arrive **in the inbox**. In Gmail, *Show
+   original* should say `DKIM: PASS` and `DMARC: PASS`. Follow the link, set
+   the password, sign in.
+3. Ask for a password reset once, and use it.
+
+### 6. Then: the content, and the backups
+
+- **The drafts kept in git** go in with one command, unpublished and signed by
+  *Redazione* — they are the archive's raw material, so the command is not
+  DEBUG-only:
+  `docker compose -f deploy/docker-compose.yml --env-file deploy/.env exec api python manage.py seed_drafts`.
+  Read them and publish them from the app or from `/admin/`.
+- **OVH's included backup is one copy of the last 24 hours**: a net for a dead
+  disk, not a history. Schedule Part 1's two backup commands (in a crontab,
+  write each `%` as `\%`) and copy the files off the machine regularly — to
+  your own computer is enough. The uploads exist nowhere else.
+
+---
+
 ## Part 1 — a VPS with Docker Compose
 
 ### What you get

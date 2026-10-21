@@ -12,6 +12,14 @@ to these phases by number, so 3, 4, 5 and 8 keep theirs and the gaps are where
 the finished ones used to sit. A roadmap that renumbers itself is a roadmap
 nothing else can cite.
 
+**Where things stand (2026-10-21).** The engineering board is empty: since
+2026-10-13 the zones were redrawn on OpenStreetMap and the map credits it (#105, #106), the
+public-source drafts moved into git (#107, #108), drafts appear on the map for
+whoever may read them (#109), and CI gained a Lighthouse gate whose first
+finding and TD-52 were both paid (#110–#112). The author chose **deploy before
+content** and decided item 3's three inputs (ADR-0009). Item 4 follows on the
+live site.
+
 **Where things stand (2026-10-13).** *«Cosa si può fare qui»* is decided and
 built in a day — the spec's Part −1 (#98), then four PRs (#99–#102):
 ADR-0008's availability and *«Se la trovi chiusa»*, the editorial zones, the
@@ -56,8 +64,16 @@ of the archive's item 6.
 
 ## 3. Deploy readiness — prerequisites now, deploy on the author's signal
 
-**What is actually left: a mail provider, a sender domain, a host, and the
-author's signal.** Everything else on this checklist is struck out — including
+**Decided 2026-10-21, with the author's signal** ([ADR-0009](./adr/0009-where-it-runs.md)):
+`viveregaeta.it` registered at OVHcloud, one **OVHcloud VPS-1** (2 vCores,
+4 GB, daily backup included, about €4.65/month), and **Brevo's free plan** for
+the invite and reset mail — about €65 a year in all, for a showcase with
+near-zero traffic and under thirty e-mails a month. **What is left is buying
+them and following [deploy.md](./deploy.md)'s *The setup chosen on
+2026-10-21*** — the author's hands, not an engineer's.
+
+~~**What is actually left: a mail provider, a sender domain, a host, and the
+author's signal.**~~ Everything else on this checklist is struck out — including
 the compose path, walked end to end on a production-shaped stack on
 2026-09-10. Nothing here is engineering work waiting for an engineer.
 
