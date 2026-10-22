@@ -171,6 +171,13 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
     cy.visit('/cosa-fare')
     cy.contains('Scegli una zona')
     check('/cosa-fare')
+
+    // Review PR-4: on a phone a chosen zone puts the other chips away behind
+    // «Cambia zona», a disclosure.
+    cy.visit('/cosa-fare?zona=porto-salvo')
+    cy.contains('a', 'Chiesa E2E pubblicata')
+    cy.contains('button', 'Cambia zona')
+    check('/cosa-fare?zona=porto-salvo (phone)')
   })
 
   it('Cosa si può fare qui: the zones are links a keyboard reaches and follows', () => {

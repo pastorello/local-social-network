@@ -47,6 +47,9 @@ const props = defineProps<{
   // page's panel leaves visible.
   focus?: MapFocus | null
   focusPadding?: { topLeft: [number, number]; bottomRight: [number, number] }
+  // A page about a set rather than one place (cosa-fare.md D5): what it wants
+  // in view, framed inside `focusPadding` like a focus but drawn as it is.
+  frame?: { lat: number; lng: number }[] | null
   // A form drawing on the map (D19): its draft, drawn as the form holds it.
   editor?: MapEditor | null
 }>()
@@ -60,6 +63,10 @@ const emit = defineEmits<{
 // Gaeta (spec F2.1: configured city center)
 const GAETA: [number, number] = [41.2172608, 13.5625165]
 const GAETA_ZOOM = 14
+// A framed set is never shown closer than this (review PR-4, 2026-10-23): a
+// set of one place, or of two next door, would otherwise fill the screen with
+// a field and no street to know it by.
+const FRAME_MAX_ZOOM = 16
 
 // Overlays belong between the base tiles (200) and everything clickable
 // (overlayPane 400, markerPane 600): a historical raster is scenery, a
@@ -229,11 +236,15 @@ const renderFocus = () => {
   focusLayer.addTo(map)
 }
 
-// Frame the open page's place in the part of the map its panel leaves free,
-// and give the reader their own view back when the page closes (D16).
+// Frame the open page's place — or, for a page about a set, that set — in the
+// part of the map its panel leaves free, and give the reader their own view
+// back when the page closes (D16).
 const frameFocus = () => {
   if (!map) return
-  const latLngs = focusLatLngs()
+  const focus = focusLatLngs()
+  const latLngs = focus.length
+    ? focus
+    : (props.frame ?? []).map((point) => [point.lat, point.lng] as [number, number])
   if (latLngs.length === 0) {
     if (viewBeforeFocus) {
       map.setView(viewBeforeFocus.center, viewBeforeFocus.zoom)
@@ -245,7 +256,7 @@ const frameFocus = () => {
   map.fitBounds(L.latLngBounds(latLngs), {
     paddingTopLeft: props.focusPadding?.topLeft ?? [48, 48],
     paddingBottomRight: props.focusPadding?.bottomRight ?? [48, 48],
-    maxZoom: 17,
+    maxZoom: focus.length ? 17 : FRAME_MAX_ZOOM,
   })
 }
 
@@ -440,6 +451,7 @@ watch(
   },
   { deep: true },
 )
+watch(() => props.frame, frameFocus, { deep: true })
 watch(() => props.focusPadding, frameFocus, { deep: true })
 watch(
   () => props.editor,

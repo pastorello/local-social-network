@@ -21,6 +21,22 @@ const onScreen = ($el: JQuery<HTMLElement>) => {
   expect(rect.bottom).to.be.at.most($el[0]!.ownerDocument.defaultView!.innerHeight)
 }
 
+// Where the map draws the cards a page hands it: every path of the card layers
+// (pins, a procession's line and stops), as one box on screen.
+const drawnBox = ($paths: JQuery<HTMLElement>) => {
+  const boxes = [...$paths].map((path) => path.getBoundingClientRect())
+  return {
+    left: Math.min(...boxes.map((box) => box.left)),
+    right: Math.max(...boxes.map((box) => box.right)),
+    top: Math.min(...boxes.map((box) => box.top)),
+    bottom: Math.max(...boxes.map((box) => box.bottom)),
+  }
+}
+const headerBottom = ($el: JQuery<HTMLElement>) =>
+  Number.parseFloat(
+    getComputedStyle($el[0]!.ownerDocument.documentElement).getPropertyValue('--header-h'),
+  )
+
 describe('the reader, on a wide screen', () => {
   beforeEach(() => cy.viewport(1280, 800))
 
@@ -186,6 +202,29 @@ describe('the reader, on a wide screen', () => {
     cy.location('pathname').should('eq', '/')
   })
 
+  // Review PR-4 (P-04): a chosen zone is framed in the part of the map the
+  // panel leaves free — not left wherever the map was, half under the panel.
+  // seed_e2e's Porto Salvo holds the published church and the feast's route.
+  it('sees the zone it chose framed beside the panel', () => {
+    cy.visit('/cosa-fare?zona=porto-salvo')
+    cy.get('main section[tabindex="-1"]').contains('a', PUBLISHED)
+
+    cy.get('main section[tabindex="-1"]').then(($panel) => {
+      const panelLeft = $panel[0]!.getBoundingClientRect().left
+      cy.get('.leaflet-overlay-pane path.leaflet-interactive').should(($paths) => {
+        const box = drawnBox($paths)
+        const viewport = $paths[0]!.ownerDocument.defaultView!
+        expect(box.left).to.be.at.least(0)
+        expect(box.right).to.be.at.most(panelLeft)
+        expect(box.top).to.be.at.least(headerBottom($paths))
+        expect(box.bottom).to.be.at.most(viewport.innerHeight)
+        // Centred in that free part: the city's centre, where the church is,
+        // would put it 290px further right.
+        expect(Math.abs((box.left + box.right) / 2 - panelLeft / 2)).to.be.below(16)
+      })
+    })
+  })
+
   it('sees a feste route drawn as a list of stops', () => {
     cy.visit('/feste')
     cy.contains('a', 'Festa E2E pubblicata').click()
@@ -254,5 +293,35 @@ describe('the reader, on a phone', () => {
     cy.go('back')
     cy.location('search').should('eq', '')
     cy.contains('h1', PUBLISHED).should('be.visible')
+  })
+
+  // Review PR-4 (M-07): on a phone a chosen zone is framed in the strip
+  // above the page, the other zones step aside for it, and the results start
+  // on the first screen of the panel.
+  it('sees the zone it chose in the strip, and its places without scrolling past the zones', () => {
+    cy.visit('/cosa-fare?zona=porto-salvo')
+    cy.get('main section[tabindex="-1"]').contains('a', PUBLISHED)
+
+    cy.get('main section[tabindex="-1"]').then(($panel) => {
+      const panelTop = $panel[0]!.getBoundingClientRect().top
+      cy.get('.leaflet-overlay-pane path.leaflet-interactive').should(($paths) => {
+        const box = drawnBox($paths)
+        expect(box.top).to.be.at.least(headerBottom($paths))
+        expect(box.bottom).to.be.at.most(panelTop)
+      })
+      cy.wrap($panel)
+        .contains('a', PUBLISHED)
+        .should(($link) => {
+          expect($link[0]!.getBoundingClientRect().top - panelTop).to.be.at.most(420)
+        })
+    })
+
+    cy.get('nav[aria-label="Zone"] a').should('have.length', 1).and('contain', 'Porto Salvo')
+    cy.contains('button', 'Cambia zona').should('have.attr', 'aria-expanded', 'false').click()
+    cy.contains('button', 'Cambia zona').should('have.attr', 'aria-expanded', 'true')
+    cy.get('nav[aria-label="Zone"] a').should('have.length.greaterThan', 1)
+    cy.get('nav[aria-label="Zone"]').contains('a', 'Gaeta Medievale').click()
+    cy.location('search').should('eq', '?zona=gaeta-medievale')
+    cy.get('nav[aria-label="Zone"] a').should('have.length', 1).and('contain', 'Gaeta Medievale')
   })
 })

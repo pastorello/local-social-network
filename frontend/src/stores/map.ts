@@ -87,6 +87,11 @@ export const useMapStore = defineStore('map', {
     // tour's focus, and separate from `activeLayers`, which are the reader's
     // toggles and must outlive the page.
     restrictTo: null as string[] | null,
+    // What such a page wants in view (review PR-4, 2026-10-23): the set it
+    // lists, or the whole of Gaeta before it lists anything. Framed in the part
+    // of the map the panel leaves free, like a focus, but nothing is drawn for
+    // it — what is drawn is `restrictTo`'s business.
+    frame: null as { lat: number; lng: number }[] | null,
     editor: null as MapEditor | null,
     loaded: false,
   }),
@@ -196,6 +201,10 @@ export const useMapStore = defineStore('map', {
 
     setRestriction(ids: string[] | null) {
       this.restrictTo = ids
+    },
+
+    setFrame(points: { lat: number; lng: number }[] | null) {
+      this.frame = points
     },
 
     startEditing(

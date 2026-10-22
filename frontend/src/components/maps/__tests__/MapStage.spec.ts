@@ -20,7 +20,7 @@ vi.mock('@/lib/firstPaint', () => ({ afterFirstPaint: () => paint.done() }))
 // MapStage listens to.
 const GaetaMapStub = defineComponent({
   name: 'GaetaMap',
-  props: ['pins', 'features', 'overlays', 'placing', 'focus', 'editor', 'focusPadding'],
+  props: ['pins', 'features', 'overlays', 'placing', 'focus', 'frame', 'editor', 'focusPadding'],
   emits: ['mapClick', 'pinClick', 'featureClick'],
   setup: () => () => h('div'),
 })
@@ -215,6 +215,32 @@ describe('MapStage while a page lists a set (spec cosa-fare.md Part −1, D5)', 
     await flushPromises()
     expect(map.props('features')).toHaveLength(2)
     expect(map.props('pins')).toHaveLength(1)
+  })
+
+  it('hands the map the set to frame, except while a form is drawing (review PR-4)', async () => {
+    const { map } = await mountStage()
+    const store = useMapStore()
+    const box = [
+      { lat: 41.2, lng: 13.55 },
+      { lat: 41.22, lng: 13.57 },
+    ]
+
+    store.setFrame(box)
+    await flushPromises()
+    expect(map.props('frame')).toEqual(box)
+
+    // The form owns the view while it draws (D19).
+    store.startEditing({ kind: 'pins', points: [], max: 1, label: 'Un punto' }, vi.fn(), vi.fn())
+    await flushPromises()
+    expect(map.props('frame')).toBeNull()
+
+    store.stopEditing()
+    await flushPromises()
+    expect(map.props('frame')).toEqual(box)
+
+    store.setFrame(null)
+    await flushPromises()
+    expect(map.props('frame')).toBeNull()
   })
 })
 

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import axios from 'axios'
 import { createPinia, setActivePinia } from 'pinia'
@@ -24,21 +24,81 @@ const feature = (over: Partial<MapCardFeature>): MapCardFeature => ({
   ...over,
 })
 
+const at = (lat: number, lng: number) => [{ lat, lng, label: '' }]
+
 const FEATURES = [
-  feature({ id: 'l1', title: 'Spiaggia di Serapo', genre: 'spiaggia', zones: ['serapo'] }),
-  feature({ id: 'l2', title: 'Belvedere', genre: 'punto-panoramico', zones: ['serapo'] }),
-  feature({ id: 'c1', type: 'chiese', title: 'Annunziata', zones: ['serapo'], access: 'services' }),
+  feature({
+    id: 'l1',
+    title: 'Spiaggia di Serapo',
+    genre: 'spiaggia',
+    zones: ['serapo'],
+    points: at(41.21, 13.56),
+  }),
+  feature({
+    id: 'l2',
+    title: 'Belvedere',
+    genre: 'punto-panoramico',
+    zones: ['serapo'],
+    points: at(41.22, 13.55),
+  }),
+  feature({
+    id: 'c1',
+    type: 'chiese',
+    title: 'Annunziata',
+    zones: ['serapo'],
+    access: 'services',
+    points: at(41.215, 13.565),
+  }),
   feature({ id: 'c2', type: 'chiese', title: 'Duomo', zones: ['gaeta-medievale'] }),
   feature({ id: 'l3', title: 'Arenauta', genre: 'spiaggia', zones: [] }),
-  feature({ id: 'f1', type: 'feste', title: 'Porto Salvo', zones: ['serapo'] }),
-  feature({ id: 'r1', type: 'ricette', title: 'Tiella', zones: ['serapo'] }),
+  feature({
+    id: 'f1',
+    type: 'feste',
+    title: 'Porto Salvo',
+    zones: ['serapo'],
+    route: [...at(41.212, 13.558), ...at(41.225, 13.57)],
+  }),
+  feature({
+    id: 'r1',
+    type: 'ricette',
+    title: 'Tiella',
+    zones: ['serapo'],
+    points: at(41.3, 13.7),
+  }),
 ]
+
+// GeoJSON: [lng, lat].
+const square = (south: number, west: number, north: number, east: number) => ({
+  type: 'Polygon',
+  coordinates: [
+    [
+      [west, south],
+      [east, south],
+      [east, north],
+      [west, north],
+      [west, south],
+    ],
+  ],
+})
 
 const ANSWERS: Record<string, unknown> = {
   '/api/map/zone/': [
-    { slug: 'serapo', name: 'Serapo', count: 3 },
-    { slug: 'gaeta-medievale', name: 'Gaeta Medievale', count: 1 },
-    { slug: 'monte-orlando', name: 'Monte Orlando', count: 0 },
+    { slug: 'serapo', name: 'Serapo', count: 3, geometry: square(41.2, 13.54, 41.23, 13.58) },
+    {
+      slug: 'gaeta-medievale',
+      name: 'Gaeta Medievale',
+      count: 1,
+      geometry: square(41.205, 13.57, 41.215, 13.59),
+    },
+    {
+      slug: 'monte-orlando',
+      name: 'Monte Orlando',
+      count: 0,
+      geometry: {
+        type: 'MultiPolygon',
+        coordinates: [square(41.2, 13.56, 41.21, 13.57).coordinates],
+      },
+    },
   ],
   '/api/itinerari/intenti/': [
     { slug: 'mare', name: 'Andare al mare' },
@@ -125,16 +185,23 @@ describe('CosaFareView — «Cosa si può fare qui» (spec cosa-fare.md Part −
   it('lists a zone by activity, alphabetically, with what is known about getting in', async () => {
     const { wrapper } = await mountAt({ zona: 'serapo' })
 
+    // The zone's own blocks first, in the author's order of intents, and the
+    // dishes — which are for all of Gaeta — last (review PR-4).
     const headings = wrapper.findAll('h2').map((h) => h.text())
     expect(headings).toEqual([
       'Andare al mare',
-      'Mangiare',
       'Scoprire la città',
       'Camminare',
       'Itinerari che passano di qui',
       'Le feste di questa zona',
+      'Mangiare',
     ])
-    expect(wrapper.text()).toContain('In ordine alfabetico.')
+    // Every section says its order under its own heading, and no orphan line
+    // says it for all of them.
+    for (const section of wrapper.findAll('section')) {
+      expect(section.text()).toContain('in ordine alfabetico')
+    }
+    expect(wrapper.text()).not.toContain('In ordine alfabetico.')
     expect(wrapper.text()).toContain('Annunziata')
     expect(wrapper.text()).toContain('Chiesa · Si entra solo durante le funzioni.')
     expect(wrapper.text()).toContain('Giro di Serapo')
@@ -157,6 +224,8 @@ describe('CosaFareView — «Cosa si può fare qui» (spec cosa-fare.md Part −
 
     expect(wrapper.text()).toContain("In questa zona l'archivio non ha ancora niente.")
     expect(wrapper.text()).toContain('Prova Serapo, Gaeta Medievale, Altrove a Gaeta.')
+    // The dishes are still offered, and still last.
+    expect(wrapper.findAll('h2').map((h) => h.text())).toEqual(['Mangiare'])
   })
 
   it('has the map draw exactly the zone’s places and feste, and lets go on leaving', async () => {
@@ -166,5 +235,76 @@ describe('CosaFareView — «Cosa si può fare qui» (spec cosa-fare.md Part −
 
     wrapper.unmount()
     expect(store.restrictTo).toBeNull()
+  })
+
+  it('frames the zone’s set — pins and processions, not the dishes — and lets go on leaving', async () => {
+    const { wrapper, store } = await mountAt({ zona: 'serapo' })
+
+    expect(store.frame).toEqual([
+      { lat: 41.21, lng: 13.55 },
+      { lat: 41.225, lng: 13.57 },
+    ])
+
+    wrapper.unmount()
+    expect(store.frame).toBeNull()
+  })
+
+  it('frames an empty zone by its outline, and the whole of Gaeta when none is chosen', async () => {
+    const { store, router } = await mountAt({ zona: 'monte-orlando' })
+    expect(store.frame).toEqual([
+      { lat: 41.2, lng: 13.56 },
+      { lat: 41.21, lng: 13.57 },
+    ])
+
+    await router.push({ path: '/cosa-fare' })
+    await flushPromises()
+    expect(store.frame).toEqual([
+      { lat: 41.2, lng: 13.54 },
+      { lat: 41.23, lng: 13.59 },
+    ])
+  })
+})
+
+describe('CosaFareView on a phone (review PR-4, M-07)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(axios.get).mockImplementation(async (url: string) => ({ data: ANSWERS[url] }))
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() })),
+    )
+  })
+  afterEach(() => vi.unstubAllGlobals())
+
+  const chipNames = (wrapper: Awaited<ReturnType<typeof mountAt>>['wrapper']) =>
+    wrapper.findAll('#zone-chips a').map((a) => a.text())
+
+  it('says what the page is in one line, and offers every zone in one row', async () => {
+    const { wrapper } = await mountAt()
+
+    expect(wrapper.text()).toContain('Luoghi, itinerari e feste, zona per zona.')
+    expect(wrapper.text()).not.toContain('gli itinerari che ci passano')
+    expect(chipNames(wrapper)).toHaveLength(4)
+    expect(wrapper.find('#zone-chips').classes()).toContain('overflow-x-auto')
+    expect(wrapper.find('button[aria-controls="zone-chips"]').exists()).toBe(false)
+  })
+
+  it('puts the other zones away once one is chosen, and «Cambia zona» brings them back', async () => {
+    const { wrapper, router } = await mountAt({ zona: 'serapo' })
+
+    expect(chipNames(wrapper)).toEqual(['Serapo 3'])
+    const toggle = wrapper.find('button[aria-controls="zone-chips"]')
+    expect(toggle.text()).toBe('Cambia zona')
+    expect(toggle.attributes('aria-expanded')).toBe('false')
+
+    await toggle.trigger('click')
+    expect(chipNames(wrapper)).toHaveLength(4)
+    expect(toggle.attributes('aria-expanded')).toBe('true')
+
+    // Choosing another zone puts them away again; the address is the choice.
+    await router.push({ path: '/cosa-fare', query: { zona: 'gaeta-medievale' } })
+    await flushPromises()
+    expect(chipNames(wrapper)).toEqual(['Gaeta Medievale 1'])
+    expect(router.currentRoute.value.query.zona).toBe('gaeta-medievale')
   })
 })

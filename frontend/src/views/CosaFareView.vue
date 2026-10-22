@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import axios from 'axios'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, type RouteLocationRaw } from 'vue-router'
 
 import MainTitle from '@/components/typography/MainTitle.vue'
+import { useIsDesktop } from '@/composables/useBreakpoint'
 import type { Genre } from '@/definitions/interfaces/Luogo'
 import type { Intent } from '@/definitions/interfaces/Itinerario'
 import type { MapCardFeature, Zone } from '@/definitions/interfaces/MapData'
@@ -25,7 +26,8 @@ import { useMapStore } from '@/stores/map'
 // (D2); places as rows, tours and feste as blocks, the dishes for all of
 // Gaeta (D3); alphabetical, and saying so (D5). It composes the map's own
 // payload with six short lists; it never ranks, and it never says a place is
-// open (ADR-0008).
+// open (ADR-0008). The zone's own blocks come first and the dishes last
+// (2026-10-23, review PR-4).
 
 interface Row {
   id: string
@@ -43,6 +45,7 @@ interface Page<T> {
 
 const route = useRoute()
 const mapStore = useMapStore()
+const { isDesktop } = useIsDesktop()
 
 const zones = ref<Zone[]>([])
 const intents = ref<Intent[]>([])
@@ -127,19 +130,48 @@ const genreName = computed(() => new Map(genres.value.map((g) => [g.slug, g.name
 const kindOf = (place: MapCardFeature): string =>
   place.type === 'chiese' ? 'Chiesa' : (genreName.value.get(place.genre ?? '') ?? 'Luogo')
 
-// The sections, in the author's order of intents (D4). *Mangiare* is the dishes
-// for all of Gaeta; the others hold this zone's places; a genre nobody has
-// mapped yet lands under «Altro da vedere» rather than nowhere.
-const sections = computed(() => {
-  const list: { key: string; name: string; rows: MapCardFeature[]; recipes: boolean }[] = []
+// One row of the page, whatever it lists: a place, a tour, a festa, a dish.
+interface Line {
+  id: string
+  title: string
+  to: RouteLocationRaw
+  detail?: string
+  draft?: boolean
+}
+interface Block {
+  key: string
+  name: string
+  rows: Line[]
+  // Places are what the page is for (D3): their names carry the weight.
+  places?: boolean
+  note?: string
+}
+
+const placeLine = (place: MapCardFeature): Line => {
+  const access = place.access ? STATE_SENTENCE[place.access] : null
+  return {
+    id: place.id,
+    title: place.title,
+    to: layerRoute(place.type, place.id),
+    detail: access ? `${kindOf(place)} · ${access}` : kindOf(place),
+    draft: !place.is_published,
+  }
+}
+
+// The blocks, top to bottom (review PR-4, 2026-10-23). First what is in this
+// zone: its places by activity, in the author's order of intents (D4), with a
+// genre nobody has mapped yet under «Altro da vedere» rather than nowhere; then
+// its tours and its feste. *Mangiare* comes last, because it is not this
+// zone's: the dishes are for all of Gaeta (D3), and ahead of the zone's own
+// places they answered a question nobody had asked.
+const blocks = computed<Block[]>(() => {
+  if (!selected.value) return []
+  const list: Block[] = []
   for (const intent of intents.value) {
-    if (intent.slug === 'mangiare') {
-      if (ricette.value.length)
-        list.push({ key: 'mangiare', name: intent.name, rows: [], recipes: true })
-      continue
-    }
+    if (intent.slug === 'mangiare') continue
     const rows = placesHere.value.filter((p) => intentOf(p) === intent.slug).sort(byTitle)
-    if (rows.length) list.push({ key: intent.slug, name: intent.name, rows, recipes: false })
+    if (rows.length)
+      list.push({ key: intent.slug, name: intent.name, rows: rows.map(placeLine), places: true })
   }
   const known = new Set(intents.value.map((intent) => intent.slug))
   const other = placesHere.value.filter((p) => {
@@ -150,8 +182,41 @@ const sections = computed(() => {
     list.push({
       key: OTHER_INTENT,
       name: OTHER_INTENT_NAME,
-      rows: other.sort(byTitle),
-      recipes: false,
+      rows: other.sort(byTitle).map(placeLine),
+      places: true,
+    })
+  if (toursHere.value.length)
+    list.push({
+      key: 'itinerari',
+      name: 'Itinerari che passano di qui',
+      rows: toursHere.value.map((tour) => ({
+        id: tour.id,
+        title: tour.title,
+        to: { name: 'itinerariodetail', params: { id: tour.id } },
+      })),
+    })
+  if (festeHere.value.length)
+    list.push({
+      key: 'feste',
+      name: 'Le feste di questa zona',
+      rows: festeHere.value.map((festa) => ({
+        id: festa.id,
+        title: festa.title,
+        to: layerRoute('feste', festa.id),
+        detail: festa.recurrence,
+      })),
+    })
+  const mangiare = intents.value.find((intent) => intent.slug === 'mangiare')
+  if (mangiare && ricette.value.length)
+    list.push({
+      key: 'mangiare',
+      name: mangiare.name,
+      note: 'Le ricette non stanno in una zona sola: queste valgono per tutta Gaeta.',
+      rows: ricette.value.map((ricetta) => ({
+        id: ricetta.id,
+        title: ricetta.title,
+        to: layerRoute('ricette', ricetta.id),
+      })),
     })
   return list
 })
@@ -171,38 +236,128 @@ watch(
   (ids) => mapStore.setRestriction(ids),
   { immediate: true },
 )
-onBeforeUnmount(() => mapStore.setRestriction(null))
+
+// …and frames it, in the part of the map the panel leaves free (2026-10-23,
+// review PR-4): with a zone chosen, that zone's set — or, when it holds
+// nothing yet, the zone's own outline, so the reader still sees where it is;
+// with none, every zone's outline, which is the whole of Gaeta. Handed over as
+// the two corners of the box, since that is all a frame needs.
+const outline = (geometry: Zone['geometry'] | undefined): { lat: number; lng: number }[] => {
+  if (!geometry) return []
+  const polygons = (
+    geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.coordinates
+  ) as number[][][][]
+  return polygons.flat(2).map(([lng, lat]) => ({ lat: lat!, lng: lng! }))
+}
+const corners = (points: { lat: number; lng: number }[]) => {
+  if (!points.length) return null
+  const lats = points.map((point) => point.lat)
+  const lngs = points.map((point) => point.lng)
+  return [
+    { lat: Math.min(...lats), lng: Math.min(...lngs) },
+    { lat: Math.max(...lats), lng: Math.max(...lngs) },
+  ]
+}
+const frame = computed(() => {
+  if (!selected.value) return corners(zones.value.flatMap((zone) => outline(zone.geometry)))
+  const slug = selected.value.slug
+  const set = [...placesHere.value, ...festeHere.value].flatMap((f) => [...f.points, ...f.route])
+  return corners(set) ?? corners(outline(zones.value.find((zone) => zone.slug === slug)?.geometry))
+})
+watch(frame, (points) => mapStore.setFrame(points), { immediate: true })
+
+onBeforeUnmount(() => {
+  mapStore.setRestriction(null)
+  mapStore.setFrame(null)
+})
+
+// On a phone the chips are one row that scrolls sideways, and once a zone is
+// chosen they step aside for it: the chosen one, and «Cambia zona» to bring
+// the others back (review PR-4). Choosing — or the address changing under
+// the page, by Back — puts them away again.
+const choosing = ref(false)
+watch(
+  () => selected.value?.slug,
+  () => (choosing.value = false),
+)
+const collapsed = computed(() => !isDesktop.value && !!selected.value && !choosing.value)
+const shownChips = computed(() =>
+  collapsed.value ? chips.value.filter((chip) => chip.slug === selected.value?.slug) : chips.value,
+)
 </script>
 
 <template>
   <article class="mx-auto w-full max-w-2xl pt-2">
     <p class="text-xs font-semibold tracking-[0.12em] text-terracotta uppercase">A Gaeta</p>
     <MainTitle>Cosa si può fare qui</MainTitle>
+    <!-- One line on a phone, where the results have to start on the first
+    screen (review PR-4, M-07). -->
     <p class="mt-2 max-w-[55ch] text-reading text-muted">
-      Scegli una zona: trovi i luoghi da vedere, gli itinerari che ci passano e le feste che la
-      attraversano.
+      {{
+        isDesktop
+          ? 'Scegli una zona: trovi i luoghi da vedere, gli itinerari che ci passano e le feste che la attraversano.'
+          : 'Luoghi, itinerari e feste, zona per zona.'
+      }}
     </p>
 
     <nav aria-label="Zone" class="mt-6">
-      <ul class="flex flex-wrap gap-2">
-        <li v-for="chip in chips" :key="chip.slug">
-          <RouterLink
-            :to="{ query: { zona: chip.slug } }"
-            :aria-current="selected?.slug === chip.slug ? 'page' : undefined"
-            class="inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
-            :class="
-              selected?.slug === chip.slug
-                ? 'border-sea bg-sea text-white'
-                : 'border-field bg-surface text-ink hover:border-sea'
-            "
+      <!-- On a phone the open row runs to the panel's edges, so it reads as a
+      row that scrolls, and «Cambia zona» goes under it. -->
+      <div class="flex flex-wrap items-center gap-2">
+        <ul
+          id="zone-chips"
+          class="flex gap-2"
+          :class="
+            isDesktop
+              ? 'flex-wrap'
+              : collapsed
+                ? ''
+                : '-mx-4 -my-1 w-[calc(100%+2rem)] flex-none snap-x snap-mandatory scroll-px-4 overflow-x-auto px-4 py-1'
+          "
+        >
+          <li v-for="chip in shownChips" :key="chip.slug" class="flex-none snap-start">
+            <RouterLink
+              :to="{ query: { zona: chip.slug } }"
+              :aria-current="selected?.slug === chip.slug ? 'page' : undefined"
+              class="inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-semibold whitespace-nowrap focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+              :class="
+                selected?.slug === chip.slug
+                  ? 'border-sea bg-sea text-white'
+                  : 'border-field bg-surface text-ink hover:border-sea'
+              "
+              @click="choosing = false"
+            >
+              {{ chip.name }}
+              <span :class="selected?.slug === chip.slug ? 'text-white' : 'text-muted'">{{
+                chip.count
+              }}</span>
+            </RouterLink>
+          </li>
+        </ul>
+        <button
+          v-if="!isDesktop && selected"
+          type="button"
+          aria-controls="zone-chips"
+          :aria-expanded="!collapsed"
+          class="inline-flex h-10 flex-none cursor-pointer items-center gap-1.5 rounded-full px-3 text-sm font-semibold text-sea underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+          @click="choosing = !choosing"
+        >
+          Cambia zona
+          <svg
+            viewBox="0 0 20 20"
+            class="h-4 w-4 transition-transform"
+            :class="{ 'rotate-180': !collapsed }"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
           >
-            {{ chip.name }}
-            <span :class="selected?.slug === chip.slug ? 'text-white' : 'text-muted'">{{
-              chip.count
-            }}</span>
-          </RouterLink>
-        </li>
-      </ul>
+            <path d="M5.5 8l4.5 4.5L14.5 8" />
+          </svg>
+        </button>
+      </div>
       <p class="mt-3 text-sm text-muted">Zone indicative, non confini ufficiali.</p>
     </nav>
 
@@ -223,60 +378,23 @@ onBeforeUnmount(() => mapStore.setRestriction(null))
           </template>
         </template>
       </p>
-      <p v-else class="mt-8 text-sm text-muted">In ordine alfabetico.</p>
 
-      <section v-for="section in sections" :key="section.key" class="mt-8">
-        <h2 class="mb-3 font-display text-title text-ink">{{ section.name }}</h2>
-        <template v-if="section.recipes">
-          <p class="mb-3 text-sm text-muted">
-            Le ricette non stanno in una zona sola: queste valgono per tutta Gaeta.
-          </p>
-          <ul class="divide-y divide-hairline border-y border-hairline">
-            <li v-for="ricetta in ricette" :key="ricetta.id" class="py-3">
-              <RouterLink :to="layerRoute('ricette', ricetta.id)" class="text-ink underline">{{
-                ricetta.title
-              }}</RouterLink>
-            </li>
-          </ul>
-        </template>
-        <ul v-else class="divide-y divide-hairline border-y border-hairline">
-          <li v-for="place in section.rows" :key="place.id" class="py-3">
-            <RouterLink
-              :to="layerRoute(place.type, place.id)"
-              class="font-semibold text-ink underline"
-              >{{ place.title }}</RouterLink
-            ><span v-if="!place.is_published" class="text-xs text-muted"> · bozza</span>
-            <p class="text-sm text-muted">
-              {{ kindOf(place)
-              }}<template v-if="place.access && STATE_SENTENCE[place.access]">
-                · {{ STATE_SENTENCE[place.access] }}</template
-              >
-            </p>
-          </li>
-        </ul>
-      </section>
-
-      <section v-if="toursHere.length" class="mt-8">
-        <h2 class="mb-3 font-display text-title text-ink">Itinerari che passano di qui</h2>
+      <section v-for="block in blocks" :key="block.key" class="mt-8">
+        <!-- The order is said where it applies, beside each heading (D5). -->
+        <div class="mb-3 flex flex-wrap items-baseline gap-x-2">
+          <h2 class="font-display text-title text-ink">{{ block.name }}</h2>
+          <p class="text-sm text-muted"><span aria-hidden="true">·</span> in ordine alfabetico</p>
+        </div>
+        <p v-if="block.note" class="mb-3 text-sm text-muted">{{ block.note }}</p>
         <ul class="divide-y divide-hairline border-y border-hairline">
-          <li v-for="tour in toursHere" :key="tour.id" class="py-3">
+          <li v-for="row in block.rows" :key="row.id" class="py-3">
             <RouterLink
-              :to="{ name: 'itinerariodetail', params: { id: tour.id } }"
+              :to="row.to"
               class="text-ink underline"
-              >{{ tour.title }}</RouterLink
-            >
-          </li>
-        </ul>
-      </section>
-
-      <section v-if="festeHere.length" class="mt-8">
-        <h2 class="mb-3 font-display text-title text-ink">Le feste di questa zona</h2>
-        <ul class="divide-y divide-hairline border-y border-hairline">
-          <li v-for="festa in festeHere" :key="festa.id" class="py-3">
-            <RouterLink :to="layerRoute('feste', festa.id)" class="text-ink underline">{{
-              festa.title
-            }}</RouterLink>
-            <p v-if="festa.recurrence" class="text-sm text-muted">{{ festa.recurrence }}</p>
+              :class="{ 'font-semibold': block.places }"
+              >{{ row.title }}</RouterLink
+            ><span v-if="row.draft" class="text-xs text-muted"> · bozza</span>
+            <p v-if="row.detail" class="text-sm text-muted">{{ row.detail }}</p>
           </li>
         </ul>
       </section>

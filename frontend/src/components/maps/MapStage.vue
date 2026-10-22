@@ -186,6 +186,7 @@ onMounted(async () => {
       :overlays="mapStore.visibleOverlays"
       :placing="mapStore.placing"
       :focus="mapStore.editor ? null : mapStore.focus"
+      :frame="mapStore.editor ? null : mapStore.frame"
       :editor="mapStore.editor"
       :focus-padding="focusPadding"
       @map-click="onMapClick"
