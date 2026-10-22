@@ -7,6 +7,7 @@ import PanelBox from '@/components/boxes/PanelBox.vue'
 import ViewContainer from '@/components/boxes/ViewContainer.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import CardArticle from '@/components/content/CardArticle.vue'
+import DirectionsLink from '@/components/content/DirectionsLink.vue'
 import { useIsDesktop } from '@/composables/useBreakpoint'
 import { useMapFocus } from '@/composables/useMapFocus'
 import { useMapStore } from '@/stores/map'
@@ -16,7 +17,8 @@ import VisitInfo from '@/components/content/VisitInfo.vue'
 import { useUserStore } from '@/stores/user'
 import { useToastStore } from '@/stores/toast'
 import type { TypeConfig } from '@/definitions/typeConfigs'
-import type { Availability, ContentItem, MapPoint } from '@/definitions/interfaces/Content'
+import type { Availability, ContentItem, MapPoint, ZoneRef } from '@/definitions/interfaces/Content'
+import { directionsUrl } from '@/lib/directions'
 
 const props = defineProps<{ config: TypeConfig }>()
 
@@ -41,6 +43,15 @@ const canEdit = computed(
 
 const pins = computed(() => (item.value?.pins as MapPoint[] | undefined) ?? [])
 const labelledPins = computed(() => pins.value.filter((pin) => pin.label))
+// «Dove si trova» (review PR-3): only for a card that has somewhere to go.
+const hasPlace = computed(() => props.config.mapMode === 'pins' && pins.value.length > 0)
+// One place — a church, a luogo — has one way there, the section's button; a
+// card with several (the shops a dish is sold in, a figure's birthplace and
+// monument) gives each its own.
+const onlyPin = computed(() => (pins.value.length === 1 ? (pins.value[0] ?? null) : null))
+const zoneNames = computed(() =>
+  ((item.value?.zones as ZoneRef[] | undefined) ?? []).map((zone) => zone.name).join(' · '),
+)
 
 // The map behind the panel shows this card's place while it is open (D16).
 useMapFocus(() =>
@@ -59,7 +70,16 @@ const fromOutside = computed(() =>
 )
 
 const filledFields = computed(() =>
-  props.config.extraFields.filter((field) => Boolean(item.value?.[field.key])),
+  props.config.extraFields.filter(
+    (field) => Boolean(item.value?.[field.key]) && !(hasPlace.value && field.inPlace),
+  ),
+)
+// Read with the way there rather than among the facts (luoghi's «Come
+// arrivarci» text), where there is a place to read it under.
+const placeFields = computed(() =>
+  hasPlace.value
+    ? props.config.extraFields.filter((field) => field.inPlace && Boolean(item.value?.[field.key]))
+    : [],
 )
 
 const getItem = async () => {
@@ -167,17 +187,61 @@ watch(
           </template>
 
           <template #map>
-            <section v-if="config.mapMode === 'pins' && pins.length > 0" class="mb-10">
+            <!-- For the reader standing in town (review PR-3): which part of
+            Gaeta, how one gets there in the author's words, and the way there
+            from where they stand. -->
+            <section v-if="hasPlace" class="mb-10">
               <h2 class="mb-3 font-display text-title text-ink">Dove si trova</h2>
+              <p v-if="zoneNames" class="font-semibold text-ink">{{ zoneNames }}</p>
+              <p
+                v-for="field in placeFields"
+                :key="field.key"
+                class="mt-2 max-w-[65ch] whitespace-pre-line text-reading text-ink"
+              >
+                {{ item![field.key] }}
+              </p>
+
+              <template v-if="onlyPin">
+                <ul v-if="labelledPins.length" class="mt-3 list-disc space-y-1 pl-5 text-ink">
+                  <li v-for="(pin, index) in labelledPins" :key="index">{{ pin.label }}</li>
+                </ul>
+                <DirectionsLink :place="onlyPin" class="mt-4" />
+              </template>
+              <!-- Several places: each row names its own, which is the link's
+              context (WCAG 2.4.4) — "Come arrivarci" beside "Forno Rossi". -->
+              <ul v-else class="mt-3 space-y-2">
+                <li
+                  v-for="(pin, index) in pins"
+                  :key="pin.id ?? index"
+                  class="flex flex-wrap items-center gap-x-3 gap-y-1"
+                >
+                  <span class="text-ink">{{ pin.label || `Punto ${index + 1}` }}</span>
+                  <a
+                    :href="directionsUrl(pin)"
+                    target="_blank"
+                    rel="noopener"
+                    class="text-sm font-semibold text-sea underline underline-offset-4"
+                  >
+                    Come arrivarci <span class="font-normal">(apre Google Maps)</span>
+                  </a>
+                </li>
+              </ul>
+
               <!-- The map is beside the panel on a wide screen and in the
               strip above it on a phone, already showing the place (D16/D18) —
-              a second map inside the panel would be a map over a map. -->
-              <p class="text-muted">
+              a second map inside the panel would be a map over a map. On a
+              phone the strip is small, so the section offers to enlarge it
+              too: the same `?mappa=1` step the strip's own button takes. -->
+              <p class="mt-4 text-muted">
                 È evidenziato sulla mappa, {{ isDesktop ? 'qui accanto' : 'qui sopra' }}.
+                <RouterLink
+                  v-if="!isDesktop"
+                  :to="{ query: { ...route.query, mappa: '1' } }"
+                  class="font-semibold whitespace-nowrap text-sea underline underline-offset-4"
+                >
+                  Allarga la mappa
+                </RouterLink>
               </p>
-              <ul v-if="labelledPins.length" class="mt-3 list-disc space-y-1 pl-5 text-ink">
-                <li v-for="(pin, index) in labelledPins" :key="index">{{ pin.label }}</li>
-              </ul>
             </section>
           </template>
 

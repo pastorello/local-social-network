@@ -12,9 +12,9 @@ import { useMapFocus } from '@/composables/useMapFocus'
 import { itinerarioConfig } from '@/definitions/typeConfigs'
 import type Itinerario from '@/definitions/interfaces/Itinerario'
 import type { MapPoint } from '@/definitions/interfaces/Content'
+import { directionsUrl } from '@/lib/directions'
 import { layerRoute } from '@/lib/mapLayers'
 import { readToken } from '@/lib/tokens'
-import { legDirections } from '@/lib/tours'
 import { useToastStore } from '@/stores/toast'
 import { useUserStore } from '@/stores/user'
 
@@ -54,7 +54,9 @@ const previous = computed(() =>
   step.value && step.value > 1 ? placed.value[step.value - 2] : null,
 )
 const directions = computed(() =>
-  current.value?.point ? legDirections(previous.value?.point ?? null, current.value.point) : null,
+  current.value?.point
+    ? directionsUrl(current.value.point, { from: previous.value?.point ?? null })
+    : null,
 )
 
 // The map behind the panel shows the tour (I11, D16): its numbered stops and
@@ -322,7 +324,7 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
                     >
                       <span v-if="place.label" class="text-ink">{{ place.label }}</span>
                       <a
-                        :href="legDirections(null, place, null)"
+                        :href="directionsUrl(place, { mode: null })"
                         target="_blank"
                         rel="noopener"
                         class="text-sm font-semibold text-sea underline underline-offset-4"

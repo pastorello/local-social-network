@@ -282,6 +282,46 @@ re-argued:
 - **The layer colour is magenta**, `--color-layer-luoghi: #be185d` — the one hue
   family no other layer used; 5.65:1 on the page ground, 6.04:1 on white.
 
+### «Dove si trova» gives the way there — 2026-10-23 (review PR-3)
+
+A place's card now answers the reader already in town, not only the one on
+the sofa ([review](../review-2026-10-22.md) P-03, L-06). On a luogo or a
+chiesa, *Dove si trova* reads, in order: the editorial zone its pin is in
+(cosa-fare.md Part −1 D2); the luogo's `how_to_get_there`; **Come arrivarci
+(apre Google Maps)** as the section's primary button; and, on a phone, *Allarga
+la mappa* — the strip's own `?mappa=1` step, offered again where the reader is
+reading. A festa's *Il percorso* gets **Portami alla partenza**, to the first
+point of its route. A card with no pin has no such section. Nothing here is
+wayfinding of ours (design.md, "Not a wayfinding app"): it is the plain
+outbound anchor itinerari.md I7 and cosa-fare.md 0.1 already allow — no key,
+nothing of Google's loaded on our page, Google computing the way when the
+link is opened.
+
+What the review left to the build, decided here:
+
+- **One function builds every such link**: `lib/directions.ts::directionsUrl`,
+  which is the tour's `lib/tours.ts::legDirections` moved out and generalised
+  (older text in cosa-fare.md names it by its old address). On foot, from
+  wherever the reader is — no origin — unless a tour's leg passes one;
+  `target="_blank" rel="noopener"`. *(apre Google Maps)* is printed on the
+  button, not only read to a screen reader: a tourist who lands in another app
+  unannounced has lost the page.
+- **Chiese and luoghi Read serializers carry `zones` as `{slug, name}`**
+  (`maps/serializers.py::named_zones_of`, the zone table read once per
+  response), the shape review PR-23 asks of them — its eyebrow builds on this
+  field rather than reshaping it. `/api/map/features/` and itinerari keep
+  their lists of slugs. The zone is plain text here; linking it to
+  `/cosa-fare?zona=` is the eyebrow's job.
+- **A card with several pins gives each its own way there** — a ricetta's
+  shops, a personaggio's birthplace and monument — one *Come arrivarci* beside
+  each pin's label (or *Punto N*), since one button would have to choose a
+  shop for the reader. *Dove si trova* is the same `TypeDetailView` section for
+  every type with pins, so "a card with a place has the way there" holds for
+  all four of them, not only the two the review named.
+- **`how_to_get_there` moved under *Dove si trova*** through
+  `FieldConfig.inPlace`; on a luogo still without a pin it stays among the
+  facts, where it was, rather than disappear with the section.
+
 ### Why this is not `tradizioni` again
 
 The argument that dropped `tradizioni` on 2026-09-09 (above) is that a generic

@@ -12,6 +12,14 @@ export interface MapPoint {
   label: string
 }
 
+// An editorial zone a place is in (spec cosa-fare.md Part −1, D2), named — on
+// chiese and luoghi, for «Dove si trova» (review PR-3). By the pin, never by
+// choice; empty outside every zone.
+export interface ZoneRef {
+  slug: string
+  name: string
+}
+
 export interface CardImage {
   id: string
   imageURL: string

@@ -36,13 +36,20 @@ def geometry_contains(geometry, lat, lng):
     return False
 
 
+def _holds_any(zone, points):
+    return any(geometry_contains(zone.geometry, point['lat'], point['lng']) for point in points)
+
+
 def zones_containing_any(zones, points):
     """The slugs of the zones holding at least one of `points` ({lat, lng}),
     in the zones' own order."""
-    return [
-        zone.slug for zone in zones
-        if any(geometry_contains(zone.geometry, point['lat'], point['lng']) for point in points)
-    ]
+    return [zone.slug for zone in zones if _holds_any(zone, points)]
+
+
+def named_zones_containing_any(zones, points):
+    """The same zones with their names, `{slug, name}` — what a place's card
+    says under «Dove si trova» (review PR-3), where a slug means nothing."""
+    return [{'slug': zone.slug, 'name': zone.name} for zone in zones if _holds_any(zone, points)]
 
 
 def zones_of_feature(zones, type_key, points, route):

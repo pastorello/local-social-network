@@ -7,6 +7,7 @@ from content.sanitize import sanitize_html
 from content.serializers import (
     CardImageSerializer, TranslationSerializer, availability_of, media_source, visible_translations,
 )
+from maps.serializers import named_zones_of
 
 from .models import Genre, Luogo
 
@@ -44,6 +45,7 @@ class LuogoReadSerializer(serializers.ModelSerializer):
     translations = serializers.SerializerMethodField()
     original_title = serializers.SerializerMethodField()
     availability = serializers.SerializerMethodField()
+    zones = serializers.SerializerMethodField()
 
     def get_availability(self, obj):
         return availability_of(obj.card)
@@ -68,6 +70,13 @@ class LuogoReadSerializer(serializers.ModelSerializer):
         points = media_source(obj.card).map_features.filter(kind=MapFeature.POINT)
         return [_map_point(p) for p in points]
 
+    def get_zones(self, obj):
+        # Where the place is, by its pin — the original's, for a translation
+        # (T5) — named for «Dove si trova» (review PR-3). Filtered in Python:
+        # the features are prefetched.
+        points = [f for f in media_source(obj.card).map_features.all() if f.kind == MapFeature.POINT]
+        return named_zones_of([{'lat': p.lat, 'lng': p.lng} for p in points], self.context)
+
     def get_original_title(self, obj):
         return media_source(obj.card).title
 
@@ -80,7 +89,7 @@ class LuogoReadSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'body_html', 'author', 'is_published',
             'genre', 'genre_label', 'how_to_get_there', 'availability',
-            'images', 'pins', 'language', 'translation_of', 'original_title', 'translations',
+            'images', 'pins', 'zones', 'language', 'translation_of', 'original_title', 'translations',
             'created_at', 'updated_at',
         )
 

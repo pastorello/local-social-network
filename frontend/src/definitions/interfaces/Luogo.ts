@@ -1,4 +1,4 @@
-import type { Availability, CardBase, MapPoint } from './Content'
+import type { Availability, CardBase, MapPoint, ZoneRef } from './Content'
 
 // One of the admin-managed genres (spec content.md, luoghi) — mirrors
 // luoghi/serializers.py::GenreSerializer.
@@ -17,6 +17,8 @@ export default interface Luogo extends CardBase {
   genre_label: string
   how_to_get_there: string
   pins: MapPoint[]
+  // The zone its pin is in — the original's, for a translation (T5).
+  zones: ZoneRef[]
   // The original's, in every language (ADR-0008, T5).
   availability: Availability
 }

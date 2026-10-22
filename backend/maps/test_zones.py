@@ -6,6 +6,8 @@ import json
 
 import pytest
 from django.core.exceptions import ValidationError
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 
 from chiese.models import Chiesa
 from content.models import Card, MapFeature
@@ -123,6 +125,46 @@ def test_a_festa_is_in_every_zone_its_procession_stops_in(api_client, citizen):
     entry = api_client.get('/api/map/features/').json()[0]
 
     assert entry['zones'] == ['serapo', 'porto-salvo']
+
+
+# --- membership on a place's own card (review PR-3, «Dove si trova») ---
+
+
+def test_a_church_names_the_zone_its_pin_is_in(api_client, citizen):
+    duomo = _chiesa(citizen, 'Duomo', INSIDE['gaeta-medievale'])
+    altrove = _chiesa(citizen, 'Altrove', NOWHERE)
+
+    assert api_client.get(f'/api/chiese/{duomo.pk}/').json()['zones'] == [
+        {'slug': 'gaeta-medievale', 'name': 'Gaeta Medievale'},
+    ]
+    assert api_client.get(f'/api/chiese/{altrove.pk}/').json()['zones'] == []
+
+
+def test_a_place_names_the_zone_its_pin_is_in(api_client, citizen):
+    card = _card(citizen, 'Spiaggia di Serapo')
+    Luogo.objects.create(card=card, genre=Genre.objects.get(slug='spiaggia'))
+    _pin(card, *INSIDE['serapo'])
+
+    assert api_client.get(f'/api/luoghi/{card.pk}/').json()['zones'] == [{'slug': 'serapo', 'name': 'Serapo'}]
+
+
+def test_a_translation_is_in_its_originals_zone(api_client, citizen):
+    # It has no pin of its own (T5): it stands where the original stands.
+    original = _chiesa(citizen, 'Annunziata', INSIDE['gaeta-medievale'])
+    english = _card(citizen, 'Annunziata (EN)', translation_of=original, language='en')
+    Chiesa.objects.create(card=english)
+
+    assert [z['slug'] for z in api_client.get(f'/api/chiese/{english.pk}/').json()['zones']] == ['gaeta-medievale']
+
+
+def test_the_church_list_reads_the_zones_once(api_client, citizen):
+    for index in range(4):
+        _chiesa(citizen, f'Chiesa {index}', INSIDE['serapo'])
+    with CaptureQueriesContext(connection) as queries:
+        rows = api_client.get('/api/chiese/').json()['results']
+
+    assert [[z['slug'] for z in row['zones']] for row in rows] == [['serapo']] * 4
+    assert sum(Zona._meta.db_table in query['sql'] for query in queries.captured_queries) == 1
 
 
 # --- the zone list ---
