@@ -37,6 +37,36 @@ const headerBottom = ($el: JQuery<HTMLElement>) =>
     getComputedStyle($el[0]!.ownerDocument.documentElement).getPropertyValue('--header-h'),
   )
 
+// How the map is framed, read off its tiles (review PR-5): a tile's address
+// names its zoom, column and row, and its box says where it is drawn, so Web
+// Mercator gives the point on screen of any place. The tiles are the blank
+// fixture (support/e2e.ts); only where they sit is read.
+const TILE_ADDRESS = /\/(\d+)\/(\d+)\/(\d+)\.png$/
+const tileView = ($tiles: JQuery<HTMLElement>) => {
+  const tiles = [...$tiles]
+    .map((tile) => ({ tile, address: TILE_ADDRESS.exec((tile as HTMLImageElement).src) }))
+    .filter(({ address }) => address)
+  expect(new Set(tiles.map(({ address }) => address![1])).size, 'one zoom on screen').to.equal(1)
+  const [z, x, y] = tiles[0]!.address!.slice(1).map(Number) as [number, number, number]
+  const box = tiles[0]!.tile.getBoundingClientRect()
+  const world = 256 * 2 ** z
+  return {
+    zoom: z,
+    at: ({ lat, lng }: { lat: number; lng: number }) => {
+      const sin = Math.sin((lat * Math.PI) / 180)
+      return {
+        x: box.left + ((lng + 180) / 360) * world - x * 256,
+        y: box.top + (0.5 - Math.log((1 + sin) / (1 - sin)) / (4 * Math.PI)) * world - y * 256,
+      }
+    },
+  }
+}
+// Gaeta's ends, as seed_demo places them: the Flacca's last beach, the
+// mountain, the medieval quarter's point.
+const SANT_AGOSTINO = { lat: 41.2337, lng: 13.4946 }
+const MONTE_ORLANDO = { lat: 41.2071, lng: 13.5767 }
+const GAETA_MEDIEVALE = { lat: 41.2086, lng: 13.5866 }
+
 describe('the reader, on a wide screen', () => {
   beforeEach(() => cy.viewport(1280, 800))
 
@@ -184,6 +214,10 @@ describe('the reader, on a wide screen', () => {
     cy.get('.leaflet-container').closest('[inert]').should('not.exist')
     // D16: the card's pin is drawn over everything else.
     cy.get('path.leaflet-interactive[stroke-width="3"]').should('have.length', 1)
+    // Review PR-5 (L-05): one place, at zoom 16 — its streets, not a field.
+    cy.get('img.leaflet-tile-loaded').should(($tiles) => {
+      expect(tileView($tiles).zoom).to.equal(16)
+    })
 
     cy.get('main section[tabindex="-1"]').trigger('keydown', { key: 'Escape' })
 
@@ -257,6 +291,26 @@ describe('the reader, on a phone', () => {
     })
   })
 
+  // Review PR-5 (M-01): the sheet covers the bottom of the screen, so the map
+  // frames Gaeta — the Flacca's beaches to Monte Orlando — in the band between
+  // the menu and the sheet, rather than centring it on the whole screen.
+  it('sees all of Gaeta between the menu and the sheet', () => {
+    cy.visit('/')
+
+    cy.get('section[aria-label="La mappa di Gaeta"]').then(($sheet) => {
+      const sheetTop = $sheet[0]!.getBoundingClientRect().top
+      cy.get('img.leaflet-tile-loaded').should(($tiles) => {
+        const view = tileView($tiles)
+        const width = $tiles[0]!.ownerDocument.defaultView!.innerWidth
+        for (const place of [SANT_AGOSTINO, MONTE_ORLANDO, GAETA_MEDIEVALE]) {
+          const { x, y } = view.at(place)
+          expect(x).to.be.within(0, width)
+          expect(y).to.be.within(headerBottom($tiles), sheetTop)
+        }
+      })
+    })
+  })
+
   it('gets the sheet, and the places in it link to their cards', () => {
     cy.visit('/')
 
@@ -282,6 +336,29 @@ describe('the reader, on a phone', () => {
     // keeps no map of its own.
     cy.get('.leaflet-container').should('have.length', 1)
     cy.get('.leaflet-container').closest('[inert]').should('not.exist')
+
+    // Review PR-5 (L-05, M-04): the place is in the strip at zoom 16, with its
+    // streets round it, and the strip's button sits inside the strip's
+    // bottom-right corner, 12px in, rather than on the article's edge.
+    cy.get('main section[tabindex="-1"]').then(($panel) => {
+      const panelTop = $panel[0]!.getBoundingClientRect().top
+      cy.get('img.leaflet-tile-loaded').should(($tiles) => {
+        expect(tileView($tiles).zoom).to.equal(16)
+      })
+      cy.get('path.leaflet-interactive[stroke-width="3"]').should(($pin) => {
+        const pin = $pin[0]!.getBoundingClientRect()
+        expect(pin.top).to.be.at.least(headerBottom($pin))
+        expect(pin.bottom).to.be.at.most(panelTop)
+      })
+      cy.contains('button', 'Allarga la mappa').should(($button) => {
+        const button = $button[0]!.getBoundingClientRect()
+        expect(panelTop - button.bottom).to.be.closeTo(12, 0.5)
+        expect($button[0]!.ownerDocument.defaultView!.innerWidth - button.right).to.be.closeTo(
+          12,
+          0.5,
+        )
+      })
+    })
 
     // The card's «Dove si trova» offers the same step as the strip's button.
     cy.contains('a', 'Allarga la mappa').should('have.attr', 'href').and('contain', 'mappa=1')

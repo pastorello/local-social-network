@@ -412,6 +412,10 @@ opening-hours filter is not.
   map under every page is decoration for most of the site, paid for in bytes
   on every route.
 
+  *Amended 2026-10-23:* one place is framed at zoom 16, not as close as the
+  map goes, and the home frames Gaeta in its own free space — see "How the
+  map frames — 2026-10-23" at the end of this section.
+
 - **D17 — Two panel shapes on desktop.** A **narrow panel on the right** for
   a card with a place, because the map beside it is doing work. A **wide
   reading panel, centred, over a veiled map** for a card without one
@@ -436,6 +440,10 @@ opening-hours filter is not.
   visible above. It costs every reader a drag on every card to show a map
   most of them look at for half a second. On a phone, the reacting map *is*
   the strip.
+
+  *Amended 2026-10-23:* *Allarga la mappa* sits inside the strip's
+  bottom-right corner; the credit question is parked — see "How the map
+  frames — 2026-10-23" at the end of this section.
 
 - **D19 — The background map is the collaborator's editor.** The form sits in
   the panel; the route or the pins are drawn on the real map. The form's
@@ -709,3 +717,53 @@ phone, and built the same day:
   Itinerari · *Cosa fare* · Il progetto on a wide screen; the phone pill is
   unchanged and *Cosa fare* sits behind *Menu*. A guest from the QR code meets
   it on `/benvenuto` instead, once a zone has a published place.
+
+### How the map frames — 2026-10-23
+
+The review of 2026-10-22 (PR-5: L-05, M-01, M-04, A-07) found the map
+framing each thing its own way: a card with one pin at the closest zoom, on
+a field with no street to know it by; the phone's home centred on the whole
+screen, so the sheet covered the borgo, Serapo and Monte Orlando; and the
+strip's *Allarga la mappa* sitting on the article's edge. Built the same day:
+
+- **One function frames everything**, `lib/mapFrame.ts::frameInFreeSpace`:
+  the box of what is to be shown, fitted into the part of the map the page
+  leaves free (`MapStage`'s padding, as D16 already had it), **never closer
+  than zoom 16** — a single place lands on 16 exactly. The open card and the
+  tour, the set «Cosa si può fare qui» lists (cosa-fare.md D5, whose cap of 16
+  this generalises), a form's draft (D19) and the city itself all go through
+  it. It knows nothing of Leaflet: `MapStage`, which works out the free space,
+  is on the entry path (TD-52).
+- **Gaeta is a box, not a centre and a zoom**: from the Flacca's beaches at
+  Sant'Agostino to Monte Orlando and the point of the medieval quarter. The
+  map starts on it through the same function, inside the free space, before
+  any tile is asked for. On a phone's home the free space is the band between
+  the menu and the sheet at the stop it rests on; the sheet tells the store
+  its height at rest, not during a drag.
+- **The city follows the free space until the reader takes the map.** While
+  no page asks for anything, Gaeta is framed again whenever the free space
+  changes — the sheet coming to another stop, a panel opening or closing.
+  Once the reader puts a hand on the map (a drag, a pinch, a tap, the wheel,
+  an arrow or a zoom key), the view is theirs and stays. Closing a page gives
+  back the reader's own view, as D16 says, or — if they had not moved the map
+  yet — Gaeta in the space there is now, which on a deep link is a different
+  space from the one the page had.
+- **Decided by the build**, since the review left them open: the wide home is
+  framed the same way, beside its floating column, so Sant'Agostino is on
+  screen there too (it was off the left edge at the old zoom 14); the cap of
+  16 holds for a form's draft as well (it was 17), because one rule is what
+  was asked for and a collaborator can still zoom in; and a free space less
+  than 96 px tall or wide — the sheet pulled all the way up — moves nothing,
+  since fitting the city into a sliver would throw the map out to the region.
+- **The strip's button** sits inside its bottom-right corner, 12 px in from
+  the side and from the article's edge; the OpenStreetMap credit moves up
+  with it and stays above it, visible.
+- **Parked, for the author: whether the credit leaves the strip.** The review
+  asked for the attribution to be hidden in the strip (M-04) and kept on the
+  enlarged map and on *Il progetto*. That contradicts what the map's credit
+  is for — the tile policy and the OSMF's attribution guidelines want it on
+  the map, readable without interacting with it, and a credits page alone
+  does not count for an interactive map (`lib/osm.ts`, #106) — so the credit
+  stays as it was until the author chooses: a shorter credit in the strip
+  (no "Leaflet" prefix, as PR-15 does elsewhere), a collapsed credit that is
+  open on first load, or hiding it and accepting the policy risk.

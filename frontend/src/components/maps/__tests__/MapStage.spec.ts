@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
@@ -266,5 +266,38 @@ describe('MapStage follows the session (spec map.md M5)', () => {
     // The reports only on the way in (reports-and-polls.md R1, 2026-10-22):
     // signing out forgets them rather than asking an API that would say 401.
     expect(fetched.filter((url) => url === '/api/reports/map/')).toHaveLength(1)
+  })
+})
+
+describe('MapStage on the phone’s home (review PR-5, M-01)', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.mocked(axios.get).mockResolvedValue({ data: [] })
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      configurable: true,
+      value: () => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} }),
+    })
+  })
+  afterEach(() => {
+    // @ts-expect-error — putting jsdom back the way it was found
+    delete window.matchMedia
+  })
+
+  it('frames in the band between the menu and the sheet, at whichever stop the sheet rests on', async () => {
+    const { wrapper } = await mountAt('/')
+    await vi.waitUntil(() => wrapper.findComponent(GaetaMapStub).exists())
+    const map = wrapper.findComponent(GaetaMapStub)
+    const store = useMapStore()
+
+    // The sheet's first stop, 45% of a 720px phone.
+    store.setSheetHeight(324)
+    await flushPromises()
+    expect(map.props('focusPadding')).toEqual({ topLeft: [16, 16], bottomRight: [16, 340] })
+
+    // Pushed down to its lowest stop, the sheet leaves more of the map free.
+    store.setSheetHeight(88)
+    await flushPromises()
+    expect(map.props('focusPadding').bottomRight).toEqual([16, 104])
   })
 })

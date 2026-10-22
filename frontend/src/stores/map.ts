@@ -92,6 +92,10 @@ export const useMapStore = defineStore('map', {
     // of the map the panel leaves free, like a focus, but nothing is drawn for
     // it — what is drawn is `restrictTo`'s business.
     frame: null as { lat: number; lng: number }[] | null,
+    // How tall the phone home's sheet is at the stop it rests on, in pixels;
+    // null while there is no sheet. The map frames Gaeta in the band above it
+    // (review PR-5, M-01) — at rest only, so a drag does not move the map.
+    sheetHeight: null as number | null,
     editor: null as MapEditor | null,
     loaded: false,
   }),
@@ -205,6 +209,10 @@ export const useMapStore = defineStore('map', {
 
     setFrame(points: { lat: number; lng: number }[] | null) {
       this.frame = points
+    },
+
+    setSheetHeight(pixels: number | null) {
+      this.sheetHeight = pixels
     },
 
     startEditing(

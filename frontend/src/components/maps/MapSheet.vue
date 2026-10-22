@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch, watchEffect } from 'vue'
 
+import { useMapStore } from '@/stores/map'
+
 // The mobile home's sheet (spec/design.md D3): the map fills the screen and
 // this sits over it, already open with content in it. Dragged up it is a list
 // you read; pushed down it is a map you explore. Neither mode asks the reader
@@ -32,6 +34,19 @@ const isOpen = computed(() => snap.value > 0)
 // drawn with, so nothing has to be measured.
 watchEffect(() => document.documentElement.style.setProperty('--sheet-h', height.value))
 onBeforeUnmount(() => document.documentElement.style.removeProperty('--sheet-h'))
+
+// A stop's height in pixels, for the drag and for the map.
+const stopPixels = (index: number) => {
+  const stop = SNAPS[index]!.height
+  return stop.endsWith('vh') ? (parseFloat(stop) / 100) * window.innerHeight : parseFloat(stop) * 16
+}
+
+// The map frames Gaeta in the band above the sheet (review PR-5, M-01), so it
+// is told the height of each stop the sheet comes to rest on — not of every
+// step of a drag.
+const mapStore = useMapStore()
+watch(snap, (index) => mapStore.setSheetHeight(stopPixels(index)), { immediate: true })
+onBeforeUnmount(() => mapStore.setSheetHeight(null))
 
 // The drag is the fast path and has no keyboard equivalent, so the handle is
 // a real button that cycles the stops — same pattern as the manual lat/lng
@@ -74,12 +89,7 @@ const onPointerUp = () => {
 
   // Snap to whichever stop the drag ended nearest, so the sheet never rests
   // at an arbitrary height.
-  const viewport = window.innerHeight
-  const pixels = SNAPS.map((stop) =>
-    stop.height.endsWith('vh')
-      ? (parseFloat(stop.height) / 100) * viewport
-      : parseFloat(stop.height) * 16,
-  )
+  const pixels = SNAPS.map((_stop, index) => stopPixels(index))
   const dragged = dragHeight.value
   let nearest = 0
   pixels.forEach((value, index) => {
