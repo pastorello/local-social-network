@@ -9,6 +9,10 @@ export interface FieldConfig {
   // What the reader sees in place of the stored value, where the two differ:
   // a genre is stored as a slug and read as its name.
   displayKey?: string
+  // Read under «Dove si trova», above the link that opens the way there,
+  // rather than among the card's facts — when the card has a place to read it
+  // under (review PR-3). Without one it stays a fact like the others.
+  inPlace?: boolean
 }
 
 // A list that can be narrowed to one value of a field — luoghi by genre, read
@@ -157,6 +161,7 @@ export const luogoConfig: TypeConfig = {
       label: 'Come arrivarci',
       kind: 'textarea',
       placeholder: 'Es. A piedi dal centro; in auto, parcheggio sulla Flacca...',
+      inPlace: true,
     },
   ],
   mapMode: 'pins',

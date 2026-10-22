@@ -7,6 +7,7 @@ from content.serializers import (
     CardImageSerializer, TranslationSerializer, availability_of, media_source, visible_translations,
 )
 from content.sanitize import sanitize_html
+from maps.serializers import named_zones_of
 
 from .models import Chiesa
 
@@ -32,6 +33,7 @@ class ChiesaReadSerializer(serializers.ModelSerializer):
     translations = serializers.SerializerMethodField()
     original_title = serializers.SerializerMethodField()
     availability = serializers.SerializerMethodField()
+    zones = serializers.SerializerMethodField()
 
     def get_availability(self, obj):
         return availability_of(obj.card)
@@ -42,6 +44,13 @@ class ChiesaReadSerializer(serializers.ModelSerializer):
     def get_pins(self, obj):
         points = media_source(obj.card).map_features.filter(kind=MapFeature.POINT)
         return [_map_point(p) for p in points]
+
+    def get_zones(self, obj):
+        # Where the church is, by its pin — the original's, for a translation
+        # (T5) — named for «Dove si trova» (review PR-3). Filtered in Python:
+        # the features are prefetched.
+        points = [f for f in media_source(obj.card).map_features.all() if f.kind == MapFeature.POINT]
+        return named_zones_of([{'lat': p.lat, 'lng': p.lng} for p in points], self.context)
 
     def get_original_title(self, obj):
         # The card group's name, which is the original's title (2026-09-09):
@@ -59,7 +68,7 @@ class ChiesaReadSerializer(serializers.ModelSerializer):
         model = Chiesa
         fields = (
             'id', 'title', 'body_html', 'author', 'is_published', 'from_outside', 'availability',
-            'images', 'pins', 'language', 'translation_of', 'original_title', 'translations',
+            'images', 'pins', 'zones', 'language', 'translation_of', 'original_title', 'translations',
             'created_at', 'updated_at',
         )
 

@@ -92,6 +92,25 @@ describe('the reader, on a wide screen', () => {
     cy.contains('h2', 'Se la trovi chiusa')
   })
 
+  // Review PR-3: the reader already in town is given the way there — a plain
+  // link out to Google Maps built from the card's own pin, on foot, with
+  // nothing of Google's loaded on the page.
+  it('is given the way to a church, as a link out to Google Maps', () => {
+    cy.visit('/chiese')
+    cy.contains('a', PUBLISHED).click()
+
+    cy.contains('h2', 'Dove si trova').parent().contains('a', 'Come arrivarci').as('directions')
+    cy.get('@directions').should('contain', '(apre Google Maps)')
+    cy.get('@directions').should('have.attr', 'target', '_blank')
+    cy.get('@directions').should('have.attr', 'rel', 'noopener')
+    cy.get('@directions')
+      .should('have.attr', 'href')
+      .and(
+        'eq',
+        'https://www.google.com/maps/dir/?api=1&destination=41.2172608%2C13.5625165&travelmode=walking',
+      )
+  })
+
   it('is not shown anyone else’s draft', () => {
     cy.visit('/chiese')
 
@@ -139,6 +158,10 @@ describe('the reader, on a wide screen', () => {
 
     cy.contains('h2', 'Il percorso')
     cy.contains('Tappa 1')
+    // Review PR-3: a feast is joined where it sets off — its route's first stop.
+    cy.contains('a', 'Portami alla partenza')
+      .should('have.attr', 'href')
+      .and('contain', 'destination=41.2172608%2C13.5625165')
   })
 })
 
@@ -171,6 +194,8 @@ describe('the reader, on a phone', () => {
     cy.get('.leaflet-container').should('have.length', 1)
     cy.get('.leaflet-container').closest('[inert]').should('not.exist')
 
+    // The card's «Dove si trova» offers the same step as the strip's button.
+    cy.contains('a', 'Allarga la mappa').should('have.attr', 'href').and('contain', 'mappa=1')
     cy.contains('button', 'Allarga la mappa').click()
     cy.location('search').should('eq', '?mappa=1')
     cy.contains('h1', PUBLISHED).should('not.be.visible')

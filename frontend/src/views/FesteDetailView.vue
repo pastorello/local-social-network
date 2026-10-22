@@ -7,6 +7,7 @@ import PanelBox from '@/components/boxes/PanelBox.vue'
 import ViewContainer from '@/components/boxes/ViewContainer.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import CardArticle from '@/components/content/CardArticle.vue'
+import DirectionsLink from '@/components/content/DirectionsLink.vue'
 import FesteForm from '@/components/content/FesteForm.vue'
 import { useIsDesktop } from '@/composables/useBreakpoint'
 import { useMapFocus } from '@/composables/useMapFocus'
@@ -46,6 +47,10 @@ const getFeste = async () => {
       router.push('/feste')
     })
 }
+
+// Where the procession sets off — what "Portami alla partenza" leads to (review
+// PR-3): a reader joins a feast at its start, not at whichever stop is nearest.
+const start = computed(() => feste.value?.route[0] ?? null)
 
 // The map behind the panel draws this feast's route while it is open (D16).
 useMapFocus(() =>
@@ -148,6 +153,12 @@ watch(
               <p class="mb-3 text-muted">
                 È evidenziato sulla mappa, {{ isDesktop ? 'qui accanto' : 'qui sopra' }}.
               </p>
+              <DirectionsLink
+                v-if="start"
+                :place="start"
+                label="Portami alla partenza"
+                class="mb-4"
+              />
               <ol class="space-y-2">
                 <li v-for="(point, index) in feste.route" :key="index" class="flex gap-2">
                   <span class="font-semibold">{{ index + 1 }}.</span>

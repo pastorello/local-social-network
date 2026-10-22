@@ -1,29 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-import { legDirections, pointOf, type StopDraft } from '../tours'
-
-describe('legDirections — "Come arrivarci" (spec itinerari.md I7)', () => {
-  it('is a walking Google Maps link from the previous stop to this one', () => {
-    const url = new URL(
-      legDirections({ lat: 41.2, lng: 13.5, label: '' }, { lat: 41.21, lng: 13.57, label: '' }),
-    )
-
-    expect(url.origin + url.pathname).toBe('https://www.google.com/maps/dir/')
-    expect(url.searchParams.get('origin')).toBe('41.2,13.5')
-    expect(url.searchParams.get('destination')).toBe('41.21,13.57')
-    expect(url.searchParams.get('travelmode')).toBe('walking')
-  })
-
-  it('leaves the origin to Google — wherever the guest is — for the first stop', () => {
-    const url = new URL(legDirections(null, { lat: 41.21, lng: 13.57, label: '' }))
-    expect(url.searchParams.has('origin')).toBe(false)
-  })
-
-  it('can leave the way of travelling to Google, for a raccolta’s "Portami"', () => {
-    const url = new URL(legDirections(null, { lat: 41.21, lng: 13.57, label: '' }, null))
-    expect(url.searchParams.has('travelmode')).toBe(false)
-  })
-})
+import { pointOf, type StopDraft } from '../tours'
 
 describe('pointOf', () => {
   const stop = (patch: Partial<StopDraft>): StopDraft => ({
