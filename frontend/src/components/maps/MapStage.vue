@@ -47,6 +47,12 @@ const focusPadding = computed<{ topLeft: [number, number]; bottomRight: [number,
   if (isDesktop.value && route.meta.fullBleed) {
     return { topLeft: [HOME_COLUMN + 16 + GAP, top], bottomRight: [GAP, GAP] }
   }
+  if (!isDesktop.value && route.meta.fullBleed && mapStore.sheetHeight !== null) {
+    // The phone's home (review PR-5, M-01): the band between the menu and the
+    // sheet, at the stop it rests on — the half of the screen the sheet does
+    // not cover, where Gaeta has to fit.
+    return { topLeft: [16, menuBottom() + 16], bottomRight: [16, mapStore.sheetHeight + 16] }
+  }
   if (!isDesktop.value && route.meta.panel === 'narrow') {
     // D18: framed inside the strip above the article — or, expanded, the
     // whole screen above the "Torna alla scheda" button.
@@ -98,7 +104,7 @@ const controlsBottom = computed(() => {
   }
   if (route.meta.panel !== 'narrow') return '0px'
   // RoutePanel lays the strip out below the menu, hence the header's height.
-  return route.query.mappa === '1' ? '4.25rem' : 'calc(100% - var(--header-h, 0px) - 8.25rem)'
+  return route.query.mappa === '1' ? '4.25rem' : 'calc(100% - var(--header-h, 0px) - 7.5rem)'
 })
 
 // While a form draws on the map, nothing on it navigates: opening a pin would

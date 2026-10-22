@@ -90,12 +90,14 @@ const pill =
     aria-hidden="true"
   ></div>
 
-  <!-- The phone's strip: the map shows through above the article. -->
+  <!-- The phone's strip: the map shows through above the article. Its button
+  sits inside the strip's bottom-right corner, 12px in (review PR-5, M-04):
+  on the article's edge it read as part of neither. -->
   <button
     v-if="withStrip && !expanded"
     ref="expandButton"
     type="button"
-    :class="[pill, 'absolute top-[8.5rem] right-3']"
+    :class="[pill, 'absolute top-[7.75rem] right-3']"
     @click="expand"
   >
     <svg

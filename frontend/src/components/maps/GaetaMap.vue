@@ -24,6 +24,7 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import type { MapCardFeature, Overlay } from '@/definitions/interfaces/MapData'
 import type { MapEditor, MapFocus } from '@/stores/map'
 import type { ReportPin } from '@/definitions/interfaces/Report'
+import { GAETA_BOUNDS, frameInFreeSpace, type Coords } from '@/lib/mapFrame'
 import { layerColor } from '@/lib/mapLayers'
 import { mapText } from '@/lib/mapText'
 import { OSM_ATTRIBUTION, OSM_TILE_URL } from '@/lib/osm'
@@ -60,14 +61,6 @@ const emit = defineEmits<{
   (e: 'mapClick', coords: { lat: number; lng: number }): void
 }>()
 
-// Gaeta (spec F2.1: configured city center)
-const GAETA: [number, number] = [41.2172608, 13.5625165]
-const GAETA_ZOOM = 14
-// A framed set is never shown closer than this (review PR-4, 2026-10-23): a
-// set of one place, or of two next door, would otherwise fill the screen with
-// a field and no street to know it by.
-const FRAME_MAX_ZOOM = 16
-
 // Overlays belong between the base tiles (200) and everything clickable
 // (overlayPane 400, markerPane 600): a historical raster is scenery, a
 // quartiere polygon is context, and neither may swallow a pin's click.
@@ -82,8 +75,13 @@ let featureLayer: LayerGroup | null = null
 let focusLayer: LayerGroup | null = null
 let editorLayer: LayerGroup | null = null
 // Where the reader was before a page took the map somewhere, so closing the
-// page gives it back (D16).
-let viewBeforeFocus: { center: LatLng; zoom: number } | null = null
+// page gives it back (D16) — their own view, or Gaeta if they had not moved
+// the map yet (`own`).
+let viewBeforeFocus: { center: LatLng; zoom: number; own: boolean } | null = null
+// Whether the reader has taken the map: until they do, the map frames Gaeta in
+// whatever space is free (review PR-5) — on a phone, above the home's sheet at
+// whichever stop it rests on.
+let moved = false
 let draftMarker: CircleMarker | null = null
 let resizeObserver: ResizeObserver | null = null
 const overlayLayers = new Map<string, Layer>()
@@ -180,14 +178,13 @@ const renderFeatures = () => {
   featureLayer.addTo(map)
 }
 
-const focusLatLngs = (): [number, number][] =>
-  props.focus
-    ? [...props.focus.route, ...props.focus.points].map(
-        (point) => [point.lat, point.lng] as [number, number],
-      )
-    : []
+const focusPoints = (): Coords[] =>
+  props.focus ? [...props.focus.route, ...props.focus.points] : []
 
-const hasFocusGeometry = () => focusLatLngs().length > 0
+const hasFocusGeometry = () => focusPoints().length > 0
+
+// What a page wants in view: its own place, or the set it lists.
+const framedPoints = (): Coords[] => (hasFocusGeometry() ? focusPoints() : (props.frame ?? []))
 
 // The open page's own geometry, drawn from what the page handed over rather
 // than looked up among the published features — so a draft, which is not
@@ -236,28 +233,32 @@ const renderFocus = () => {
   focusLayer.addTo(map)
 }
 
-// Frame the open page's place — or, for a page about a set, that set — in the
-// part of the map its panel leaves free, and give the reader their own view
-// back when the page closes (D16).
-const frameFocus = () => {
+// Every frame goes through lib/mapFrame.ts: inside the part of the map the
+// page leaves free, never closer than zoom 16. Nothing moves when there is no
+// room to frame anything in.
+const fit = (points: Coords[], options: { animate?: boolean } = {}) => {
+  const frame = map && frameInFreeSpace(points, props.focusPadding, map.getSize())
+  if (frame) map?.fitBounds(frame.bounds, { ...frame.options, ...options })
+}
+
+// Frame the open page's place — or, for a page about a set, that set — and
+// give the reader their view back when the page closes (D16). With no page
+// asking for anything, the map frames Gaeta for as long as the reader has not
+// taken it, so the city follows the free space as it changes: a panel opening
+// or closing, the phone's sheet moving to another stop (review PR-5, M-01).
+const frameView = (options: { animate?: boolean } = {}) => {
   if (!map) return
-  const focus = focusLatLngs()
-  const latLngs = focus.length
-    ? focus
-    : (props.frame ?? []).map((point) => [point.lat, point.lng] as [number, number])
-  if (latLngs.length === 0) {
-    if (viewBeforeFocus) {
-      map.setView(viewBeforeFocus.center, viewBeforeFocus.zoom)
-      viewBeforeFocus = null
+  const points = framedPoints()
+  if (points.length) {
+    if (!viewBeforeFocus) {
+      viewBeforeFocus = { center: map.getCenter(), zoom: map.getZoom(), own: moved }
     }
+    fit(points, options)
     return
   }
-  if (!viewBeforeFocus) viewBeforeFocus = { center: map.getCenter(), zoom: map.getZoom() }
-  map.fitBounds(L.latLngBounds(latLngs), {
-    paddingTopLeft: props.focusPadding?.topLeft ?? [48, 48],
-    paddingBottomRight: props.focusPadding?.bottomRight ?? [48, 48],
-    maxZoom: focus.length ? 17 : FRAME_MAX_ZOOM,
-  })
+  if (viewBeforeFocus?.own) map.setView(viewBeforeFocus.center, viewBeforeFocus.zoom)
+  else if (!moved && !props.editor) fit(GAETA_BOUNDS, options)
+  viewBeforeFocus = null
 }
 
 // The draft of the form that is drawing (D19), in the accent colour: a route's
@@ -304,15 +305,7 @@ const renderEditor = () => {
 // When a form starts drawing, the map goes to what it already has, if
 // anything; while it draws, the view is the collaborator's to move.
 const frameEditor = () => {
-  if (!map || !props.editor || props.editor.points.length === 0) return
-  map.fitBounds(
-    L.latLngBounds(props.editor.points.map((point) => [point.lat, point.lng] as [number, number])),
-    {
-      paddingTopLeft: props.focusPadding?.topLeft ?? [48, 48],
-      paddingBottomRight: props.focusPadding?.bottomRight ?? [48, 48],
-      maxZoom: 17,
-    },
-  )
+  if (props.editor) fit(props.editor.points)
 }
 
 const buildOverlay = (overlay: Overlay): Layer | null => {
@@ -406,6 +399,20 @@ const onReady = (leafletMap: LeafletMap) => {
     resizeObserver.observe(wrapper.value)
   }
 
+  // The reader takes the map by putting a hand on it — a drag, a pinch, a tap,
+  // the wheel, an arrow or a zoom key — while it shows their own view. What
+  // they do on a page's frame is undone when the page closes (D16), so it does
+  // not count.
+  const take = () => {
+    if (!framedPoints().length) moved = true
+  }
+  const element = leafletMap.getContainer()
+  element.addEventListener('pointerdown', take)
+  element.addEventListener('wheel', take, { passive: true })
+  element.addEventListener('keydown', (event) => {
+    if (event.key.startsWith('Arrow') || ['+', '-', '='].includes(event.key)) take()
+  })
+
   map.on('click', (event: LeafletMouseEvent) => {
     if (!map) return
     // A form drawing on the map takes the click (D19); it draws the result
@@ -435,7 +442,8 @@ const onReady = (leafletMap: LeafletMap) => {
   renderFeatures()
   renderOverlays()
   renderFocus()
-  frameFocus()
+  // The first frame is not animated: it is where the map starts.
+  frameView({ animate: false })
   renderEditor()
   frameEditor()
 }
@@ -447,12 +455,20 @@ watch(
   () => {
     renderFeatures()
     renderFocus()
-    frameFocus()
+    frameView()
   },
   { deep: true },
 )
-watch(() => props.frame, frameFocus, { deep: true })
-watch(() => props.focusPadding, frameFocus, { deep: true })
+watch(
+  () => props.frame,
+  () => frameView(),
+  { deep: true },
+)
+watch(
+  () => props.focusPadding,
+  () => frameView(),
+  { deep: true },
+)
 watch(
   () => props.editor,
   (editor, previous) => {
@@ -483,11 +499,19 @@ watch(
 // its tiles, and it held the map back until three marker images it fetched
 // on its own had arrived — a round trip before any tile, for markers this map
 // never draws (every pin here is a circle).
+//
+// The map starts on Gaeta (spec F2.1) through the same function as every other
+// frame, first with a plain margin — Leaflet needs a view before it can measure
+// anything — then, in onReady, inside the space the page leaves free. Both
+// before the tiles are added, so the only tiles fetched are the ones shown.
+// The map's own maximum is the tile layer's (Leaflet's default, 18), written
+// out because the cluster layer asks for it before the tiles are there.
 onMounted(() => {
   if (!container.value) return
-  const leafletMap = L.map(container.value, { center: GAETA, zoom: GAETA_ZOOM })
-  L.tileLayer(OSM_TILE_URL, { attribution: OSM_ATTRIBUTION }).addTo(leafletMap)
+  const start = frameInFreeSpace(GAETA_BOUNDS)!
+  const leafletMap = L.map(container.value, { maxZoom: 18 }).fitBounds(start.bounds, start.options)
   onReady(leafletMap)
+  L.tileLayer(OSM_TILE_URL, { attribution: OSM_ATTRIBUTION }).addTo(leafletMap)
 })
 
 onBeforeUnmount(() => {

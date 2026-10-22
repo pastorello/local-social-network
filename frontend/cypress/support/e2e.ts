@@ -31,8 +31,9 @@ import { OSM_TILE_URL } from '../../src/lib/osm'
 // the same reason (lighthouserc.yml). Each tile is answered here, before it
 // leaves the runner, with a transparent 1×1 PNG: a successful load as far as
 // Leaflet can tell, so the map behaves as it does for a reader, minus the
-// picture. No spec asserts on a tile. The pattern is the map's own URL with
-// {z}/{x}/{y} as wildcards, so a new tile host moves this with it.
+// picture. No spec asserts on a tile's picture — reader.cy.ts reads only where
+// the tiles are drawn, to tell how the map is framed. The pattern is the map's
+// own URL with {z}/{x}/{y} as wildcards, so a new tile host moves this with it.
 //
 // Intercepts are cleared before every test, and a spec's own `before()` runs
 // ahead of every `beforeEach`, so a sign-in there is not covered by this — the
