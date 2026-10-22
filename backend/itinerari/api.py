@@ -36,8 +36,8 @@ MAX_PATH_POINTS = 500
 
 def _stops_queryset():
     return Stop.objects.select_related(
-        'card', *(f'card__{type_key}' for type_key in CARD_TYPES)
-    ).prefetch_related('card__map_features')
+        'card', 'card__availability', *(f'card__{type_key}' for type_key in CARD_TYPES)
+    ).prefetch_related('card__map_features', 'card__images')
 
 
 def _base_queryset():

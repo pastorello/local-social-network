@@ -523,3 +523,102 @@ def test_a_stop_with_no_place_chosen_stands_for_every_place_its_card_has(auth_cl
     assert [p['label'] for p in data[2]['places']] == ['Scalzi']
     assert data[3]['how_to_get_there'] == 'A piedi dal centro, dieci minuti.'
     assert data[0]['how_to_get_there'] == ''
+
+
+# --- what the guided mode shows of a stop (review PR-7) ---
+
+
+def _stop_of(client, places, key, **stop):
+    stops = [{'card': str(places[key].pk), **stop}]
+    return client.post('/api/itinerari/', payload(stops)).json()['stops'][0]
+
+
+def test_a_stop_carries_the_opening_of_its_card_as_plain_text(auth_client, places):
+    Card.objects.filter(pk=places['chiesa'].pk).update(
+        body_html='<h2>Storia</h2><p>Il Duomo &amp; il suo <strong>campanile</strong>.</p>'
+        '<ul><li>Uno</li><li>Due</li></ul>'
+    )
+
+    stop = _stop_of(auth_client, places, 'chiesa')
+
+    # No markup comes back — a block is a line — so the guided mode renders it
+    # as text and `RichText.vue` stays the one place a body is HTML.
+    assert stop['excerpt'] == 'Storia\nIl Duomo & il suo campanile.\nUno\nDue'
+
+
+def test_the_excerpt_is_cut_at_400_characters_on_a_word():
+    from itinerari.serializers import excerpt
+
+    body = '<p>' + ' '.join(['parola'] * 100) + '</p>'
+
+    text = excerpt(body)
+
+    assert text.endswith('parola…')
+    assert len(text) <= 401
+    assert excerpt('<p>Breve.</p>') == 'Breve.'
+
+
+def test_a_stop_has_its_cards_cover_and_no_placeholder_without_one(auth_client, places):
+    from content.models import CardImage
+
+    from chiese.tests import make_image_upload
+
+    assert _stop_of(auth_client, places, 'chiesa')['cover'] is None
+
+    for position, caption in enumerate(('La facciata', 'Il chiostro')):
+        CardImage.objects.create(
+            card=places['chiesa'], image=make_image_upload(), position=position, caption=caption
+        )
+
+    cover = _stop_of(auth_client, places, 'chiesa')['cover']
+    assert cover['caption'] == 'La facciata'
+    assert cover['imageURL']
+
+
+def test_a_stop_with_a_door_and_no_access_row_is_unknown_not_open(auth_client, places):
+    stop = _stop_of(auth_client, places, 'chiesa')
+
+    assert stop['availability'] == {
+        'state': 'unknown', 'hours': '', 'hours_updated': None, 'keeper': '', 'keeper_phone': '',
+    }
+
+
+def test_a_stop_says_what_is_known_about_getting_in_with_its_date(auth_client, places):
+    from content.models import Availability
+
+    Availability.objects.create(
+        card=places['chiesa'], state=Availability.ON_REQUEST,
+        hours='Il sabato mattina.', keeper='Parrocchia', keeper_phone='0771 000000',
+    )
+
+    availability = _stop_of(auth_client, places, 'chiesa')['availability']
+
+    assert availability['state'] == 'on_request'
+    assert availability['hours'] == 'Il sabato mattina.'
+    # ADR-0008: the hours never travel without the day someone gave them.
+    assert availability['hours_updated'] is not None
+    assert availability['keeper'] == 'Parrocchia'
+
+
+def test_only_a_place_with_a_door_carries_an_access_block(auth_client, places):
+    assert _stop_of(auth_client, places, 'tiella')['availability'] is None
+    assert _stop_of(auth_client, places, 'festa')['availability'] is None
+
+
+def test_a_stop_names_the_zone_its_own_point_is_in(auth_client, places):
+    from luoghi.models import Genre, Luogo
+
+    # On Serapo's beach (maps/migrations/0006), as seed_e2e's luogo is.
+    serapo = [{'slug': 'serapo', 'name': 'Serapo'}]
+    spiaggia = Luogo.objects.create(
+        card=_card(places['chiesa'].author, 'Serapo'), genre=Genre.objects.get(slug='spiaggia')
+    )
+    MapFeature.objects.create(
+        card=spiaggia.card, kind=MapFeature.POINT, position=0, lat=41.2105, lng=13.5640
+    )
+    places['spiaggia'] = spiaggia.card
+
+    assert _stop_of(auth_client, places, 'spiaggia')['zones'] == serapo
+    # A dish sold in two bakeries: the zone is the chosen bakery's, not the card's.
+    MapFeature.objects.filter(card=places['tiella'], position=1).update(lat=41.2105, lng=13.5640)
+    assert _stop_of(auth_client, places, 'tiella', point_index=1)['zones'] == serapo

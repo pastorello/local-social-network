@@ -37,6 +37,21 @@ const tour = {
       places: [{ lat: 41.2, lng: 13.5, label: '' }],
       how_to_get_there: '',
       note: '',
+      cover: {
+        id: '1',
+        imageURL: 'http://x/duomo.jpg',
+        position: 0,
+        caption: 'La facciata',
+      },
+      excerpt: 'Il Duomo di Gaeta…',
+      availability: {
+        state: 'on_request',
+        hours: 'Il sabato mattina.',
+        hours_updated: '2026-03-12',
+        keeper: 'Parrocchia',
+        keeper_phone: '',
+      },
+      zones: [{ slug: 'gaeta-medievale', name: 'Gaeta Medievale' }],
     },
     {
       card: 'c2',
@@ -51,9 +66,23 @@ const tour = {
       ],
       how_to_get_there: 'In autobus dalla stazione.',
       note: 'Si parte dal porto.',
+      cover: null,
+      excerpt: 'La processione.',
+      availability: null,
+      zones: [{ slug: 'porto-salvo', name: 'Porto Salvo' }],
     },
   ],
 } as unknown as Itinerario
+
+// The tour, and the three counts its last stop asks for (review PR-7).
+const serve = (data: Itinerario, counts = { tours: 2, ricette: 1, citta: 2 }) =>
+  vi.mocked(axios.get).mockImplementation(async (url: string) => {
+    if (url === '/api/itinerari/intenti/')
+      return { data: [{ slug: 'citta', name: 'Scoprire la città', count: counts.citta }] }
+    if (url === '/api/itinerari/') return { data: { count: counts.tours } }
+    if (url === '/api/ricette/') return { data: { count: counts.ricette } }
+    return { data }
+  })
 
 const mountAt = async (path: string, attach = false) => {
   const stub = { template: '<div />' }
@@ -64,6 +93,8 @@ const mountAt = async (path: string, attach = false) => {
       { path: '/itinerari/:id', name: 'itinerariodetail', component: ItineraryDetailView },
       { path: '/chiese/:id', name: 'chiesedetail', component: stub },
       { path: '/feste/:id', name: 'festedetail', component: stub },
+      { path: '/cosa-fare', name: 'cosafare', component: stub },
+      { path: '/ricette', name: 'ricettelist', component: stub },
     ],
   })
   router.push(path)
@@ -79,7 +110,7 @@ const mountAt = async (path: string, attach = false) => {
 describe('ItineraryDetailView (spec itinerari.md I7)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(axios.get).mockResolvedValue({ data: tour })
+    serve(tour)
   })
 
   it('reads as an article with its stops in order, and offers to start the tour', async () => {
@@ -88,6 +119,17 @@ describe('ItineraryDetailView (spec itinerari.md I7)', () => {
     expect(wrapper.get('h1').text()).toBe('Gaeta medievale')
     expect(wrapper.findAll('ol li a').map((a) => a.text())).toEqual(['Duomo', 'Processione'])
     expect(wrapper.text()).toContain('Inizia il tour')
+  })
+
+  it('offers to start before the list of stops, and again under it (review PR-7)', async () => {
+    const { wrapper } = await mountAt('/itinerari/t1')
+
+    const html = wrapper.html()
+    const starts = [...html.matchAll(/Inizia il tour/g)].map((match) => match.index!)
+    expect(starts).toHaveLength(2)
+    expect(starts[0]).toBeLessThan(html.indexOf('Le tappe'))
+    expect(starts[0]).toBeGreaterThan(html.indexOf('Durata indicativa'))
+    expect(starts[1]).toBeGreaterThan(html.indexOf('Processione'))
   })
 
   it('follows one stop at a time from the URL, with the leg from the previous stop', async () => {
@@ -100,15 +142,79 @@ describe('ItineraryDetailView (spec itinerari.md I7)', () => {
     expect(href.searchParams.get('origin')).toBe('41.2,13.5')
     expect(href.searchParams.get('destination')).toBe('41.21,13.57')
 
-    const next = wrapper.findAll('button').find((b) => b.text().startsWith('Tappa successiva'))!
-    expect(next.attributes('disabled')).toBeDefined()
-
     await wrapper
       .findAll('button')
-      .find((b) => b.text() === '← Tappa precedente')!
+      .find((b) => b.text() === '← Precedente')!
       .trigger('click')
     await flushPromises()
     expect(router.currentRoute.value.query.tappa).toBe('1')
+  })
+
+  it('tells the stop on its own: the tour under the title, cover, opening, access', async () => {
+    const { wrapper } = await mountAt('/itinerari/t1?tappa=1')
+
+    // The eyebrow is the position alone; the tour's name sits under the title.
+    expect(wrapper.get('p').text()).toBe('Tappa 1 di 2')
+    expect(wrapper.get('h1 + p').text()).toBe('Gaeta medievale')
+    expect(wrapper.get('img').attributes('alt')).toBe('La facciata')
+    expect(wrapper.text()).toContain('Il Duomo di Gaeta…')
+    // ADR-0008: the hours only with the day they were given, never "open".
+    expect(wrapper.text()).toContain('Visitare')
+    expect(wrapper.text()).toContain('Orari segnalati il 12 marzo 2026')
+    expect(wrapper.text().toLowerCase()).not.toContain('aperto')
+  })
+
+  it('shows nothing in place of a missing cover, and how to reach a place', async () => {
+    const { wrapper } = await mountAt('/itinerari/t1?tappa=2')
+
+    expect(wrapper.find('img').exists()).toBe(false)
+    expect(wrapper.text()).toContain('La processione.')
+    expect(wrapper.text()).toContain('In autobus dalla stazione.')
+    expect(wrapper.text()).not.toContain('Visitare')
+  })
+
+  it('moves forward with one primary button and has no "previous" at the first stop', async () => {
+    const { wrapper, router } = await mountAt('/itinerari/t1?tappa=1')
+    const labels = wrapper.findAll('nav button').map((b) => b.text())
+
+    expect(labels).toEqual(['Tappa successiva →', 'Torna all’itinerario'])
+    await wrapper.get('nav button').trigger('click')
+    await flushPromises()
+    expect(router.currentRoute.value.query.tappa).toBe('2')
+  })
+
+  it('ends the tour with what comes after it, instead of a next stop', async () => {
+    const { wrapper } = await mountAt('/itinerari/t1?tappa=2')
+
+    expect(wrapper.findAll('button').some((b) => b.text().startsWith('Tappa successiva'))).toBe(
+      false,
+    )
+    expect(wrapper.get('h2#' + wrapper.get('section').attributes('aria-labelledby')).text()).toBe(
+      'Hai finito il giro',
+    )
+    const links = wrapper.get('section ul').findAll('a')
+    expect(links.map((a) => a.find('span span').text())).toEqual([
+      'Un altro itinerario',
+      'Cosa c’è qui intorno',
+      'Da mangiare',
+    ])
+    expect(links.map((a) => a.attributes('href'))).toEqual([
+      '/itinerari?intento=citta',
+      '/cosa-fare?zona=porto-salvo',
+      '/ricette',
+    ])
+  })
+
+  it('promises nothing after the last stop that is not there', async () => {
+    const noZone = {
+      ...tour,
+      stops: tour.stops.map((stop) => ({ ...stop, zones: [] })),
+    } as Itinerario
+    serve(noZone, { tours: 1, ricette: 0, citta: 1 })
+    const { wrapper } = await mountAt('/itinerari/t1?tappa=2')
+
+    expect(wrapper.text()).toContain('Hai finito il giro')
+    expect(wrapper.find('section ul').exists()).toBe(false)
   })
 
   it('keeps focus on the page when the pressed button goes away (WCAG 2.4.3)', async () => {
@@ -120,11 +226,17 @@ describe('ItineraryDetailView (spec itinerari.md I7)', () => {
     await flushPromises()
     expect(document.activeElement?.textContent?.trim()).toBe('Duomo')
 
-    // The last "Tappa successiva" disables itself: focus goes to the stop.
+    // The last stop has no "Tappa successiva": focus goes to the stop.
     ;(button('Tappa successiva →').element as HTMLButtonElement).focus()
     await button('Tappa successiva →').trigger('click')
     await flushPromises()
     expect(document.activeElement?.textContent?.trim()).toBe('Processione')
+
+    // The first stop has no "Precedente": focus goes to the stop.
+    ;(button('← Precedente').element as HTMLButtonElement).focus()
+    await button('← Precedente').trigger('click')
+    await flushPromises()
+    expect(document.activeElement?.textContent?.trim()).toBe('Duomo')
 
     // Back to the article: focus goes to "Inizia il tour" again.
     await button('Torna all’itinerario').trigger('click')
@@ -141,7 +253,7 @@ describe('ItineraryDetailView (spec itinerari.md I7)', () => {
   })
 
   it('in a raccolta, gives every place of a stop its own way there', async () => {
-    vi.mocked(axios.get).mockResolvedValue({ data: { ...tour, form: 'raccolta' } })
+    serve({ ...tour, form: 'raccolta' } as Itinerario)
     const { wrapper } = await mountAt('/itinerari/t1')
 
     const portami = wrapper
@@ -164,7 +276,7 @@ describe('ItineraryDetailView (spec itinerari.md I7)', () => {
   })
 
   it('does not guide a raccolta: it has no order to follow', async () => {
-    vi.mocked(axios.get).mockResolvedValue({ data: { ...tour, form: 'raccolta' } })
+    serve({ ...tour, form: 'raccolta' } as Itinerario)
     const { wrapper } = await mountAt('/itinerari/t1?tappa=1')
 
     expect(wrapper.get('h1').text()).toBe('Gaeta medievale')

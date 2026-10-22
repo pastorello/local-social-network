@@ -27,6 +27,7 @@ import type { ReportPin } from '@/definitions/interfaces/Report'
 import { GAETA_BOUNDS, frameInFreeSpace, type Coords } from '@/lib/mapFrame'
 import { layerColor } from '@/lib/mapLayers'
 import { mapText } from '@/lib/mapText'
+import { stopsByPlace } from '@/lib/tours'
 import { OSM_ATTRIBUTION, OSM_TILE_URL } from '@/lib/osm'
 import { keepMarkersOutOfTabOrder } from '@/lib/leafletKeyboard'
 import { readToken } from '@/lib/tokens'
@@ -216,7 +217,12 @@ const renderFocus = () => {
       }).bindTooltip(mapText(point.label || '')),
     )
   }
-  props.focus.points.forEach((point, index) => {
+  // A tour's stops carry their number on the map, as in its list — and stops
+  // on one spot share a marker carrying all of theirs (review PR-7).
+  const places = props.focus.numbered
+    ? stopsByPlace(props.focus.points)
+    : props.focus.points.map((point) => ({ point, numbers: [] }))
+  for (const { point, numbers } of places) {
     const marker = L.circleMarker([point.lat, point.lng], {
       radius: 11,
       color: surface,
@@ -224,12 +230,11 @@ const renderFocus = () => {
       fillColor: color,
       fillOpacity: 1,
     })
-    // A tour's stops carry their number on the map, as in its list.
-    if (props.focus?.numbered) {
-      marker.bindTooltip(mapText(String(index + 1)), { permanent: true, direction: 'top' })
+    if (numbers.length) {
+      marker.bindTooltip(mapText(numbers.join(' · ')), { permanent: true, direction: 'top' })
     }
-    focusLayer?.addLayer(marker)
-  })
+    focusLayer.addLayer(marker)
+  }
   focusLayer.addTo(map)
 }
 

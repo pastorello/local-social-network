@@ -1,4 +1,4 @@
-import type { CardBase, MapPoint } from './Content'
+import type { Availability, CardBase, CardImage, MapPoint, ZoneRef } from './Content'
 
 // One stop of a tour (spec itinerari.md I3): a card of the archive, optionally
 // one of its own points, and the tour author's note. Mirrors
@@ -19,6 +19,15 @@ export interface ItineraryStop {
   // A luogo's own "come arrivarci"; empty for any other type.
   how_to_get_there: string
   note: string
+  // What the guided mode shows of the stop itself (review PR-7): the card's
+  // cover, the opening of its body as plain text (at most 400 characters), and
+  // for a place with a door what is known about getting in — null for any
+  // other type, `unknown` when nothing is (ADR-0008).
+  cover: CardImage | null
+  excerpt: string
+  availability: Availability | null
+  // The zones the stop's own point is in.
+  zones: ZoneRef[]
 }
 
 // "Che cosa ti va di fare?" (I5): an intent, with the line under it.

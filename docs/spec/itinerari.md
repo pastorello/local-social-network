@@ -262,3 +262,62 @@ asked for them on 2026-09-19.
   the guided mode of a percorso stays on foot. A percorso does not change: a
   walk needs one point per stop. **Limit:** the map marks such a stop at its
   first place only.
+
+## The guided mode tells the stop — 2026-10-23 (review PR-7)
+
+The review of 2026-10-22 ([review-2026-10-22.md](../review-2026-10-22.md):
+P-05, L-07, L-08, M-08) found the guided mode two-thirds empty, *Inizia il
+tour* under the whole list of stops, three equal ways out of a stop, and
+nothing after the last one. What changed, with the details the prompt left to
+the build:
+
+- **A stop tells itself, without a second tap.** Under *Come arrivarci* and
+  *Leggi la scheda*: the card's cover if it has one — and nothing in its place
+  if not, since an empty block tells a guest nothing — then the opening of its
+  body, a luogo's own *come arrivarci* text, and *Visitare* for a place with a
+  door. *Leggi la scheda* is for the rest.
+  - The opening is the body's first **400 characters as plain text**, one line
+    per block, cut on a word and closed with "…". The API makes it
+    (`itinerari/serializers.py::excerpt`): a card has no summary field, and a
+    body cut as HTML would need a second `v-html` beside `RichText.vue`.
+  - *Visitare* is the card's own `VisitInfo`, so ADR-0008 holds unchanged: it
+    shows nothing when nothing is known, never "open", and the hours only with
+    their date. The prompt said "for a church"; it shows for **chiese and
+    luoghi**, the two types with a door (`content.models.ACCESS_TYPES`), since a
+    museum's hours on its card and not at its stop would be one fact in one
+    place and missing in the other.
+- **The stop's page.** The eyebrow is the position alone, *Tappa 1 di 3*; the
+  tour's name sits under the title, small. *Tappa successiva →* is the one
+  primary button, full width; *← Precedente* and *Torna all'itinerario* are
+  links in a row under it, and the first stop has no *Precedente*. When the
+  pressed control goes away, focus moves to the stop's heading (WCAG 2.4.3), as
+  before.
+- **«Inizia il tour» comes before the stops**, right after *Durata indicativa*
+  and *Per chi vuole*, and again under the list.
+- **After the last stop** (the after-tour approved on 2026-10-22): *Hai finito
+  il giro* takes the place of *Tappa successiva*, with up to three ways on, each
+  shown only when something is behind it — `lib/doors.ts`'s rule, no door onto
+  an empty room:
+  - *Un altro itinerario* goes to the list for the first of the tour's intents
+    that has another published tour, else to every tour, and is not offered
+    when this tour is the only one;
+  - *Cosa c'è qui intorno* goes to `/cosa-fare?zona=` for the first zone **the
+    last stop's own point** is in — the chosen bakery, not every shop the dish
+    is sold in — and is not offered when that point is in no zone;
+  - *Da mangiare* goes to `/ricette` once a ricetta is published.
+
+  The three counts are asked for when the guest reaches the last stop, not
+  before, and a count that fails offers nothing. `lib/tours.ts::afterTour`
+  holds the rule.
+- **Stops on one spot share one marker** carrying all their numbers, "1 · 2",
+  instead of two labels drawn one over the other (L-07). The prompt offered a
+  6 px offset per number, which still overlaps at the width of a number, or a
+  "3 tappe" marker, which loses which three. One spot is the same point to
+  about a metre (`lib/tours.ts::stopsByPlace`): stops a few metres apart keep
+  their own markers and may still touch at zoom 16. A cluster that regroups
+  with the zoom was not worth it for that.
+- **A stop in the API** carries four more fields for this: `cover`, `excerpt`,
+  `availability` (null for a type without a door, `unknown` when nothing is
+  known) and `zones`, by name. `seed_e2e`'s tour gained a third stop (the beach
+  in Serapo) and the archive a published ricetta, so `itinerari.cy.ts` walks
+  stop 1 → 2 → 3 → the end.
