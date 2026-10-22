@@ -12,6 +12,11 @@ to these phases by number, so 3, 4, 5 and 8 keep theirs and the gaps are where
 the finished ones used to sit. A roadmap that renumbers itself is a roadmap
 nothing else can cite.
 
+**Where things stand (2026-10-22).** **The site is live** at
+`https://viveregaeta.it` (item 3, below). The archive on it is empty until the
+drafts are read and published — item 4 is now the only thing between the
+product and a reader.
+
 **Where things stand (2026-10-21).** The engineering board is empty: since
 2026-10-13 the zones were redrawn on OpenStreetMap and the map credits it (#105, #106), the
 public-source drafts moved into git (#107, #108), drafts appear on the map for
@@ -63,6 +68,16 @@ picture written when the v2 build order closed, on 2026-08-27, is at the head
 of the archive's item 6.
 
 ## 3. Deploy readiness — prerequisites now, deploy on the author's signal
+
+**Live at `https://viveregaeta.it` since 2026-10-22.** The author bought the
+domain and the VPS and walked deploy.md's runbook with this session reading his
+terminal: DNS, Docker on Ubuntu 26.04, the first start and its certificate, the
+first admin, Brevo's domain authentication, a test message, and the whole
+onboarding journey — a *Collabora con noi* request approved in `/admin/`, the
+invite in the inbox, a password set, a sign-in, a reset — all passed. What the
+run taught is written into the runbook, and the nightly backup is now a script
+(`deploy/backup.sh`). **Item 3 is done; it moves to the archive at the next
+register sweep.**
 
 **Decided 2026-10-21, with the author's signal** ([ADR-0009](./adr/0009-where-it-runs.md)):
 `viveregaeta.it` registered at OVHcloud, one **OVHcloud VPS-1** (2 vCores,
