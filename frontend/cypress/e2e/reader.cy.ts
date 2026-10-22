@@ -6,6 +6,21 @@
 const PUBLISHED = 'Chiesa E2E pubblicata'
 const DRAFT = 'Chiesa E2E in bozza'
 
+// The home's first words and its two other ways in (review of 2026-10-22,
+// P-02/M-02). seed_e2e publishes a tour under «Scoprire la città» and a church
+// in Porto Salvo, so both doors are open here.
+const PRESENTATION = 'Gaeta raccontata da chi ci vive'
+const TOURS_DOOR = 'Che cosa ti va di fare?'
+const ZONES_DOOR = 'Cosa c’è in una zona'
+
+// Read without scrolling: inside the window, and `be.visible` already says
+// that no scrolling box (the column, the sheet) has clipped it.
+const onScreen = ($el: JQuery<HTMLElement>) => {
+  const rect = $el[0]!.getBoundingClientRect()
+  expect(rect.top).to.be.at.least(0)
+  expect(rect.bottom).to.be.at.most($el[0]!.ownerDocument.defaultView!.innerHeight)
+}
+
 describe('the reader, on a wide screen', () => {
   beforeEach(() => cy.viewport(1280, 800))
 
@@ -18,6 +33,25 @@ describe('the reader, on a wide screen', () => {
 
     cy.get('#layer-chiese').uncheck()
     cy.get('#layer-chiese').should('not.be.checked')
+  })
+
+  it('is told what the site is and offered its two other ways in', () => {
+    cy.visit('/')
+
+    cy.contains('p', PRESENTATION).should('be.visible').and(onScreen)
+    cy.contains('a', TOURS_DOOR)
+      .should('be.visible')
+      .and(onScreen)
+      .and('have.attr', 'href', '/benvenuto')
+      .and('contain', 'Scoprire la città')
+    cy.contains('a', ZONES_DOOR)
+      .should('be.visible')
+      .and(onScreen)
+      .and('have.attr', 'href', '/cosa-fare')
+      .and('contain', 'Porto Salvo')
+
+    cy.contains('a', TOURS_DOOR).click()
+    cy.contains('h1', TOURS_DOOR)
   })
 
   // ADR-0005 closed its map-widget deferral on the claim that the map's data
@@ -145,11 +179,27 @@ describe('the reader, on a wide screen', () => {
 describe('the reader, on a phone', () => {
   beforeEach(() => cy.viewport(375, 812))
 
+  // M-02: the sheet opens on what the site is and its two doors — at its
+  // first stop, before anyone drags it — with the places after them.
+  it('opens the sheet on what the site is and its two other ways in', () => {
+    cy.visit('/')
+
+    cy.get('section[aria-label="La mappa di Gaeta"]').within(() => {
+      cy.contains('p', PRESENTATION).should('be.visible').and(onScreen)
+      cy.contains('a', TOURS_DOOR).should('be.visible').and(onScreen)
+      cy.contains('a', ZONES_DOOR)
+        .should('be.visible')
+        .and(onScreen)
+        .and('have.attr', 'href', '/cosa-fare')
+      cy.contains('h2', 'Luoghi sulla mappa')
+    })
+  })
+
   it('gets the sheet, and the places in it link to their cards', () => {
     cy.visit('/')
 
-    cy.get('section[aria-label="Luoghi sulla mappa"]').within(() => {
-      // The sheet is the places and nothing else (R1, 2026-10-22).
+    cy.get('section[aria-label="La mappa di Gaeta"]').within(() => {
+      // No reports in the reader's sheet (R1, 2026-10-22).
       cy.contains(/Segnalazion|Segnala un problema/).should('not.exist')
       cy.contains('a', PUBLISHED).click()
     })
@@ -161,7 +211,7 @@ describe('the reader, on a phone', () => {
   // same map, already on the place; enlarging it is a step Back undoes.
   it('reads a card under a strip of the map, and enlarges the map and comes back', () => {
     cy.visit('/')
-    cy.get('section[aria-label="Luoghi sulla mappa"]').within(() => {
+    cy.get('section[aria-label="La mappa di Gaeta"]').within(() => {
       cy.contains('a', PUBLISHED).click()
     })
 

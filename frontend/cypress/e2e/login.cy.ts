@@ -20,7 +20,9 @@ describe('anonymous visitor', () => {
     // it is visually hidden, because the map is the title.
     cy.get('h1').should('have.length', 1).and('not.be.visible')
     // D3: the map fills the screen and the places sit in a sheet over it.
-    cy.get('section[aria-label="Luoghi sulla mappa"]').should('exist')
+    cy.get('section[aria-label="La mappa di Gaeta"]')
+      .find('ul[aria-label="Luoghi sulla mappa"]')
+      .should('exist')
     // D4: the layer controls float over the map rather than beside it, and
     // stay behind a button until asked for.
     cy.get('button[aria-controls="map-chrome-panel"]').should('have.attr', 'aria-expanded', 'false')

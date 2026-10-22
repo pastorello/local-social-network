@@ -5,6 +5,7 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 import axios from 'axios'
 
 import HomeView from '../HomeView.vue'
+import { PRESENTATION } from '@/definitions/copy'
 import { CARD_LAYERS } from '@/lib/mapLayers'
 import { useMapStore } from '@/stores/map'
 import { useUserStore } from '@/stores/user'
@@ -27,6 +28,8 @@ const makeRouter = () =>
       { path: '/login', name: 'login', component: stub },
       { path: '/chiese/:id', name: 'chiesedetail', component: stub },
       { path: '/feste/:id', name: 'festedetail', component: stub },
+      { path: '/benvenuto', name: 'benvenuto', component: stub },
+      { path: '/cosa-fare', name: 'cosafare', component: stub },
     ],
   })
 
@@ -84,11 +87,32 @@ const PINS = [
   },
 ]
 
-const mockApi = (overlays: unknown[] = OVERLAYS) => {
+// What the two doors are decided on (lib/doors.ts): one intent with a tour and
+// one without; one zone with a published place and one without.
+const INTENTS = [
+  { slug: 'citta', name: 'Scoprire la città', name_plural: '', description: '', count: 2 },
+  { slug: 'mangiare', name: 'Mangiare', name_plural: '', description: '', count: 0 },
+]
+const ZONES = [
+  { slug: 'serapo', name: 'Serapo', geometry: { type: 'Polygon', coordinates: [] }, count: 0 },
+  {
+    slug: 'porto-salvo',
+    name: 'Porto Salvo',
+    geometry: { type: 'Polygon', coordinates: [] },
+    count: 1,
+  },
+]
+
+const mockApi = (
+  overlays: unknown[] = OVERLAYS,
+  { intents = INTENTS, zones = ZONES }: { intents?: unknown[]; zones?: unknown[] } = {},
+) => {
   vi.mocked(axios.get).mockImplementation((url: string) => {
     if (url === '/api/map/features/') return Promise.resolve({ data: FEATURES })
     if (url === '/api/map/overlays/') return Promise.resolve({ data: overlays })
     if (url === '/api/reports/map/') return Promise.resolve({ data: PINS })
+    if (url === '/api/itinerari/intenti/') return Promise.resolve({ data: intents })
+    if (url === '/api/map/zone/') return Promise.resolve({ data: zones })
     return Promise.resolve({ data: [] })
   })
 }
@@ -139,6 +163,71 @@ describe('HomeView (the map, spec map.md M1/M2/M3)', () => {
       // ADR-0005: every input is associated with its own label.
       expect(wrapper.find(`label[for="layer-${layer.key}"]`).exists()).toBe(true)
     })
+  })
+
+  // A reader who did not come from a B&B's card is told what the site is and
+  // shown its two other ways in (review of 2026-10-22, P-02).
+  it('says what the site is and opens its two other ways in', async () => {
+    const wrapper = await mountHome()
+
+    expect(wrapper.text()).toContain(PRESENTATION)
+    const tours = wrapper.get('a[href="/benvenuto"]')
+    expect(tours.text()).toContain('Che cosa ti va di fare?')
+    // Only what is behind the door is named: Mangiare has no tour.
+    expect(tours.text()).toContain('Scoprire la città')
+    expect(tours.text()).not.toContain('Mangiare')
+    const zones = wrapper.get('a[href="/cosa-fare"]')
+    expect(zones.text()).toContain('Cosa c’è in una zona')
+    expect(zones.text()).toContain('Porto Salvo')
+    expect(zones.text()).not.toContain('Serapo')
+  })
+
+  // The same thresholds /benvenuto uses: an empty archive promises nothing.
+  it('offers no door with nothing behind it', async () => {
+    mockApi(OVERLAYS, {
+      intents: [{ ...INTENTS[0], count: 0 }],
+      zones: [{ ...ZONES[1], count: 0 }],
+    })
+    const wrapper = await mountHome()
+
+    expect(wrapper.text()).toContain(PRESENTATION)
+    expect(wrapper.find('a[href="/benvenuto"]').exists()).toBe(false)
+    expect(wrapper.find('a[href="/cosa-fare"]').exists()).toBe(false)
+  })
+
+  it('keeps one door when only the other is empty', async () => {
+    mockApi(OVERLAYS, { intents: [] })
+    const wrapper = await mountHome()
+
+    expect(wrapper.find('a[href="/benvenuto"]').exists()).toBe(false)
+    expect(wrapper.find('a[href="/cosa-fare"]').exists()).toBe(true)
+  })
+
+  // The doors sit above the layers and the list: until they are known nothing
+  // under the presentation is drawn, so their arrival cannot push it down.
+  it('draws what comes from the API in one piece, once the doors are known', async () => {
+    let answerIntents: (value: { data: unknown[] }) => void = () => {}
+    vi.mocked(axios.get).mockImplementation((url: string) => {
+      if (url === '/api/itinerari/intenti/')
+        return new Promise((resolve) => {
+          answerIntents = resolve
+        })
+      if (url === '/api/map/features/') return Promise.resolve({ data: FEATURES })
+      if (url === '/api/map/zone/') return Promise.resolve({ data: ZONES })
+      return Promise.resolve({ data: [] })
+    })
+    const wrapper = await mountHome()
+
+    expect(wrapper.text()).toContain(PRESENTATION)
+    expect(wrapper.find('#layer-chiese').exists()).toBe(false)
+    expect(wrapper.find('ul[aria-label="Luoghi sulla mappa"]').exists()).toBe(false)
+
+    answerIntents({ data: INTENTS })
+    await flushPromises()
+
+    expect(wrapper.find('a[href="/benvenuto"]').exists()).toBe(true)
+    expect(wrapper.find('#layer-chiese').exists()).toBe(true)
+    expect(wrapper.find('ul[aria-label="Luoghi sulla mappa"]').exists()).toBe(true)
   })
 
   // The v1 reports block was the first text a tourist read on the home
@@ -260,10 +349,36 @@ describe('HomeView on a phone (spec/design.md D3/D4/D5)', () => {
   it('leads with the map and puts the places in a sheet, not a side panel', async () => {
     const wrapper = await mountHome()
 
-    expect(wrapper.find('section[aria-label="Luoghi sulla mappa"]').exists()).toBe(true)
+    expect(wrapper.find('section[aria-label="La mappa di Gaeta"]').exists()).toBe(true)
     // The wide layout's own furniture must not come along for the ride.
     expect(wrapper.find('#layer-chiese').exists()).toBe(false)
     expect(wrapper.findComponent({ name: 'MainTitle' }).exists()).toBe(false)
+  })
+
+  // M-02: the sheet used to open on «Luoghi sulla mappa · N schede», which
+  // says nothing about what the site is. It opens on the presentation, then
+  // the two doors, then the places.
+  it('opens the sheet on what the site is, its two doors, then the places', async () => {
+    const wrapper = await mountHome()
+
+    const sheet = wrapper.get('section[aria-label="La mappa di Gaeta"]')
+    const text = sheet.text()
+    expect(text.indexOf(PRESENTATION)).toBeGreaterThanOrEqual(0)
+    expect(text.indexOf(PRESENTATION)).toBeLessThan(text.indexOf('Che cosa ti va di fare?'))
+    expect(text.indexOf('Che cosa ti va di fare?')).toBeLessThan(
+      text.indexOf('Cosa c’è in una zona'),
+    )
+    expect(text.indexOf('Cosa c’è in una zona')).toBeLessThan(text.indexOf('Luoghi sulla mappa'))
+    expect(sheet.get('h2').text()).toBe('Luoghi sulla mappa')
+  })
+
+  it('offers no door in the sheet when there is nothing behind it', async () => {
+    mockApi(OVERLAYS, { intents: [], zones: [] })
+    const wrapper = await mountHome()
+
+    expect(wrapper.text()).toContain(PRESENTATION)
+    expect(wrapper.find('a[href="/benvenuto"]').exists()).toBe(false)
+    expect(wrapper.find('a[href="/cosa-fare"]').exists()).toBe(false)
   })
 
   it('keeps the layer controls behind a floating button instead of beside the map (D4)', async () => {
@@ -313,7 +428,7 @@ describe('HomeView on a phone (spec/design.md D3/D4/D5)', () => {
 
     // The drag has no keyboard equivalent, so the handle is a real button that
     // cycles the stops (WCAG 2.1.1), same pattern as every map editor here.
-    const handle = wrapper.get('section[aria-label="Luoghi sulla mappa"] button')
+    const handle = wrapper.get('section[aria-label="La mappa di Gaeta"] button')
     expect(handle.attributes('aria-expanded')).toBe('true')
 
     await handle.trigger('click')
