@@ -53,6 +53,9 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
     cy.viewport(1280, 800)
     cy.visit('/')
     cy.contains('h1', 'La mappa di Gaeta')
+    // The two doors under the presentation (review of 2026-10-22, P-02) come
+    // from the API: measured once they are there, not before.
+    cy.contains('a', 'Che cosa ti va di fare?')
 
     check('/ (desktop)')
   })
@@ -61,6 +64,7 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
     cy.viewport(375, 812)
     cy.visit('/')
     cy.get('.leaflet-container').should('exist')
+    cy.contains('a', 'Che cosa ti va di fare?')
 
     check('/ (mobile)')
   })

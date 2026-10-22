@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 
+import HomeShortcuts from '@/components/maps/HomeShortcuts.vue'
 import LayerToggles from '@/components/maps/LayerToggles.vue'
 import MapChrome from '@/components/maps/MapChrome.vue'
 import MapSheet from '@/components/maps/MapSheet.vue'
@@ -16,6 +17,8 @@ import { useUserStore } from '@/stores/user'
 import { useMapStore } from '@/stores/map'
 import type { ReportStatus } from '@/definitions/interfaces/Report'
 import { useIsDesktop } from '@/composables/useBreakpoint'
+import { useDoors } from '@/composables/useDoors'
+import { PRESENTATION } from '@/definitions/copy'
 import { REPORTS_LAYER_KEY } from '@/lib/mapLayers'
 import { STATUS_META, statusColor } from '@/lib/reportStatus'
 
@@ -60,6 +63,14 @@ const statusOptions = (Object.keys(STATUS_META) as ReportStatus[]).map((status) 
 
 const featureCount = (key: string) => mapStore.featureCount(key)
 
+// The home says what the site is and opens its two other ways in (review of
+// 2026-10-22, P-02/M-02; design.md D3's note of 2026-10-23): a reader from a
+// search engine never sees /benvenuto. The presentation is static and paints
+// with the page. The doors, the layers and the lists come from the API, so
+// they appear together once the doors are known: the doors sit above the
+// rest, and arriving after it would push down what the reader had started on.
+const { withTours, zonesWithPlaces, loaded: doorsKnown, load: loadDoors } = useDoors()
+
 // The reports are for people with an account (decided 2026-10-22, spec
 // reports-and-polls.md R1). A reader's home is the places and nothing else —
 // no reports section, no reports layer — and its wide column is two blocks:
@@ -100,7 +111,10 @@ const onReportSaved = () => {
 
 // The shell loads the map's data too; this makes the chrome self-sufficient
 // (and is a no-op once loaded).
-onMounted(mapStore.load)
+onMounted(() => {
+  mapStore.load()
+  loadDoors()
+})
 </script>
 
 <template>
@@ -123,19 +137,24 @@ onMounted(mapStore.load)
       />
     </MapChrome>
 
-    <MapSheet
-      class="pointer-events-auto"
-      title="Luoghi sulla mappa"
-      :subtitle="`${visibleFeatures.length} schede`"
-      :force-peek="chromeOpen"
-    >
-      <PlacesList v-if="visibleFeatures.length" :features="visibleFeatures" />
-      <p v-else class="py-6 text-sm text-muted">
-        Nessun livello attivo: apri «Livelli» per scegliere cosa vedere.
-      </p>
+    <MapSheet class="pointer-events-auto" title="La mappa di Gaeta" :force-peek="chromeOpen">
+      <p class="text-reading text-ink">{{ PRESENTATION }}</p>
+
+      <template v-if="doorsKnown">
+        <HomeShortcuts :with-tours="withTours" :zones="zonesWithPlaces" class="mt-3" />
+
+        <div class="mt-5 flex items-baseline justify-between">
+          <h2 class="font-display text-title">Luoghi sulla mappa</h2>
+          <span class="text-xs text-muted">{{ visibleFeatures.length }} schede</span>
+        </div>
+        <PlacesList v-if="visibleFeatures.length" :features="visibleFeatures" />
+        <p v-else class="py-6 text-sm text-muted">
+          Nessun livello attivo: apri «Livelli» per scegliere cosa vedere.
+        </p>
+      </template>
 
       <div
-        v-if="isAuthenticated && activeLayers[REPORTS_LAYER_KEY]"
+        v-if="doorsKnown && isAuthenticated && activeLayers[REPORTS_LAYER_KEY]"
         class="mt-6 border-t border-hairline pt-4"
       >
         <h2
@@ -186,22 +205,25 @@ onMounted(mapStore.load)
     <div>
       <PanelBox>
         <MainTitle>La mappa di Gaeta</MainTitle>
-        <p class="mb-4 text-muted">
-          Luoghi, chiese, feste, ricette e personaggi della città, sulla mappa. Scegli cosa vedere.
-        </p>
+        <p class="text-reading text-ink">{{ PRESENTATION }}</p>
 
-        <LayerToggles
-          v-model:active-layers="activeLayers"
-          v-model:active-overlays="activeOverlays"
-          v-model:overlay-opacity="overlayOpacity"
-          :overlays="overlays"
-          :feature-count="featureCount"
-          :report-count="isAuthenticated ? pins.length : undefined"
-        />
+        <template v-if="doorsKnown">
+          <HomeShortcuts :with-tours="withTours" :zones="zonesWithPlaces" class="mt-4" />
+
+          <LayerToggles
+            v-model:active-layers="activeLayers"
+            v-model:active-overlays="activeOverlays"
+            v-model:overlay-opacity="overlayOpacity"
+            :overlays="overlays"
+            :feature-count="featureCount"
+            :report-count="isAuthenticated ? pins.length : undefined"
+            class="mt-6"
+          />
+        </template>
       </PanelBox>
     </div>
 
-    <div v-if="visibleFeatures.length">
+    <div v-if="doorsKnown && visibleFeatures.length">
       <PanelBox>
         <h2 class="mb-1 font-display text-title">Luoghi sulla mappa</h2>
         <p class="mb-3 text-xs text-muted">Gli stessi luoghi disegnati sulla mappa.</p>
@@ -209,7 +231,7 @@ onMounted(mapStore.load)
       </PanelBox>
     </div>
 
-    <div v-if="isAuthenticated && activeLayers[REPORTS_LAYER_KEY]">
+    <div v-if="doorsKnown && isAuthenticated && activeLayers[REPORTS_LAYER_KEY]">
       <PanelBox>
         <h2
           ref="reportsHeading"
