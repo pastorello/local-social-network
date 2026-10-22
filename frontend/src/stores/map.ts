@@ -6,6 +6,7 @@ import type { MapPoint } from '@/definitions/interfaces/Content'
 import type { MapCardFeature, Overlay } from '@/definitions/interfaces/MapData'
 import type { ReportPin } from '@/definitions/interfaces/Report'
 import { CARD_LAYERS, REPORTS_LAYER_KEY } from '@/lib/mapLayers'
+import { useUserStore } from '@/stores/user'
 
 // The map under every page (spec/design.md D13): one map, mounted by the shell,
 // and every route renders over it. What it shows used to be HomeView's own
@@ -64,7 +65,8 @@ export const useMapStore = defineStore('map', {
     overlays: [] as Overlay[],
     // Spec map.md M1/M2: every layer is the reader's to toggle, all on by
     // default — the first thing a visitor should see is how much of the city
-    // is on the map.
+    // is on the map. The reports layer is on too, but only someone with an
+    // account has one (decided 2026-10-22, reports-and-polls.md R1).
     activeLayers: Object.fromEntries([
       ...CARD_LAYERS.map((layer) => [layer.key, true]),
       [REPORTS_LAYER_KEY, true],
@@ -92,7 +94,12 @@ export const useMapStore = defineStore('map', {
   getters: {
     visibleFeatures: (state) =>
       state.features.filter((feature) => state.activeLayers[feature.type]),
-    visiblePins: (state) => (state.activeLayers[REPORTS_LAYER_KEY] ? state.pins : []),
+    // Whatever the store holds, a reader without an account is handed no
+    // report: a fetch still in flight when they signed out cannot put one back.
+    visiblePins: (state) =>
+      useUserStore().user.isAuthenticated && state.activeLayers[REPORTS_LAYER_KEY]
+        ? state.pins
+        : [],
     visibleOverlays: (state) =>
       state.overlays
         .filter((overlay) => state.activeOverlays[overlay.id])
@@ -150,17 +157,26 @@ export const useMapStore = defineStore('map', {
       }
     },
 
+    // Reports, and the categories they are filed under, are for people with
+    // an account (decided 2026-10-22, reports-and-polls.md R1): the API
+    // answers a reader with a 401, so a reader never asks, and signing out
+    // forgets what was fetched — a filing under way included.
+    async loadReports() {
+      if (!useUserStore().user.isAuthenticated) {
+        this.stopPlacing()
+        this.pins = []
+        this.categories = []
+        return
+      }
+      await Promise.all([this.fetchCategories(), this.fetchPins()])
+    },
+
     // Once per session: the map is not re-fetched because a page opened over
     // it. A card saved or a report filed refetches what it changed.
     async load() {
       if (this.loaded) return
       this.loaded = true
-      await Promise.all([
-        this.fetchCategories(),
-        this.fetchPins(),
-        this.fetchFeatures(),
-        this.fetchOverlays(),
-      ])
+      await Promise.all([this.loadReports(), this.fetchFeatures(), this.fetchOverlays()])
     },
 
     startPlacing() {

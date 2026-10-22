@@ -189,6 +189,10 @@ describe('MapStage while a page lists a set (spec cosa-fare.md Part −1, D5)', 
   it('draws exactly that set — no other card, no report — and everything again after', async () => {
     const { map } = await mountStage()
     const store = useMapStore()
+    // A collaborator: a reader has no reports to hide (reports-and-polls.md
+    // R1). Signed in first, because signing in refetches what the map holds.
+    useUserStore().user.isAuthenticated = true
+    await flushPromises()
     const card = (id: string) => ({
       id,
       type: 'chiese',
@@ -233,5 +237,8 @@ describe('MapStage follows the session (spec map.md M5)', () => {
     const fetched = vi.mocked(axios.get).mock.calls.map(([url]) => url)
     expect(fetched.filter((url) => url === '/api/map/features/')).toHaveLength(2)
     expect(fetched.filter((url) => url === '/api/map/overlays/')).toHaveLength(2)
+    // The reports only on the way in (reports-and-polls.md R1, 2026-10-22):
+    // signing out forgets them rather than asking an API that would say 401.
+    expect(fetched.filter((url) => url === '/api/reports/map/')).toHaveLength(1)
   })
 })

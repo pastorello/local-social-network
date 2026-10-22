@@ -5,7 +5,6 @@
 // disagree.
 const PUBLISHED = 'Chiesa E2E pubblicata'
 const DRAFT = 'Chiesa E2E in bozza'
-const REPORT = 'Segnalazione E2E di un altro cittadino'
 
 describe('the reader, on a wide screen', () => {
   beforeEach(() => cy.viewport(1280, 800))
@@ -23,8 +22,9 @@ describe('the reader, on a wide screen', () => {
 
   // ADR-0005 closed its map-widget deferral on the claim that the map's data
   // also reaches a reader as text. This is that claim, asserted: everything
-  // the map draws is reachable without ever touching the map — a card through
-  // "Luoghi sulla mappa", a report through "Segnalazioni sulla mappa".
+  // the map draws is reachable without ever touching the map, through
+  // "Luoghi sulla mappa". (A collaborator's reports have their own list,
+  // "Segnalazioni sulla mappa", which v1-flows.cy.ts follows.)
   //
   // The keyboard half is asserted as *focusable real link*, not as a synthetic
   // Enter: Cypress's key events do not follow an anchor the way the browser
@@ -35,18 +35,32 @@ describe('the reader, on a wide screen', () => {
   it('reaches everything the map draws without touching the map', () => {
     cy.visit('/')
 
-    cy.get('ul[aria-label="Luoghi sulla mappa"]').contains('a', PUBLISHED).should('exist')
-
-    cy.get('ul[aria-label="Segnalazioni sulla mappa"]').contains('a', REPORT).as('reportLink')
-    cy.get('@reportLink').focus()
-    cy.get('@reportLink').should('have.focus')
-    cy.get('@reportLink')
+    cy.get('ul[aria-label="Luoghi sulla mappa"]').contains('a', PUBLISHED).as('placeLink')
+    cy.get('@placeLink').focus()
+    cy.get('@placeLink').should('have.focus')
+    cy.get('@placeLink')
       .should('have.attr', 'href')
-      .and('match', /^\/reports\/[0-9a-f-]+$/)
+      .and('match', /^\/chiese\/[0-9a-f-]+$/)
+  })
 
-    cy.get('@reportLink').click()
-    cy.location('pathname').should('match', /^\/reports\/[0-9a-f-]+$/)
-    cy.contains('h1', REPORT)
+  // Reports are a tool for the people working on the archive (decided
+  // 2026-10-22, spec reports-and-polls.md R1). For a reader they are absent,
+  // not hidden: no section, no layer, no request the API would refuse with a
+  // 401 — and a report's own address asks for a login.
+  it('is shown no reports, and a report’s address asks for a login', () => {
+    cy.intercept('GET', '**/api/map/features/**').as('features')
+    cy.intercept('GET', '**/api/reports/**').as('reports')
+    cy.visit('/')
+    cy.wait('@features')
+
+    cy.get('ul[aria-label="Luoghi sulla mappa"]').contains('a', PUBLISHED).should('exist')
+    cy.get('#layer-segnalazioni').should('not.exist')
+    cy.contains(/Segnalazion|Segnala un problema|cittadini/).should('not.exist')
+    cy.get('@reports.all').should('have.length', 0)
+
+    cy.visit('/reports/00000000-0000-4000-8000-000000000000')
+    cy.location('pathname').should('eq', '/login')
+    cy.location('search').should('contain', 'redirect=')
   })
 
   it('is offered the public overlay and never learns the confidential one exists', () => {
@@ -135,6 +149,8 @@ describe('the reader, on a phone', () => {
     cy.visit('/')
 
     cy.get('section[aria-label="Luoghi sulla mappa"]').within(() => {
+      // The sheet is the places and nothing else (R1, 2026-10-22).
+      cy.contains(/Segnalazion|Segnala un problema/).should('not.exist')
       cy.contains('a', PUBLISHED).click()
     })
 

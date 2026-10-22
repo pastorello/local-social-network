@@ -9,7 +9,10 @@ import { statusColor } from '@/lib/reportStatus'
 const props = defineProps<{
   overlays: Overlay[]
   featureCount: (key: string) => number
-  reportCount: number
+  // Only someone with an account is handed a count, and only they get the
+  // reports layer at all (decided 2026-10-22, reports-and-polls.md R1): for a
+  // reader there is no toggle, not an empty one.
+  reportCount?: number
 }>()
 
 const activeLayers = defineModel<Record<string, boolean>>('activeLayers', { required: true })
@@ -38,7 +41,7 @@ const overlayOpacity = defineModel<Record<string, number>>('overlayOpacity', { r
           <span class="text-muted">({{ props.featureCount(layer.key) }})</span>
         </label>
       </div>
-      <div class="flex items-center gap-2">
+      <div v-if="props.reportCount !== undefined" class="flex items-center gap-2">
         <input
           id="layer-segnalazioni"
           v-model="activeLayers[REPORTS_LAYER_KEY]"

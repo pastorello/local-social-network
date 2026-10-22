@@ -4,8 +4,8 @@ from django.db import transaction
 from django.db.models import F
 from django.shortcuts import get_object_or_404
 
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.exceptions import NotAuthenticated, PermissionDenied, ValidationError
+from rest_framework.decorators import api_view
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 
 from account.models import User
@@ -27,8 +27,8 @@ def _uuid_param(request, name):
 
     `category` and `author` are UUID columns, so a malformed value makes Django
     raise its own ValidationError at query-evaluation time — which DRF's handler
-    does not recognise. These endpoints are public, so that was an anonymous
-    500 (TD-14).
+    does not recognise. These endpoints were public then, so that was an
+    anonymous 500 (TD-14).
     """
     raw = request.GET.get(name, '')
     if not raw:
@@ -62,8 +62,6 @@ def _filtered_reports(request):
 
 
 def _upvoted_ids(request, reports):
-    if not request.user.is_authenticated:
-        return set()
     return set(
         Upvote.objects.filter(
             user=request.user, report__in=[report.id for report in reports]
@@ -71,13 +69,13 @@ def _upvoted_ids(request, reports):
     )
 
 
-def _require_authenticated(request):
-    if not request.user.is_authenticated:
-        raise NotAuthenticated()
+# Reports are for people with an account (decided 2026-10-22, spec
+# reports-and-polls.md R1): reading them as much as filing them. Nothing in
+# this file opts out of the global IsAuthenticated default, and that is what
+# says so — an anonymous request is a 401 before any of it runs.
 
 
 @api_view(['GET'])
-@permission_classes([])
 def category_list(request):
     categories = Category.objects.filter(is_active=True)
     serializer = CategorySerializer(categories, many=True)
@@ -85,12 +83,8 @@ def category_list(request):
 
 
 @api_view(['GET', 'POST'])
-@permission_classes([])
 def report_list(request):
-    # GET is open to visitors (spec §3); POST requires a logged-in citizen.
     if request.method == 'POST':
-        _require_authenticated(request)
-
         serializer = ReportWriteSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         report = serializer.save(author=request.user)
@@ -109,7 +103,6 @@ def report_list(request):
 
 
 @api_view(['GET'])
-@permission_classes([])
 def report_map(request):
     # Unpaginated slim payload for the map (spec F2.4); same filters as the list.
     serializer = ReportPinSerializer(_filtered_reports(request), many=True)
@@ -117,7 +110,6 @@ def report_map(request):
 
 
 @api_view(['GET', 'PATCH', 'DELETE'])
-@permission_classes([])
 def report_detail(request, pk):
     report = get_object_or_404(
         IssueReport.objects.select_related('category', 'author'), pk=pk
@@ -130,7 +122,6 @@ def report_detail(request, pk):
         return Response(serializer.data)
 
     # Spec F2.8: authors can edit/delete their own report while it is open.
-    _require_authenticated(request)
     if report.author_id != request.user.id:
         raise PermissionDenied('Puoi modificare solo le tue segnalazioni.')
     if report.status != IssueReport.OPEN:

@@ -262,6 +262,17 @@ describe("the collaborator's surfaces meet WCAG 2.1 AA", { testIsolation: false 
     check('/chiese/nuova')
   })
 
+  // The reports section — its list, filters and legend — left the reader's
+  // home on 2026-10-22 (reports-and-polls.md R1). It is measured where it
+  // lives now, so the gate does not quietly stop seeing it.
+  it('the map home with its reports, a collaborator’s alone', () => {
+    cy.visit('/')
+    cy.contains('h2', 'Segnalazioni')
+    cy.contains('button', 'Segnala un problema').should('exist')
+
+    check('/ (desktop, collaboratore)')
+  })
+
   // design.md D19: the map tab lends the map to the form — the banner over the
   // map and the points field are new controls, so the gate measures them.
   it('the authoring form drawing on the map, with its banner', () => {

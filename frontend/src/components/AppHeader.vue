@@ -3,6 +3,7 @@ import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useUserStore } from '@/stores/user'
+import { useMapStore } from '@/stores/map'
 import { useIsDesktop } from '@/composables/useBreakpoint'
 import NavDisclosure from './buttons/NavDisclosure.vue'
 import SchedeMenu from './buttons/SchedeMenu.vue'
@@ -61,6 +62,18 @@ const logout = async () => {
   router.push('/login')
 }
 
+// Reports are for people with an account (decided 2026-10-22, spec
+// reports-and-polls.md R1), so the way to file one is in the account's own
+// menu as well as on the home: it opens the map and starts the placing there.
+// Closed by hand, because from the home itself there is no route change to
+// close it.
+const mapStore = useMapStore()
+const fileReport = async (close: () => void) => {
+  close()
+  await router.push('/')
+  mapStore.startPlacing()
+}
+
 const item =
   'flex h-9 items-center rounded-full px-2 lg:px-3 text-sm font-semibold whitespace-nowrap text-ink hover:bg-page focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea'
 const active = 'bg-sea/10 text-sea'
@@ -102,17 +115,26 @@ const menuLink =
             aria-hidden="true"
           />
         </template>
-        <RouterLink :to="{ name: 'profile', params: { id: user.id } }" :class="menuLink">
-          Il tuo profilo
-        </RouterLink>
-        <RouterLink to="/users" :class="menuLink">Utenti</RouterLink>
-        <button
-          type="button"
-          :class="[menuLink, 'w-full cursor-pointer text-left']"
-          @click="logout"
-        >
-          Esci
-        </button>
+        <template #default="{ close }">
+          <RouterLink :to="{ name: 'profile', params: { id: user.id } }" :class="menuLink">
+            Il tuo profilo
+          </RouterLink>
+          <RouterLink to="/users" :class="menuLink">Utenti</RouterLink>
+          <button
+            type="button"
+            :class="[menuLink, 'w-full cursor-pointer text-left']"
+            @click="fileReport(close)"
+          >
+            Segnala un problema
+          </button>
+          <button
+            type="button"
+            :class="[menuLink, 'w-full cursor-pointer text-left']"
+            @click="logout"
+          >
+            Esci
+          </button>
+        </template>
       </NavDisclosure>
       <RouterLink v-else to="/login" :class="item" :active-class="active">Accedi</RouterLink>
     </template>
@@ -149,24 +171,35 @@ const menuLink =
             <path d="M3.5 6h13M3.5 10h13M3.5 14h13" />
           </svg>
         </template>
-        <RouterLink to="/" :class="menuLink">Mappa</RouterLink>
-        <RouterLink to="/itinerari" :class="[menuLink, 'min-[360px]:hidden']">Itinerari</RouterLink>
-        <RouterLink to="/cosa-fare" :class="menuLink">Cosa fare</RouterLink>
-        <RouterLink to="/il-progetto" :class="menuLink">Il progetto</RouterLink>
-        <template v-if="user.isAuthenticated && user.id">
-          <RouterLink :to="{ name: 'profile', params: { id: user.id } }" :class="menuLink">
-            Il tuo profilo
-          </RouterLink>
-          <RouterLink to="/users" :class="menuLink">Utenti</RouterLink>
-          <button
-            type="button"
-            :class="[menuLink, 'w-full cursor-pointer text-left']"
-            @click="logout"
+        <template #default="{ close }">
+          <RouterLink to="/" :class="menuLink">Mappa</RouterLink>
+          <RouterLink to="/itinerari" :class="[menuLink, 'min-[360px]:hidden']"
+            >Itinerari</RouterLink
           >
-            Esci
-          </button>
+          <RouterLink to="/cosa-fare" :class="menuLink">Cosa fare</RouterLink>
+          <RouterLink to="/il-progetto" :class="menuLink">Il progetto</RouterLink>
+          <template v-if="user.isAuthenticated && user.id">
+            <RouterLink :to="{ name: 'profile', params: { id: user.id } }" :class="menuLink">
+              Il tuo profilo
+            </RouterLink>
+            <RouterLink to="/users" :class="menuLink">Utenti</RouterLink>
+            <button
+              type="button"
+              :class="[menuLink, 'w-full cursor-pointer text-left']"
+              @click="fileReport(close)"
+            >
+              Segnala un problema
+            </button>
+            <button
+              type="button"
+              :class="[menuLink, 'w-full cursor-pointer text-left']"
+              @click="logout"
+            >
+              Esci
+            </button>
+          </template>
+          <RouterLink v-else to="/login" :class="menuLink">Accedi</RouterLink>
         </template>
-        <RouterLink v-else to="/login" :class="menuLink">Accedi</RouterLink>
       </NavDisclosure>
     </template>
   </nav>

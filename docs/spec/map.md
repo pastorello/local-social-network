@@ -16,6 +16,9 @@
   (pins), and the existing reports layer — and luoghi (pins), the seventh type,
   since 2026-09-18. The map shows only what has a place;
   dialetto and recipes-as-articles are reached from the menu, not the map.
+  *(2026-10-22: the reports layer is a collaborator's alone — a reader without
+  an account has no reports layer, not an empty one; see
+  [reports-and-polls.md](./reports-and-polls.md) R1.)*
 - **M3 — Overlays**, one mechanism, two kinds:
   - **raster** — historical maps of Gaeta (1820, 1600…): georeferenced images
     the author sources, drawn over the base tiles with adjustable opacity

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import LayerToggles from '@/components/maps/LayerToggles.vue'
@@ -14,7 +13,6 @@ import MainTitle from '@/components/typography/MainTitle.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import SearchBar from '@/components/forms/SearchBar.vue'
 import { useUserStore } from '@/stores/user'
-import { useToastStore } from '@/stores/toast'
 import { useMapStore } from '@/stores/map'
 import type { ReportStatus } from '@/definitions/interfaces/Report'
 import { useIsDesktop } from '@/composables/useBreakpoint'
@@ -30,9 +28,7 @@ import { STATUS_META, statusColor } from '@/lib/reportStatus'
 // DOM — see useBreakpoint for why that matters beyond tidiness.
 const { isDesktop } = useIsDesktop()
 
-const router = useRouter()
 const userStore = useUserStore()
-const toastStore = useToastStore()
 const mapStore = useMapStore()
 const {
   activeLayers,
@@ -64,14 +60,23 @@ const statusOptions = (Object.keys(STATUS_META) as ReportStatus[]).map((status) 
 
 const featureCount = (key: string) => mapStore.featureCount(key)
 
-const startReporting = () => {
-  if (!userStore.user.isAuthenticated) {
-    toastStore.showToast(5000, 'Accedi per inviare una segnalazione', 'bg-red-300')
-    router.push('/login')
-    return
-  }
-  mapStore.startPlacing()
-}
+// The reports are for people with an account (decided 2026-10-22, spec
+// reports-and-polls.md R1). A reader's home is the places and nothing else —
+// no reports section, no reports layer — and its wide column is two blocks:
+// the presentation with the layers, then the places.
+const isAuthenticated = computed(() => userStore.user.isAuthenticated)
+
+// Filing starts from the account menu too (AppHeader), and from wherever it
+// starts the collaborator has to see what comes next: the section that asks
+// for a point can sit below the fold of the column, or of the sheet.
+const reportsHeading = ref<HTMLElement | null>(null)
+watch(
+  placing,
+  (now) => {
+    if (now) reportsHeading.value?.focus()
+  },
+  { flush: 'post' },
+)
 
 const cancelReporting = () => {
   mapStore.stopPlacing()
@@ -114,7 +119,7 @@ onMounted(mapStore.load)
         v-model:overlay-opacity="overlayOpacity"
         :overlays="overlays"
         :feature-count="featureCount"
-        :report-count="pins.length"
+        :report-count="isAuthenticated ? pins.length : undefined"
       />
     </MapChrome>
 
@@ -129,13 +134,22 @@ onMounted(mapStore.load)
         Nessun livello attivo: apri «Livelli» per scegliere cosa vedere.
       </p>
 
-      <div v-if="activeLayers[REPORTS_LAYER_KEY]" class="mt-6 border-t border-hairline pt-4">
-        <h2 class="mb-2 font-display text-title">Segnalazioni</h2>
+      <div
+        v-if="isAuthenticated && activeLayers[REPORTS_LAYER_KEY]"
+        class="mt-6 border-t border-hairline pt-4"
+      >
+        <h2
+          ref="reportsHeading"
+          tabindex="-1"
+          class="mb-2 font-display text-title focus:outline-none"
+        >
+          Segnalazioni
+        </h2>
         <template v-if="!placing">
           <p class="mb-3 text-sm text-muted">
             Esplora i problemi segnalati dai cittadini di Gaeta o invia la tua segnalazione.
           </p>
-          <ActionButton @click="startReporting">Segnala un problema</ActionButton>
+          <ActionButton @click="mapStore.startPlacing()">Segnala un problema</ActionButton>
 
           <ReportsList v-if="visiblePins.length" :pins="visiblePins" class="mt-4" />
         </template>
@@ -182,7 +196,7 @@ onMounted(mapStore.load)
           v-model:overlay-opacity="overlayOpacity"
           :overlays="overlays"
           :feature-count="featureCount"
-          :report-count="pins.length"
+          :report-count="isAuthenticated ? pins.length : undefined"
         />
       </PanelBox>
     </div>
@@ -195,15 +209,21 @@ onMounted(mapStore.load)
       </PanelBox>
     </div>
 
-    <div v-if="activeLayers[REPORTS_LAYER_KEY]">
+    <div v-if="isAuthenticated && activeLayers[REPORTS_LAYER_KEY]">
       <PanelBox>
-        <h2 class="mb-4 font-display text-title">Segnalazioni</h2>
+        <h2
+          ref="reportsHeading"
+          tabindex="-1"
+          class="mb-4 font-display text-title focus:outline-none"
+        >
+          Segnalazioni
+        </h2>
 
         <template v-if="!placing">
           <p class="mb-4 text-muted">
             Esplora i problemi segnalati dai cittadini di Gaeta o invia la tua segnalazione.
           </p>
-          <ActionButton @click="startReporting">Segnala un problema</ActionButton>
+          <ActionButton @click="mapStore.startPlacing()">Segnala un problema</ActionButton>
 
           <!-- The same reports the map is drawing, as links: the keyboard path
           a clickable pin does not have (ADR-0005, closed 2026-09-05).

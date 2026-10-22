@@ -5,6 +5,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import AppHeader from '../AppHeader.vue'
 import App from '@/App.vue'
+import { useMapStore } from '@/stores/map'
 import { useUserStore } from '@/stores/user'
 
 const makeRouter = () =>
@@ -85,6 +86,23 @@ describe('the menu (spec/design.md D14)', () => {
     expect(wrapper.text()).toContain('Esci')
   })
 
+  // Reports are for people with an account (decided 2026-10-22, spec
+  // reports-and-polls.md R1), and so is the way to file one. From the home
+  // itself there is no route change to close the menu, so it closes itself.
+  it('lets a collaborator start filing a report from the account menu', async () => {
+    const wrapper = await mountHeader(true)
+    const trigger = wrapper.get('button[aria-label^="Il tuo account: Maria Conte"]')
+    await trigger.trigger('click')
+
+    const file = wrapper.findAll('button').find((button) => button.text() === 'Segnala un problema')
+    expect(file).toBeDefined()
+    await file!.trigger('click')
+    await flushPromises()
+
+    expect(useMapStore().placing).toBe(true)
+    expect(trigger.attributes('aria-expanded')).toBe('false')
+  })
+
   // WCAG 2.5.3: someone using speech input says what they see on the button.
   it('names the account button with the initials it shows, and without them for a photo', async () => {
     const initials = await mountHeader(true)
@@ -120,6 +138,7 @@ describe('the menu (spec/design.md D14)', () => {
 
     expect(wrapper.find('a[href="/il-progetto"]').exists()).toBe(true)
     expect(wrapper.find('a[href="/login"]').exists()).toBe(true)
+    expect(wrapper.text()).not.toContain('Segnala un problema')
   })
 })
 

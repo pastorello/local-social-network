@@ -7,7 +7,9 @@ describe('anonymous visitor', () => {
     cy.visit('/')
     cy.contains('h1', 'La mappa di Gaeta')
     cy.contains('legend', 'Livelli')
-    cy.contains('button', 'Segnala un problema')
+    // Reports are for people with an account (decided 2026-10-22, spec
+    // reports-and-polls.md R1): a visitor is not offered one to file.
+    cy.contains('Segnala un problema').should('not.exist')
   })
 
   it('gets the map and a sheet of places on a phone', () => {
