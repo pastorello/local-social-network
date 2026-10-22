@@ -91,6 +91,34 @@ geolocation is a later phase (see Non-goals) rather than the centre of this one.
   opened on a phone no longer lives in it — it opens full screen, with a strip
   of the map at its head.
 
+  **Amended 2026-10-23 — the home says what it is** (review of 2026-10-22,
+  P-02/M-02, PR-2). The sheet opened on «Luoghi sulla mappa · N schede», which
+  tells a reader from a search engine nothing about the site, and that reader
+  never sees `/benvenuto`. Both homes now lead with one line, «Gaeta raccontata
+  da chi ci vive: luoghi, chiese, feste, ricette, itinerari.» (a constant in
+  `definitions/copy.ts`, so `/benvenuto` and the archive line can say it the
+  same way later), and under it two compact links: *Che cosa ti va di fare?*
+  → `/benvenuto` and *Cosa c'è in una zona* → `/cosa-fare`. Each appears only
+  under the rule `/benvenuto` already applied — an intent with a published
+  tour; a zone with a published place (cosa-fare.md D8) — and both pages now
+  read it from one place, `lib/doors.ts`, so an empty archive promises
+  nothing on either. The second line of each names what is behind it (the
+  first two intents or zones that pass the rule), never a fixed list. On a
+  phone the order inside the sheet is the line, the two links, then the places
+  under their own *Luoghi sulla mappa* heading: at the first stop all three
+  are in view and the first card still shows, so D3's "opens already
+  showing cards" holds; at the lowest stop what shows is the line. The sheet's
+  handle no longer carries a title — it is the grab bar, a 32 px button that
+  still cycles the stops (D20's list stays in the sheet, one drag or one tap
+  away). The wide column keeps *La mappa di Gaeta* as its h1, with the line
+  and the links above the layers. **Left to the build, and decided:** the
+  line paints with the page, and everything under it that comes from the API
+  — the links, the layers, the lists — is drawn in one piece once the two
+  links are known, because links arriving above content already on screen
+  would push it down (the Lighthouse gate holds CLS to 0.1). A bridge, not
+  the end state: the wizard decided on 2026-10-22 (review proposal 1, PR-21)
+  absorbs the two links into its first question; the line stays.
+
 - **D4 — The map chrome lands here.** C5 deliberately did not build M1's
   "minimal top menu" as a chrome redesign — layer toggles live in a side panel
   and the nav kept C3's `SchedeMenu`. The full-bleed map with floating controls

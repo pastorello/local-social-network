@@ -14,7 +14,10 @@ const SNAPS = [
   { key: 'full', label: 'Riduci l’elenco', height: '85vh' },
 ] as const
 
-const props = defineProps<{ title: string; subtitle?: string; forcePeek?: boolean }>()
+// `title` names the sheet for assistive technology. It is not drawn: the
+// sheet opens on what the caller puts first (review of 2026-10-22, M-02 — on
+// the home that is what the site is, not a count of what is on the map).
+const props = defineProps<{ title: string; forcePeek?: boolean }>()
 
 const snap = ref(1)
 const dragHeight = ref<number | null>(null)
@@ -97,7 +100,7 @@ const onPointerUp = () => {
   >
     <button
       type="button"
-      class="flex w-full flex-col items-center gap-2 px-4 pt-2 pb-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+      class="flex h-8 w-full flex-none items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
       :aria-expanded="isOpen"
       @click="cycle"
       @pointerdown="onPointerDown"
@@ -107,10 +110,6 @@ const onPointerUp = () => {
     >
       <span class="h-1 w-9 rounded-full bg-field/50" aria-hidden="true"></span>
       <span class="sr-only">{{ SNAPS[snap]!.label }}</span>
-      <span class="flex w-full items-baseline justify-between">
-        <span class="font-display text-title">{{ props.title }}</span>
-        <span v-if="props.subtitle" class="text-xs text-muted">{{ props.subtitle }}</span>
-      </span>
     </button>
 
     <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-6">
