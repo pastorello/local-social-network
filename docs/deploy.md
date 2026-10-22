@@ -19,6 +19,10 @@ plan**. The reasons, and what was turned down, are in
 where a step is the same on any VPS, it points to Part 1 rather than repeating
 it.
 
+**Walked for real on 2026-10-22**, and live at `https://viveregaeta.it` since:
+every step below is the one that worked, and what the first run taught is
+written into it rather than kept in somebody's memory.
+
 ### 1. Buy the domain and the server (OVHcloud)
 
 One OVHcloud account holds both.
@@ -29,9 +33,15 @@ One OVHcloud account holds both.
   to be answered before the domain is active. Keep OVH's own DNS servers: the
   zone stays at OVH, next to the server.
 - **The server, VPS-1**, in a main European region — **not a Local Zone**,
-  which leaves out NVMe and some features. Image: Ubuntu 24.04 LTS. Paste your
-  SSH public key into the order form, so the machine is born with key login
-  and no password to guess. Note its IPv4 address.
+  which leaves out NVMe and some features. Image: Ubuntu LTS — the first
+  deploy ran **26.04**, and Docker's install script handled it. Paste your SSH
+  public key into the order form, so the machine is born with key login and no
+  password to guess. Note its IPv4 address.
+- **If you ordered without a key**, OVH mails a password for `ubuntu` that has
+  already expired: the first login makes you change it and then closes the
+  session. Make a key on your own machine if it has none
+  (`ssh-keygen -t ed25519`, `ssh-add --apple-use-keychain ~/.ssh/id_ed25519`
+  on a Mac), then `ssh-copy-id ubuntu@<IPv4>`; from then on, no password.
 
 ### 2. Point the domain at the server (OVH's DNS zone)
 
@@ -50,9 +60,17 @@ Add it once `curl -6 https://viveregaeta.it` works from somewhere else.
 
 OVH's default MX and SPF records can stay: Brevo's authentication needs
 neither, and they are what an OVH e-mail redirect (an `info@` that reaches your
-own inbox, optional) would use. **Wait until `dig +short viveregaeta.it`
-answers the VPS's address** before step 4 — Caddy asks for the certificate on
-its first start.
+own inbox, optional) would use; so is the `info@` mailbox OVH now gives with a
+new domain (Zimbra Starter). Delete the TXT `"1|www.viveregaeta.it"` OVH adds:
+it belongs to its parking redirect.
+
+**Wait until the name answers the VPS's address** before step 4 — Caddy asks
+for the certificate on its first start — and ask from the VPS:
+`dig +short viveregaeta.it @dns103.ovh.net`. Your own network may be no
+witness: on 2026-10-22 the author's router answered every DNS query from a
+cache, even ones addressed to OVH's servers, and kept the parking address for
+the zone's TTL (an hour). `https://dns.google/resolve?name=viveregaeta.it`
+is another honest view.
 
 ### 3. Brevo — the sender
 
@@ -67,7 +85,15 @@ its first start.
 3. **Add the sender** `noreply@viveregaeta.it`, named *Vivere Gaeta*.
 4. **Create an SMTP key** (SMTP & API → SMTP). Note the server, the port and
    the **login** shown there — the login is an identifier Brevo issues, not
-   your account e-mail.
+   your account e-mail. The key is shown once; it goes into `deploy/.env` and
+   nowhere else.
+
+In OVH's zone editor, write a record's sub-domain without the domain
+(`brevo1._domainkey`, not `brevo1._domainkey.viveregaeta.it`), and check that a
+CNAME's target was saved as Brevo printed it: if OVH shows it with
+`.viveregaeta.it` appended, re-enter it with a trailing dot. Before pressing
+Brevo's *verify*, the records can be read back from public DNS (the TXT on the
+domain, `_dmarc`, and `brevo1`/`brevo2._domainkey` resolving to a `k=rsa` key).
 
 An invite in a spam folder is a collaborator who never gets in, which is why
 step 2 is not optional.
@@ -84,30 +110,50 @@ cd local-social-network
 cp deploy/.env.example deploy/.env
 ```
 
+If the upgrade installed a kernel, `sudo reboot` before going on.
+
 Fill in `deploy/.env` — the example already carries the domain, Brevo's server
-and port and the sender:
+and port and the sender. **Write the two secrets straight into the file**, so
+they never appear on a screen (or in a terminal somebody else can read):
+
+```sh
+sed -i "s|^DJANGO_SECRET_KEY=.*|DJANGO_SECRET_KEY='$(openssl rand -base64 48 | tr -d '\n')'|" deploy/.env
+sed -i "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$(openssl rand -hex 32)|" deploy/.env
+```
+
+Neither alphabet contains a `$`, so Part 1's Compose trap cannot spring. Then,
+with `nano deploy/.env`:
 
 - `ACME_EMAIL` — your own address; Let's Encrypt writes there about expiry.
-- `DJANGO_SECRET_KEY` — Part 1's generator, **between single quotes**.
-- `POSTGRES_PASSWORD` — `openssl rand -hex 32` gives one with no character
-  Compose would read as a variable.
 - `EMAIL_HOST_USER` and `EMAIL_HOST_PASSWORD` — Brevo's SMTP login and SMTP
-  key from step 3, the key between single quotes.
+  key from step 3, the key between single quotes. They can stay empty for the
+  first start: the site runs without mail, and an approval then fails in plain
+  sight rather than half-way (TD-38).
 
-Then continue with Part 1 from *Then start it*: the first start, the logs, the
-first admin and its `role`. Nothing but SSH, 80 and 443 listens on the public
-address — `db` and `api` publish no ports — so there is no other door to close.
+`docker compose -f deploy/docker-compose.yml --env-file deploy/.env config --quiet`
+checks the file without printing it. Then continue with Part 1 from *Then
+start it*: the first start, the logs, the first admin and its `role`. Nothing
+but SSH, 80 and 443 listens on the public address — `db` and `api` publish no
+ports — so there is no other door to close. Filling the mail in later needs
+only `up -d` again: Compose recreates the one container whose environment
+changed.
 
 ### 5. Prove it works, as a collaborator would
 
 1. `https://viveregaeta.it/benvenuto` opens with a valid certificate, and both
    `http://` and `www.` land on it.
-2. **The whole onboarding, with the real provider:** file a *Collabora con
+2. **One message, before the journey**, so a mail problem is not mistaken for
+   an onboarding one (`None` means `DEFAULT_FROM_EMAIL`; it prints `1`):
+
+   ```sh
+   docker compose -f deploy/docker-compose.yml --env-file deploy/.env exec api python manage.py shell -c "from django.core.mail import send_mail; print(send_mail('Prova Vivere Gaeta', 'Se leggi questo, la posta funziona.', None, ['you@example.org']))"
+   ```
+3. **The whole onboarding, with the real provider:** file a *Collabora con
    noi* request from the site with a second address of yours, approve it in
    `/admin/`, and the invite must arrive **in the inbox**. In Gmail, *Show
    original* should say `DKIM: PASS` and `DMARC: PASS`. Follow the link, set
    the password, sign in.
-3. Ask for a password reset once, and use it.
+4. Ask for a password reset once, and use it.
 
 ### 6. Then: the content, and the backups
 
@@ -117,9 +163,19 @@ address — `db` and `api` publish no ports — so there is no other door to clo
   `docker compose -f deploy/docker-compose.yml --env-file deploy/.env exec api python manage.py seed_drafts`.
   Read them and publish them from the app or from `/admin/`.
 - **OVH's included backup is one copy of the last 24 hours**: a net for a dead
-  disk, not a history. Schedule Part 1's two backup commands (in a crontab,
-  write each `%` as `\%`) and copy the files off the machine regularly — to
-  your own computer is enough. The uploads exist nowhere else.
+  disk, not a history. `deploy/backup.sh` is Part 1's two commands made safe
+  to schedule — `pipefail`, so a dump that fails fails the run instead of
+  leaving the 20-byte file Part 1 warns about; files renamed into place only
+  when complete; 14 days kept; one line of sizes per run in the log. Run it
+  once by hand and look at the sizes, then schedule it:
+
+  ```sh
+  (crontab -l 2>/dev/null; echo '0 3 * * * $HOME/local-social-network/deploy/backup.sh >> $HOME/backups/backup.log 2>&1') | crontab -
+  ```
+
+  and copy the folder off the machine regularly — to your own computer is
+  enough: `rsync -av ubuntu@<IPv4>:backups/ ~/Backups/vivere-gaeta/`. The
+  uploads exist nowhere else.
 
 ---
 
@@ -189,12 +245,19 @@ signup and every account is created by an admin approving a request (spec A2):
 
 ```sh
 docker compose -f deploy/docker-compose.yml --env-file deploy/.env exec api \
-  python manage.py shell -c "from account.models import User; User.objects.create_superuser(email='you@example.org', password='CHANGE-ME', name='admin')"
+  python manage.py createsuperuser --email you@example.org
 ```
 
-Then log in at `https://your-domain/admin/`, and set that user's **role to
-admin** on its own record — `create_superuser` gives Django admin access, while
-the product's own permissions read `User.role` (spec F1.3).
+It asks for the password without echoing it, so it ends up neither on the
+screen nor in the shell's history — which a password typed into a `shell -c`
+line, as this guide printed until 2026-10-22, did. Then give the account the
+product's **role** and a name: superuser status opens Django admin, while the
+app's own permissions read `User.role` (spec F1.3). It prints `1`:
+
+```sh
+docker compose -f deploy/docker-compose.yml --env-file deploy/.env exec api \
+  python manage.py shell -c "from account.models import User; print(User.objects.filter(email='you@example.org').update(role='admin', name='Your name'))"
+```
 
 ### Updating
 
@@ -237,7 +300,9 @@ one of an empty archive is several kilobytes and lists every table.
 Losing the `media` volume loses every photo, and nothing else has a copy. Put
 both on a schedule before the archive has anything in it worth losing. Both
 commands were run against a live stack on 2026-09-10, and a photo taken out of
-the media archive matched the one the site served, byte for byte.
+the media archive matched the one the site served, byte for byte. `deploy/backup.sh` is
+the two of them made safe for cron — step 6 of *The setup chosen on
+2026-10-21* has the line to schedule.
 
 ### What will bite you
 
