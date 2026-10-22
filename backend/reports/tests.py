@@ -59,13 +59,33 @@ def valid_payload(category, **overrides):
     return payload
 
 
+# --- who may read them (decided 2026-10-22, spec reports-and-polls.md R1) ---
+
+
+@pytest.mark.parametrize(
+    'path',
+    ['/api/categories/', '/api/reports/', '/api/reports/map/', '/api/reports/{id}/'],
+)
+def test_anonymous_cannot_read_reports(api_client, make_report, path):
+    """Reports are a tool for the people working on the archive, not part of
+    it: a reader without an account is shown none of them — not the list, not
+    the map's pins, not one report by its address, not the categories they
+    are filed under."""
+    report = make_report()
+
+    response = api_client.get(path.format(id=report.id))
+
+    assert response.status_code == 401
+    assert report.title not in response.content.decode()
+
+
 # --- categories ---
 
 
-def test_categories_are_public_and_only_active(api_client, category):
+def test_categories_list_only_the_active_ones(make_client, citizen, category):
     Category.objects.create(name='Disattivata', is_active=False)
 
-    response = api_client.get('/api/categories/')
+    response = make_client(citizen).get('/api/categories/')
 
     assert response.status_code == 200
     names = [item['name'] for item in response.json()]
@@ -78,10 +98,10 @@ def test_categories_are_public_and_only_active(api_client, category):
 # --- list & filters (F2.5) ---
 
 
-def test_report_list_is_public_and_paginated(api_client, make_report):
+def test_report_list_is_paginated(make_client, citizen, make_report):
     make_report()
 
-    response = api_client.get('/api/reports/')
+    response = make_client(citizen).get('/api/reports/')
 
     assert response.status_code == 200
     data = response.json()
@@ -95,7 +115,8 @@ def test_report_list_is_public_and_paginated(api_client, make_report):
     assert item['upvoted_by_me'] is False
 
 
-def test_report_list_filters(api_client, make_report, citizen):
+def test_report_list_filters(make_client, make_report, citizen):
+    api_client = make_client(citizen)
     other_category = Category.objects.create(name='Altra', color='#000000')
     make_report(title='Buca pericolosa')
     make_report(title='Panchina rotta', category=other_category)
@@ -114,10 +135,10 @@ def test_report_list_filters(api_client, make_report, citizen):
     assert by_author.json()['count'] == 3
 
 
-def test_report_map_returns_slim_pins(api_client, make_report):
+def test_report_map_returns_slim_pins(make_client, citizen, make_report):
     make_report()
 
-    response = api_client.get('/api/reports/map/')
+    response = make_client(citizen).get('/api/reports/map/')
 
     assert response.status_code == 200
     pins = response.json()
@@ -277,10 +298,10 @@ def test_create_rejects_unsupported_image_format(make_client, citizen, category)
 # --- detail (F2.6) ---
 
 
-def test_detail_is_public(api_client, make_report):
+def test_detail_shows_the_report(make_client, other_citizen, make_report):
     report = make_report()
 
-    response = api_client.get(f'/api/reports/{report.id}/')
+    response = make_client(other_citizen).get(f'/api/reports/{report.id}/')
 
     assert response.status_code == 200
     data = response.json()
@@ -290,8 +311,8 @@ def test_detail_is_public(api_client, make_report):
     assert data['upvotes_count'] == 0
 
 
-def test_detail_unknown_report_is_404_with_detail(api_client):
-    response = api_client.get('/api/reports/00000000-0000-0000-0000-000000000000/')
+def test_detail_unknown_report_is_404_with_detail(make_client, citizen):
+    response = make_client(citizen).get('/api/reports/00000000-0000-0000-0000-000000000000/')
 
     assert response.status_code == 404
     assert 'detail' in response.json()
@@ -491,27 +512,29 @@ def test_admin_rejects_invalid_status_value(make_client, admin, make_report):
 
 
 @pytest.mark.parametrize('param', ['category', 'author'])
-def test_report_list_rejects_a_malformed_uuid_filter(api_client, param):
+def test_report_list_rejects_a_malformed_uuid_filter(make_client, citizen, param):
     """Both columns are UUIDField, so the ORM raises Django's ValidationError at
-    query time. The endpoint is public and DEBUG used to default on, so this was
-    an anonymous 500 with a full traceback."""
-    response = api_client.get('/api/reports/', {param: 'non-un-uuid'})
+    query time. The endpoint was public then and DEBUG used to default on, so
+    this was an anonymous 500 with a full traceback."""
+    response = make_client(citizen).get('/api/reports/', {param: 'non-un-uuid'})
 
     assert response.status_code == 400
     assert param in response.json()['fields']
 
 
-def test_report_map_rejects_a_malformed_uuid_filter(api_client):
-    response = api_client.get('/api/reports/map/', {'category': 'non-un-uuid'})
+def test_report_map_rejects_a_malformed_uuid_filter(make_client, citizen):
+    response = make_client(citizen).get('/api/reports/map/', {'category': 'non-un-uuid'})
 
     assert response.status_code == 400
     assert 'category' in response.json()['fields']
 
 
-def test_a_well_formed_but_unknown_uuid_is_an_empty_result_not_an_error(api_client, make_report):
+def test_a_well_formed_but_unknown_uuid_is_an_empty_result_not_an_error(
+    make_client, citizen, make_report
+):
     """The guard must reject malformed input, not filter out valid lookups."""
     make_report()
-    response = api_client.get(
+    response = make_client(citizen).get(
         '/api/reports/', {'category': '00000000-0000-4000-8000-000000000000'}
     )
 
@@ -519,10 +542,10 @@ def test_a_well_formed_but_unknown_uuid_is_an_empty_result_not_an_error(api_clie
     assert response.json()['results'] == []
 
 
-def test_an_unknown_status_filter_still_returns_200(api_client, make_report):
+def test_an_unknown_status_filter_still_returns_200(make_client, citizen, make_report):
     """status is a CharField — no UUID parsing, so nothing to guard here."""
     make_report()
-    response = api_client.get('/api/reports/', {'status': 'inventato'})
+    response = make_client(citizen).get('/api/reports/', {'status': 'inventato'})
 
     assert response.status_code == 200
     assert response.json()['results'] == []

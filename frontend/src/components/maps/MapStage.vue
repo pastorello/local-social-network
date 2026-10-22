@@ -143,11 +143,12 @@ const onMapClick = (coords: { lat: number; lng: number }) => {
   mapStore.draftCoords = coords
 }
 
-// Logging in or out changes which overlays exist for this reader, and which
-// drafts are on the map (spec map.md M5).
+// Logging in or out changes which overlays exist for this reader, which
+// drafts are on the map (spec map.md M5), and whether there are reports at all
+// (reports-and-polls.md R1, 2026-10-22).
 watch(
   () => userStore.user.isAuthenticated,
-  () => Promise.all([mapStore.fetchOverlays(), mapStore.fetchFeatures()]),
+  () => Promise.all([mapStore.fetchOverlays(), mapStore.fetchFeatures(), mapStore.loadReports()]),
 )
 
 onMounted(async () => {

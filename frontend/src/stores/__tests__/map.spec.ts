@@ -3,6 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import axios from 'axios'
 
 import { useMapStore } from '../map'
+import { useUserStore } from '../user'
 
 vi.mock('axios')
 
@@ -60,6 +61,7 @@ describe('the map store (spec/design.md D13)', () => {
   })
 
   it('takes the reports off the map with their layer', async () => {
+    useUserStore().user.isAuthenticated = true
     const store = useMapStore()
     await store.load()
     expect(store.visiblePins).toHaveLength(1)
@@ -67,6 +69,37 @@ describe('the map store (spec/design.md D13)', () => {
     store.activeLayers.segnalazioni = false
 
     expect(store.visiblePins).toHaveLength(0)
+  })
+
+  // Reports are for people with an account (decided 2026-10-22, spec
+  // reports-and-polls.md R1). The API answers a reader with a 401, so asking
+  // would only be noise — and a pin the store still held must not reach them.
+  it('never asks a reader for reports, nor hands them one', async () => {
+    const store = useMapStore()
+    await store.load()
+
+    const asked = vi.mocked(axios.get).mock.calls.map(([url]) => url)
+    expect(asked).not.toContain('/api/reports/map/')
+    expect(asked).not.toContain('/api/categories/')
+
+    store.pins = PINS as never
+    expect(store.visiblePins).toEqual([])
+  })
+
+  it('forgets the reports, and a filing under way, when the collaborator signs out', async () => {
+    const user = useUserStore().user
+    user.isAuthenticated = true
+    const store = useMapStore()
+    await store.load()
+    store.startPlacing()
+    expect(store.pins).toHaveLength(1)
+
+    user.isAuthenticated = false
+    await store.loadReports()
+
+    expect(store.pins).toEqual([])
+    expect(store.categories).toEqual([])
+    expect(store.placing).toBe(false)
   })
 
   it('turns the reports layer back on when a report is being placed', () => {

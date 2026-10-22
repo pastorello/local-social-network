@@ -7,6 +7,7 @@ import axios from 'axios'
 import HomeView from '../HomeView.vue'
 import { CARD_LAYERS } from '@/lib/mapLayers'
 import { useMapStore } from '@/stores/map'
+import { useUserStore } from '@/stores/user'
 
 vi.mock('axios')
 
@@ -92,11 +93,15 @@ const mockApi = (overlays: unknown[] = OVERLAYS) => {
   })
 }
 
-const mountHome = async () => {
+// Signed out by default: the reader is who the home is for. A collaborator is
+// who has reports at all (decided 2026-10-22, reports-and-polls.md R1).
+const mountHome = async ({ signedIn = false, attach = false } = {}) => {
   const pinia = createPinia()
   setActivePinia(pinia)
+  if (signedIn) useUserStore().user.isAuthenticated = true
   const wrapper = mount(HomeView, {
     global: { plugins: [pinia, makeRouter()], stubs: globalStubs },
+    ...(attach ? { attachTo: document.body } : {}),
   })
   await flushPromises()
   return wrapper
@@ -123,7 +128,7 @@ describe('HomeView (the map, spec map.md M1/M2/M3)', () => {
     mockApi()
   })
 
-  it('is the map view, with one toggle per layer plus the reports layer', async () => {
+  it('is the map view, with one toggle per card layer', async () => {
     const wrapper = await mountHome()
 
     expect(wrapper.find('h1').text()).toContain('La mappa di Gaeta')
@@ -134,7 +139,42 @@ describe('HomeView (the map, spec map.md M1/M2/M3)', () => {
       // ADR-0005: every input is associated with its own label.
       expect(wrapper.find(`label[for="layer-${layer.key}"]`).exists()).toBe(true)
     })
+  })
+
+  // The v1 reports block was the first text a tourist read on the home
+  // (review of 2026-10-22, P-01). For a reader it is not hidden, it is absent:
+  // no section, no button, no toggle — and no request the API would refuse.
+  it('shows a reader no reports at all', async () => {
+    const wrapper = await mountHome()
+
+    expect(wrapper.find('#layer-segnalazioni').exists()).toBe(false)
+    expect(wrapper.find('ul[aria-label="Segnalazioni sulla mappa"]').exists()).toBe(false)
+    for (const words of ['Segnalazion', 'Segnala un problema', 'cittadini']) {
+      expect(wrapper.text()).not.toContain(words)
+    }
+    const asked = vi.mocked(axios.get).mock.calls.map(([url]) => url)
+    expect(asked).not.toContain('/api/reports/map/')
+  })
+
+  it('gives a collaborator the reports layer and the way to file one', async () => {
+    const wrapper = await mountHome({ signedIn: true })
+
     expect(wrapper.find('#layer-segnalazioni').exists()).toBe(true)
+    expect(wrapper.get('label[for="layer-segnalazioni"]').text()).toContain('(2)')
+    expect(wrapper.text()).toContain('Segnala un problema')
+  })
+
+  // Filing can start from the account menu, with the section below the fold:
+  // wherever it starts, the collaborator is taken to what it asks next.
+  it('takes the collaborator to the reports section when filing starts', async () => {
+    const wrapper = await mountHome({ signedIn: true, attach: true })
+
+    useMapStore().startPlacing()
+    await flushPromises()
+
+    expect(document.activeElement?.textContent?.trim()).toBe('Segnalazioni')
+    expect(wrapper.text()).toContain('Clicca sulla mappa nel punto del problema.')
+    wrapper.unmount()
   })
 
   it('drops a layer from the map when its toggle goes off', async () => {
@@ -159,7 +199,7 @@ describe('HomeView (the map, spec map.md M1/M2/M3)', () => {
   // "equivalent path" ADR-0005 closed its map-widget deferral on, so it is
   // pinned by a test rather than left to a reviewer's memory.
   it('lists every report on the map as a link, with its status in words', async () => {
-    const wrapper = await mountHome()
+    const wrapper = await mountHome({ signedIn: true })
 
     for (const pin of PINS) {
       const link = wrapper.find(
@@ -175,7 +215,7 @@ describe('HomeView (the map, spec map.md M1/M2/M3)', () => {
   })
 
   it('takes reports out of the list when their layer is off, exactly as the map does', async () => {
-    const wrapper = await mountHome()
+    const wrapper = await mountHome({ signedIn: true })
 
     await wrapper.find('#layer-segnalazioni').setValue(false)
 
@@ -252,16 +292,17 @@ describe('HomeView on a phone (spec/design.md D3/D4/D5)', () => {
   it('lists the visible places in the sheet, with covers where a card has one (D5)', async () => {
     const wrapper = await mountHome()
 
-    // Scoped to the places list rather than to the whole sheet: the sheet also
-    // carries the reports list, which is a different list with its own label.
+    // Scoped to the places list rather than to the whole sheet: a
+    // collaborator's sheet also carries the reports list, a different list
+    // with its own label.
     const links = wrapper.findAll('ul[aria-label="Luoghi sulla mappa"] a')
     expect(links.map((link) => link.attributes('href'))).toEqual(['/chiese/c1', '/feste/f1'])
     // c1 has a cover; f1 has none and falls back to a coloured block.
     expect(wrapper.findAll('ul[aria-label="Luoghi sulla mappa"] img')).toHaveLength(1)
   })
 
-  it("carries the reports list in the sheet too — the phone is the reader's layout", async () => {
-    const wrapper = await mountHome()
+  it('carries the reports list in the sheet too, for a collaborator', async () => {
+    const wrapper = await mountHome({ signedIn: true })
 
     const links = wrapper.findAll('ul[aria-label="Segnalazioni sulla mappa"] a')
     expect(links.map((link) => link.attributes('href'))).toEqual(['/reports/r1', '/reports/r2'])

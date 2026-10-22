@@ -147,8 +147,11 @@ jobs:
           python manage.py migrate --noinput
           python manage.py seed_e2e
           nohup python manage.py runserver 127.0.0.1:8000 --noreload > api.log 2>&1 &
+          # Up when a *public* endpoint answers. The probe was /api/categories/
+          # until the reports went behind the login (2026-10-22, spec
+          # reports-and-polls.md R1): its 401 kept this loop waiting for good.
           for _ in $(seq 1 60); do
-            curl -sf http://127.0.0.1:8000/api/categories/ > /dev/null && exit 0
+            curl -sf http://127.0.0.1:8000/api/map/features/ > /dev/null && exit 0
             sleep 1
           done
           echo "the API never came up:" && cat api.log && exit 1
@@ -231,8 +234,9 @@ jobs:
           python manage.py migrate --noinput
           python manage.py seed_e2e
           nohup python manage.py runserver 127.0.0.1:8000 --noreload > api.log 2>&1 &
+          # The e2e job's probe: a public endpoint, not a reports one.
           for _ in $(seq 1 60); do
-            curl -sf http://127.0.0.1:8000/api/categories/ > /dev/null && exit 0
+            curl -sf http://127.0.0.1:8000/api/map/features/ > /dev/null && exit 0
             sleep 1
           done
           echo "the API never came up:" && cat api.log && exit 1

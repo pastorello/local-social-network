@@ -77,8 +77,9 @@ describe('the v1 flows', { testIsolation: false }, () => {
   })
 
   it("supports somebody else's report, and takes the support back", () => {
-    // Reached the way a reader reaches it: through the map's own pins, which
-    // is also how the redesigned home links to this screen.
+    // Reached the way a collaborator reaches it: through the map's own pins,
+    // which is also how the redesigned home links to this screen. (Only a
+    // collaborator: a reader has no reports, reports-and-polls.md R1.)
     cy.intercept('GET', '**/api/reports/map/**').as('pins')
     cy.visit('/')
 

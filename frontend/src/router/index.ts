@@ -40,10 +40,12 @@ const router = createRouter({
       meta: { requiresAuth: false },
     },
     {
+      // Behind the login since 2026-10-22, like the API it reads: reports are
+      // for people with an account (spec reports-and-polls.md R1).
       path: '/reports/:id',
       name: 'reportdetail',
       component: () => import('../views/ReportDetailView.vue'),
-      meta: { requiresAuth: false, panel: 'narrow' },
+      meta: { requiresAuth: true, panel: 'narrow' },
     },
     {
       path: '/collabora',
