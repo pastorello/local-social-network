@@ -5,7 +5,6 @@ import { computed, onMounted, ref, watch } from 'vue'
 import ViewContainer from '@/components/boxes/ViewContainer.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import CardGrid from '@/components/content/CardGrid.vue'
-import { layerColor } from '@/lib/mapLayers'
 import MainTitle from '@/components/typography/MainTitle.vue'
 import { useUserStore } from '@/stores/user'
 import type Feste from '@/definitions/interfaces/Feste'
@@ -85,7 +84,7 @@ onMounted(getFeste)
         {{ mineOnly ? 'Non hai ancora creato nessuna festa.' : 'Nessuna festa pubblicata.' }}
       </p>
 
-      <CardGrid :entries="entries" :placeholder="layerColor('feste')" />
+      <CardGrid :entries="entries" type="feste" />
 
       <ActionButton v-if="nextPage" size="small" class="mt-8" @click="loadMore">
         Carica altre

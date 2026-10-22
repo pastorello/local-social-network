@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CoverPlaceholder from '@/components/content/CoverPlaceholder.vue'
 import type { MapCardFeature } from '@/definitions/interfaces/MapData'
 import { CARD_LAYERS, layerColor, layerRoute } from '@/lib/mapLayers'
 
@@ -18,21 +19,17 @@ const typeLabel = (key: string) => CARD_LAYERS.find((layer) => layer.key === key
         :to="layerRoute(feature.type, feature.id)"
         class="flex items-center gap-3 py-3 hover:bg-page focus-visible:bg-page"
       >
-        <!-- D5: the card's first image is its cover. A card with none gets a
-        block in its layer's colour rather than an empty square — a list of
-        bare titles is dreary, which is the whole reason covers exist. -->
+        <!-- D5: the card's first image is its cover. A card with none gets the
+        lists' one placeholder, a tint with its type's icon — a list of bare
+        titles is dreary, and a column of saturated squares is a paint chart
+        (review PR-6, L-01). -->
         <img
           v-if="feature.cover"
           :src="feature.cover"
           alt=""
           class="h-12 w-12 flex-none rounded object-cover"
         />
-        <span
-          v-else
-          class="h-12 w-12 flex-none rounded"
-          :style="{ backgroundColor: layerColor(feature.type) }"
-          aria-hidden="true"
-        ></span>
+        <CoverPlaceholder v-else :type="feature.type" class="h-12 w-12 flex-none rounded" />
 
         <span class="min-w-0">
           <span class="block truncate font-semibold text-ink"

@@ -141,6 +141,44 @@ geolocation is a later phase (see Non-goals) rather than the centre of this one.
   buttons (not only by dragging, which ADR-0005 would not accept as the sole
   gesture).
 
+  **Amended 2026-10-23 — the card without a cover is drawn** (review of
+  2026-10-22, L-03/M-05/A-06/L-01, PR-6). The archive starts without
+  photographs — its images are the ones collaborators take, and nothing found
+  on the web comes with its rights ([content.md](./content.md)) — so the card
+  with no cover is the state most readers meet first, and it had not been
+  designed: a saturated square per row in the home's list, an empty block of
+  170–240 px per card in the grids, titles broken one word per line, and on a
+  phone `/luoghi` a column of pink rectangles with the first title under the
+  fold. Now every list has one placeholder,
+  `components/content/CoverPlaceholder.vue`: a pale tint of the layer's colour
+  (18 % over the page ground, `color-mix` on the token itself through
+  `lib/mapLayers.ts::layerVar` — never a hex, D8) with the type's icon in the
+  full colour, a thin stroke that names the type without shouting it (D7). In
+  the grids (`CardGrid.vue`) a card without a cover is a 96 px band over its
+  title on a wide screen and, under 640 px, a row — the 48 px placeholder
+  beside the title — so a phone shows four places on its first screen rather
+  than one rectangle; the home's list (`PlacesList.vue`) uses the same 48 px
+  placeholder. A card with a cover keeps its cover card, its image capped at
+  160 px on a phone. Columns are never narrower than 260 px — they fill the
+  panel rather than follow a breakpoint, because the panel is what is narrow,
+  not the window — titles wrap `pretty` and stop at two lines with an ellipsis,
+  one step below the title token, and the line under the title says where the
+  card is: «Zona · Genere», the zone by name from the payload (chiese and
+  luoghi carry it since review PR-3; the other types keep their own summary,
+  and a tour's zones are slugs, so it keeps «durata · tappe»). Under 640 px the
+  genre chips are one row that scrolls, as on `/cosa-fare`. **Left to the
+  build, and decided:** the title's size, cap and wrapping apply to every card,
+  cover or not, since a row holding both at two sizes would read as a mistake;
+  in a grid a title always holds two lines, so every card without a cover is
+  the same height and the lines under the titles align across a row; in a row
+  where one card has a photograph, the band of a card without one grows to the
+  photograph's height instead of leaving a gap under its text, and is 96 px
+  wherever nothing asks it to grow; a type with no map layer (itinerari,
+  dialetto, libri) gets the unknown grey, as its pin would; the phone row
+  keeps the card's border, so a list where some cards have photographs and
+  some do not still reads as one list. `seed_e2e` gained a published beach in
+  Serapo so that the a11y gate measures `/luoghi` in both layouts.
+
 ### The register
 
 - **D6 — A cultural magazine: warm, but sober.** Typography-led, large

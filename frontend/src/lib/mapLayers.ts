@@ -65,6 +65,15 @@ export const layerColor = (key: string): string => {
     : readToken('--color-layer-unknown', '#6b7280')
 }
 
+// The same colour for the DOM, which can take a `var()` and so needs nothing
+// read back: the token itself, never the hex it resolves to (D8). A type with
+// no layer — itinerari, dialetto, libri — gets the unknown grey, as its pin
+// would.
+export const layerVar = (key: string): string => {
+  const layer = CARD_LAYERS.find((candidate) => candidate.key === key)
+  return `var(${layer ? layer.token : '--color-layer-unknown'})`
+}
+
 export const layerRoute = (key: string, id: string): string => {
   const layer = CARD_LAYERS.find((candidate) => candidate.key === key)
   return layer ? `${layer.route}/${id}` : '/'

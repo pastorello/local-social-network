@@ -20,6 +20,7 @@ from chiese.models import Chiesa
 from content.models import Availability, Card, MapFeature
 from feste.models import Feste
 from itinerari.models import Intent, Itinerario, Stop
+from luoghi.models import Genre, Luogo
 from maps.models import Overlay
 from polls.models import Poll, PollOption, Vote
 from reports.models import Category, IssueReport, Upvote
@@ -30,11 +31,15 @@ ADMIN_EMAIL = 'amministratore@e2e.test'
 
 GAETA_LAT = 41.2172608
 GAETA_LNG = 13.5625165
+# On Serapo's beach, inside that zone's outline (maps/migrations/0006).
+SERAPO_LAT = 41.2105
+SERAPO_LNG = 13.5640
 
 # Titles the specs assert on. They are deliberately unmistakable: a failure
 # should say which fixture is missing, not "expected to find 3 items".
 PUBLISHED_CHIESA = 'Chiesa E2E pubblicata'
 DRAFT_CHIESA = 'Chiesa E2E in bozza'
+PUBLISHED_LUOGO = 'Luogo E2E pubblicato'
 PUBLISHED_FESTA = 'Festa E2E pubblicata'
 PUBLISHED_TOUR = 'Itinerario E2E'
 PUBLIC_OVERLAY = 'Quartieri E2E'
@@ -96,6 +101,19 @@ class Command(BaseCommand):
             'keeper': 'Parrocchia E2E',
             'keeper_phone': '0771 000000',
         })
+
+        # A beach, so /luoghi has a card on it — a genre chip, and the line
+        # under the title that says where it is (review PR-6) — for the a11y
+        # gate to measure in both layouts. In Serapo rather than Porto Salvo on
+        # purpose: what the specs assert about that zone stays the church and
+        # the feast's route.
+        luogo_card = self._card(PUBLISHED_LUOGO, collaborator, is_published=True)
+        Luogo.objects.get_or_create(
+            card=luogo_card, defaults={'genre': Genre.objects.get(slug='spiaggia')}
+        )
+        self._point(
+            luogo_card, 'Battigia', dlat=SERAPO_LAT - GAETA_LAT, dlng=SERAPO_LNG - GAETA_LNG
+        )
 
         # A draft must stay invisible to a reader — the one fixture that cannot
         # be created through the public API without making it the flow itself.
@@ -177,7 +195,7 @@ class Command(BaseCommand):
             )
 
         self.stdout.write(self.style.SUCCESS(
-            f'Seeded: {collaborator.email}, {admin.email}, 2 published cards, 1 draft, 1 tour, '
+            f'Seeded: {collaborator.email}, {admin.email}, 3 published cards, 1 draft, 1 tour, '
             f'2 overlays, 1 report ({report.upvotes_count} upvotes), 1 open poll; '
             f'cleared {removed} card(s) and every trace of previous v1 runs.'
         ))
@@ -198,7 +216,9 @@ class Command(BaseCommand):
         rule is simply: keep the fixtures, drop the rest.
         """
         leftovers = Card.objects.filter(author=collaborator).exclude(
-            title__in=(PUBLISHED_CHIESA, DRAFT_CHIESA, PUBLISHED_FESTA, PUBLISHED_TOUR)
+            title__in=(
+                PUBLISHED_CHIESA, DRAFT_CHIESA, PUBLISHED_LUOGO, PUBLISHED_FESTA, PUBLISHED_TOUR,
+            )
         )
         count = leftovers.count()
         leftovers.delete()
@@ -244,9 +264,10 @@ class Command(BaseCommand):
         card.save(update_fields=('is_published',))
         return card
 
-    def _point(self, card, label, dlat=0.0):
+    def _point(self, card, label, dlat=0.0, dlng=0.0):
         if card.map_features.filter(kind=MapFeature.POINT).exists():
             return
         MapFeature.objects.create(
-            card=card, kind=MapFeature.POINT, lat=GAETA_LAT + dlat, lng=GAETA_LNG, label=label,
+            card=card, kind=MapFeature.POINT, lat=GAETA_LAT + dlat, lng=GAETA_LNG + dlng,
+            label=label,
         )

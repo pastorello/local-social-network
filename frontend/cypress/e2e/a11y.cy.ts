@@ -45,6 +45,7 @@ const check = (label: string) => {
 }
 
 const PUBLISHED = 'Chiesa E2E pubblicata'
+const PLACE = 'Luogo E2E pubblicato'
 const EMAIL = 'collaboratore@e2e.test'
 const PASSWORD = 'E2ePassw0rd!'
 
@@ -114,6 +115,22 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
     cy.contains('h1', 'Chiese')
 
     check('/chiese')
+  })
+
+  // The list as the archive starts, without photographs (review PR-6): a
+  // tinted band over each title on a wide screen; on a phone a row per place,
+  // and the genres one row that scrolls.
+  it('a list of places without covers, wide and on a phone', () => {
+    cy.viewport(1280, 800)
+    cy.visit('/luoghi')
+    cy.contains('a', PLACE).should('contain', 'Serapo · Spiaggia')
+    check('/luoghi (desktop)')
+
+    cy.viewport(390, 844)
+    cy.visit('/luoghi')
+    cy.contains('a', PLACE)
+    cy.get('nav[aria-label="Filtra luoghi per genere"] ul').should('have.css', 'overflow-x', 'auto')
+    check('/luoghi (mobile)')
   })
 
   it('a card, read as an article', () => {

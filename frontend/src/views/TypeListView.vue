@@ -7,10 +7,9 @@ import ViewContainer from '@/components/boxes/ViewContainer.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import CardGrid from '@/components/content/CardGrid.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
-import { layerColor } from '@/lib/mapLayers'
 import { useUserStore } from '@/stores/user'
 import type { TypeConfig } from '@/definitions/typeConfigs'
-import type { ContentItem } from '@/definitions/interfaces/Content'
+import type { ContentItem, ZoneRef } from '@/definitions/interfaces/Content'
 import type { Genre } from '@/definitions/interfaces/Luogo'
 
 const props = defineProps<{ config: TypeConfig }>()
@@ -93,16 +92,29 @@ const summaryField = computed(() => {
   return first ? (first.displayKey ?? first.key) : ''
 })
 
+// «Zona · Genere» under the title (review PR-6): the zone leads wherever the
+// card carries it by name — chiese and luoghi, since review PR-3. A tour's
+// zones are slugs, and its own summary says more.
+const zoneOf = (item: ContentItem): string => {
+  const first = Array.isArray(item.zones) ? (item.zones[0] as Partial<ZoneRef>) : undefined
+  return typeof first?.name === 'string' ? first.name : ''
+}
+
 // The grid takes one normalised shape and knows nothing about card types.
 const entries = computed(() =>
   items.value.map((item) => ({
     id: item.id,
     title: item.title,
-    summary: props.config.summaryOf
-      ? props.config.summaryOf(item)
-      : summaryField.value
-        ? (item[summaryField.value] as string)
-        : '',
+    summary: [
+      zoneOf(item),
+      props.config.summaryOf
+        ? props.config.summaryOf(item)
+        : summaryField.value
+          ? (item[summaryField.value] as string)
+          : '',
+    ]
+      .filter(Boolean)
+      .join(' · '),
     cover: item.images[0]?.imageURL ?? null,
     isPublished: item.is_published,
     to: { name: props.config.routeNames.detail, params: { id: item.id } },
@@ -127,7 +139,7 @@ onMounted(() => {
 <template>
   <ViewContainer class="grid-cols-1">
     <div class="mx-auto w-full max-w-6xl">
-      <header class="mb-8 flex flex-wrap items-end justify-between gap-4">
+      <header class="mb-4 flex flex-wrap items-end justify-between gap-4 sm:mb-8">
         <div>
           <MainTitle>{{ activeOption?.name_plural ?? config.label }}</MainTitle>
           <p v-if="!loading" class="text-muted">
@@ -154,13 +166,18 @@ onMounted(() => {
       <nav
         v-if="config.listFilter && visibleOptions.length"
         :aria-label="config.listFilter.label"
-        class="mb-8"
+        class="mb-4 sm:mb-8"
       >
-        <ul class="flex flex-wrap gap-2">
-          <li>
+        <!-- On a phone the chips are one row that scrolls, run to the panel's
+        edges so it reads as one (review PR-6, M-05): four rows of them put the
+        first card under the fold. -->
+        <ul
+          class="flex gap-2 max-sm:-mx-4 max-sm:w-[calc(100%+2rem)] max-sm:snap-x max-sm:snap-mandatory max-sm:scroll-px-4 max-sm:overflow-x-auto max-sm:px-4 max-sm:py-1 sm:flex-wrap"
+        >
+          <li class="flex-none snap-start">
             <RouterLink
               :to="{ query: {} }"
-              class="inline-flex items-center rounded-full border px-4 py-2 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+              class="inline-flex items-center rounded-full border px-4 py-2 text-sm font-semibold whitespace-nowrap focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
               :class="
                 activeFilter
                   ? 'border-hairline bg-surface text-ink'
@@ -171,10 +188,10 @@ onMounted(() => {
               Tutti
             </RouterLink>
           </li>
-          <li v-for="option in visibleOptions" :key="option.slug">
+          <li v-for="option in visibleOptions" :key="option.slug" class="flex-none snap-start">
             <RouterLink
               :to="{ query: { [config.listFilter.param]: option.slug } }"
-              class="inline-flex items-center rounded-full border px-4 py-2 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+              class="inline-flex items-center rounded-full border px-4 py-2 text-sm font-semibold whitespace-nowrap focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
               :class="
                 option.slug === activeFilter
                   ? 'border-sea bg-sea text-white'
@@ -185,10 +202,14 @@ onMounted(() => {
               {{ option.name_plural }}
             </RouterLink>
           </li>
-          <li v-for="related in config.listFilter.related ?? []" :key="related.to">
+          <li
+            v-for="related in config.listFilter.related ?? []"
+            :key="related.to"
+            class="flex-none snap-start"
+          >
             <RouterLink
               :to="related.to"
-              class="inline-flex items-center rounded-full border border-hairline bg-surface px-4 py-2 text-sm font-semibold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+              class="inline-flex items-center rounded-full border border-hairline bg-surface px-4 py-2 text-sm font-semibold whitespace-nowrap text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
             >
               {{ related.label }}
             </RouterLink>
@@ -200,7 +221,7 @@ onMounted(() => {
         {{ mineOnly ? 'Non hai ancora creato nessuna scheda.' : 'Nessuna scheda pubblicata.' }}
       </p>
 
-      <CardGrid :entries="entries" :placeholder="layerColor(config.key)" />
+      <CardGrid :entries="entries" :type="config.key" />
 
       <ActionButton v-if="nextPage" size="small" class="mt-8" @click="loadMore">
         Carica altre
