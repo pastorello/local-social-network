@@ -179,6 +179,38 @@ published tour carries it, so adding it changes nothing a guest sees today.
 - **An empty zone says so** — *«In questa zona l'archivio non ha ancora
   niente»* — and offers the zones that have something.
 
+**Framed, and in D3's order — 2026-10-23** (review of 2026-10-22, PR-4:
+P-04, M-07). Drawing the set was not enough: with *Gaeta Medievale* chosen on
+a wide screen every pin sat under the panel. The page now also hands the map a
+**frame** (`stores/map.ts`'s `frame`, beside `restrictTo`), which `GaetaMap`
+fits into the part of the map the panel leaves free — the padding a card's
+focus already uses (design.md D16): beside the narrow panel on a wide screen,
+inside the strip on a phone. What is framed is the box of the zone's set — its
+places' pins and its feste's routes, never the dishes —; the zone's own outline
+when the set is empty, so the reader still sees where it is; and, while no zone
+is chosen, every zone's outline, which is the whole of Gaeta, Flacca beaches
+included. Never closer than zoom 16, so a single place still shows its streets.
+Closing the page gives the reader their view back, as closing a card does.
+
+The blocks now run in D3's own order: the zone's activities (in
+`Intent.position` order, then *Altro da vedere*), its tours, its feste — and
+**Mangiare last**, with its note that the dishes are for all of Gaeta. Ordered
+by `Intent.position` with the rest, it came before the zone's own places
+whenever the zone had no beach. *«In ordine alfabetico»* is printed beside each
+heading (*«Scoprire la città · in ordine alfabetico»*) rather than as one line
+above them all. On a phone the intro is one line (*«Luoghi, itinerari e feste,
+zona per zona.»*), the chips are one row that scrolls sideways with
+scroll-snap, and a chosen zone puts the others away behind *«Cambia zona»*, a
+disclosure that brings them back; the address is still `?zona=`.
+
+Decided by the build, since the review left them open: the zoom cap applies to
+every frame, not only to a set of one point, because two pins next door are
+the same field; "phone" is the app's one breakpoint (below 1024px, where the
+panel is the whole screen under a strip of map); and the review's *«within
+420 px»* is measured from the top of the panel, where its *~560 px* had been
+measured too — the strip above it is map. The first result now starts at about
+345 px on a 390 px phone.
+
 ## D6 — Where it lives, and how a guest finds it
 
 **`/cosa-fare`**, h1 **«Cosa si può fare qui»**. The way in is **`/benvenuto`**:
