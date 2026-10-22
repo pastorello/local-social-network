@@ -293,6 +293,15 @@ genre is a sign it belongs to another type.
 
 ## Seeding the archive from public sources — 2026-09-11
 
+> **Withdrawn 2026-10-22.** The author judged the seeded drafts a trial, not
+> material to publish, the day the site went live — so both batches below and
+> `seed_drafts` were removed from the repository, and production was born
+> empty. What stays is the record, and the rules on *writing* from published
+> sources (own words, *Fonti* and *Da verificare*, no images, no invented
+> geometry, the types that cannot be seeded), which hold for any card written
+> that way in the app. The rules on *loading* (drafts signed by *Redazione*,
+> a command, files in git) went with the drafts.
+
 The archive is empty, and the author asked for it to be seeded from what is
 already published about Gaeta. It was — into the **development database
 only**, eleven drafts on the first day (two feste, five chiese, a ricetta, a
@@ -317,7 +326,9 @@ batch, and whoever publishes these, needs them:
   coordinates. A procession's route cannot be reconstructed from "through the
   main streets": it is drawn by someone who has walked it, and until then the
   route stays empty.
-- **Kept in git, loaded by a command** (2026-10-14). The first batch lived
+- ~~**Kept in git, loaded by a command** (2026-10-14).~~ *Removed
+  2026-10-22, with the drafts — see the note at the head of this section.*
+  The first batch lived
   only in one developer's SQLite file, so a broken database would have taken
   it along. Every seeded draft is now a JSON file under
   `backend/content/drafts/<type>/`, and `python manage.py seed_drafts` turns

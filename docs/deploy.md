@@ -157,11 +157,11 @@ changed.
 
 ### 6. Then: the content, and the backups
 
-- **The drafts kept in git** go in with one command, unpublished and signed by
-  *Redazione* — they are the archive's raw material, so the command is not
-  DEBUG-only:
-  `docker compose -f deploy/docker-compose.yml --env-file deploy/.env exec api python manage.py seed_drafts`.
-  Read them and publish them from the app or from `/admin/`.
+- **The content is written in the app**, by the author and the collaborators,
+  and nothing is loaded by a command. *(Until 2026-10-22 this step loaded
+  public-source drafts with `seed_drafts`; the author judged them a trial and
+  both were removed — see content.md's seeding section. `seed_demo` and
+  `seed_e2e` are DEBUG-only and refuse to run here.)*
 - **OVH's included backup is one copy of the last 24 hours**: a net for a dead
   disk, not a history. `deploy/backup.sh` is Part 1's two commands made safe
   to schedule — `pipefail`, so a dump that fails fails the run instead of

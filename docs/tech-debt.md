@@ -21,7 +21,7 @@
 
 | Gate | Command | Result |
 |---|---|---|
-| Backend tests | `python -m pytest` | **576 passed** in ~12s |
+| Backend tests | `python -m pytest` | **558 passed** in ~10s (2026-10-22) |
 | Backend lint | `python -m ruff check .` | clean |
 | Frontend tests | `npm run test:unit -- run` | **282 passed**, 58 files |
 | Frontend lint | `npx oxlint` · `npx eslint .` | clean |
@@ -38,6 +38,10 @@ on `:8000` and a production build; it is counted from the specs and taken from
 CI. The performance row was run in a Linux container under `act`, since
 GitHub Actions was refusing every job that day. The 2026-08-19 baseline — 142 backend tests, 43 frontend, 4 e2e — is in the
 archive, for the scale of the difference rather than for nostalgia.
+
+**2026-10-22:** `seed_drafts` and its 18 tests were removed with the
+public-source drafts (content.md's seeding section), so the backend count is
+558 — re-run that day, ruff clean too. Nothing else changed.
 
 **Green gates are not covered behaviour.** That sentence opened this register on
 day one, and TD-47 — a whole status nothing exercised under a green suite,
