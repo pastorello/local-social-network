@@ -111,16 +111,12 @@ why the HTTPS hardening block carries `and not TESTING` — without it
 titled `[DEMO] …` across the eight zones — places, churches with sample
 hours, a festa, two ricette, two tours — and no images, on purpose;
 `seed_demo --remove` takes away exactly those. They are not content: real
-cards follow content.md's seeding rules.
-
-**The drafts written from public sources live in git**, one JSON file per card
-under `backend/content/drafts/<type>/`, and `python manage.py seed_drafts`
-creates them (2026-10-14, spec content.md's seeding section): unpublished,
-signed by `redazione@vivere-gaeta.local`, through each type's own write
-serializer and the shared point/availability parsers. **Not DEBUG-only** — it
-is the archive's raw material — and safe to re-run: a card whose type already
-holds an original with the same title is skipped, so edits made in the app are
-never overwritten. `--check` validates without writing.
+cards are written in the app, under content.md's rules for writing from
+published sources. **There is no other seeding command, on purpose**: the
+public-source drafts and `seed_drafts` (2026-10-14) were **removed on
+2026-10-22** — the author judged them a trial, not material to publish, so
+production was born empty and stays so until someone writes in it. Do not
+bring a seeding command back for production content.
 
 Create a superuser via `python manage.py shell`:
 

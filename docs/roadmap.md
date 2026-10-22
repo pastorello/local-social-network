@@ -13,9 +13,11 @@ the finished ones used to sit. A roadmap that renumbers itself is a roadmap
 nothing else can cite.
 
 **Where things stand (2026-10-22).** **The site is live** at
-`https://viveregaeta.it` (item 3, below). The archive on it is empty until the
-drafts are read and published — item 4 is now the only thing between the
-product and a reader.
+`https://viveregaeta.it` (item 3, below). The archive on it is empty until
+cards are written and published — item 4 is now the only thing between the
+product and a reader. The same day the author withdrew the public-source
+drafts: a trial, not material to publish, so they and `seed_drafts` were
+removed and production starts from nothing (item 4).
 
 **Where things stand (2026-10-21).** The engineering board is empty: since
 2026-10-13 the zones were redrawn on OpenStreetMap and the map credits it (#105, #106), the
@@ -195,9 +197,12 @@ build questions into input ones:
   showed about why they are needed — are in
   [spec/content.md](./spec/content.md#seeding-the-archive-from-public-sources--2026-09-11).
   Seeded drafts are material for the author's reading, not a substitute for
-  it. **Since 2026-10-14 they are in git** (`backend/content/drafts/`, loaded
+  it. ~~**Since 2026-10-14 they are in git** (`backend/content/drafts/`, loaded
   by `seed_drafts`), so they no longer depend on one database file surviving.
-  A second batch the same day added ten luoghi, one or more per zone.
+  A second batch the same day added ten luoghi, one or more per zone.~~
+  **Withdrawn 2026-10-22**: the author judged the drafts a trial rather than
+  material to publish, and they were removed with the command that loaded
+  them. The first real cards are written in the app, from nothing.
 - **At least one published itinerary** (added 2026-09-18, with the tours).
   `/benvenuto` is the one address printed on a B&B's card, and it lists only
   the intents that have a published tour — so with none it tells a guest the
