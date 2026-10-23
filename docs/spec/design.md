@@ -475,7 +475,8 @@ section said was one to take. Built the next day:
     `autocomplete="off"`. Not built: a form that shows less than it will
     send is the worse fault, and on a shared computer the address is the
     browser profile's to forget, which the page cannot do for it. Hiding it
-    would be a decision of its own, for the author.
+    would be a decision of its own, for the author. *(Confirmed by the author
+    on 2026-10-23: it stays visible, nothing to build.)*
 
 ## The map under every page
 
