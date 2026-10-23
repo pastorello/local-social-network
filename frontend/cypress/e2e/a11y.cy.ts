@@ -477,21 +477,22 @@ describe("the collaborator's surfaces meet WCAG 2.1 AA", { testIsolation: false 
   // account pages' 420px one); measured at a wide screen, at the 1024px line
   // where the wide layout starts, and on a phone: everything in the column
   // stays inside it, and nothing scrolls sideways.
+  //
+  // The profile's address comes from the session the block signed in with,
+  // not from the avatar's menu: the case above already walks that path, and
+  // a menu opened the instant a page loads is a race this case is not about.
   it('the profile keeps its avatar and its name inside its column, at every width', () => {
-    cy.viewport(1280, 800)
-    cy.visit('/users')
-    cy.get('button[aria-label^="Il tuo account"]').click()
-    cy.get('nav a[href^="/profile/"]')
-      .first()
-      .invoke('attr', 'href')
-      .then((href) => {
+    cy.window()
+      .then((win) => win.localStorage.getItem('user.id'))
+      .then((id) => {
+        expect(id, 'the signed-in user').to.match(/^[0-9a-f-]{36}$/)
         for (const [width, height] of [
           [1440, 900],
           [1024, 768],
           [390, 844],
         ] as const) {
           cy.viewport(width, height)
-          cy.visit(href!)
+          cy.visit(`/profile/${id}`)
           cy.get('h1').should('not.be.empty')
           cy.get('[aria-label^="Foto profilo di"]').should('be.visible')
           cy.get('h1').then(($h1) => {
