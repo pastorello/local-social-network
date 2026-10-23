@@ -5,13 +5,14 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import RoutePanel from '../RoutePanel.vue'
 import { usePanelTrail, type Trail } from '@/composables/usePanelTrail'
+import type { PanelShape } from '@/stores/map'
 
 const stub = { template: '<div />' }
 
 type Slot = string | (() => ReturnType<typeof h>)
 
 const mountPanel = async (
-  shape: 'narrow' | 'wide' = 'wide',
+  shape: PanelShape = 'wide',
   path = '/chiese',
   slot: Slot = '<h1>Chiese</h1><input id="campo" />',
 ) => {
@@ -152,6 +153,18 @@ describe('RoutePanel (spec/design.md D15/D17)', () => {
     const narrow = await mountPanel('narrow')
     expect(narrow.wrapper.find('div[aria-hidden="true"]').exists()).toBe(false)
   })
+
+  // Review PR-13 (C-01): a form is the third shape — on the right like the
+  // narrow panel, beside a live map it draws on (D19), as wide as the reading
+  // panel from 1280px and the narrow panel's 560px below that.
+  it('opens a form in the editor: on the right, reading-wide from 1280px, the map unveiled', async () => {
+    const { wrapper } = await mountPanel('editor', '/chiese/nuova')
+    const section = wrapper.get('section').classes()
+
+    expect(section).toEqual(expect.arrayContaining(['right-4', 'w-[35rem]', 'xl:w-[50.5rem]']))
+    expect(section).not.toContain('left-1/2')
+    expect(wrapper.find('div[aria-hidden="true"]').exists()).toBe(false)
+  })
 })
 
 describe('RoutePanel on a phone (spec/design.md D18)', () => {
@@ -205,6 +218,15 @@ describe('RoutePanel on a phone (spec/design.md D18)', () => {
     expect(back).not.toHaveBeenCalled()
     expect(router.currentRoute.value.fullPath).toBe('/chiese/c1')
     expect(wrapper.get('section').isVisible()).toBe(true)
+  })
+
+  // D19: on a phone the strip, enlarged, is where the place is drawn.
+  it('leaves the strip of the map above a form too', async () => {
+    stubPhone()
+    const { wrapper } = await mountPanel('editor', '/chiese/nuova')
+
+    expect(wrapper.get('section').classes()).toContain('top-[11.25rem]')
+    expect(wrapper.text()).toContain('Allarga la mappa')
   })
 
   it('is the whole screen for a page without a place', async () => {

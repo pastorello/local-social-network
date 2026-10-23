@@ -270,16 +270,28 @@ describe('TypeDetailView — the panel’s shape (review PR-10)', () => {
     expect(store.panelShape).toBe('narrow')
   })
 
-  it('keeps a card without a place narrow while its form is open: the form draws on the map', async () => {
+  // Review PR-13: a form is written in the editor's shape — beside the map,
+  // which it draws on — whether or not the card has a place yet.
+  it('opens a card without a place in the editor while its form is open: the form draws on the map', async () => {
     const { store } = await mountBrought(ricettaConfig, card({ pins: [] }), '?edit=1')
 
-    expect(store.panelShape).toBe('narrow')
+    expect(store.panelShape).toBe('editor')
   })
 
   it('leaves a type with no place at all to its route', async () => {
     const { store } = await mountBrought(dialettoConfig, card({ meaning: 'Lustrascarpe.' }))
 
     expect(store.panelShape).toBeNull()
+  })
+
+  it('writes a type with no place at all in the editor too: one shape for writing', async () => {
+    const { store } = await mountBrought(
+      dialettoConfig,
+      card({ meaning: 'Lustrascarpe.' }),
+      '?edit=1',
+    )
+
+    expect(store.panelShape).toBe('editor')
   })
 
   it('decides once it has the card, when the route could not bring it', async () => {

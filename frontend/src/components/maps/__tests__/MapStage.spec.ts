@@ -39,6 +39,13 @@ const makeRouter = () =>
         component: { render: () => null },
         meta: { panel: 'narrow' },
       },
+      // A form: the editor's shape, beside a live map (review PR-13).
+      {
+        path: '/luoghi/nuovo',
+        name: 'luoghicreate',
+        component: { render: () => null },
+        meta: { panel: 'editor' },
+      },
       { path: '/:any(.*)*', component: { render: () => null } },
     ],
   })
@@ -298,6 +305,71 @@ describe('MapStage beside a card, or under it (review PR-10)', () => {
     expect(inert()).toBe(true)
     expect(wrapper.text()).not.toContain('Elenco')
     expect(map.props('focusPadding').bottomRight[0]).toBe(48)
+  })
+})
+
+// Review PR-13 (C-01, A-05): a form opens in the editor's shape — on the right,
+// beside a map it draws on, as wide as the reading panel from 1280px — and
+// while it draws, a banner runs across the map right under the menu.
+describe('MapStage beside a form (review PR-13)', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.mocked(axios.get).mockResolvedValue({ data: [] })
+  })
+  afterEach(() => {
+    // @ts-expect-error — putting jsdom back the way it was found
+    delete window.matchMedia
+  })
+
+  const mountForm = async () => {
+    const { wrapper } = await mountAt('/luoghi/nuovo')
+    await vi.waitUntil(() => wrapper.findComponent(GaetaMapStub).exists())
+    return { wrapper, map: wrapper.findComponent(GaetaMapStub) }
+  }
+
+  it('stays in reach, and frames in the space the editor’s 808px leave free', async () => {
+    const { wrapper, map } = await mountForm()
+
+    expect(wrapper.get('div.fixed.inset-0').attributes('inert') ?? 'false').toBe('false')
+    expect(map.props('focusPadding').bottomRight[0]).toBe(808 + 16 + 48)
+  })
+
+  it('frames beside the narrow panel’s 560px under 1280px, where the editor is that wide', async () => {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      configurable: true,
+      value: (query: string) => ({
+        matches: query.includes('1024px'),
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      }),
+    })
+    const { map } = await mountForm()
+
+    expect(map.props('focusPadding').bottomRight[0]).toBe(560 + 16 + 48)
+  })
+
+  it('says it is drawing in a banner across the map, under the menu, with Fatto', async () => {
+    const { wrapper } = await mountForm()
+    const done = vi.fn()
+    useMapStore().startEditing(
+      { kind: 'pins', points: [], max: 1, label: 'Clicca sulla mappa nel punto del luogo' },
+      () => {},
+      done,
+    )
+    await flushPromises()
+
+    const banner = wrapper.get('[role="status"]')
+    expect(banner.text()).toContain('Clicca sulla mappa nel punto del luogo')
+    // Across the map from edge to panel, in the accent — not the first
+    // build's dark pill in the bottom-left corner.
+    expect(banner.classes()).toEqual(
+      expect.arrayContaining(['left-3', 'right-3', 'top-[var(--header-h,0px)]', 'bg-sea']),
+    )
+    expect(banner.classes()).not.toContain('lg:bottom-4')
+
+    await banner.get('button').trigger('click')
+    expect(done).toHaveBeenCalled()
   })
 })
 

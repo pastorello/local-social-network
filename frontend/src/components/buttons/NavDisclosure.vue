@@ -20,9 +20,11 @@ const close = () => {
 
 // Escape closes it from anywhere inside and gives focus back to the button —
 // closing a panel with focus inside it otherwise drops the reader at the top
-// of the document.
-const closeAndReturn = () => {
+// of the document. That Escape is spent: inside a page's panel (*Nuova
+// scheda* on Le mie schede, review PR-13) it must not close the page too.
+const closeAndReturn = (event: KeyboardEvent) => {
   if (!open.value) return
+  event.preventDefault()
   open.value = false
   trigger.value?.focus()
 }

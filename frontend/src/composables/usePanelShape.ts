@@ -13,10 +13,11 @@ import { useMapStore, type PanelShape } from '@/stores/map'
 // framing — draws what it says.
 
 // The rule, one for every card: narrow beside the map when it has a place,
-// wide over it when it has none — and narrow while its form is open, since
-// the form draws the place on that map (D19).
+// wide over it when it has none — and the editor while its form is open, place
+// or not: the form draws the place on that map (D19), and a card is written in
+// one shape whatever its type (review PR-13).
 export const cardPanelShape = (hasPlace: boolean, editing: boolean): PanelShape =>
-  hasPlace || editing ? 'narrow' : 'wide'
+  editing ? 'editor' : hasPlace ? 'narrow' : 'wide'
 
 // Which page spoke last. Cleared only by that page, as usePanelTrail's trail
 // is: the next one may already have said its own.

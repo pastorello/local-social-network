@@ -21,6 +21,7 @@ const makeRouter = () =>
       { path: '/collabora', name: 'collabora', component: stub },
       { path: '/password-dimenticata', name: 'passwordresetrequest', component: stub },
       { path: '/feste/:id', name: 'festedetail', component: stub },
+      { path: '/le-mie-schede', name: 'lemieschede', component: stub },
     ],
   })
 
@@ -71,23 +72,22 @@ describe('LoginView', () => {
     expect(wrapper.find('input[type="password"]').attributes('aria-invalid')).toBeUndefined()
   })
 
-  // TD-48: the router guard sends a visitor to /login?redirect=… (login.cy.ts
-  // covers that leg); this is the other one — signing in lands them back on
-  // the page they asked for, query and all, not on the map.
-  it.each([
-    ['/login?redirect=%2Ffeste%2Fabc%3Fedit%3D1', '/feste/abc?edit=1'],
-    ['/login', '/'],
-  ])('after signing in from %s, lands on %s', async (from, to) => {
+  const me = {
+    data: {
+      id: 'u1',
+      name: 'Autore',
+      email: 'autore@example.com',
+      role: 'citizen',
+      avatarURL: null,
+    },
+  }
+  // The collaborator's first card, as /api/content/mine/ sends it: drafts first.
+  const firstCard = (isPublished: boolean | null) => ({
+    data: { results: isPublished === null ? [] : [{ id: 'c1', is_published: isPublished }] },
+  })
+
+  const signIn = async (from: string) => {
     vi.mocked(axios.post).mockResolvedValueOnce({ data: { access: 'a', refresh: 'r' } })
-    vi.mocked(axios.get).mockResolvedValueOnce({
-      data: {
-        id: 'u1',
-        name: 'Autore',
-        email: 'autore@example.com',
-        role: 'citizen',
-        avatarURL: null,
-      },
-    })
     const router = makeRouter()
     await router.push(from)
     const wrapper = mount(LoginView, {
@@ -98,7 +98,41 @@ describe('LoginView', () => {
     await wrapper.get('input[type="password"]').setValue('password123')
     await wrapper.get('form').trigger('submit')
     await flushPromises()
+    return router.currentRoute.value.fullPath
+  }
 
-    expect(router.currentRoute.value.fullPath).toBe(to)
+  // TD-48: the router guard sends a visitor to /login?redirect=… (login.cy.ts
+  // covers that leg); this is the other one — signing in lands them back on
+  // the page they asked for, query and all, whatever they have unfinished.
+  it('after signing in from a redirect, lands where the visitor was going', async () => {
+    vi.mocked(axios.get).mockReset().mockResolvedValueOnce(me)
+
+    expect(await signIn('/login?redirect=%2Ffeste%2Fabc%3Fedit%3D1')).toBe('/feste/abc?edit=1')
+    expect(axios.get).toHaveBeenCalledTimes(1)
+  })
+
+  // Review PR-13 (C-02): with nowhere asked for, a collaborator with a draft
+  // lands on their own cards — the work they came back to finish — and
+  // anyone else on the map, as before.
+  it.each([
+    ['a draft', firstCard(false), '/le-mie-schede'],
+    ['only published cards', firstCard(true), '/'],
+    ['no card at all', firstCard(null), '/'],
+  ])('after signing in with %s, lands on %s', async (_, mine, to) => {
+    vi.mocked(axios.get).mockReset().mockResolvedValueOnce(me).mockResolvedValueOnce(mine)
+
+    expect(await signIn('/login')).toBe(to)
+    expect(axios.get).toHaveBeenLastCalledWith('/api/content/mine/', {
+      params: { page_size: 1 },
+    })
+  })
+
+  it('lands on the map when its own cards cannot be had: signing in does not fail over it', async () => {
+    vi.mocked(axios.get)
+      .mockReset()
+      .mockResolvedValueOnce(me)
+      .mockRejectedValueOnce(new Error('rete'))
+
+    expect(await signIn('/login')).toBe('/')
   })
 })

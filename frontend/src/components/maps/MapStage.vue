@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { useIsDesktop } from '@/composables/useBreakpoint'
+import { useIsDesktop, useIsWide } from '@/composables/useBreakpoint'
 import { useOpenPanelShape } from '@/composables/usePanelShape'
 import { afterFirstPaint } from '@/lib/firstPaint'
 import { layerRoute } from '@/lib/mapLayers'
@@ -18,12 +18,14 @@ const userStore = useUserStore()
 const route = useRoute()
 const router = useRouter()
 const { isDesktop } = useIsDesktop()
+const { isWide } = useIsWide()
 
 // A page beside the map rather than over it (D17): a card with a place. Its
 // card says whether it has one, not its type (review PR-10) — a ricetta sold
-// nowhere covers the map like a book.
+// nowhere covers the map like a book. And a form, which draws on the map
+// beside it (D19, review PR-13).
 const panelShape = useOpenPanelShape()
-const besideMap = computed(() => !route.meta.fullBleed && panelShape.value === 'narrow')
+const besideMap = computed(() => !route.meta.fullBleed && panelShape.value !== 'wide')
 
 // TD-52: Leaflet, its cluster plugin and vue-leaflet are 58% of what the
 // entry chunk used to hold, and no page's text needs them. So the map is its
@@ -31,9 +33,11 @@ const besideMap = computed(() => !route.meta.fullBleed && panelShape.value === '
 const GaetaMap = defineAsyncComponent(() => import('@/components/maps/GaetaMap.vue'))
 const drawMap = ref(false)
 
-// Must match RoutePanel's narrow panel and HomeView's floating column, so a
-// focused place is framed where the reader can actually see it (D16).
+// Must match RoutePanel's narrow and editor panels and HomeView's floating
+// column, so a focused place is framed where the reader can actually see it
+// (D16). The editor is the reading panel's 808px from 1280px (review PR-13).
 const NARROW_PANEL = 560
+const EDITOR_PANEL = 808
 const HOME_COLUMN = 416
 const GAP = 48
 // The phone's strip above a card with a place (D18) — RoutePanel's 11.25rem.
@@ -46,10 +50,15 @@ const menuBottom = () => {
   return Number.parseFloat(value) || 0
 }
 
+// How wide the panel beside the map is, on a wide screen.
+const panelWidth = computed(() =>
+  panelShape.value === 'editor' && isWide.value ? EDITOR_PANEL : NARROW_PANEL,
+)
+
 const focusPadding = computed<{ topLeft: [number, number]; bottomRight: [number, number] }>(() => {
   const top = menuBottom() + GAP
   if (isDesktop.value && besideMap.value) {
-    return { topLeft: [GAP, top], bottomRight: [NARROW_PANEL + 16 + GAP, GAP] }
+    return { topLeft: [GAP, top], bottomRight: [panelWidth.value + 16 + GAP, GAP] }
   }
   if (isDesktop.value && route.meta.fullBleed) {
     return { topLeft: [HOME_COLUMN + 16 + GAP, top], bottomRight: [GAP, GAP] }
@@ -102,7 +111,7 @@ const controlsLeft = computed(() =>
 // sheet with it rather than under the button. Behind a wide panel it stays
 // where it is, veiled with the rest of the map.
 const controlsRight = computed(() =>
-  isDesktop.value && besideMap.value ? 'calc(36rem + 0.75rem)' : '0px',
+  isDesktop.value && besideMap.value ? `calc(${panelWidth.value + 16}px + 0.75rem)` : '0px',
 )
 const controlsBottom = computed(() => {
   if (isDesktop.value) return '0px'
@@ -113,6 +122,27 @@ const controlsBottom = computed(() => {
   // RoutePanel lays the strip out below the menu, hence the header's height.
   return route.query.mappa === '1' ? '4.25rem' : 'calc(100% - var(--header-h, 0px) - 7.5rem)'
 })
+
+// The banner over a map a form is drawing on (D19) runs across the map right
+// under the menu (review PR-13, A-05), so Leaflet's zoom buttons, which live
+// there, step down below it. Measured, because the banner is one line on a
+// wide screen and two or three on a phone.
+const banner = ref<HTMLElement | null>(null)
+const bannerBottom = ref(0)
+let bannerObserver: ResizeObserver | null = null
+watch(banner, (element) => {
+  bannerObserver?.disconnect()
+  bannerBottom.value = 0
+  if (!element || typeof ResizeObserver !== 'function') return
+  bannerObserver = new ResizeObserver(() => {
+    bannerBottom.value = element.getBoundingClientRect().bottom
+  })
+  bannerObserver.observe(element)
+})
+onBeforeUnmount(() => bannerObserver?.disconnect())
+const controlsTop = computed(() =>
+  bannerBottom.value ? `${bannerBottom.value}px` : 'var(--header-h, 0px)',
+)
 
 // While a form draws on the map, nothing on it navigates: opening a pin would
 // unmount the form and lose what it holds. The click still reaches the map,
@@ -187,6 +217,7 @@ onMounted(async () => {
     class="fixed inset-0 z-0"
     :inert="covered"
     :style="{
+      '--map-controls-top': controlsTop,
       '--map-controls-left': controlsLeft,
       '--map-controls-right': controlsRight,
       '--map-controls-bottom': controlsBottom,
@@ -208,16 +239,21 @@ onMounted(async () => {
       @view="mapStore.setView"
     />
     <!-- D19: a map that sometimes takes clicks as edits and sometimes does not
-    must never leave it ambiguous which it is doing now. -->
+    must never leave it ambiguous which it is doing now — "a banner that cannot
+    be missed". Across the map, right under the menu, in the accent (review
+    PR-13, A-05): the first build's dark pill in the map's bottom-left corner
+    was a status, not a banner. On a wide screen it runs to the panel, its top
+    level with the panel's; on a phone, across the strip. -->
     <div
       v-if="mapStore.editor"
+      ref="banner"
       role="status"
-      class="absolute top-[calc(var(--header-h,0px)+0.5rem)] right-3 left-14 z-1000 flex items-center justify-between gap-3 rounded-full bg-ink py-1.5 pr-1.5 pl-4 text-sm font-semibold text-white shadow-md lg:top-auto lg:right-auto lg:bottom-4 lg:left-4"
+      class="absolute top-[var(--header-h,0px)] right-3 left-3 z-1000 flex items-center justify-between gap-3 rounded-xl bg-sea py-2 pr-2 pl-4 text-sm font-semibold text-white shadow-md lg:top-[calc(var(--header-h,0px)+1rem)] lg:right-[calc(var(--map-controls-right)+0.25rem)] lg:left-4"
     >
       <span>{{ mapStore.editor.label }}</span>
       <button
         type="button"
-        class="h-9 cursor-pointer rounded-full bg-surface px-4 text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+        class="h-9 flex-none cursor-pointer rounded-lg bg-surface px-4 text-sea focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
         @click="mapStore.editorDone()"
       >
         Fatto
@@ -246,9 +282,10 @@ onMounted(async () => {
 
 <style scoped>
 /* Leaflet's own controls (zoom) sit in its top corners, and the map now runs
-   under the floating menu: they start below it instead of behind it. */
+   under the floating menu: they start below it instead of behind it — and
+   below the editing banner while there is one. */
 div :deep(.leaflet-top) {
-  top: var(--header-h, 0px);
+  top: var(--map-controls-top, var(--header-h, 0px));
 }
 
 div :deep(.leaflet-left) {

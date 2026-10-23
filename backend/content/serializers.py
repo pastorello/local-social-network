@@ -6,7 +6,7 @@ from rest_framework import serializers
 
 from account.models import User
 
-from .models import Availability, CardImage
+from .models import Availability, Card, CardImage
 
 
 class CardImageSerializer(serializers.ModelSerializer):
@@ -91,3 +91,28 @@ def availability_of(card):
         'keeper': row.keeper,
         'keeper_phone': row.keeper_phone,
     }
+
+
+class MyCardSerializer(serializers.ModelSerializer):
+    """One row of *Le mie schede* (review PR-13): enough to find a card again
+    and open it — its type, which is also its route segment, whether it is
+    still a draft, and for a translation its language and the Italian name it
+    is filed under (T7)."""
+
+    type = serializers.SerializerMethodField()
+    original_title = serializers.SerializerMethodField()
+
+    def get_type(self, obj):
+        # The reverse one-to-one is how a card's type is found (ADR-0004): no
+        # stored discriminator to drift. Selected with the card, so no query.
+        return next((key for key in self.context['type_keys'] if hasattr(obj, key)), None)
+
+    def get_original_title(self, obj):
+        return obj.translation_of.title if obj.translation_of_id else obj.title
+
+    class Meta:
+        model = Card
+        fields = (
+            'id', 'type', 'title', 'original_title', 'is_published', 'language', 'translation_of',
+            'updated_at',
+        )

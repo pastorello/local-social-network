@@ -101,10 +101,14 @@ const router = createRouter({
       meta: { requiresAuth: false, title: ['Feste'] },
     },
     {
+      // Every form that writes a card opens in the editor's shape, the types
+      // with no place too: one shape for writing (review PR-13, design.md
+      // D19's note of 2026-10-23). A card's edit form, which opens in place
+      // on its own page, asks for the same shape (composables/usePanelShape.ts).
       path: '/feste/nuova',
       name: 'festecreate',
       component: () => import('../views/FesteCreateView.vue'),
-      meta: { requiresAuth: true, panel: 'narrow', title: ['Nuova festa', 'Feste'] },
+      meta: { requiresAuth: true, panel: 'editor', title: ['Nuova festa', 'Feste'] },
     },
     {
       // 'narrow' is the type's default; the card says whether it has a place,
@@ -132,7 +136,7 @@ const router = createRouter({
       name: chiesaConfig.routeNames.create,
       component: () => import('../views/TypeCreateView.vue'),
       props: { config: chiesaConfig },
-      meta: { requiresAuth: true, panel: 'narrow', title: ['Nuova scheda', chiesaConfig.label] },
+      meta: { requiresAuth: true, panel: 'editor', title: ['Nuova scheda', chiesaConfig.label] },
     },
     {
       path: '/chiese/:id',
@@ -154,7 +158,7 @@ const router = createRouter({
       name: ricettaConfig.routeNames.create,
       component: () => import('../views/TypeCreateView.vue'),
       props: { config: ricettaConfig },
-      meta: { requiresAuth: true, panel: 'narrow', title: ['Nuova scheda', ricettaConfig.label] },
+      meta: { requiresAuth: true, panel: 'editor', title: ['Nuova scheda', ricettaConfig.label] },
     },
     {
       path: '/ricette/:id',
@@ -178,7 +182,7 @@ const router = createRouter({
       props: { config: personaggioConfig },
       meta: {
         requiresAuth: true,
-        panel: 'narrow',
+        panel: 'editor',
         title: ['Nuova scheda', personaggioConfig.label],
       },
     },
@@ -202,7 +206,7 @@ const router = createRouter({
       name: dialettoConfig.routeNames.create,
       component: () => import('../views/TypeCreateView.vue'),
       props: { config: dialettoConfig },
-      meta: { requiresAuth: true, title: ['Nuova scheda', dialettoConfig.label] },
+      meta: { requiresAuth: true, panel: 'editor', title: ['Nuova scheda', dialettoConfig.label] },
     },
     {
       path: '/dialetto/:id',
@@ -223,7 +227,7 @@ const router = createRouter({
       name: luogoConfig.routeNames.create,
       component: () => import('../views/TypeCreateView.vue'),
       props: { config: luogoConfig },
-      meta: { requiresAuth: true, panel: 'narrow', title: ['Nuova scheda', luogoConfig.label] },
+      meta: { requiresAuth: true, panel: 'editor', title: ['Nuova scheda', luogoConfig.label] },
     },
     {
       path: '/luoghi/:id',
@@ -262,7 +266,7 @@ const router = createRouter({
       component: () => import('../views/ItineraryCreateView.vue'),
       meta: {
         requiresAuth: true,
-        panel: 'narrow',
+        panel: 'editor',
         title: ['Nuovo itinerario', itinerarioConfig.label],
       },
     },
@@ -286,7 +290,7 @@ const router = createRouter({
       name: libroConfig.routeNames.create,
       component: () => import('../views/TypeCreateView.vue'),
       props: { config: libroConfig },
-      meta: { requiresAuth: true, title: ['Nuova scheda', libroConfig.label] },
+      meta: { requiresAuth: true, panel: 'editor', title: ['Nuova scheda', libroConfig.label] },
     },
     {
       path: '/libri/:id',
@@ -294,6 +298,14 @@ const router = createRouter({
       component: () => import('../views/TypeDetailView.vue'),
       props: { config: libroConfig },
       meta: { requiresAuth: false, title: [libroConfig.label] },
+    },
+    {
+      // A collaborator's own cards, every type at once, behind the avatar
+      // (review PR-13): where they land after signing in while one is a draft.
+      path: '/le-mie-schede',
+      name: 'lemieschede',
+      component: () => import('../views/MyCardsView.vue'),
+      meta: { requiresAuth: true, title: ['Le mie schede'] },
     },
     {
       path: '/profile/edit',

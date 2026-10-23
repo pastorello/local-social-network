@@ -45,10 +45,12 @@ export interface MapEditor {
   joined?: boolean
 }
 
-// The two shapes a page opens in over the map (spec/design.md D17): narrow on
-// the right beside a map that shows its place, or wide and centred over a
-// veiled one.
-export type PanelShape = 'narrow' | 'wide'
+// The shapes a page opens in over the map (spec/design.md D17): narrow on the
+// right beside a map that shows its place, or wide and centred over a veiled
+// one — and, for a form, the editor: as wide as the reading panel but on the
+// right, beside a live map, because the map is what the form draws on (D19;
+// review PR-13, decided 2026-10-22).
+export type PanelShape = 'narrow' | 'wide' | 'editor'
 
 // Handles, not data (the same reasoning as stores/toast.ts's timers): the
 // callbacks of the one form that is drawing, kept out of reactive state.

@@ -11,6 +11,7 @@ import VisitInfo from '@/components/content/VisitInfo.vue'
 import { useIsDesktop } from '@/composables/useBreakpoint'
 import { useMapFocus } from '@/composables/useMapFocus'
 import { usePageTitle } from '@/composables/usePageTitle'
+import { usePanelShape } from '@/composables/usePanelShape'
 import { usePanelTrail } from '@/composables/usePanelTrail'
 import { itinerarioConfig } from '@/definitions/typeConfigs'
 import type Itinerario from '@/definitions/interfaces/Itinerario'
@@ -95,6 +96,10 @@ const directions = computed(() =>
     ? directionsUrl(current.value.point, { from: previous.value?.point ?? null })
     : null,
 )
+
+// A tour is read in its route's narrow panel, beside the map that draws it,
+// and written in the editor's, like every card (review PR-13).
+usePanelShape(() => (editing.value ? 'editor' : null))
 
 // The map behind the panel shows the tour (I11, D16): its numbered stops and
 // its path — the drawn one if the author drew it, else the stops joined in
