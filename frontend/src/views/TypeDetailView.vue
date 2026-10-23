@@ -10,6 +10,8 @@ import CardArticle from '@/components/content/CardArticle.vue'
 import DirectionsLink from '@/components/content/DirectionsLink.vue'
 import { useIsDesktop } from '@/composables/useBreakpoint'
 import { useMapFocus } from '@/composables/useMapFocus'
+import { usePageTitle } from '@/composables/usePageTitle'
+import { usePanelTrail } from '@/composables/usePanelTrail'
 import { useMapStore } from '@/stores/map'
 import TypeForm from '@/components/content/TypeForm.vue'
 import TranslateControl from '@/components/content/TranslateControl.vue'
@@ -49,8 +51,29 @@ const hasPlace = computed(() => props.config.mapMode === 'pins' && pins.value.le
 // card with several (the shops a dish is sold in, a figure's birthplace and
 // monument) gives each its own.
 const onlyPin = computed(() => (pins.value.length === 1 ? (pins.value[0] ?? null) : null))
-const zoneNames = computed(() =>
-  ((item.value?.zones as ZoneRef[] | undefined) ?? []).map((zone) => zone.name).join(' · '),
+const zones = computed(() => (item.value?.zones as ZoneRef[] | undefined) ?? [])
+const zoneNames = computed(() => zones.value.map((zone) => zone.name).join(' · '))
+
+// The card the URL names — not the one before it, which a card opened from
+// another card's page shows until the new one has loaded.
+const shown = computed(() => (item.value && item.value.id === route.params.id ? item.value : null))
+
+// Where it is, over its title (review PR-23): the type's list is the panel's
+// own way up; each zone the card is in leads to what else is there.
+usePanelTrail(() =>
+  shown.value
+    ? {
+        steps: zones.value.map((zone) => ({
+          label: zone.name,
+          to: { name: 'cosafare', query: { zona: zone.slug } },
+        })),
+      }
+    : null,
+)
+// «Santissima Annunziata · Chiese · Vivere Gaeta» — by its Italian name, the
+// heading of a translation too (T7).
+usePageTitle(() =>
+  shown.value ? [shown.value.original_title || shown.value.title, props.config.label] : null,
 )
 
 // The map behind the panel shows this card's place while it is open (D16).
@@ -149,7 +172,6 @@ watch(
           :is-published="item.is_published"
           :images="item.images"
           :translations="item.translations"
-          :type-label="config.singularLabel"
           :detail-route-name="config.routeNames.detail"
           :back-to="{ name: config.routeNames.list, label: config.label.toLowerCase() }"
         >

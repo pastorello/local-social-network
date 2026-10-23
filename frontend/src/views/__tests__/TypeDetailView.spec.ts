@@ -2,9 +2,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import axios from 'axios'
 import { createPinia } from 'pinia'
+import { shallowRef } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import TypeDetailView from '../TypeDetailView.vue'
+import { PANEL_TRAIL, type Trail } from '@/composables/usePanelTrail'
 import {
   chiesaConfig,
   dialettoConfig,
@@ -43,12 +45,18 @@ const mountWith = async (config: TypeConfig, data: Record<string, unknown>) => {
   })
   router.push(`/${config.key}/c1`)
   await router.isReady()
+  // What the panel would draw over the card (review PR-23).
+  const trail = shallowRef<Trail | null>(null)
   const wrapper = mount(TypeDetailView, {
     props: { config },
-    global: { plugins: [createPinia(), router], stubs: { TypeForm: true } },
+    global: {
+      plugins: [createPinia(), router],
+      stubs: { TypeForm: true },
+      provide: { [PANEL_TRAIL as symbol]: trail },
+    },
   })
   await flushPromises()
-  return { wrapper, router }
+  return { wrapper, router, trail }
 }
 
 const section = (wrapper: Awaited<ReturnType<typeof mountWith>>['wrapper']) =>
@@ -156,5 +164,51 @@ describe('TypeDetailView — «Dove si trova» (review PR-3)', () => {
     await flushPromises()
 
     expect(router.currentRoute.value.query.mappa).toBe('1')
+  })
+})
+
+// Review PR-23 (N-02, N-04): the card's type is the panel's way up; the zone
+// it is in goes beside it, as the way to what else is there, and the window
+// is named after the card.
+describe('TypeDetailView — eyebrow and title (review PR-23)', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('hands the panel the zone the card is in, linked to «Cosa fare»', async () => {
+    const { trail } = await mountWith(
+      chiesaConfig,
+      card({
+        pins: [{ id: 1, lat: 41.2087, lng: 13.5868, label: '' }],
+        zones: [{ slug: 'gaeta-medievale', name: 'Gaeta Medievale' }],
+      }),
+    )
+
+    expect(trail.value).toEqual({
+      steps: [
+        { label: 'Gaeta Medievale', to: { name: 'cosafare', query: { zona: 'gaeta-medievale' } } },
+      ],
+    })
+  })
+
+  it('draws no eyebrow of its own over the title: the panel’s is the one', async () => {
+    const { wrapper } = await mountWith(chiesaConfig, card({ zones: [] }))
+
+    // It said «Chiesa» there until 2026-10-23.
+    expect(wrapper.get('header').text()).not.toMatch(/chiesa/i)
+    expect(wrapper.get('h1').text()).toBe('Santissima Annunziata')
+  })
+
+  it('names the window after the card, by its Italian name and its type', async () => {
+    await mountWith(
+      chiesaConfig,
+      card({ title: 'Annunziata', original_title: 'Santissima Annunziata', language: 'en' }),
+    )
+
+    expect(document.title).toBe('Santissima Annunziata · Chiese · Vivere Gaeta')
+  })
+
+  it('says nothing of a card the URL does not name — the one before it, still loading', async () => {
+    const { trail } = await mountWith(chiesaConfig, card({ id: 'altra', zones: [] }))
+
+    expect(trail.value).toBeNull()
   })
 })

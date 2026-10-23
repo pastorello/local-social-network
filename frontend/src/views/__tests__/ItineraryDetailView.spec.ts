@@ -2,9 +2,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import axios from 'axios'
 import { createPinia } from 'pinia'
+import { shallowRef } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import ItineraryDetailView from '../ItineraryDetailView.vue'
+import { PANEL_TRAIL, type Trail } from '@/composables/usePanelTrail'
 import type Itinerario from '@/definitions/interfaces/Itinerario'
 
 vi.mock('axios')
@@ -99,12 +101,19 @@ const mountAt = async (path: string, attach = false) => {
   })
   router.push(path)
   await router.isReady()
+  // What the panel would draw over the page (review PR-23): the view hands it
+  // its part of the eyebrow, as RoutePanel provides for it.
+  const trail = shallowRef<Trail | null>(null)
   const wrapper = mount(ItineraryDetailView, {
-    global: { plugins: [createPinia(), router], stubs: { ItineraryForm: true } },
+    global: {
+      plugins: [createPinia(), router],
+      stubs: { ItineraryForm: true },
+      provide: { [PANEL_TRAIL as symbol]: trail },
+    },
     attachTo: attach ? document.body : undefined,
   })
   await flushPromises()
-  return { wrapper, router }
+  return { wrapper, router, trail }
 }
 
 describe('ItineraryDetailView (spec itinerari.md I7)', () => {
@@ -133,9 +142,9 @@ describe('ItineraryDetailView (spec itinerari.md I7)', () => {
   })
 
   it('follows one stop at a time from the URL, with the leg from the previous stop', async () => {
-    const { wrapper, router } = await mountAt('/itinerari/t1?tappa=2')
+    const { wrapper, router, trail } = await mountAt('/itinerari/t1?tappa=2')
 
-    expect(wrapper.text()).toContain('Tappa 2 di 2')
+    expect(trail.value?.steps).toEqual([{ label: 'Tappa 2 di 2' }])
     expect(wrapper.get('h1').text()).toBe('Processione')
     expect(wrapper.text()).toContain('Si parte dal porto.')
     const href = new URL(wrapper.get('a[target="_blank"]').attributes('href')!)
@@ -150,12 +159,14 @@ describe('ItineraryDetailView (spec itinerari.md I7)', () => {
     expect(router.currentRoute.value.query.tappa).toBe('1')
   })
 
-  it('tells the stop on its own: the tour under the title, cover, opening, access', async () => {
-    const { wrapper } = await mountAt('/itinerari/t1?tappa=1')
+  it('tells the stop on its own: its tour and position over the title, cover, opening, access', async () => {
+    const { wrapper, trail } = await mountAt('/itinerari/t1?tappa=1')
 
-    // The eyebrow is the position alone; the tour's name sits under the title.
-    expect(wrapper.get('p').text()).toBe('Tappa 1 di 2')
-    expect(wrapper.get('h1 + p').text()).toBe('Gaeta medievale')
+    // Review PR-23: the panel's eyebrow is «Gaeta medievale · Tappa 1 di 2»,
+    // the tour's name the way up to it; the page draws neither under its title.
+    expect(trail.value).toEqual({ up: 'Gaeta medievale', steps: [{ label: 'Tappa 1 di 2' }] })
+    expect(wrapper.text()).not.toContain('Tappa 1 di 2')
+    expect(wrapper.find('h1 + p').exists()).toBe(false)
     expect(wrapper.get('img').attributes('alt')).toBe('La facciata')
     expect(wrapper.text()).toContain('Il Duomo di Gaeta…')
     // ADR-0008: the hours only with the day they were given, never "open".
@@ -281,5 +292,33 @@ describe('ItineraryDetailView (spec itinerari.md I7)', () => {
 
     expect(wrapper.get('h1').text()).toBe('Gaeta medievale')
     expect(wrapper.text()).not.toContain('Inizia il tour')
+  })
+})
+
+// Review PR-23 (N-02, N-04): where the reader is, over the title and in the
+// window's title.
+describe('ItineraryDetailView’s eyebrow and title (review PR-23)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    serve(tour)
+  })
+
+  it('puts a tour under «Itinerari», each intent a way to the tours that share it', async () => {
+    const { trail } = await mountAt('/itinerari/t1')
+
+    expect(trail.value).toEqual({
+      steps: [
+        { label: 'Scoprire la città', to: { name: 'itinerarilist', query: { intento: 'citta' } } },
+      ],
+    })
+  })
+
+  it('names the window after the tour, and after the stop within it', async () => {
+    const { router } = await mountAt('/itinerari/t1')
+    expect(document.title).toBe('Gaeta medievale · Itinerari · Vivere Gaeta')
+
+    await router.push('/itinerari/t1?tappa=2')
+    await flushPromises()
+    expect(document.title).toBe('Processione · Gaeta medievale · Vivere Gaeta')
   })
 })

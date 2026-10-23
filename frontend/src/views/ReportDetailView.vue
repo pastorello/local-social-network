@@ -16,6 +16,7 @@ import type Report from '@/definitions/interfaces/Report'
 import type { ReportStatus } from '@/definitions/interfaces/Report'
 import { ADMIN_TRANSITIONS, STATUS_META, statusColor } from '@/lib/reportStatus'
 import { useMapFocus } from '@/composables/useMapFocus'
+import { usePageTitle } from '@/composables/usePageTitle'
 
 const route = useRoute()
 const router = useRouter()
@@ -36,6 +37,9 @@ useMapFocus(() =>
       }
     : null,
 )
+// «Buca su Lungomare Caboto · Segnalazioni · Vivere Gaeta» (review PR-23).
+usePageTitle(() => (report.value ? [report.value.title, 'Segnalazioni'] : null))
+
 const categories = ref<Category[]>([])
 const editing = ref(false)
 
@@ -165,10 +169,9 @@ onMounted(() => {
         </div>
 
         <header class="mb-8">
-          <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <p class="text-xs font-semibold tracking-[0.12em] text-terracotta uppercase">
-              Segnalazione
-            </p>
+          <!-- What it is — a report — is the panel's eyebrow above it
+          (review PR-23); its status is its own. -->
+          <div class="mb-3">
             <StatusBadge :status="report.status" />
           </div>
 

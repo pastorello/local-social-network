@@ -161,6 +161,8 @@ describe('the reader, on a wide screen', () => {
     cy.location('pathname').should('match', /^\/chiese\/[0-9a-f-]+$/)
     cy.contains('h1', PUBLISHED)
     cy.contains('Collaboratore E2E')
+    // Review PR-23 (N-04): the tab says which card, and of what.
+    cy.title().should('eq', `${PUBLISHED} · Chiese · Vivere Gaeta`)
 
     // ADR-0008: what is known about getting in, the hours with the day they
     // were reported — and never a claim that the church is open.

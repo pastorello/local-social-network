@@ -1,7 +1,10 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, it, expect } from 'vitest'
 
 import router from '@/router'
-import { parentOf, type Parent } from '../navigation'
+import { CARD_LAYERS } from '@/lib/mapLayers'
+import { parentOf, sectionOf, tintOf, type Parent, type Section } from '../navigation'
 
 const ID = '5f0c6a52-6a0e-4f0a-9d3b-0a9f6e1c2b7d'
 
@@ -10,7 +13,7 @@ const ID = '5f0c6a52-6a0e-4f0a-9d3b-0a9f6e1c2b7d'
 const EXPECTED: Record<string, Parent | null> = {
   '/': null,
   '/il-progetto': null,
-  '/reports/:id': { to: '/', label: 'Mappa' },
+  '/reports/:id': { to: '/', label: 'Segnalazioni' },
   '/collabora': null,
   '/login': null,
   '/invito/:token': null,
@@ -90,4 +93,110 @@ describe('parentOf', () => {
     expect(parentOf(at(`/chiese/${ID}?edit=1`))).toEqual({ to: '/chiese', label: 'Chiese' })
     expect(parentOf(at(`/luoghi/${ID}?mappa=1`))).toEqual({ to: '/luoghi', label: 'Luoghi' })
   })
+})
+
+// The menu's current item (review PR-23, N-02): the item above the page, for
+// every page the router knows.
+const SECTIONS: Record<string, Section | null> = {
+  '/': 'mappa',
+  '/il-progetto': 'progetto',
+  '/reports/:id': 'mappa',
+  '/collabora': null,
+  '/login': null,
+  '/invito/:token': null,
+  '/password-dimenticata': null,
+  '/reimposta-password/:token': null,
+  '/users': null,
+  '/polls': null,
+  '/feste': 'esplora',
+  '/feste/nuova': 'esplora',
+  '/feste/:id': 'esplora',
+  '/chiese': 'esplora',
+  '/chiese/nuova': 'esplora',
+  '/chiese/:id': 'esplora',
+  '/ricette': 'esplora',
+  '/ricette/nuova': 'esplora',
+  '/ricette/:id': 'esplora',
+  '/personaggi': 'esplora',
+  '/personaggi/nuovo': 'esplora',
+  '/personaggi/:id': 'esplora',
+  '/dialetto': 'esplora',
+  '/dialetto/nuovo': 'esplora',
+  '/dialetto/:id': 'esplora',
+  '/luoghi': 'esplora',
+  '/luoghi/nuovo': 'esplora',
+  '/luoghi/:id': 'esplora',
+  '/benvenuto': null,
+  '/cosa-fare': 'cosa-fare',
+  '/itinerari': 'itinerari',
+  '/itinerari/nuovo': 'itinerari',
+  '/itinerari/:id': 'itinerari',
+  '/libri': 'esplora',
+  '/libri/nuovo': 'esplora',
+  '/libri/:id': 'esplora',
+  '/profile/edit': null,
+  '/profile/edit/password': null,
+  '/profile/:id': null,
+}
+
+describe('sectionOf', () => {
+  it('has an answer for every route, so a new page is placed on purpose', () => {
+    expect(
+      router
+        .getRoutes()
+        .map((record) => record.path)
+        .sort(),
+    ).toEqual(Object.keys(SECTIONS).sort())
+  })
+
+  it.each(Object.entries(SECTIONS))('%s', (path, section) => {
+    expect(sectionOf(at(path.replace(':id', ID).replace(':token', 'abc')))).toBe(section)
+  })
+
+  it('keeps a stop and a chosen zone in their sections', () => {
+    expect(sectionOf(at(`/itinerari/${ID}?tappa=2`))).toBe('itinerari')
+    expect(sectionOf(at('/cosa-fare?zona=serapo'))).toBe('cosa-fare')
+  })
+})
+
+// The relative luminance of WCAG 2.1, from the hex a token holds in main.css
+// — the stylesheet is the source of truth (D8), so this reads it rather than
+// a copy of its values. From the disk: Vitest hands a stylesheet imported
+// `?raw` back empty.
+const CSS = readFileSync(resolve(process.cwd(), 'src/assets/main.css'), 'utf8')
+const token = (name: string): string => {
+  const found = CSS.match(new RegExp(`${name}:\\s*(#[0-9a-f]{6})`, 'i'))
+  if (!found?.[1]) throw new Error(`${name} is not in main.css`)
+  return found[1]
+}
+const luminance = (hex: string): number => {
+  const [r, g, b] = [1, 3, 5].map((at) => {
+    const channel = parseInt(hex.slice(at, at + 2), 16) / 255
+    return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4
+  }) as [number, number, number]
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+const contrast = (a: string, b: string): number => {
+  const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number]
+  return (light + 0.05) / (dark + 0.05)
+}
+
+describe('tintOf — the eyebrow’s colour (review PR-23)', () => {
+  it('wears the layer of a card’s type, and terracotta under no layer', () => {
+    expect(tintOf({ to: '/chiese', label: 'Chiese' })).toBe('var(--color-layer-chiese)')
+    expect(tintOf({ to: '/feste', label: 'Feste' })).toBe('var(--color-layer-feste)')
+    expect(tintOf({ to: '/dialetto', label: 'Dialetto' })).toBe('var(--color-terracotta)')
+    expect(tintOf({ to: `/itinerari/${ID}`, label: 'Giro' })).toBe('var(--color-terracotta)')
+    expect(tintOf({ to: '/cosa-fare', label: 'Cosa fare' })).toBe('var(--color-terracotta)')
+    expect(tintOf(null)).toBe('var(--color-terracotta)')
+  })
+
+  // Small text: WCAG 1.4.3 asks 4.5:1 of every colour it can be, on the
+  // panel's ground.
+  it.each([...CARD_LAYERS.map((layer) => layer.token), '--color-terracotta'])(
+    '%s clears 4.5:1 on the panel',
+    (name) => {
+      expect(contrast(token(name), token('--color-page'))).toBeGreaterThanOrEqual(4.5)
+    },
+  )
 })

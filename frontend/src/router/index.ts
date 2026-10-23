@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '../stores/user'
+import { setTitle } from '../lib/pageTitle'
 import {
   chiesaConfig,
   dialettoConfig,
@@ -37,7 +38,7 @@ const router = createRouter({
       path: '/il-progetto',
       name: 'progetto',
       component: () => import('../views/ProjectView.vue'),
-      meta: { requiresAuth: false },
+      meta: { requiresAuth: false, title: ['Il progetto'] },
     },
     {
       // Behind the login since 2026-10-22, like the API it reads: reports are
@@ -45,50 +46,50 @@ const router = createRouter({
       path: '/reports/:id',
       name: 'reportdetail',
       component: () => import('../views/ReportDetailView.vue'),
-      meta: { requiresAuth: true, panel: 'narrow' },
+      meta: { requiresAuth: true, panel: 'narrow', title: ['Segnalazioni'] },
     },
     {
       path: '/collabora',
       name: 'collabora',
       component: () => import('../views/CollaboraView.vue'),
-      meta: { requiresAuth: false },
+      meta: { requiresAuth: false, title: ['Collabora con noi'] },
     },
     {
       path: '/login',
       name: 'login',
       component: () => import('../views/LoginView.vue'),
-      meta: { requiresAuth: false },
+      meta: { requiresAuth: false, title: ['Accedi'] },
     },
     {
       path: '/invito/:token',
       name: 'inviteaccept',
       component: () => import('../views/InviteAcceptView.vue'),
-      meta: { requiresAuth: false },
+      meta: { requiresAuth: false, title: ['Attiva il tuo account'] },
     },
     {
       path: '/password-dimenticata',
       name: 'passwordresetrequest',
       component: () => import('../views/PasswordResetRequestView.vue'),
-      meta: { requiresAuth: false },
+      meta: { requiresAuth: false, title: ['Password dimenticata'] },
     },
     {
       path: '/reimposta-password/:token',
       name: 'passwordresetconfirm',
       component: () => import('../views/PasswordResetConfirmView.vue'),
-      meta: { requiresAuth: false },
+      meta: { requiresAuth: false, title: ['Reimposta password'] },
     },
     {
       path: '/users',
       name: 'users',
       component: () => import('../views/UsersView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, title: ['Utenti'] },
     },
     {
       // poll reading is open to visitors (spec §3; M2 decision)
       path: '/polls',
       name: 'polls',
       component: () => import('../views/PollsView.vue'),
-      meta: { requiresAuth: false },
+      meta: { requiresAuth: false, title: ['Sondaggi'] },
     },
     {
       // published feste are readable by anyone (spec content.md); the
@@ -96,19 +97,19 @@ const router = createRouter({
       path: '/feste',
       name: 'festelist',
       component: () => import('../views/FesteListView.vue'),
-      meta: { requiresAuth: false },
+      meta: { requiresAuth: false, title: ['Feste'] },
     },
     {
       path: '/feste/nuova',
       name: 'festecreate',
       component: () => import('../views/FesteCreateView.vue'),
-      meta: { requiresAuth: true, panel: 'narrow' },
+      meta: { requiresAuth: true, panel: 'narrow', title: ['Nuova festa', 'Feste'] },
     },
     {
       path: '/feste/:id',
       name: 'festedetail',
       component: () => import('../views/FesteDetailView.vue'),
-      meta: { requiresAuth: false, panel: 'narrow' },
+      meta: { requiresAuth: false, panel: 'narrow', title: ['Feste'] },
     },
     // C3: chiese/ricette/personaggi/dialetto share the same generic
     // Type*View components, parameterized by definitions/typeConfigs.ts —
@@ -118,105 +119,109 @@ const router = createRouter({
       name: chiesaConfig.routeNames.list,
       component: () => import('../views/TypeListView.vue'),
       props: { config: chiesaConfig },
-      meta: { requiresAuth: false },
+      meta: { requiresAuth: false, title: [chiesaConfig.label] },
     },
     {
       path: '/chiese/nuova',
       name: chiesaConfig.routeNames.create,
       component: () => import('../views/TypeCreateView.vue'),
       props: { config: chiesaConfig },
-      meta: { requiresAuth: true, panel: 'narrow' },
+      meta: { requiresAuth: true, panel: 'narrow', title: ['Nuova scheda', chiesaConfig.label] },
     },
     {
       path: '/chiese/:id',
       name: chiesaConfig.routeNames.detail,
       component: () => import('../views/TypeDetailView.vue'),
       props: { config: chiesaConfig },
-      meta: { requiresAuth: false, panel: 'narrow' },
+      meta: { requiresAuth: false, panel: 'narrow', title: [chiesaConfig.label] },
     },
     {
       path: '/ricette',
       name: ricettaConfig.routeNames.list,
       component: () => import('../views/TypeListView.vue'),
       props: { config: ricettaConfig },
-      meta: { requiresAuth: false },
+      meta: { requiresAuth: false, title: [ricettaConfig.label] },
     },
     {
       path: '/ricette/nuova',
       name: ricettaConfig.routeNames.create,
       component: () => import('../views/TypeCreateView.vue'),
       props: { config: ricettaConfig },
-      meta: { requiresAuth: true, panel: 'narrow' },
+      meta: { requiresAuth: true, panel: 'narrow', title: ['Nuova scheda', ricettaConfig.label] },
     },
     {
       path: '/ricette/:id',
       name: ricettaConfig.routeNames.detail,
       component: () => import('../views/TypeDetailView.vue'),
       props: { config: ricettaConfig },
-      meta: { requiresAuth: false, panel: 'narrow' },
+      meta: { requiresAuth: false, panel: 'narrow', title: [ricettaConfig.label] },
     },
     {
       path: '/personaggi',
       name: personaggioConfig.routeNames.list,
       component: () => import('../views/TypeListView.vue'),
       props: { config: personaggioConfig },
-      meta: { requiresAuth: false },
+      meta: { requiresAuth: false, title: [personaggioConfig.label] },
     },
     {
       path: '/personaggi/nuovo',
       name: personaggioConfig.routeNames.create,
       component: () => import('../views/TypeCreateView.vue'),
       props: { config: personaggioConfig },
-      meta: { requiresAuth: true, panel: 'narrow' },
+      meta: {
+        requiresAuth: true,
+        panel: 'narrow',
+        title: ['Nuova scheda', personaggioConfig.label],
+      },
     },
     {
       path: '/personaggi/:id',
       name: personaggioConfig.routeNames.detail,
       component: () => import('../views/TypeDetailView.vue'),
       props: { config: personaggioConfig },
-      meta: { requiresAuth: false, panel: 'narrow' },
+      meta: { requiresAuth: false, panel: 'narrow', title: [personaggioConfig.label] },
     },
     {
       path: '/dialetto',
       name: dialettoConfig.routeNames.list,
       component: () => import('../views/TypeListView.vue'),
       props: { config: dialettoConfig },
-      meta: { requiresAuth: false },
+      meta: { requiresAuth: false, title: [dialettoConfig.label] },
     },
     {
       path: '/dialetto/nuovo',
       name: dialettoConfig.routeNames.create,
       component: () => import('../views/TypeCreateView.vue'),
       props: { config: dialettoConfig },
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, title: ['Nuova scheda', dialettoConfig.label] },
     },
     {
       path: '/dialetto/:id',
       name: dialettoConfig.routeNames.detail,
       component: () => import('../views/TypeDetailView.vue'),
       props: { config: dialettoConfig },
-      meta: { requiresAuth: false },
+      meta: { requiresAuth: false, title: [dialettoConfig.label] },
     },
     {
       path: '/luoghi',
       name: luogoConfig.routeNames.list,
       component: () => import('../views/TypeListView.vue'),
       props: { config: luogoConfig },
-      meta: { requiresAuth: false },
+      meta: { requiresAuth: false, title: [luogoConfig.label] },
     },
     {
       path: '/luoghi/nuovo',
       name: luogoConfig.routeNames.create,
       component: () => import('../views/TypeCreateView.vue'),
       props: { config: luogoConfig },
-      meta: { requiresAuth: true, panel: 'narrow' },
+      meta: { requiresAuth: true, panel: 'narrow', title: ['Nuova scheda', luogoConfig.label] },
     },
     {
       path: '/luoghi/:id',
       name: luogoConfig.routeNames.detail,
       component: () => import('../views/TypeDetailView.vue'),
       props: { config: luogoConfig },
-      meta: { requiresAuth: false, panel: 'narrow' },
+      meta: { requiresAuth: false, panel: 'narrow', title: [luogoConfig.label] },
     },
     {
       // The one address printed on every B&B's card (spec itinerari.md I6):
@@ -224,7 +229,7 @@ const router = createRouter({
       path: '/benvenuto',
       name: 'benvenuto',
       component: WelcomeView,
-      meta: { requiresAuth: false },
+      meta: { requiresAuth: false, title: ['Che cosa ti va di fare?'] },
     },
     {
       // «Cosa si può fare qui» (spec cosa-fare.md Part −1): a zone and what is
@@ -232,20 +237,24 @@ const router = createRouter({
       path: '/cosa-fare',
       name: 'cosafare',
       component: CosaFareView,
-      meta: { requiresAuth: false, panel: 'narrow' },
+      meta: { requiresAuth: false, panel: 'narrow', title: ['Cosa fare'] },
     },
     {
       path: '/itinerari',
       name: itinerarioConfig.routeNames.list,
       component: () => import('../views/TypeListView.vue'),
       props: { config: itinerarioConfig },
-      meta: { requiresAuth: false },
+      meta: { requiresAuth: false, title: [itinerarioConfig.label] },
     },
     {
       path: '/itinerari/nuovo',
       name: itinerarioConfig.routeNames.create,
       component: () => import('../views/ItineraryCreateView.vue'),
-      meta: { requiresAuth: true, panel: 'narrow' },
+      meta: {
+        requiresAuth: true,
+        panel: 'narrow',
+        title: ['Nuovo itinerario', itinerarioConfig.label],
+      },
     },
     {
       // Narrow: an open tour draws its stops and path on the map beside it,
@@ -253,46 +262,46 @@ const router = createRouter({
       path: '/itinerari/:id',
       name: itinerarioConfig.routeNames.detail,
       component: () => import('../views/ItineraryDetailView.vue'),
-      meta: { requiresAuth: false, panel: 'narrow' },
+      meta: { requiresAuth: false, panel: 'narrow', title: [itinerarioConfig.label] },
     },
     {
       path: '/libri',
       name: libroConfig.routeNames.list,
       component: () => import('../views/TypeListView.vue'),
       props: { config: libroConfig },
-      meta: { requiresAuth: false },
+      meta: { requiresAuth: false, title: [libroConfig.label] },
     },
     {
       path: '/libri/nuovo',
       name: libroConfig.routeNames.create,
       component: () => import('../views/TypeCreateView.vue'),
       props: { config: libroConfig },
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, title: ['Nuova scheda', libroConfig.label] },
     },
     {
       path: '/libri/:id',
       name: libroConfig.routeNames.detail,
       component: () => import('../views/TypeDetailView.vue'),
       props: { config: libroConfig },
-      meta: { requiresAuth: false },
+      meta: { requiresAuth: false, title: [libroConfig.label] },
     },
     {
       path: '/profile/edit',
       name: 'editprofile',
       component: () => import('../views/EditProfileView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, title: ['Modifica profilo'] },
     },
     {
       path: '/profile/edit/password',
       name: 'editpassword',
       component: () => import('../views/EditPasswordView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, title: ['Cambia password'] },
     },
     {
       path: '/profile/:id',
       name: 'profile',
       component: () => import('../views/ProfileView.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, title: ['Profilo'] },
     },
   ],
 })
@@ -307,5 +316,10 @@ router.beforeEach((to) => {
     }
   }
 })
+
+// The window's title (review PR-23, N-04): the route's own, after every
+// navigation. A page whose title is its data — a card, a tour, a zone — puts
+// its own on top once it has it (composables/usePageTitle.ts).
+router.afterEach((to) => setTitle(to.meta.title ?? []))
 
 export default router

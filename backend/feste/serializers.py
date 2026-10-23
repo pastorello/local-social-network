@@ -6,6 +6,7 @@ from content.models import MapFeature
 from content.serializers import CardImageSerializer, TranslationSerializer, media_source, visible_translations
 from content.fields import PlainTextField
 from content.sanitize import sanitize_html
+from maps.serializers import named_zones_of
 
 from .models import Feste
 
@@ -38,6 +39,7 @@ class FesteReadSerializer(serializers.ModelSerializer):
     pins = serializers.SerializerMethodField()
     translations = serializers.SerializerMethodField()
     original_title = serializers.SerializerMethodField()
+    zones = serializers.SerializerMethodField()
 
     def get_images(self, obj):
         return CardImageSerializer(media_source(obj.card).images.all(), many=True).data
@@ -49,6 +51,13 @@ class FesteReadSerializer(serializers.ModelSerializer):
     def get_pins(self, obj):
         points = media_source(obj.card).map_features.filter(kind=MapFeature.POINT)
         return [_map_point(p) for p in points]
+
+    def get_zones(self, obj):
+        # The zones its procession stops in, by name — D2's rule for a festa,
+        # as on the map (maps/zones.py::zones_of_feature) — for the eyebrow
+        # over its page (review PR-23). A translation walks its original's
+        # route (T5), so it is where the original is.
+        return named_zones_of(self.get_route(obj), self.context)
 
     def get_original_title(self, obj):
         # The card group's name, which is the original's title (2026-09-09):
@@ -67,7 +76,7 @@ class FesteReadSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'body_html', 'author', 'is_published',
             'recurrence', 'programme', 'images', 'route', 'pins',
-            'language', 'translation_of', 'original_title', 'translations',
+            'language', 'translation_of', 'original_title', 'translations', 'zones',
             'created_at', 'updated_at',
         )
 

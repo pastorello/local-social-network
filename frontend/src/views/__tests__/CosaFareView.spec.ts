@@ -2,9 +2,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import axios from 'axios'
 import { createPinia, setActivePinia } from 'pinia'
+import { shallowRef } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import CosaFareView from '../CosaFareView.vue'
+import { PANEL_TRAIL, type Trail } from '@/composables/usePanelTrail'
 import { useMapStore } from '@/stores/map'
 import type { MapCardFeature } from '@/definitions/interfaces/MapData'
 
@@ -125,7 +127,10 @@ const ANSWERS: Record<string, unknown> = {
   },
 }
 
-const mountAt = async (query: Record<string, string> = {}) => {
+const mountAt = async (
+  query: Record<string, string> = {},
+  trail = shallowRef<Trail | null>(null),
+) => {
   setActivePinia(createPinia())
   const store = useMapStore()
   store.features = FEATURES
@@ -140,9 +145,12 @@ const mountAt = async (query: Record<string, string> = {}) => {
   })
   await router.push({ path: '/cosa-fare', query })
   await router.isReady()
-  const wrapper = mount(CosaFareView, { global: { plugins: [router] } })
+  // What the panel would draw over the page (review PR-23).
+  const wrapper = mount(CosaFareView, {
+    global: { plugins: [router], provide: { [PANEL_TRAIL as symbol]: trail } },
+  })
   await flushPromises()
-  return { wrapper, store, router }
+  return { wrapper, store, router, trail }
 }
 
 describe('CosaFareView — «Cosa si può fare qui» (spec cosa-fare.md Part −1)', () => {
@@ -306,5 +314,29 @@ describe('CosaFareView on a phone (review PR-4, M-07)', () => {
     await flushPromises()
     expect(chipNames(wrapper)).toEqual(['Gaeta Medievale 1'])
     expect(router.currentRoute.value.query.zona).toBe('gaeta-medievale')
+  })
+})
+
+// Review PR-23: a chosen zone is where the reader stands, under «Cosa fare»
+// — the panel's eyebrow says so, and the window's title.
+describe('CosaFareView — eyebrow and title (review PR-23)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(axios.get).mockImplementation(async (url: string) => ({ data: ANSWERS[url] }))
+  })
+
+  it('hands the panel the chosen zone, and lets its own «A Gaeta» go', async () => {
+    const { wrapper, trail } = await mountAt({ zona: 'serapo' })
+
+    expect(trail.value).toEqual({ steps: [{ label: 'Serapo' }] })
+    expect(wrapper.text()).not.toContain('A Gaeta')
+    expect(document.title).toBe('Serapo · Cosa fare · Vivere Gaeta')
+  })
+
+  it('has no eyebrow to hand over before a zone is chosen, and says «A Gaeta» itself', async () => {
+    const { wrapper, trail } = await mountAt()
+
+    expect(trail.value).toBeNull()
+    expect(wrapper.text()).toContain('A Gaeta')
   })
 })

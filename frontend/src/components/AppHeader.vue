@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 import { useUserStore } from '@/stores/user'
 import { useMapStore } from '@/stores/map'
@@ -10,17 +10,30 @@ import SchedeMenu from './buttons/SchedeMenu.vue'
 import SiteTitle from './typography/SiteTitle.vue'
 import UserAvatar from './cards/UserAvatar.vue'
 import { initials } from '@/lib/initials'
+import { sectionOf, type Section } from '@/lib/navigation'
 
 // The menu (spec/design.md D14): one pill at the top centre of every page,
 // floating over the map rather than a bar above it — the map is the ground of
-// every page (D13). The wordmark, Mappa, Schede, Itinerari, Il progetto, then
-// Accedi or the collaborator's avatar. The polls are reached from Il progetto;
-// there is no search in this phase. Itinerari (spec itinerari.md) is its own
-// item rather than a Schede entry: a tour is how a guest starts, not a card type.
+// every page (D13). The wordmark, Mappa, Esplora, Itinerari, Cosa fare, Il
+// progetto, then Accedi or the collaborator's avatar. The polls are reached
+// from Il progetto; there is no search in this phase. Itinerari (spec
+// itinerari.md) is its own item rather than an Esplora entry: a tour is how a
+// guest starts, not a card type. *Esplora* was *Schede* until 2026-10-23
+// (review PR-23, N-05).
 const userStore = useUserStore()
 const user = userStore.user
 const router = useRouter()
+const route = useRoute()
 const { isDesktop } = useIsDesktop()
+
+// The item above the page the reader is on is current (review PR-23, N-02):
+// a tour's page lights Itinerari, any card Esplora — one rule
+// (lib/navigation.ts::sectionOf) for the pill and for the phone's Menu, read
+// by a screen reader as the current page and seen as an underline as well as
+// a tint, so colour is never the only sign of it (WCAG 1.4.1).
+const section = computed(() => sectionOf(route))
+const isCurrent = (name: Section) => section.value === name
+const currentAttr = (name: Section) => (isCurrent(name) ? 'page' : undefined)
 
 // WCAG 2.5.3, label in name: without a photograph the button shows the
 // initials, and someone using speech input says what they see — so the
@@ -76,9 +89,10 @@ const fileReport = async (close: () => void) => {
 
 const item =
   'flex h-9 items-center rounded-full px-2 lg:px-3 text-sm font-semibold whitespace-nowrap text-ink hover:bg-page focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea'
-const active = 'bg-sea/10 text-sea'
+const active = 'bg-sea/10 text-sea underline decoration-2 underline-offset-4'
 const menuLink =
   'block px-4 py-2 text-sm text-ink hover:bg-page focus-visible:bg-page focus-visible:outline-none'
+const menuActive = 'font-semibold text-sea underline decoration-2 underline-offset-4'
 </script>
 
 <template>
@@ -93,11 +107,31 @@ const menuLink =
     <span class="hidden h-6 w-px bg-hairline lg:block" aria-hidden="true"></span>
 
     <template v-if="isDesktop">
-      <RouterLink to="/" :class="item" :exact-active-class="active">Mappa</RouterLink>
+      <RouterLink
+        to="/"
+        :class="[item, isCurrent('mappa') && active]"
+        :aria-current="currentAttr('mappa')"
+        >Mappa</RouterLink
+      >
       <SchedeMenu />
-      <RouterLink to="/itinerari" :class="item" :active-class="active">Itinerari</RouterLink>
-      <RouterLink to="/cosa-fare" :class="item" :active-class="active">Cosa fare</RouterLink>
-      <RouterLink to="/il-progetto" :class="item" :active-class="active">Il progetto</RouterLink>
+      <RouterLink
+        to="/itinerari"
+        :class="[item, isCurrent('itinerari') && active]"
+        :aria-current="currentAttr('itinerari')"
+        >Itinerari</RouterLink
+      >
+      <RouterLink
+        to="/cosa-fare"
+        :class="[item, isCurrent('cosa-fare') && active]"
+        :aria-current="currentAttr('cosa-fare')"
+        >Cosa fare</RouterLink
+      >
+      <RouterLink
+        to="/il-progetto"
+        :class="[item, isCurrent('progetto') && active]"
+        :aria-current="currentAttr('progetto')"
+        >Il progetto</RouterLink
+      >
       <span class="h-6 w-px bg-hairline" aria-hidden="true"></span>
 
       <NavDisclosure
@@ -140,7 +174,7 @@ const menuLink =
     </template>
 
     <!-- On a phone the pill holds what a reader reaches for first — the
-    wordmark home, the cards and the tours, since a guest arriving from a B&B's
+    wordmark home, Esplora and the tours, since a guest arriving from a B&B's
     QR code is on a phone (decided 2026-09-19) — and the rest sits behind one
     button. -->
     <template v-else>
@@ -149,8 +183,8 @@ const menuLink =
       reflow width — the pill has no room for it, and it moves into Menu. -->
       <RouterLink
         to="/itinerari"
-        :class="[item, 'max-[359px]:hidden']"
-        :active-class="active"
+        :class="[item, 'max-[359px]:hidden', isCurrent('itinerari') && active]"
+        :aria-current="currentAttr('itinerari')"
         data-pill-itinerari
         >Itinerari</RouterLink
       >
@@ -172,12 +206,30 @@ const menuLink =
           </svg>
         </template>
         <template #default="{ close }">
-          <RouterLink to="/" :class="menuLink">Mappa</RouterLink>
-          <RouterLink to="/itinerari" :class="[menuLink, 'min-[360px]:hidden']"
+          <RouterLink
+            to="/"
+            :class="[menuLink, isCurrent('mappa') && menuActive]"
+            :aria-current="currentAttr('mappa')"
+            >Mappa</RouterLink
+          >
+          <RouterLink
+            to="/itinerari"
+            :class="[menuLink, 'min-[360px]:hidden', isCurrent('itinerari') && menuActive]"
+            :aria-current="currentAttr('itinerari')"
             >Itinerari</RouterLink
           >
-          <RouterLink to="/cosa-fare" :class="menuLink">Cosa fare</RouterLink>
-          <RouterLink to="/il-progetto" :class="menuLink">Il progetto</RouterLink>
+          <RouterLink
+            to="/cosa-fare"
+            :class="[menuLink, isCurrent('cosa-fare') && menuActive]"
+            :aria-current="currentAttr('cosa-fare')"
+            >Cosa fare</RouterLink
+          >
+          <RouterLink
+            to="/il-progetto"
+            :class="[menuLink, isCurrent('progetto') && menuActive]"
+            :aria-current="currentAttr('progetto')"
+            >Il progetto</RouterLink
+          >
           <template v-if="user.isAuthenticated && user.id">
             <RouterLink :to="{ name: 'profile', params: { id: user.id } }" :class="menuLink">
               Il tuo profilo

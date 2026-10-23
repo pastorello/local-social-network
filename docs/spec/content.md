@@ -312,7 +312,9 @@ What the review left to the build, decided here:
   response), the shape review PR-23 asks of them — its eyebrow builds on this
   field rather than reshaping it. `/api/map/features/` and itinerari keep
   their lists of slugs. The zone is plain text here; linking it to
-  `/cosa-fare?zona=` is the eyebrow's job.
+  `/cosa-fare?zona=` is the eyebrow's job. *(It does since 2026-10-23, and
+  feste carry their zones the same way, by their procession's stops;
+  itinerari kept their slugs — design.md "Where the reader is".)*
 - **A card with several pins gives each its own way there** — a ricetta's
   shops, a personaggio's birthplace and monument — one *Come arrivarci* beside
   each pin's label (or *Punto N*), since one button would have to choose a

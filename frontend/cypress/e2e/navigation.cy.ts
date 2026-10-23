@@ -10,6 +10,10 @@ const LUOGO = 'Luogo E2E pubblicato'
 
 const CLOSE = 'button[aria-label="Chiudi e torna alla mappa"]'
 const PANEL = 'main section[tabindex="-1"]'
+// The panel's eyebrow (review PR-23), whose first link is up. Its words are
+// set in capitals by the stylesheet, so they are matched without case.
+const WHERE = 'nav[aria-label="Dove sei"]'
+const up = (label: string) => cy.get(WHERE).contains('a', label, { matchCase: false })
 const CARD_PATH = /^\/chiese\/[0-9a-f-]+$/
 
 interface View {
@@ -179,7 +183,7 @@ describe('close, up, back (review PR-22)', () => {
   it('goes up from a card to its list, from a stop to its tour, from a zone to Cosa fare', () => {
     cy.visit('/chiese')
     cy.contains('a', CHIESA).click()
-    cy.get(PANEL).contains('a', 'Chiese').click()
+    up('Chiese').click()
     cy.location('pathname').should('eq', '/chiese')
     cy.contains('h1', 'Chiese')
     cy.go('back')
@@ -189,17 +193,85 @@ describe('close, up, back (review PR-22)', () => {
     cy.contains('a', TOUR).click()
     cy.contains('button', 'Inizia il tour').click()
     cy.contains('button', 'Tappa successiva').click()
-    cy.get(PANEL).contains('a', 'Itinerario').click()
+    // A stop's way up is named after its own tour (review PR-23).
+    up(TOUR).click()
     cy.location('search').should('eq', '')
     cy.contains('h1', TOUR)
     cy.focused().should('match', PANEL)
-    cy.get(PANEL).contains('a', 'Itinerari').click()
+    up('Itinerari').click()
     cy.location('pathname').should('eq', '/itinerari')
 
     cy.visit('/cosa-fare?zona=porto-salvo')
-    cy.get(PANEL).contains('a', 'Cosa fare').click()
+    up('Cosa fare').click()
     cy.location('pathname').should('eq', '/cosa-fare')
     cy.location('search').should('eq', '')
     cy.focused().should('match', PANEL)
+  })
+})
+
+// Where the reader is (review PR-23, N-02/N-04): the eyebrow over the page —
+// up, and what the page is within it — the menu's item above the page marked
+// current, and the window named after the page. Runs on seed_e2e: the church
+// and the tour's first stop are in Porto Salvo, the tour is for «Scoprire la
+// città».
+describe('where the reader is (review PR-23)', () => {
+  beforeEach(() => cy.viewport(1280, 800))
+
+  const current = () => cy.get('nav[aria-label="Principale"] [aria-current="page"]')
+  const eyebrowLinks = () =>
+    cy
+      .get(WHERE)
+      .find('a')
+      .then(($links) =>
+        [...$links].map((link) => [link.textContent?.trim(), link.getAttribute('href')]),
+      )
+
+  it('on a card: its type and its zone, Esplora current, the card in the tab', () => {
+    cy.visit('/chiese')
+    cy.contains('a', CHIESA).click()
+    cy.contains('h1', CHIESA)
+
+    eyebrowLinks().should('deep.equal', [
+      ['Chiese', '/chiese'],
+      ['Porto Salvo', '/cosa-fare?zona=porto-salvo'],
+    ])
+    current().should('have.length', 1).and('contain.text', 'Esplora')
+    cy.title().should('eq', `${CHIESA} · Chiese · Vivere Gaeta`)
+
+    // The zone is a way to what else is there.
+    cy.get(WHERE).contains('a', 'Porto Salvo', { matchCase: false }).click()
+    cy.location('search').should('eq', '?zona=porto-salvo')
+    cy.contains('h1', 'Cosa si può fare qui')
+  })
+
+  it('on a tour: «Itinerari» and its intent, Itinerari current', () => {
+    cy.visit('/itinerari')
+    cy.contains('a', TOUR).click()
+    cy.contains('h1', TOUR)
+
+    eyebrowLinks().should('deep.equal', [
+      ['Itinerari', '/itinerari'],
+      ['Scoprire la città', '/itinerari?intento=citta'],
+    ])
+    current().should('have.length', 1).and('contain.text', 'Itinerari')
+  })
+
+  it('on a chosen zone: «Cosa fare» and the zone, Cosa fare current', () => {
+    cy.visit('/cosa-fare?zona=porto-salvo')
+    cy.contains('h1', 'Cosa si può fare qui')
+
+    eyebrowLinks().should('deep.equal', [['Cosa fare', '/cosa-fare']])
+    cy.get(WHERE).should('contain.text', 'Porto Salvo')
+    current().should('have.length', 1).and('contain.text', 'Cosa fare')
+    cy.title().should('eq', 'Porto Salvo · Cosa fare · Vivere Gaeta')
+  })
+
+  it('on Il progetto: no eyebrow, nothing above it but the map, Il progetto current', () => {
+    cy.visit('/il-progetto')
+    cy.contains('h1', 'Il progetto')
+
+    cy.get(WHERE).should('not.exist')
+    current().should('have.length', 1).and('contain.text', 'Il progetto')
+    cy.title().should('eq', 'Il progetto · Vivere Gaeta')
   })
 })

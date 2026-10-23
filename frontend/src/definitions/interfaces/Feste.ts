@@ -1,3 +1,4 @@
+import type { ZoneRef } from './Content'
 import type User from './User'
 
 export interface RoutePoint {
@@ -38,6 +39,9 @@ export default interface Feste {
   language: string
   translation_of: string | null
   translations: TranslationRef[]
+  // The editorial zones its procession stops in, named (spec cosa-fare.md
+  // Part −1, D2) — the original's, for a translation (T5).
+  zones: ZoneRef[]
   created_at: string
   updated_at: string
 }

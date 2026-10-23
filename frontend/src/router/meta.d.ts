@@ -11,5 +11,10 @@ declare module 'vue-router' {
     // work (D16); 'wide', the default, is the centred reading panel over a
     // veiled map, for everything that has no place (D17).
     panel?: 'narrow' | 'wide'
+    // The window's title, most specific part first and without the site's
+    // name, which lib/pageTitle.ts adds — «Itinerari» becomes «Itinerari ·
+    // Vivere Gaeta». None on the home, whose title is its own. A page named by
+    // its data puts that in front (composables/usePageTitle.ts).
+    title?: string[]
   }
 }
