@@ -33,6 +33,23 @@ describe('the OpenStreetMap credit', () => {
     expect(node.textContent).toContain('©')
   })
 
+  // Review PR-15 (M-03): the long credit took a quarter of a phone's map. The
+  // full sentence, with the ODbL, is on Il progetto.
+  it('is short, and has no Leaflet before it', () => {
+    const node = document.createElement('div')
+    node.innerHTML = OSM_ATTRIBUTION
+    const [map] = Object.values(
+      import.meta.glob<string>('/src/components/maps/GaetaMap.vue', {
+        query: '?raw',
+        import: 'default',
+        eager: true,
+      }),
+    )
+
+    expect(node.textContent).toBe('© OpenStreetMap')
+    expect(map).toContain('attributionControl.setPrefix(false)')
+  })
+
   it('is given to every tile layer in src/', () => {
     const sources = import.meta.glob<string>(
       ['/src/**/*.vue', '/src/**/*.ts', '!/src/**/__tests__/**'],

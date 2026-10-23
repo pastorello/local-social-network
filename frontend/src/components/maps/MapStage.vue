@@ -94,33 +94,37 @@ const covered = computed(
 // narrow panel the map is on screen without them, so it offers the way back.
 const offerList = computed(() => isDesktop.value && besideMap.value)
 
-// Leaflet's zoom buttons live in the map's top-left corner, which on the wide
-// home is under the floating column: they move out beside it.
-const controlsLeft = computed(() =>
-  isDesktop.value && route.meta.fullBleed ? `${HOME_COLUMN + 16 + 16}px` : '0px',
+// The phone's enlarged map (D18): the strip, given the whole screen.
+const enlarged = computed(() => !isDesktop.value && besideMap.value && route.query.mappa === '1')
+
+// Leaflet's two controls go where each layout leaves the map free (review
+// PR-15). The zoom buttons sit top-left, except on the wide home, where that
+// corner is the floating column's: there they go to the bottom-right, by the
+// credit, rather than squeezed into the column's margin (L-02).
+const zoomPosition = computed(() =>
+  isDesktop.value && route.meta.fullBleed ? 'bottomright' : 'topleft',
+)
+// The credit — the OpenStreetMap attribution the tile policy requires to be
+// visible — is bottom-right on a wide screen, left of a narrow panel. On a
+// phone it goes to the top-right, under «Livelli» on the home and under the
+// menu on the enlarged map, because at the bottom it rode the sheet's edge
+// (M-03). The strip above a card keeps it bottom-right, above «Allarga la
+// mappa» (PR-25 moves it). Behind a wide panel it stays where it is, veiled
+// with the rest of the map.
+const attributionPosition = computed(() =>
+  !isDesktop.value && (route.meta.fullBleed || enlarged.value) ? 'topright' : 'bottomright',
 )
 
-// The bottom-right corner holds Leaflet's attribution — the OpenStreetMap
-// credit the tile policy requires to be visible — and on most layouts
-// something of ours sits on that corner. It moves to where the map is still
-// in view: left of the narrow panel; above "Allarga la mappa" in the phone's
-// strip (D18) and above "Torna alla scheda" once that strip is enlarged; and
-// on the phone's home, riding the sheet's edge (the sheet publishes its height
-// as `--sheet-h`) but never higher than just below "Livelli" — with the sheet
-// fully up the map is a sliver under the menu, and the credit goes behind the
-// sheet with it rather than under the button. Behind a wide panel it stays
-// where it is, veiled with the rest of the map.
+// The corners themselves move to where the map is still in view: the right
+// ones left of a panel beside it, the bottom ones, in the phone's strip, up
+// to just above «Allarga la mappa» (D18).
 const controlsRight = computed(() =>
   isDesktop.value && besideMap.value ? `calc(${panelWidth.value + 16}px + 0.75rem)` : '0px',
 )
 const controlsBottom = computed(() => {
-  if (isDesktop.value) return '0px'
-  if (route.meta.fullBleed) {
-    return 'min(var(--sheet-h, 0px), calc(100% - var(--header-h, 0px) - 4.5rem))'
-  }
-  if (!besideMap.value) return '0px'
+  if (isDesktop.value || !besideMap.value || enlarged.value) return '0px'
   // RoutePanel lays the strip out below the menu, hence the header's height.
-  return route.query.mappa === '1' ? '4.25rem' : 'calc(100% - var(--header-h, 0px) - 7.5rem)'
+  return 'calc(100% - var(--header-h, 0px) - 7.5rem)'
 })
 
 // The banner over a map a form is drawing on (D19) runs across the map right
@@ -142,6 +146,13 @@ watch(banner, (element) => {
 onBeforeUnmount(() => bannerObserver?.disconnect())
 const controlsTop = computed(() =>
   bannerBottom.value ? `${bannerBottom.value}px` : 'var(--header-h, 0px)',
+)
+// On the phone's home the top-right corner starts under «Livelli», which
+// MapChrome puts 0.75rem below the menu, 2.375rem tall.
+const controlsTopRight = computed(() =>
+  !isDesktop.value && route.meta.fullBleed
+    ? 'calc(var(--header-h, 0px) + 3.125rem)'
+    : controlsTop.value,
 )
 
 // While a form draws on the map, nothing on it navigates: opening a pin would
@@ -218,7 +229,7 @@ onMounted(async () => {
     :inert="covered"
     :style="{
       '--map-controls-top': controlsTop,
-      '--map-controls-left': controlsLeft,
+      '--map-controls-top-right': controlsTopRight,
       '--map-controls-right': controlsRight,
       '--map-controls-bottom': controlsBottom,
     }"
@@ -233,6 +244,8 @@ onMounted(async () => {
       :frame="mapStore.editor ? null : mapStore.frame"
       :editor="mapStore.editor"
       :focus-padding="focusPadding"
+      :zoom-position="zoomPosition"
+      :attribution-position="attributionPosition"
       @map-click="onMapClick"
       @pin-click="onPinClick"
       @feature-click="onFeatureClick"
@@ -288,8 +301,8 @@ div :deep(.leaflet-top) {
   top: var(--map-controls-top, var(--header-h, 0px));
 }
 
-div :deep(.leaflet-left) {
-  left: var(--map-controls-left, 0px);
+div :deep(.leaflet-top.leaflet-right) {
+  top: var(--map-controls-top-right, var(--map-controls-top, var(--header-h, 0px)));
 }
 
 div :deep(.leaflet-right) {
@@ -308,6 +321,13 @@ div :deep(.leaflet-control-attribution) {
   background: var(--color-surface);
   color: var(--color-ink);
   border-top-left-radius: 0.375rem;
+}
+
+/* In a top corner, on a phone, it floats under the controls there, lined up
+   with «Livelli»'s edge, rather than sitting in the corner (review PR-15). */
+div :deep(.leaflet-top .leaflet-control-attribution) {
+  margin: 0.5rem 0.75rem 0 0;
+  border-radius: 0.375rem;
 }
 
 div :deep(.leaflet-control-attribution a) {

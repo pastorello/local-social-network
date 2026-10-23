@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch, watchEffect } from 'vue'
+import { computed, onBeforeUnmount, ref, useId, watch } from 'vue'
 
 import { useMapStore } from '@/stores/map'
 
@@ -10,8 +10,12 @@ import { useMapStore } from '@/stores/map'
 //
 // Height, not transform: the content has to scroll inside the sheet at every
 // stop, and a transformed element still occupies its original box.
+//
+// The lowest stop is the handle's 44px and two whole lines of what the sheet
+// opens on — on the home, the presentation (D3's note of 2026-10-23): two
+// lines of `text-reading` are 2 × 1.65 × 17px = 56.1px, so 102px, not 100.
 const SNAPS = [
-  { key: 'peek', label: 'Mostra i luoghi', height: '5.5rem' },
+  { key: 'peek', label: 'Mostra i luoghi', height: '6.375rem' },
   { key: 'half', label: 'Espandi l’elenco', height: '45vh' },
   { key: 'full', label: 'Riduci l’elenco', height: '85vh' },
 ] as const
@@ -29,12 +33,6 @@ const height = computed(() =>
 )
 const isOpen = computed(() => snap.value > 0)
 
-// The map keeps its OpenStreetMap credit just above the sheet's edge
-// (MapStage), so the sheet says how tall it is — as the same length it is
-// drawn with, so nothing has to be measured.
-watchEffect(() => document.documentElement.style.setProperty('--sheet-h', height.value))
-onBeforeUnmount(() => document.documentElement.style.removeProperty('--sheet-h'))
-
 // A stop's height in pixels, for the drag and for the map.
 const stopPixels = (index: number) => {
   const stop = SNAPS[index]!.height
@@ -48,10 +46,45 @@ const mapStore = useMapStore()
 watch(snap, (index) => mapStore.setSheetHeight(stopPixels(index)), { immediate: true })
 onBeforeUnmount(() => mapStore.setSheetHeight(null))
 
+// The first time in a session, a line under the handle says that it drags,
+// until the reader drags it (review PR-15, M-11): a bar of 36 × 4px does not
+// say so on its own. Storage can be missing or refuse — a private window,
+// blocked site data — and then the line shows on every visit until the first
+// drag; the sheet works the same either way.
+const HINT_KEY = 'sheet.dragHintSeen'
+const hintSeen = () => {
+  try {
+    return sessionStorage.getItem(HINT_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+const showHint = ref(!hintSeen())
+if (showHint.value) {
+  try {
+    sessionStorage.setItem(HINT_KEY, '1')
+  } catch {
+    // Nothing to remember it in: the hint goes at the first drag all the same.
+  }
+}
+
+// What pressing the handle does now, read after its name (which says it drags).
+const actionId = useId()
+
+// A press that moved further than this is a drag, not a tap.
+const DRAG_SLOP = 6
+let dragged = false
+
 // The drag is the fast path and has no keyboard equivalent, so the handle is
 // a real button that cycles the stops — same pattern as the manual lat/lng
-// fallback next to every map editor in this codebase (WCAG 2.1.1).
+// fallback next to every map editor in this codebase (WCAG 2.1.1). A drag
+// ends on a click as well, and has already chosen its stop: that click is not
+// a press.
 const cycle = () => {
+  if (dragged) {
+    dragged = false
+    return
+  }
   snap.value = (snap.value + 1) % SNAPS.length
 }
 
@@ -72,6 +105,7 @@ let startY = 0
 let startHeight = 0
 
 const onPointerDown = (event: PointerEvent) => {
+  dragged = false
   startY = event.clientY
   startHeight = (event.currentTarget as HTMLElement).parentElement?.offsetHeight ?? 0
   dragHeight.value = startHeight
@@ -80,6 +114,10 @@ const onPointerDown = (event: PointerEvent) => {
 
 const onPointerMove = (event: PointerEvent) => {
   if (dragHeight.value === null) return
+  if (Math.abs(event.clientY - startY) > DRAG_SLOP) {
+    dragged = true
+    showHint.value = false
+  }
   const next = startHeight - (event.clientY - startY)
   dragHeight.value = Math.min(Math.max(next, 64), window.innerHeight * 0.9)
 }
@@ -99,6 +137,12 @@ const onPointerUp = () => {
   snap.value = nearest
   dragHeight.value = null
 }
+
+// A cancelled drag — the browser took the gesture — is followed by no click.
+const onPointerCancel = () => {
+  onPointerUp()
+  dragged = false
+}
 </script>
 
 <template>
@@ -108,19 +152,35 @@ const onPointerUp = () => {
     :aria-label="props.title"
     @keydown.esc="collapse"
   >
+    <!-- 44px tall and the sheet's whole width to grab (review PR-15, M-11),
+    with the bar drawn as it was: the target grew, not the mark. `touch-none`
+    keeps a phone's browser from taking the drag as a scroll of the page, or
+    as a pull to refresh it. -->
     <button
       type="button"
-      class="flex h-8 w-full flex-none items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+      class="flex h-11 w-full flex-none touch-none items-center justify-center rounded-t-2xl focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-sea"
+      aria-label="Trascina per vedere più mappa"
+      :aria-describedby="actionId"
       :aria-expanded="isOpen"
       @click="cycle"
       @pointerdown="onPointerDown"
       @pointermove="onPointerMove"
       @pointerup="onPointerUp"
-      @pointercancel="onPointerUp"
+      @pointercancel="onPointerCancel"
     >
       <span class="h-1 w-9 rounded-full bg-field/50" aria-hidden="true"></span>
-      <span class="sr-only">{{ SNAPS[snap]!.label }}</span>
+      <span :id="actionId" class="sr-only">{{ SNAPS[snap]!.label }}</span>
     </button>
+    <!-- Not at the lowest stop, where the sheet shows its first line and
+    nothing else (D3's note of 2026-10-23), and hidden from assistive
+    technology, which has the handle's name for it. -->
+    <p
+      v-if="showHint && snap > 0"
+      class="flex-none pb-2 text-center text-xs text-muted"
+      aria-hidden="true"
+    >
+      Trascina per vedere più mappa
+    </p>
 
     <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-6">
       <slot></slot>

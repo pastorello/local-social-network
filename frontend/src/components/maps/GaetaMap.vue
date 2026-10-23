@@ -7,6 +7,7 @@ import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import L from 'leaflet'
 import type {
   CircleMarker,
+  ControlPosition,
   GeoJSON as GeoJSONLayer,
   ImageOverlay,
   Layer,
@@ -53,6 +54,10 @@ const props = defineProps<{
   frame?: { lat: number; lng: number }[] | null
   // A form drawing on the map (D19): its draft, drawn as the form holds it.
   editor?: MapEditor | null
+  // Which corners Leaflet's own controls sit in (review PR-15): what covers
+  // which corner is the layout's business, so the caller says.
+  zoomPosition?: ControlPosition
+  attributionPosition?: ControlPosition
 }>()
 
 const emit = defineEmits<{
@@ -376,8 +381,22 @@ const applyOverlayOpacity = () => {
   }
 }
 
+// Both controls are placed again whenever either moves, the credit first: in
+// a corner they share, Leaflet stacks the later one above the earlier, and the
+// credit belongs in the corner itself.
+const placeControls = () => {
+  if (!map) return
+  map.attributionControl.setPosition(props.attributionPosition ?? 'bottomright')
+  map.zoomControl.setPosition(props.zoomPosition ?? 'topleft')
+}
+
 const onReady = (leafletMap: LeafletMap) => {
   map = leafletMap
+
+  // The OpenStreetMap credit alone, without Leaflet's own name and flag before
+  // it (review PR-15): the credit is what the tile policy asks for (lib/osm.ts).
+  leafletMap.attributionControl.setPrefix(false)
+  placeControls()
 
   keepMarkersOutOfTabOrder()
   // The container stays focusable — that is what arrow-key panning needs — but
@@ -456,6 +475,7 @@ const onReady = (leafletMap: LeafletMap) => {
   reportView()
 }
 
+watch(() => [props.zoomPosition, props.attributionPosition], placeControls)
 watch(() => props.pins, renderPins, { deep: true })
 watch(() => props.features, renderFeatures, { deep: true })
 watch(
