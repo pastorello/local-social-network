@@ -21,13 +21,13 @@ import type { PanelShape } from '@/stores/map'
 //
 // On a phone (D18) a page is the whole screen — except a card with a place,
 // which leaves a strip of the map at its head, already centred on the place.
-// The whole screen means up behind the menu too (review PR-14, M-06): the page
-// starts under the pill, as everywhere, but its ground runs to the top edge,
-// where a band of map around the pill read as a rendering fault.
 // The strip is the same map, not a second one: the panel simply starts below
 // it. Tapping "Allarga la mappa" gives the map the whole screen, with "Torna
 // alla scheda" to come back; that state is in the URL (`?mappa=1`), so Back
-// undoes it like any other step.
+// undoes it like any other step. And the whole screen means up behind the
+// menu too (review PR-14, M-06): the page's words start under the pill, but
+// its ground runs to the top edge, where a band of map around the pill read
+// as a rendering fault.
 //
 // Close, up, back (review PR-22, design.md "Close, up, back"): three actions,
 // and the app imitates the browser's history in none of them. *Close* — the
