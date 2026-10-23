@@ -145,7 +145,10 @@ walking directions are handed to the app that already does them.
 - **"The tour of the seven beaches" as a percorso** — nobody does it; it is a
   raccolta (I2).
 - **Beach clubs** (*stabilimenti balneari*). The archive lists the beaches as
-  places, not the businesses on them.
+  places, not the businesses on them. *(Superseded 2026-10-23 by
+  [ADR-0010](../adr/0010-businesses-in-the-archive.md): a lido may enter as an
+  `attivita` through its bar or its kitchen. The beach stays public land, and
+  a tour stop at it is the beach, not a lido.)*
 - **A QR code per B&B** — see I6.
 - **English at launch** — see I9.
 - **Opening hours and "open now"** — already declined in design.md for the

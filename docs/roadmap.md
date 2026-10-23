@@ -12,6 +12,8 @@ to these phases by number, so 3, 4, 5 and 8 keep theirs and the gaps are where
 the finished ones used to sit. A roadmap that renumbers itself is a roadmap
 nothing else can cite.
 
+**Where things stand (2026-10-23).** The UX/UI review of 2026-10-22 ([review-2026-10-22.md](./review-2026-10-22.md)) is running as a queue of prompts, one PR each, merged by GitHub when the four required checks are green. Since 2026-10-23 `main` requires them and auto-merge is on. All of priority A and two prompts of priority B are in (#116–#126). An interview with the author the same day decided the wizard's flow (study 10, PR-21). It also decided businesses as a type of their own ([ADR-0010](./adr/0010-businesses-in-the-archive.md)) and events and feasts' editions as dated entries, the poster included (cosa-fare.md Part −1 D9). Both are specified and queued as the review's PR-26 and PR-27, before PR-21 and the English interface (PR-19). Item 4, the content, is still what a reader is waiting for.
+
 **Where things stand (2026-10-22).** **The site is live** at
 `https://viveregaeta.it` (item 3, below). The archive on it is empty until
 cards are written and published — item 4 is now the only thing between the
