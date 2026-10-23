@@ -24,6 +24,7 @@ from luoghi.models import Genre, Luogo
 from maps.models import Overlay
 from polls.models import Poll, PollOption, Vote
 from reports.models import Category, IssueReport, Upvote
+from ricette.models import Ricetta
 
 PASSWORD = 'E2ePassw0rd!'
 COLLABORATOR_EMAIL = 'collaboratore@e2e.test'
@@ -41,6 +42,7 @@ PUBLISHED_CHIESA = 'Chiesa E2E pubblicata'
 DRAFT_CHIESA = 'Chiesa E2E in bozza'
 PUBLISHED_LUOGO = 'Luogo E2E pubblicato'
 PUBLISHED_FESTA = 'Festa E2E pubblicata'
+PUBLISHED_RICETTA = 'Ricetta E2E pubblicata'
 PUBLISHED_TOUR = 'Itinerario E2E'
 PUBLIC_OVERLAY = 'Quartieri E2E'
 STEERING_OVERLAY = 'Seggi E2E'
@@ -107,9 +109,13 @@ class Command(BaseCommand):
         # gate to measure in both layouts. In Serapo rather than Porto Salvo on
         # purpose: what the specs assert about that zone stays the church and
         # the feast's route.
+        # It is also the tour's last stop, so it says how to reach it.
         luogo_card = self._card(PUBLISHED_LUOGO, collaborator, is_published=True)
-        Luogo.objects.get_or_create(
-            card=luogo_card, defaults={'genre': Genre.objects.get(slug='spiaggia')}
+        Luogo.objects.update_or_create(
+            card=luogo_card, defaults={
+                'genre': Genre.objects.get(slug='spiaggia'),
+                'how_to_get_there': 'A piedi dal lungomare.',
+            },
         )
         self._point(
             luogo_card, 'Battigia', dlat=SERAPO_LAT - GAETA_LAT, dlng=SERAPO_LNG - GAETA_LNG
@@ -133,9 +139,17 @@ class Command(BaseCommand):
                 for index in range(3)
             ])
 
-        # A percorso through the two published cards, under "Scoprire la
-        # città", so `itinerari.cy.ts` can walk the B&B's journey (spec
-        # itinerari.md I6/I7): welcome page, intent, tour, one stop at a time.
+        # A dish with no shop on the map: the end of a tour offers «Da
+        # mangiare» only once a ricetta is published (review PR-7).
+        ricetta = self._card(PUBLISHED_RICETTA, collaborator, is_published=True)
+        Ricetta.objects.get_or_create(card=ricetta)
+
+        # A percorso through the published church, feast and beach, under
+        # "Scoprire la città", so `itinerari.cy.ts` can walk the B&B's journey
+        # (spec itinerari.md I6/I7): welcome page, intent, tour, one stop at a
+        # time, and what comes after the last (review PR-7) — the beach is in
+        # Serapo, so «Cosa c'è qui intorno» has a zone to open. The church and
+        # the feast's start share a point, as two stops on one square do.
         # The stops are reset every run, so a stray edit cannot reorder them.
         tour_card = self._card(PUBLISHED_TOUR, collaborator, is_published=True)
         tour, _ = Itinerario.objects.get_or_create(
@@ -146,6 +160,7 @@ class Command(BaseCommand):
         Stop.objects.bulk_create([
             Stop(itinerario=tour, position=0, card=published),
             Stop(itinerario=tour, position=1, card=festa, note='Si segue la processione.'),
+            Stop(itinerario=tour, position=2, card=luogo_card),
         ])
 
         # The pair the overlay gate is asserted on: a reader must be offered the
@@ -195,7 +210,7 @@ class Command(BaseCommand):
             )
 
         self.stdout.write(self.style.SUCCESS(
-            f'Seeded: {collaborator.email}, {admin.email}, 3 published cards, 1 draft, 1 tour, '
+            f'Seeded: {collaborator.email}, {admin.email}, 4 published cards, 1 draft, 1 tour, '
             f'2 overlays, 1 report ({report.upvotes_count} upvotes), 1 open poll; '
             f'cleared {removed} card(s) and every trace of previous v1 runs.'
         ))
@@ -217,7 +232,8 @@ class Command(BaseCommand):
         """
         leftovers = Card.objects.filter(author=collaborator).exclude(
             title__in=(
-                PUBLISHED_CHIESA, DRAFT_CHIESA, PUBLISHED_LUOGO, PUBLISHED_FESTA, PUBLISHED_TOUR,
+                PUBLISHED_CHIESA, DRAFT_CHIESA, PUBLISHED_LUOGO, PUBLISHED_FESTA,
+                PUBLISHED_RICETTA, PUBLISHED_TOUR,
             )
         )
         count = leftovers.count()

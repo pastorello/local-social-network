@@ -162,7 +162,7 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
     check('/benvenuto')
   })
 
-  it('a tour, and one of its stops', () => {
+  it('a tour, its first stop and its last', () => {
     cy.viewport(1280, 800)
     cy.visit('/itinerari')
     cy.contains('a', 'Itinerario E2E').click()
@@ -170,8 +170,15 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
     check('/itinerari/:id')
 
     cy.contains('button', 'Inizia il tour').click()
-    cy.contains('Tappa 1 di 2')
+    cy.contains('Tappa 1 di 3')
     check('/itinerari/:id?tappa=1')
+
+    // The last stop, where what comes after the tour replaces "next" (review
+    // PR-7): new links, measured with the counts behind them loaded.
+    cy.contains('button', 'Tappa successiva').click()
+    cy.contains('button', 'Tappa successiva').click()
+    cy.contains('a', 'Cosa c’è qui intorno')
+    check('/itinerari/:id?tappa=3')
   })
 
   // «Cosa si può fare qui» (spec cosa-fare.md Part −1): the guest's second

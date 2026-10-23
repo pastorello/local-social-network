@@ -1,14 +1,24 @@
+import html
+import re
+
+from django.utils.html import strip_tags
 from rest_framework import serializers
 
 from account.models import User
 from account.serializers import UserSerializer
 from content.fields import PlainTextField
-from content.models import MapFeature
+from content.models import ACCESS_TYPES, MapFeature
 from content.sanitize import sanitize_html
-from content.serializers import CardImageSerializer, TranslationSerializer, media_source, visible_translations
+from content.serializers import (
+    CardImageSerializer,
+    TranslationSerializer,
+    availability_of,
+    media_source,
+    visible_translations,
+)
 from maps.api import CARD_TYPES
 from maps.models import Zona
-from maps.zones import zones_containing_any
+from maps.zones import named_zones_containing_any, zones_containing_any
 
 from .models import Intent, Itinerario
 
@@ -69,6 +79,35 @@ def stop_point(card, chosen=None):
     if chosen is None:
         return None
     return {'lat': chosen.lat, 'lng': chosen.lng, 'label': chosen.label}
+
+
+# What the guided mode reads at a stop before «Leggi la scheda» (review PR-7):
+# the opening of the card's body, at most this many characters.
+EXCERPT_LENGTH = 400
+# Where a block ends a line ends, so a heading does not run into its paragraph.
+_BLOCK_END = re.compile(r'</(?:p|h2|h3|li|blockquote)>|<br\s*/?>|<hr\s*/?>')
+
+
+def excerpt(body_html, limit=EXCERPT_LENGTH):
+    """The opening of a card's body as plain text — no markup, one line per
+    block — cut at a word and closed with an ellipsis when there is more. Plain
+    text on purpose: the SPA renders it as text, so `RichText.vue` stays the
+    one place a body is rendered as HTML (ADR-0001's amendment)."""
+    text = html.unescape(strip_tags(_BLOCK_END.sub('\n', body_html)))
+    text = '\n'.join(filter(None, (' '.join(line.split()) for line in text.splitlines())))
+    if len(text) <= limit:
+        return text
+    cut = text[:limit]
+    word_end = max(cut.rfind(' '), cut.rfind('\n'))
+    if word_end > 0:
+        cut = cut[:word_end]
+    return cut.rstrip(' \n,;:.') + '…'
+
+
+def _cover(card):
+    # D5: a card's first image is its cover. From the prefetched images.
+    first = next(iter(card.images.all()), None)
+    return CardImageSerializer(first).data if first is not None else None
 
 
 def _is_owner(request, card):
@@ -136,13 +175,15 @@ class ItinerarioReadSerializer(serializers.ModelSerializer):
         for stop in self._original(obj).stops.all():
             if not stop.card.is_published and not owner:
                 continue
+            type_key = card_type(stop.card)
+            point = stop_point(stop.card, _chosen_point(stop, _card_points(stop.card)))
             stops.append({
                 'card': str(stop.card_id),
-                'type': card_type(stop.card),
+                'type': type_key,
                 'title': stop.card.title,
                 'is_published': stop.card.is_published,
                 'point_index': _live_point_index(stop),
-                'point': stop_point(stop.card, _chosen_point(stop, _card_points(stop.card))),
+                'point': point,
                 # Every place the stop stands for: the chosen one, or — with no
                 # choice made — all of the card's pins, so a raccolta can list
                 # each bakery a dish is sold at (decided 2026-09-19).
@@ -150,17 +191,32 @@ class ItinerarioReadSerializer(serializers.ModelSerializer):
                 # A luogo says how to reach it; the raccolta shows it per stop.
                 'how_to_get_there': getattr(getattr(stop.card, 'luoghi', None), 'how_to_get_there', ''),
                 'note': stop.note,
+                # What the guided mode shows of the stop itself (review PR-7),
+                # so a guest reads it without a second tap: the cover if there
+                # is one, the body's opening, and — for a place with a door —
+                # what is known about getting in (ADR-0008: `unknown` when
+                # nothing is, never "open").
+                'cover': _cover(stop.card),
+                'excerpt': excerpt(stop.card.body_html),
+                'availability': availability_of(stop.card) if type_key in ACCESS_TYPES else None,
+                # The zones the stop's own point is in, by name: the last
+                # stop's first one is where «Cosa c'è qui intorno» leads.
+                'zones': named_zones_containing_any(self._zones(), [point]) if point else [],
             })
         return stops
+
+    def _zones(self):
+        # Read once per response, not once per tour or per stop.
+        if 'zones' not in self.context:
+            self.context['zones'] = list(Zona.objects.all())
+        return self.context['zones']
 
     def get_zones(self, obj):
         """The editorial zones the tour belongs to (spec cosa-fare.md Part −1,
         D2), from the stops a reader is shown: a percorso where it *starts*, a
         raccolta wherever *any* of its stops is — a raccolta has no order, so
         its "first" stop is only the one clicked first."""
-        if 'zones' not in self.context:
-            self.context['zones'] = list(Zona.objects.all())
-        zones = self.context['zones']
+        zones = self._zones()
         tour = self._original(obj)
         stops = [stop for stop in tour.stops.all() if stop.card.is_published]
         if not stops:

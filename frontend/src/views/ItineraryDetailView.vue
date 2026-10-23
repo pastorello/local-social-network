@@ -1,19 +1,22 @@
 <script setup lang="ts">
 import axios from 'axios'
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, useId, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import CardArticle from '@/components/content/CardArticle.vue'
 import ItineraryForm from '@/components/content/ItineraryForm.vue'
 import TranslateControl from '@/components/content/TranslateControl.vue'
+import VisitInfo from '@/components/content/VisitInfo.vue'
 import { useIsDesktop } from '@/composables/useBreakpoint'
 import { useMapFocus } from '@/composables/useMapFocus'
 import { itinerarioConfig } from '@/definitions/typeConfigs'
 import type Itinerario from '@/definitions/interfaces/Itinerario'
+import type { Intent } from '@/definitions/interfaces/Itinerario'
 import type { MapPoint } from '@/definitions/interfaces/Content'
 import { directionsUrl } from '@/lib/directions'
 import { layerRoute } from '@/lib/mapLayers'
+import { afterTour, type AfterTourLink } from '@/lib/tours'
 import { readToken } from '@/lib/tokens'
 import { useToastStore } from '@/stores/toast'
 import { useUserStore } from '@/stores/user'
@@ -50,6 +53,9 @@ const step = computed(() => {
   return Math.min(raw, placed.value.length)
 })
 const current = computed(() => (step.value ? placed.value[step.value - 1] : null))
+const isLast = computed(() => step.value !== null && step.value === placed.value.length)
+// Only a percorso with somewhere to go is followed (I7).
+const canGuide = computed(() => isPercorso.value && placed.value.length > 0)
 const previous = computed(() =>
   step.value && step.value > 1 ? placed.value[step.value - 2] : null,
 )
@@ -88,12 +94,13 @@ useMapFocus(() => {
   }
 })
 
-// Entering or leaving the guided mode removes the button that was pressed,
-// and the last "Tappa successiva" disables itself: either way focus would fall
-// to the page's start (WCAG 2.4.3). It goes to the stop's heading — which also
-// tells a screen reader where they are — or back to "Inizia il tour".
+// Entering or leaving the guided mode removes the button that was pressed, and
+// so do the last "Tappa successiva" and the first "Precedente": focus would
+// fall to the page's start (WCAG 2.4.3). It goes to the stop's heading — which
+// also tells a screen reader where they are — or back to "Inizia il tour".
 const stepHeading = ref<HTMLElement | null>(null)
 const startButton = ref<{ $el: HTMLElement } | null>(null)
+const finishHeadingId = useId()
 // What a stop is, under its title (the itinerari canvas: "Chiesa",
 // "Monumento"). Singular, where the map's layers are plural.
 const TYPE_LABELS: Record<string, string> = {
@@ -116,6 +123,39 @@ const goToStep = async (n: number | null) => {
   if (n) stepHeading.value?.focus()
   else startButton.value?.$el.focus()
 }
+
+// After the last stop (review PR-7, decided 2026-10-22): another tour, what is
+// around, something to eat — each only if something is behind it, which takes
+// three short counts, asked for once the guest gets there.
+const after = ref<AfterTourLink[]>([])
+const loadAfter = async () => {
+  const shown = tour.value
+  if (!shown) return
+  const last = placed.value[placed.value.length - 1]
+  const count = { params: { page_size: 1 } }
+  const [intents, tours, ricette] = await Promise.allSettled([
+    axios.get<Intent[]>('/api/itinerari/intenti/'),
+    axios.get<{ count: number }>('/api/itinerari/', count),
+    axios.get<{ count: number }>('/api/ricette/', count),
+  ])
+  const counted = (result: PromiseSettledResult<{ data: { count: number } }>) =>
+    result.status === 'fulfilled' ? result.value.data.count : 0
+  // A failed count promises nothing rather than a door onto an empty room.
+  after.value = afterTour({
+    intents: shown.intents,
+    isPublished: shown.is_published,
+    intentCounts: intents.status === 'fulfilled' ? intents.value.data : [],
+    tours: counted(tours),
+    zone: last?.zones[0] ?? null,
+    ricette: counted(ricette),
+  })
+}
+watch(
+  () => (isLast.value ? tour.value?.id : null),
+  (id) => {
+    if (id) loadAfter()
+  },
+)
 
 const getTour = async () => {
   try {
@@ -150,6 +190,7 @@ watch(
   () => route.params.id,
   async () => {
     editing.value = false
+    after.value = []
     await getTour()
     editing.value = route.query.edit === '1'
   },
@@ -163,7 +204,7 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
     <!-- ============ following a percorso, one stop at a time (I7) ============ -->
     <article v-if="tour && !editing && current" class="pt-2">
       <p class="text-xs font-semibold tracking-[0.12em] text-terracotta uppercase">
-        {{ tour.original_title || tour.title }} · Tappa {{ step }} di {{ placed.length }}
+        Tappa {{ step }} di {{ placed.length }}
       </p>
       <h1
         ref="stepHeading"
@@ -173,6 +214,7 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
       >
         {{ current.title }}
       </h1>
+      <p class="mt-1 text-sm text-muted">{{ tour.original_title || tour.title }}</p>
       <p v-if="current.point?.label" class="mt-1 text-muted">{{ current.point.label }}</p>
       <p v-if="current.note" class="mt-4 text-reading whitespace-pre-line text-ink">
         {{ current.note }}
@@ -196,34 +238,91 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
         </RouterLink>
       </div>
 
-      <nav
-        aria-label="Tappe del tour"
-        class="mt-8 flex items-center justify-between gap-3 border-t border-hairline pt-4"
-      >
-        <button
-          type="button"
-          class="h-11 cursor-pointer rounded-full px-4 text-sm font-semibold text-ink hover:bg-page disabled:cursor-default disabled:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
-          :disabled="step === 1"
-          @click="goToStep((step ?? 1) - 1)"
-        >
-          ← Tappa precedente
-        </button>
-        <button
-          type="button"
-          class="h-11 cursor-pointer rounded-full px-4 text-sm font-semibold text-sea underline"
-          @click="goToStep(null)"
-        >
-          Torna all’itinerario
-        </button>
-        <button
-          type="button"
-          class="h-11 cursor-pointer rounded-full px-4 text-sm font-semibold text-ink hover:bg-page disabled:cursor-default disabled:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
-          :disabled="step === placed.length"
-          @click="goToStep((step ?? 0) + 1)"
-        >
-          Tappa successiva →
-        </button>
-      </nav>
+      <!-- What the stop is, without a second tap (review PR-7): its cover if
+      it has one — no placeholder, an empty block tells a guest nothing — the
+      opening of its card, how to reach it, and what is known about getting in
+      (ADR-0008: VisitInfo shows nothing when nothing is known). The rest is
+      «Leggi la scheda». -->
+      <img
+        v-if="current.cover"
+        :src="current.cover.imageURL"
+        :alt="current.cover.caption || current.title"
+        class="mt-6 aspect-[3/2] w-full rounded-lg object-cover"
+      />
+      <p v-if="current.excerpt" class="mt-6 max-w-[65ch] text-reading whitespace-pre-line text-ink">
+        {{ current.excerpt }}
+      </p>
+      <p v-if="current.how_to_get_there" class="mt-4 text-sm whitespace-pre-line text-muted">
+        {{ current.how_to_get_there }}
+      </p>
+      <VisitInfo :availability="current.availability" class="mt-8" />
+
+      <div class="mt-8 border-t border-hairline pt-6">
+        <!-- The last stop has no "next": what comes after the tour does
+        (decided 2026-10-22), each way only if something is behind it. -->
+        <section v-if="isLast" :aria-labelledby="finishHeadingId">
+          <h2 :id="finishHeadingId" class="font-display text-title text-ink">Hai finito il giro</h2>
+          <ul v-if="after.length" class="mt-4 space-y-2">
+            <li v-for="link in after" :key="link.label">
+              <RouterLink
+                :to="link.to"
+                class="flex min-h-11 items-center gap-3 rounded-xl border border-hairline bg-surface p-3 hover:border-field focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+              >
+                <span class="min-w-0 flex-1">
+                  <span class="block font-semibold text-ink">{{ link.label }}</span>
+                  <span class="block truncate text-sm text-muted">{{ link.detail }}</span>
+                </span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  class="size-5 flex-none text-muted"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </RouterLink>
+            </li>
+          </ul>
+        </section>
+
+        <nav aria-label="Tappe del tour" :class="{ 'mt-6': isLast }">
+          <!-- One way forward, full width and primary; the two ways back are
+          links under it, and the first stop has no "previous" at all. -->
+          <button
+            v-if="!isLast"
+            type="button"
+            class="flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-sea px-5 text-base font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+            @click="goToStep((step ?? 0) + 1)"
+          >
+            Tappa successiva <span aria-hidden="true">→</span>
+          </button>
+          <div
+            class="flex flex-wrap items-center justify-center gap-x-6"
+            :class="{ 'mt-2': !isLast }"
+          >
+            <button
+              v-if="step && step > 1"
+              type="button"
+              class="h-11 cursor-pointer text-sm font-semibold whitespace-nowrap text-sea underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+              @click="goToStep((step ?? 2) - 1)"
+            >
+              <span aria-hidden="true">←</span> Precedente
+            </button>
+            <button
+              type="button"
+              class="h-11 cursor-pointer text-sm font-semibold whitespace-nowrap text-sea underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+              @click="goToStep(null)"
+            >
+              Torna all’itinerario
+            </button>
+          </div>
+        </nav>
+      </div>
     </article>
 
     <!-- ============ the tour, read as an article ============ -->
@@ -245,7 +344,8 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
       <template #fields>
         <dl
           v-if="tour.duration || tour.intent_labels.length"
-          class="mb-10 divide-y divide-hairline border-y border-hairline"
+          class="divide-y divide-hairline border-y border-hairline"
+          :class="canGuide ? 'mb-6' : 'mb-10'"
         >
           <div v-if="tour.duration" class="py-3 sm:flex sm:gap-6">
             <dt
@@ -264,6 +364,11 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
             <dd class="text-ink">{{ tour.intent_labels.join(', ') }}</dd>
           </div>
         </dl>
+        <!-- Where a guest who came from the QR looks for it: before the stops,
+        not after a list they have to scroll (review PR-7); repeated under it. -->
+        <ActionButton v-if="canGuide" ref="startButton" class="mb-10" @click="goToStep(1)">
+          Inizia il tour
+        </ActionButton>
       </template>
 
       <template #map>
@@ -340,12 +445,7 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
             </li>
           </component>
 
-          <ActionButton
-            v-if="isPercorso && placed.length"
-            ref="startButton"
-            class="mt-6"
-            @click="goToStep(1)"
-          >
+          <ActionButton v-if="canGuide" class="mt-6" @click="goToStep(1)">
             Inizia il tour
           </ActionButton>
         </section>
