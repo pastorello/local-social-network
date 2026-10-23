@@ -305,6 +305,9 @@ rule, stated by the author and load-bearing for the design:
   *from how the page is built*, that a listed bakery is there on editorial
   merit. A "sponsored" badge stuck on afterwards does the opposite — it tells
   the reader the opposite of the truth about how this archive works.
+  *(2026-10-23: the listed bakery now has a type, `attivita`, with three closed
+  kinds, admitted on the editors' merit and never ranked:
+  [ADR-0010](../adr/0010-businesses-in-the-archive.md).)*
 - **D11 — Institutional endorsement gets a dignified, fixed place** (a footer
   or credits surface), not a banner.
 
@@ -324,7 +327,9 @@ rule, stated by the author and load-bearing for the design:
   *Il progetto*. The rule above — dignified, fixed, no invented endorsement —
   moves with it unchanged.
 - **D12 — No ad slots.** Nothing in the layout is a rectangle waiting to be
-  sold.
+  sold. *(2026-10-23, cosa-fare.md Part −1 D9: an event's own poster is not an
+  ad slot. It is the event's information, optional and zoomable. D12 still
+  governs the layout and the businesses themselves.)*
 
 This reverses nothing in the spec's non-goals: there is still no commerce, no
 booking, no payment. It reserves a shape, so that the day it is needed the
