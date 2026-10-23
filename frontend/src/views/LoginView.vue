@@ -7,12 +7,11 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { LoginForm, parseZodObject } from '@/forms/user'
 import ActionButton from '@/components/buttons/ActionButton.vue'
+import FormColumn from '@/components/boxes/FormColumn.vue'
 import FormErrors from '@/components/forms/FormErrors.vue'
 import FormField from '@/components/forms/FormField.vue'
 import FormInput from '@/components/forms/FormInput.vue'
-import PanelBox from '@/components/boxes/PanelBox.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
-import ViewContainer from '@/components/boxes/ViewContainer.vue'
 
 const userStore = useUserStore()
 const route = useRoute()
@@ -69,67 +68,62 @@ const submitForm = async () => {
 </script>
 
 <template>
-  <ViewContainer class="grid-cols-2">
-    <div>
-      <PanelBox>
-        <MainTitle>Accedi</MainTitle>
+  <FormColumn>
+    <MainTitle>Accedi</MainTitle>
 
-        <p class="mb-6 text-muted">
-          Bentornato! Inserisci i tuoi dati per accedere al tuo account.
-        </p>
+    <form class="space-y-6" v-on:submit.prevent="submitForm">
+      <!-- «username», not «email»: here the address is the account's name,
+      and the token a password manager pairs with «current-password» (WCAG
+      1.3.5; review A-03). What the browser fills in, the page shows: hiding it
+      until the field has focus would make the form lie about what it sends
+      (design.md, "The account forms in one column"). -->
+      <FormField field-id="login-email" label="E-mail" :errors="fieldErrors.email">
+        <template #default="{ describedBy, invalid }">
+          <FormInput
+            id="login-email"
+            type="email"
+            autocomplete="username"
+            v-model="form.email"
+            :invalid="invalid"
+            :aria-describedby="describedBy"
+          />
+        </template>
+      </FormField>
 
-        <p class="font-bold">
-          Vuoi collaborare?
-          <RouterLink :to="{ name: 'collabora' }" class="underline">Scrivici</RouterLink>!
-        </p>
-      </PanelBox>
-    </div>
+      <FormField field-id="login-password" label="Password" :errors="fieldErrors.password">
+        <template #default="{ describedBy, invalid }">
+          <FormInput
+            id="login-password"
+            type="password"
+            autocomplete="current-password"
+            v-model="form.password"
+            :invalid="invalid"
+            :aria-describedby="describedBy"
+          />
+        </template>
+      </FormField>
 
-    <div>
-      <PanelBox>
-        <form class="space-y-6" v-on:submit.prevent="submitForm">
-          <FormField field-id="login-email" label="E-mail" :errors="fieldErrors.email">
-            <template #default="{ describedBy, invalid }">
-              <FormInput
-                id="login-email"
-                type="email"
-                v-model="form.email"
-                :invalid="invalid"
-                :aria-describedby="describedBy"
-                placeholder="La tua e-mail"
-              />
-            </template>
-          </FormField>
+      <!-- In a block of its own: the form spaces its children with
+      `space-y-6`, which sets a top margin — and a margin-top does nothing
+      to an inline <a>. -->
+      <div>
+        <RouterLink :to="{ name: 'passwordresetrequest' }" class="text-sm text-sea underline">
+          Password dimenticata?
+        </RouterLink>
+      </div>
 
-          <FormField field-id="login-password" label="Password" :errors="fieldErrors.password">
-            <template #default="{ describedBy, invalid }">
-              <FormInput
-                id="login-password"
-                type="password"
-                v-model="form.password"
-                :invalid="invalid"
-                :aria-describedby="describedBy"
-                placeholder="La tua password"
-              />
-            </template>
-          </FormField>
+      <FormErrors :errors="formErrors" />
 
-          <!-- In a block of its own: the form spaces its children with
-          `space-y-6`, which sets a top margin — and a margin-top does nothing
-          to an inline <a>. -->
-          <div>
-            <RouterLink :to="{ name: 'passwordresetrequest' }" class="text-sm text-sea underline">
-              Password dimenticata?
-            </RouterLink>
-          </div>
+      <div>
+        <ActionButton>Accedi</ActionButton>
+      </div>
+    </form>
 
-          <FormErrors :errors="formErrors" />
-
-          <div>
-            <ActionButton>Accedi</ActionButton>
-          </div>
-        </form>
-      </PanelBox>
-    </div>
-  </ViewContainer>
+    <p class="mt-8 border-t border-hairline pt-6">
+      Vuoi collaborare?
+      <RouterLink :to="{ name: 'collabora' }" class="font-semibold text-sea underline"
+        >Scrivici</RouterLink
+      >
+    </p>
+  </FormColumn>
 </template>

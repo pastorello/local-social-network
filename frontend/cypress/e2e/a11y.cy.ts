@@ -314,6 +314,36 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
     check('/login (in errore)')
   })
 
+  // The account forms are one column since review PR-11 (design.md "The
+  // account forms in one column"); on a phone that column is the panel.
+  it('the login form on a phone', () => {
+    cy.viewport(375, 812)
+    cy.visit('/login')
+    cy.get('#login-email').should('exist')
+
+    check('/login (phone)')
+  })
+
+  // A keyboard signs in without reaching for the button: Enter in a field
+  // submits the form. With a password the client refuses, so — like the case
+  // above — it costs nothing against the login rate limit.
+  it('the login form answers Enter in a field, as it answers «Accedi»', () => {
+    cy.viewport(1280, 800)
+    cy.visit('/login')
+
+    cy.get('#login-email').type('collaboratore@e2e.test')
+    cy.get('#login-password').type('corta{enter}')
+    cy.get('#login-password').should('have.attr', 'aria-invalid', 'true')
+  })
+
+  it('the forgotten-password form', () => {
+    cy.viewport(1280, 800)
+    cy.visit('/password-dimenticata')
+    cy.contains('h1', 'Password dimenticata')
+
+    check('/password-dimenticata')
+  })
+
   // The design pass left /polls in its v1 clothes on purpose (design.md's
   // closing note), and that changes nothing here: ADR-0005's bar is the whole
   // app, not the redesigned part of it. Style and accessibility are different
@@ -439,6 +469,19 @@ describe("the collaborator's surfaces meet WCAG 2.1 AA", { testIsolation: false 
     cy.get('nav a[href^="/profile/"]').first().click()
     cy.location('pathname').should('match', /^\/profile\/[0-9a-f-]+$/)
     check('/profile/:id')
+  })
+
+  // The profile's two forms, one column like the login (review PR-11). Only
+  // visited, never sent: a new password revokes every token (TD-20), and the
+  // cases after this one share the block's single sign-in.
+  it('the profile form and the password form', () => {
+    cy.visit('/profile/edit')
+    cy.get('#editprofile-name').should('exist')
+    check('/profile/edit')
+
+    cy.visit('/profile/edit/password')
+    cy.get('#editpassword-old').should('exist')
+    check('/profile/edit/password')
   })
 
   it('an authoring form showing a real validation error', () => {

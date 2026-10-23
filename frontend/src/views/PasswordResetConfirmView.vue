@@ -7,12 +7,11 @@ import { useToastStore } from '@/stores/toast'
 import { useUserStore } from '@/stores/user'
 import { parseZodObject, PasswordResetConfirmForm } from '@/forms/user'
 import ActionButton from '@/components/buttons/ActionButton.vue'
+import FormColumn from '@/components/boxes/FormColumn.vue'
 import FormErrors from '@/components/forms/FormErrors.vue'
 import FormField from '@/components/forms/FormField.vue'
 import FormInput from '@/components/forms/FormInput.vue'
-import PanelBox from '@/components/boxes/PanelBox.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
-import ViewContainer from '@/components/boxes/ViewContainer.vue'
 import { extractFieldErrors, extractFormErrors } from '@/lib/apiErrors'
 
 const route = useRoute()
@@ -61,58 +60,51 @@ const submitForm = () => {
 </script>
 
 <template>
-  <ViewContainer class="grid-cols-2">
-    <div>
-      <PanelBox>
-        <MainTitle>Reimposta password</MainTitle>
-        <p class="text-muted">Scegli una nuova password per il tuo account.</p>
-      </PanelBox>
-    </div>
+  <FormColumn>
+    <MainTitle>Reimposta password</MainTitle>
 
-    <div>
-      <PanelBox>
-        <form class="space-y-6" v-on:submit.prevent="submitForm">
-          <FormField
-            field-id="reset-confirm-password1"
-            label="Nuova password"
-            :errors="fieldErrors.password1"
-          >
-            <template #default="{ describedBy, invalid }">
-              <FormInput
-                id="reset-confirm-password1"
-                type="password"
-                v-model="form.password1"
-                :invalid="invalid"
-                :aria-describedby="describedBy"
-                placeholder="La nuova password"
-              />
-            </template>
-          </FormField>
+    <p class="mb-6 text-muted">Scegli una nuova password per il tuo account.</p>
 
-          <FormField
-            field-id="reset-confirm-password2"
-            label="Ripeti password"
-            :errors="fieldErrors.password2"
-          >
-            <template #default="{ describedBy, invalid }">
-              <FormInput
-                id="reset-confirm-password2"
-                type="password"
-                v-model="form.password2"
-                :invalid="invalid"
-                :aria-describedby="describedBy"
-                placeholder="Ripeti la password"
-              />
-            </template>
-          </FormField>
+    <form class="space-y-6" v-on:submit.prevent="submitForm">
+      <FormField
+        field-id="reset-confirm-password1"
+        label="Nuova password"
+        :errors="fieldErrors.password1"
+      >
+        <template #default="{ describedBy, invalid }">
+          <FormInput
+            id="reset-confirm-password1"
+            type="password"
+            autocomplete="new-password"
+            v-model="form.password1"
+            :invalid="invalid"
+            :aria-describedby="describedBy"
+          />
+        </template>
+      </FormField>
 
-          <FormErrors :errors="formErrors" />
+      <FormField
+        field-id="reset-confirm-password2"
+        label="Ripeti password"
+        :errors="fieldErrors.password2"
+      >
+        <template #default="{ describedBy, invalid }">
+          <FormInput
+            id="reset-confirm-password2"
+            type="password"
+            autocomplete="new-password"
+            v-model="form.password2"
+            :invalid="invalid"
+            :aria-describedby="describedBy"
+          />
+        </template>
+      </FormField>
 
-          <div>
-            <ActionButton>Salva password</ActionButton>
-          </div>
-        </form>
-      </PanelBox>
-    </div>
-  </ViewContainer>
+      <FormErrors :errors="formErrors" />
+
+      <div>
+        <ActionButton>Salva password</ActionButton>
+      </div>
+    </form>
+  </FormColumn>
 </template>
