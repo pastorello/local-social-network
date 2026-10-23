@@ -135,11 +135,7 @@ const submitForm = async () => {
     const response = props.tour
       ? await axios.patch<Itinerario>(`/api/itinerari/${props.tour.id}/`, formData, config)
       : await axios.post<Itinerario>('/api/itinerari/', formData, config)
-    toastStore.showToast(
-      5000,
-      props.tour ? 'Itinerario aggiornato!' : 'Itinerario creato!',
-      'bg-emerald-500',
-    )
+    toastStore.showToast(5000, props.tour ? 'Itinerario aggiornato!' : 'Itinerario creato!')
     emit('saved', response.data)
   } catch (error) {
     formErrors.value = extractFormErrors(error)

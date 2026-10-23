@@ -51,7 +51,7 @@ const submitForm = async () => {
       options: trimmedOptions,
       closes_at: closesAt.value ? new Date(closesAt.value).toISOString() : null,
     })
-    toastStore.showToast(5000, 'Sondaggio creato!', 'bg-emerald-500')
+    toastStore.showToast(5000, 'Sondaggio creato!')
     emit('saved', response.data)
   } catch (error) {
     formErrors.value = extractApiErrors(error)

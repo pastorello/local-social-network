@@ -38,7 +38,7 @@ const submitForm = () => {
       sent.value = true
     })
     .catch(() => {
-      toastStore.showToast(5000, 'Qualcosa è andato storto. Riprova.', 'bg-red-300')
+      toastStore.showToast(5000, 'Qualcosa è andato storto. Riprova.')
     })
 }
 </script>

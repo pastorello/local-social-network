@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest'
 
 import router from '@/router'
 import { CARD_LAYERS } from '@/lib/mapLayers'
+import { contrastRatio } from '@/lib/tokens'
 import { parentOf, sectionOf, tintOf, type Parent, type Section } from '../navigation'
 
 const ID = '5f0c6a52-6a0e-4f0a-9d3b-0a9f6e1c2b7d'
@@ -159,26 +160,15 @@ describe('sectionOf', () => {
   })
 })
 
-// The relative luminance of WCAG 2.1, from the hex a token holds in main.css
-// — the stylesheet is the source of truth (D8), so this reads it rather than
-// a copy of its values. From the disk: Vitest hands a stylesheet imported
-// `?raw` back empty.
+// The hex a token holds in main.css — the stylesheet is the source of truth
+// (D8), so this reads it rather than a copy of its values. From the disk:
+// Vitest hands a stylesheet imported `?raw` back empty. The ratio is WCAG
+// 2.1's, from lib/tokens.ts.
 const CSS = readFileSync(resolve(process.cwd(), 'src/assets/main.css'), 'utf8')
 const token = (name: string): string => {
   const found = CSS.match(new RegExp(`${name}:\\s*(#[0-9a-f]{6})`, 'i'))
   if (!found?.[1]) throw new Error(`${name} is not in main.css`)
   return found[1]
-}
-const luminance = (hex: string): number => {
-  const [r, g, b] = [1, 3, 5].map((at) => {
-    const channel = parseInt(hex.slice(at, at + 2), 16) / 255
-    return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4
-  }) as [number, number, number]
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b
-}
-const contrast = (a: string, b: string): number => {
-  const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number]
-  return (light + 0.05) / (dark + 0.05)
 }
 
 describe('tintOf — the eyebrow’s colour (review PR-23)', () => {
@@ -196,7 +186,7 @@ describe('tintOf — the eyebrow’s colour (review PR-23)', () => {
   it.each([...CARD_LAYERS.map((layer) => layer.token), '--color-terracotta'])(
     '%s clears 4.5:1 on the panel',
     (name) => {
-      expect(contrast(token(name), token('--color-page'))).toBeGreaterThanOrEqual(4.5)
+      expect(contrastRatio(token(name), token('--color-page'))).toBeGreaterThanOrEqual(4.5)
     },
   )
 })

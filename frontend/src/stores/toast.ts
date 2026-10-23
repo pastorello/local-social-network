@@ -3,38 +3,34 @@ import { defineStore } from 'pinia'
 interface ToastState {
   ms: number
   message: string
-  classes: string
   isVisible: boolean
 }
 
-// Module scope, not state: these are handles, not data. Keeping them lets a new
-// toast cancel the previous one's timers — without that, two toasts within the
-// same window let the first one's callbacks hide the second early (TD-31).
-let timers: ReturnType<typeof setTimeout>[] = []
+// Module scope, not state: a handle, not data. Keeping it lets a new toast
+// cancel the previous one's timer — without that, two toasts within the same
+// window let the first one's callback hide the second early (TD-31).
+let timer: ReturnType<typeof setTimeout> | undefined
 
+// One look for every toast (review PR-8, A-02): its colours are two tokens in
+// main.css, not classes a caller hands over — the words say whether it went
+// well, and a success-green and an error-pink were never in the palette.
+// The entrance and the exit are AppToast's transition, not timed classes here.
 export const useToastStore = defineStore('toast', {
   state: (): ToastState => ({
     ms: 0,
     message: '',
-    classes: '',
     isVisible: false,
   }),
 
   actions: {
-    showToast(ms: number, message: string, classes: string) {
-      timers.forEach(clearTimeout)
-      timers = []
+    showToast(ms: number, message: string) {
+      clearTimeout(timer)
 
       this.ms = ms
       this.message = message
-      this.classes = classes
       this.isVisible = true
 
-      // Rebuilt from `classes` each time rather than concatenated onto the
-      // current value, which used to accumulate across toasts.
-      timers.push(setTimeout(() => (this.classes = `${classes} -translate-y-28`), 10))
-      timers.push(setTimeout(() => (this.classes = classes), ms - 500))
-      timers.push(setTimeout(() => (this.isVisible = false), ms))
+      timer = setTimeout(() => (this.isVisible = false), ms)
     },
   },
 })

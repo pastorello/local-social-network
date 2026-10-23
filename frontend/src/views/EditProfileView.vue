@@ -60,7 +60,7 @@ const submitForm = () => {
         },
       })
       .then((response) => {
-        toastStore.showToast(5000, 'Le informazioni sono state salvate', 'bg-emerald-500')
+        toastStore.showToast(5000, 'Le informazioni sono state salvate')
 
         userStore.setUserInfo({
           id: userStore.user.id ?? '',

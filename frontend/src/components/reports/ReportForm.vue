@@ -60,7 +60,6 @@ const submitForm = async () => {
     toastStore.showToast(
       5000,
       props.report ? 'Segnalazione aggiornata!' : 'Segnalazione inviata. Grazie!',
-      'bg-emerald-500',
     )
     resetFile()
     emit('saved', response.data)

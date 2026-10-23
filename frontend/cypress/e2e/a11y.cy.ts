@@ -36,8 +36,27 @@ const settle = () =>
     expect(Number(getComputedStyle(el[0]).opacity)).to.equal(1)
   })
 
+// Leaflet 1.9 draws its tiles with `mix-blend-mode: plus-lighter`, so no seam
+// shows between two of them, and axe-core has no formula for that mode: meeting
+// a tile under a text, its colour rule throws, files itself as "incomplete" —
+// which cypress-axe does not fail on — and is skipped for the whole page. With
+// the map under every page, that was every page, and the gate's WCAG 1.4.3 was
+// passing by not looking: found on 2026-10-23 (review PR-8), when a toast given
+// a 1.9:1 pair came back green. The suite's tiles are a transparent 1×1 PNG
+// (support/e2e.ts), so blending them normally changes no colour on screen; it
+// only lets the rule run. The case "measures contrast" fails if it stops again.
+const blendTilesNormally = () =>
+  cy.document().then((doc) => {
+    if (doc.getElementById('axe-tile-blend')) return
+    const style = doc.createElement('style')
+    style.id = 'axe-tile-blend'
+    style.textContent = '.leaflet-tile { mix-blend-mode: normal !important; }'
+    doc.head.append(style)
+  })
+
 const check = (label: string) => {
   settle()
+  blendTilesNormally()
   cy.injectAxe()
   cy.checkA11y(EXCLUDE_MAP_WIDGET, WCAG_21_AA, (violations: Result[]) => {
     cy.task('a11yViolations', { label, violations })
@@ -150,6 +169,45 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
     cy.contains('h1', 'Il progetto')
 
     check('/il-progetto')
+  })
+
+  // Review PR-8 (A-02, L-10): the toast was pink with grey text in the
+  // bottom-right corner, its contrast judged by eye. It is put up through the
+  // app's own store rather than by a flow that happens to raise one today, so
+  // the case measures the toast and not whichever page still calls it — and
+  // measured once its entrance is over, as the wordmark is (`settle`). Tried
+  // with a failing pair (#4b5563 on the ink, 1.9:1): it goes red.
+  it('a toast, under the pill and over a panel, wide and on a phone', () => {
+    const message = 'Accedi per votare nei sondaggi'
+    const toastUp = () => {
+      cy.get('#app')
+        .its('0.__vue_app__.config.globalProperties.$pinia.state.value.toast')
+        .then((toast) => {
+          Object.assign(toast, { message, isVisible: true })
+        })
+      cy.contains('[role="status"] p', message).should((el) => {
+        const page = el[0].ownerDocument
+        expect(getComputedStyle(el[0]).opacity).to.equal('1')
+        const toast = el[0].getBoundingClientRect()
+        const pill = page.querySelector('nav[aria-label="Principale"]')?.getBoundingClientRect()
+        expect(toast.top).to.be.greaterThan(pill?.bottom ?? Infinity)
+        expect(toast.width).to.be.at.most(480)
+        const middle = page.documentElement.clientWidth / 2
+        expect(Math.abs(toast.left + toast.width / 2 - middle)).to.be.lessThan(1)
+      })
+    }
+
+    cy.viewport(1280, 800)
+    cy.visit('/il-progetto')
+    cy.contains('h1', 'Il progetto')
+    toastUp()
+    check('il toast, largo')
+
+    cy.viewport(390, 844)
+    cy.visit('/il-progetto')
+    cy.contains('h1', 'Il progetto')
+    toastUp()
+    check('il toast, telefono')
   })
 
   // The guest's path (spec itinerari.md I6/I7): the page a B&B's card points
@@ -266,6 +324,27 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
     cy.contains('h1', 'Sondaggi')
 
     check('/polls')
+  })
+
+  // The colour rule has to run before it can pass (see `blendTilesNormally`).
+  // If it ever throws again — another blend mode, another gap in the engine —
+  // axe files it as "incomplete", cypress-axe says nothing, and every case
+  // above stays green without having judged a colour. This one would not.
+  it('measures contrast: axe’s colour rule runs over the map, and finds text to judge', () => {
+    cy.viewport(1280, 800)
+    cy.visit('/il-progetto')
+    cy.contains('h1', 'Il progetto')
+    cy.get('.leaflet-tile-loaded').should('exist')
+    settle()
+    blendTilesNormally()
+    cy.injectAxe()
+    cy.window()
+      .then((win) => win.axe.run(win.document, { runOnly: ['color-contrast'] }))
+      .then((results) => {
+        const errored = results.incomplete.filter((rule) => 'error' in rule)
+        expect(errored, 'colour rules that threw').to.deep.equal([])
+        expect(results.passes.flatMap((rule) => rule.nodes)).to.have.length.greaterThan(0)
+      })
   })
 })
 

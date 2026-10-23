@@ -52,7 +52,7 @@ const submitForm = () => {
         // (TD-20), so this session is over — say so instead of letting the next
         // request 401 on its own.
         userStore.removeToken()
-        toastStore.showToast(5000, 'Password aggiornata. Accedi di nuovo.', 'bg-emerald-500')
+        toastStore.showToast(5000, 'Password aggiornata. Accedi di nuovo.')
         router.push('/login')
       })
       .catch((error) => {

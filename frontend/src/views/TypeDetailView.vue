@@ -112,7 +112,7 @@ const getItem = async () => {
       item.value = response.data
     })
     .catch(() => {
-      toastStore.showToast(5000, 'Scheda non trovata', 'bg-red-300')
+      toastStore.showToast(5000, 'Scheda non trovata')
       router.push({ name: props.config.routeNames.list })
     })
 }
@@ -131,12 +131,12 @@ const deleteItem = async () => {
   await axios
     .delete(`${props.config.endpoint}${item.value.id}/`)
     .then(() => {
-      toastStore.showToast(5000, 'Scheda eliminata', 'bg-emerald-500')
+      toastStore.showToast(5000, 'Scheda eliminata')
       mapStore.fetchFeatures()
       router.push({ name: props.config.routeNames.list })
     })
     .catch(() => {
-      toastStore.showToast(5000, 'Impossibile eliminare la scheda.', 'bg-red-300')
+      toastStore.showToast(5000, 'Impossibile eliminare la scheda.')
     })
 }
 

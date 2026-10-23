@@ -100,6 +100,14 @@
   --color-hairline: #e6e0d6; /* decorative rules only — exempt from 1.4.11 */
   --color-field: #8a8279; /* control outlines: 3.54 on page, 3.78 on surface */
 
+  /* The toast (review PR-8, A-02/L-10): the app speaking over the page, so
+     the one dark surface on the paper — the ink-and-white the map's editing
+     banner already wears. 14.76:1, tested in lib/__tests__/tokens.spec.ts.
+     One pair for every toast, a success or a failure: the words say which
+     (WCAG 1.4.1), and the pink-on-grey it replaces was measured nowhere. */
+  --color-toast-bg: #1f2933;
+  --color-toast-fg: #ffffff;
+
   /* Report status (spec F2.4). Unchanged shades: ADR-0005 already picked them
      for >=4.5:1 against the white badge text, and their meaning is semantic,
      not decorative — see lib/reportStatus.ts. */

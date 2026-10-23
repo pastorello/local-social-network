@@ -252,6 +252,45 @@ geolocation is a later phase (see Non-goals) rather than the centre of this one.
   the palette has `hairline` (decorative, exempt) and `field` (control
   outlines, ≥3:1 against both grounds).
 
+  **The toast, the wordmark and the close button — 2026-10-23** (review of
+  2026-10-22, PR-8: A-01, A-02, L-10, A-04). Three things an automated gate
+  had passed and a reader had not:
+  - **The toast has a pair of its own**, `--color-toast-bg` and
+    `--color-toast-fg` in `main.css` (the review's `--toast-bg`/`--toast-fg`,
+    with the `--color-` every colour token carries, so Tailwind makes
+    `bg-toast-bg`/`text-toast-fg` of them): ink and white, the dark surface
+    the map's editing banner already wears, 14.76:1. A unit test measures it
+    with the relative-luminance formula, which moved out of a test into
+    `lib/tokens.ts::contrastRatio` so the eyebrow's tints and the toast are
+    checked by one implementation. It sits under the pill in the middle, at
+    most 480 px wide, transparent to the pointer — no longer in the
+    bottom-right corner, out of sight of a panel open in the centre.
+  - **Decided by the build:** one pair for every toast, a success or a
+    failure. The green and the pink it replaces were Tailwind's, not the
+    palette's (D7), the pink was the failing pair, and the words already say
+    which it is (WCAG 1.4.1) — so `showToast(ms, message)` no longer takes
+    classes from its caller. Its `role="status"` region is always in the
+    document and only the words come and go, because a live region that
+    arrives together with its message is one a screen reader can miss. It
+    enters with a 200 ms slide that reduced motion turns off, and the a11y
+    gate measures it once that is over, as it does the wordmark.
+  - **The wordmark is named**, «Vivere Gaeta — torna alla mappa»: a screen
+    reader had it as «ivere aeta». The visible words come first, so a
+    speech-input user can say what they see (WCAG 2.5.3). The initials are
+    plain spans set apart by colour alone, as the review asked, so they are
+    no longer a size larger than the rest. A unit test computes the name with
+    axe-core, the gate's own engine.
+  - **The close button says that Escape is the same thing**: `title="Chiudi
+    (Esc)"` for the pointer, `aria-keyshortcuts="Escape"` for a screen
+    reader. The *Indietro* beside it is not built — up is that ("Close, up,
+    back").
+  - **Found on the way:** the a11y gate's contrast rule had not been
+    running on any page over the map — Leaflet's tile blend mode made axe
+    skip it without a word. It runs again, every page was already clean, and
+    a case fails if it stops; [ADR-0005](../adr/0005-wcag-2.1-aa-accessibility-bar.md)
+    records it. Until then this D9 was kept by the unit tests and by hand,
+    not by the gate.
+
 ### Patronage and sponsors
 
 The author expects municipal patronage first, and later contributions from

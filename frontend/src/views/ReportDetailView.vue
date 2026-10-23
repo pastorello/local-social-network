@@ -69,7 +69,7 @@ const getReport = async () => {
     })
     .catch((error) => {
       console.log('error', error)
-      toastStore.showToast(5000, 'Segnalazione non trovata', 'bg-red-300')
+      toastStore.showToast(5000, 'Segnalazione non trovata')
       router.push('/')
     })
 }
@@ -87,7 +87,7 @@ const getCategories = async () => {
 
 const toggleUpvote = async () => {
   if (!userStore.user.isAuthenticated) {
-    toastStore.showToast(5000, 'Accedi per sostenere una segnalazione', 'bg-red-300')
+    toastStore.showToast(5000, 'Accedi per sostenere una segnalazione')
     router.push('/login')
     return
   }
@@ -104,7 +104,7 @@ const toggleUpvote = async () => {
     .catch(() => {
       // Every other action in the app raises a toast; this one used to fail
       // silently, so the button simply did not move (TD-31).
-      toastStore.showToast(5000, 'Non è stato possibile registrare il voto.', 'bg-red-300')
+      toastStore.showToast(5000, 'Non è stato possibile registrare il voto.')
     })
 }
 
@@ -115,11 +115,11 @@ const changeStatus = async (status: ReportStatus) => {
     .patch(`/api/reports/${report.value.id}/status/`, { status })
     .then((response) => {
       report.value = response.data
-      toastStore.showToast(5000, 'Stato aggiornato', 'bg-emerald-500')
+      toastStore.showToast(5000, 'Stato aggiornato')
     })
     .catch((error) => {
       console.log('error', error)
-      toastStore.showToast(5000, 'Impossibile aggiornare lo stato', 'bg-red-300')
+      toastStore.showToast(5000, 'Impossibile aggiornare lo stato')
     })
 }
 
@@ -135,7 +135,7 @@ const deleteReport = async () => {
   await axios
     .delete(`/api/reports/${report.value.id}/`)
     .then(() => {
-      toastStore.showToast(5000, 'Segnalazione eliminata', 'bg-emerald-500')
+      toastStore.showToast(5000, 'Segnalazione eliminata')
       router.push('/')
     })
     .catch((error) => {

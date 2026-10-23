@@ -40,7 +40,7 @@ const startTranslation = async (language: string) => {
       query: { edit: '1' },
     })
   } catch {
-    toastStore.showToast(5000, 'Impossibile avviare la traduzione.', 'bg-red-300')
+    toastStore.showToast(5000, 'Impossibile avviare la traduzione.')
   } finally {
     submitting.value = false
   }

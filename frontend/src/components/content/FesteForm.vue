@@ -93,11 +93,7 @@ const submitForm = async () => {
       ? await axios.patch(`/api/feste/${props.feste.id}/`, formData, config)
       : await axios.post('/api/feste/', formData, config)
 
-    toastStore.showToast(
-      5000,
-      props.feste ? 'Scheda aggiornata!' : 'Scheda creata!',
-      'bg-emerald-500',
-    )
+    toastStore.showToast(5000, props.feste ? 'Scheda aggiornata!' : 'Scheda creata!')
     emit('saved', response.data)
   } catch (error) {
     formErrors.value = extractFormErrors(error)
