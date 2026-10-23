@@ -2,6 +2,7 @@
 import axios from 'axios'
 
 import { useUserStore } from '@/stores/user'
+import { landingAfterLogin } from '@/lib/landing'
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -52,12 +53,13 @@ const submitForm = async () => {
   if (formErrors.value.length === 0) {
     await axios
       .get('/api/users/me/')
-      .then((response) => {
+      .then(async (response) => {
         userStore.setUserInfo(response.data)
 
-        // back to where the router guard intercepted the visitor, if anywhere
+        // back to where the router guard intercepted the visitor, if anywhere;
+        // else to their own cards while one is a draft (lib/landing.ts)
         const redirect = route.query.redirect
-        router.push(typeof redirect === 'string' ? redirect : '/')
+        router.push(typeof redirect === 'string' ? redirect : await landingAfterLogin())
       })
       .catch((error) => {
         console.log('error', error)

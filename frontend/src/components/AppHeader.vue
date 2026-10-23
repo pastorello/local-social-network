@@ -15,8 +15,8 @@ import { sectionOf, type Section } from '@/lib/navigation'
 // The menu (spec/design.md D14): one pill at the top centre of every page,
 // floating over the map rather than a bar above it — the map is the ground of
 // every page (D13). The wordmark, Mappa, Esplora, Itinerari, Cosa fare, Il
-// progetto, then Accedi or the collaborator's avatar. The polls are reached
-// from Il progetto; there is no search in this phase. Itinerari (spec
+// progetto, then Accedi or the collaborator's avatar, behind which are their
+// own cards first (review PR-13). The polls are reached from Il progetto; there is no search in this phase. Itinerari (spec
 // itinerari.md) is its own item rather than an Esplora entry: a tour is how a
 // guest starts, not a card type. *Esplora* was *Schede* until 2026-10-23
 // (review PR-23, N-05).
@@ -150,6 +150,9 @@ const menuActive = 'font-semibold text-sea underline decoration-2 underline-offs
           />
         </template>
         <template #default="{ close }">
+          <!-- First, before the profile: what a collaborator signs in for
+          (review PR-13, C-02). The polls will follow it (review PR-17). -->
+          <RouterLink to="/le-mie-schede" :class="menuLink">Le mie schede</RouterLink>
           <RouterLink :to="{ name: 'profile', params: { id: user.id } }" :class="menuLink">
             Il tuo profilo
           </RouterLink>
@@ -231,6 +234,7 @@ const menuActive = 'font-semibold text-sea underline decoration-2 underline-offs
             >Il progetto</RouterLink
           >
           <template v-if="user.isAuthenticated && user.id">
+            <RouterLink to="/le-mie-schede" :class="menuLink">Le mie schede</RouterLink>
             <RouterLink :to="{ name: 'profile', params: { id: user.id } }" :class="menuLink">
               Il tuo profilo
             </RouterLink>

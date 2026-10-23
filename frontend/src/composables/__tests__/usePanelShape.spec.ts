@@ -17,9 +17,11 @@ describe('cardPanelShape — the rule (design.md D17)', () => {
     expect(cardPanelShape(false, false)).toBe('wide')
   })
 
-  it('keeps a card’s form narrow, with or without a place: it draws on the map (D19)', () => {
-    expect(cardPanelShape(false, true)).toBe('narrow')
-    expect(cardPanelShape(true, true)).toBe('narrow')
+  // Review PR-13: a form is written in the editor's shape, place or not — on
+  // the right beside the map it draws on (D19), as wide as the reading panel.
+  it('opens a card’s form in the editor, with or without a place', () => {
+    expect(cardPanelShape(false, true)).toBe('editor')
+    expect(cardPanelShape(true, true)).toBe('editor')
   })
 })
 

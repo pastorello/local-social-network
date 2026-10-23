@@ -10,7 +10,18 @@ const login = () => {
   cy.contains('button', 'Accedi').click()
   // Signed in: the menu shows the account behind the avatar (design.md D14).
   cy.get('button[aria-label^="Il tuo account"]').should('exist')
+  // With nowhere asked for, a collaborator with a draft lands on their own
+  // cards (review PR-13, C-02) — and `seed_e2e` gives this one a draft church.
+  cy.location('pathname').should('equal', '/le-mie-schede')
+  cy.contains('h2', 'Bozze')
 }
+
+// Everything on one horizontal line: the tops of the elements are one value.
+const onOneRow = (selector: string) =>
+  cy.get(selector).should(($elements) => {
+    const tops = new Set([...$elements].map((element) => element.getBoundingClientRect().top))
+    expect(tops.size, `${selector} on one row`).to.equal(1)
+  })
 
 // Two runs must not collide on a title, and the suite must be re-runnable
 // against a database it already wrote to.
@@ -18,7 +29,8 @@ const uniqueTitle = () => `Chiesa E2E creata ${Date.now()}`
 
 describe('the collaborator', () => {
   beforeEach(() => {
-    cy.viewport(1280, 800)
+    // A desk (design.md D2): the editor's panel is reading-wide from 1280px.
+    cy.viewport(1440, 900)
     login()
   })
 
@@ -26,18 +38,51 @@ describe('the collaborator', () => {
     const title = uniqueTitle()
 
     cy.visit('/chiese/nuova')
+    // The editor's shape (review PR-13, C-01): as wide as the reading panel,
+    // on the right beside the map — the five tabs and the toolbar on one row.
+    cy.get('main section').should(($panel) => {
+      const panel = $panel[0]!.getBoundingClientRect()
+      expect(panel.width).to.equal(808)
+      expect(panel.right).to.equal(1440 - 16)
+    })
+    onOneRow('[role="tab"]')
+    onOneRow('[role="toolbar"] button')
     cy.get('#type-form-title').type(title)
     // Tiptap renders a contenteditable rather than a textarea.
     cy.get('.tiptap').type('Un testo scritto dal test end-to-end.')
 
     // design.md D19: the map under the panel is the editor. Opening the map
-    // tab says so over the map, and a click on the map is the card's pin.
+    // tab says so over the map — in a banner across it, under the menu
+    // (review PR-13, A-05) — and a click on the map is the card's pin.
     cy.contains('[role="tab"]', 'Mappa').click()
-    cy.get('[role="status"]').should('contain', 'Clicca sulla mappa')
-    cy.get('.leaflet-container').click(300, 400)
+    cy.contains('[role="status"]', 'Clicca sulla mappa')
+      .should('be.visible')
+      .and(($banner) => {
+        const banner = $banner[0]!.getBoundingClientRect()
+        expect(banner.left).to.equal(16)
+        expect(banner.right).to.be.at.most(1440 - 16 - 808 - 16)
+      })
+    // Cypress judges a fixed element by its centre, and the map's centre is
+    // under the editor's 808px panel now. The point clicked is the map's, and
+    // this says so — a stricter check than the centre's, not a looser one.
+    cy.document().then((doc) => {
+      const map = doc.elementFromPoint(300, 400)?.closest('.leaflet-container') ?? null
+      expect(map, 'the map at (300, 400)').not.to.equal(null)
+    })
+    cy.get('.leaflet-container').click(300, 400, { force: true })
     cy.get('input[aria-label="Nome del punto 1"]').type('Ingresso')
     // A church has one pin: the map now says so instead of taking another.
     cy.get('[role="status"]').should('contain', 'toglilo per sceglierne un altro')
+
+    // On a phone the banner runs across the strip of map, under the menu.
+    cy.viewport(390, 844)
+    cy.contains('[role="status"]', 'toglilo per sceglierne un altro')
+      .should('be.visible')
+      .and(($banner) => {
+        const banner = $banner[0]!.getBoundingClientRect()
+        expect(banner.width).to.be.at.least(390 - 24)
+      })
+    cy.viewport(1440, 900)
     cy.contains('[role="status"] button', 'Fatto').click()
 
     // "Fatto" leaves the map tab for the next one, and the map stops editing:
@@ -79,6 +124,14 @@ describe('the collaborator', () => {
     cy.contains('li', 'Portale')
 
     cy.url().then((cardUrl) => {
+      // Two clicks from the avatar to the draft (review PR-13, C-02): *Le mie
+      // schede*, then the draft itself, among the drafts at the top.
+      cy.get('button[aria-label^="Il tuo account"]').click()
+      cy.contains('a', 'Le mie schede').click()
+      cy.get('section[aria-labelledby="mie-bozze"]').contains('a', title).click()
+      cy.location('href').should('equal', cardUrl)
+      cy.contains('h1', title)
+
       cy.get('button[aria-label^="Il tuo account"]').click()
       cy.contains('button', 'Esci').click()
 

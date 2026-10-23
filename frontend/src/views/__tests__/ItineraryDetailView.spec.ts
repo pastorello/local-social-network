@@ -8,6 +8,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import ItineraryDetailView from '../ItineraryDetailView.vue'
 import { PANEL_TRAIL, type Trail } from '@/composables/usePanelTrail'
 import type Itinerario from '@/definitions/interfaces/Itinerario'
+import { useMapStore } from '@/stores/map'
 
 vi.mock('axios')
 
@@ -104,16 +105,17 @@ const mountAt = async (path: string, attach = false) => {
   // What the panel would draw over the page (review PR-23): the view hands it
   // its part of the eyebrow, as RoutePanel provides for it.
   const trail = shallowRef<Trail | null>(null)
+  const pinia = createPinia()
   const wrapper = mount(ItineraryDetailView, {
     global: {
-      plugins: [createPinia(), router],
+      plugins: [pinia, router],
       stubs: { ItineraryForm: true },
       provide: { [PANEL_TRAIL as symbol]: trail },
     },
     attachTo: attach ? document.body : undefined,
   })
   await flushPromises()
-  return { wrapper, router, trail }
+  return { wrapper, router, trail, pinia }
 }
 
 describe('ItineraryDetailView (spec itinerari.md I7)', () => {
@@ -128,6 +130,16 @@ describe('ItineraryDetailView (spec itinerari.md I7)', () => {
     expect(wrapper.get('h1').text()).toBe('Gaeta medievale')
     expect(wrapper.findAll('ol li a').map((a) => a.text())).toEqual(['Duomo', 'Processione'])
     expect(wrapper.text()).toContain('Inizia il tour')
+  })
+
+  // Review PR-13: read in its route's narrow panel, written in the editor's.
+  it('opens its form in the editor’s shape, and is read in its route’s', async () => {
+    const editing = await mountAt('/itinerari/t1?edit=1')
+    expect(useMapStore(editing.pinia).panelShape).toBe('editor')
+    editing.wrapper.unmount()
+
+    const reading = await mountAt('/itinerari/t1')
+    expect(useMapStore(reading.pinia).panelShape).toBeNull()
   })
 
   it('offers to start before the list of stops, and again under it (review PR-7)', async () => {

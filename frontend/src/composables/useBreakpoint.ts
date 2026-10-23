@@ -7,23 +7,34 @@ import { onBeforeUnmount, ref } from 'vue'
 // layer toggles means two elements with `id="layer-chiese"`, which breaks the
 // `for`/`id` pairing ADR-0005 requires. It would also mount two Leaflet maps.
 const DESKTOP = '(min-width: 1024px)'
+// Tailwind's `xl`: from here the editor's panel is as wide as the reading
+// panel (review PR-13); below it, the narrow panel's 560px.
+const WIDE = '(min-width: 1280px)'
 
-export function useIsDesktop() {
-  // Defaults to desktop where matchMedia does not exist (jsdom, SSR): the
-  // wide layout is the one that degrades gracefully into a narrow viewport,
-  // and it is what every existing unit test already expects to find.
-  const isDesktop = ref(true)
+// Defaults to a match where matchMedia does not exist (jsdom, SSR): the wide
+// layout is the one that degrades gracefully into a narrow viewport, and it is
+// what every existing unit test already expects to find.
+const useMediaQuery = (media: string) => {
+  const matches = ref(true)
 
   if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
-    const query = window.matchMedia(DESKTOP)
-    isDesktop.value = query.matches
+    const query = window.matchMedia(media)
+    matches.value = query.matches
 
     const onChange = (event: MediaQueryListEvent) => {
-      isDesktop.value = event.matches
+      matches.value = event.matches
     }
     query.addEventListener('change', onChange)
     onBeforeUnmount(() => query.removeEventListener('change', onChange))
   }
 
-  return { isDesktop }
+  return matches
+}
+
+export function useIsDesktop() {
+  return { isDesktop: useMediaQuery(DESKTOP) }
+}
+
+export function useIsWide() {
+  return { isWide: useMediaQuery(WIDE) }
 }

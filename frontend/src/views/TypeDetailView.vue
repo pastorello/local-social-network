@@ -88,9 +88,10 @@ usePageTitle(() =>
 // D17 by the card, not by its type (review PR-10): a card of a type with a
 // place that has none — a ricetta sold nowhere — opens wide over a veiled map,
 // like a book; with no strip of map on a phone. A type with no place at all
-// leaves it to its route, which is wide already.
+// leaves it to its route, which is wide already — until its form opens, which
+// is written in the editor's shape like every other (review PR-13).
 usePanelShape(() =>
-  props.config.mapMode === 'pins' && item.value
+  item.value && (props.config.mapMode === 'pins' || editing.value)
     ? cardPanelShape(hasPlace.value, editing.value)
     : null,
 )

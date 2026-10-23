@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useIsDesktop } from '@/composables/useBreakpoint'
 import { providePanelTrail } from '@/composables/usePanelTrail'
 import { parentOf, tintOf } from '@/lib/navigation'
+import type { PanelShape } from '@/stores/map'
 
 // Every page but the home opens over the map (spec/design.md D15) and keeps its
 // own URL, so a shared link to a card opens the map *and* the card. Two
@@ -12,7 +13,11 @@ import { parentOf, tintOf } from '@/lib/navigation'
 // place, because the map beside it is showing that place (D16); a wide,
 // centred reading panel over a veiled map for everything else. Whether a card
 // has a place is the card's to say, not its type's (review PR-10): App.vue
-// hands over the shape its data asked for (composables/usePanelShape.ts).
+// hands over the shape its data asked for (composables/usePanelShape.ts). A
+// form is the third shape, the editor (review PR-13): on the right like the
+// narrow panel, beside a live map that it draws on (D19), but as wide as the
+// reading panel from 1280px — tabs and toolbar on one row, the text at a
+// reading measure — and the narrow panel's 560px below that.
 //
 // On a phone (D18) a page is the whole screen — except a card with a place,
 // which leaves a strip of the map at its head, already centred on the place.
@@ -30,7 +35,7 @@ import { parentOf, tintOf } from '@/lib/navigation'
 // tour's stop too. *Up* is the link at the panel's head, one level above
 // (lib/navigation.ts). *Back* is the browser's and the system's own, and the
 // two states in the URL, `?mappa=1` and `?tappa=N`, are steps it undoes.
-const props = defineProps<{ shape: 'narrow' | 'wide' }>()
+const props = defineProps<{ shape: PanelShape }>()
 
 const router = useRouter()
 const route = useRoute()
@@ -39,9 +44,13 @@ const panel = ref<HTMLElement | null>(null)
 const expandButton = ref<HTMLButtonElement | null>(null)
 const collapseButton = ref<HTMLButtonElement | null>(null)
 
+// Beside the map rather than over it: a card with a place, and a form.
+const beside = computed(() => props.shape !== 'wide')
 const narrow = computed(() => isDesktop.value && props.shape === 'narrow')
-// The phone's card with a place: a strip of the map above the article.
-const withStrip = computed(() => !isDesktop.value && props.shape === 'narrow')
+const editor = computed(() => isDesktop.value && props.shape === 'editor')
+// The phone's card with a place: a strip of the map above the article. A form
+// keeps it too — enlarged, it is where the place is drawn (D19).
+const withStrip = computed(() => !isDesktop.value && beside.value)
 const expanded = computed(() => withStrip.value && route.query.mappa === '1')
 
 // A page that opens over the map takes the reader's focus with it (D15):
@@ -117,7 +126,7 @@ const pill =
   on it closes the panel, as the button and Escape do — for the pointer only,
   since those two are already the keyboard's way. -->
   <div
-    v-if="!narrow && isDesktop"
+    v-if="!beside && isDesktop"
     class="pointer-events-auto absolute inset-0 bg-page/70"
     aria-hidden="true"
     @click="close"
@@ -170,7 +179,9 @@ const pill =
           ? 'inset-x-0 -top-[var(--header-h,10rem)] bottom-0 pt-[var(--header-h,10rem)]'
           : narrow
             ? 'top-4 right-4 bottom-4 w-[35rem] rounded-2xl border border-hairline shadow-[0_18px_40px_-16px_rgba(31,41,51,0.45)]'
-            : 'top-4 bottom-4 left-1/2 w-[min(50.5rem,calc(100%-2rem))] -translate-x-1/2 rounded-2xl border border-hairline shadow-[0_18px_40px_-16px_rgba(31,41,51,0.45)]'
+            : editor
+              ? 'top-4 right-4 bottom-4 w-[35rem] rounded-2xl border border-hairline shadow-[0_18px_40px_-16px_rgba(31,41,51,0.45)] xl:w-[50.5rem]'
+              : 'top-4 bottom-4 left-1/2 w-[min(50.5rem,calc(100%-2rem))] -translate-x-1/2 rounded-2xl border border-hairline shadow-[0_18px_40px_-16px_rgba(31,41,51,0.45)]'
     "
     @keydown="onKeydown"
   >
