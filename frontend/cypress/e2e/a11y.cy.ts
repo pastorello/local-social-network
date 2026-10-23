@@ -216,8 +216,16 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
     cy.viewport(390, 844)
     cy.visit('/benvenuto')
     cy.contains('h1', 'Che cosa ti va di fare?')
+    // The intents come from the API (review PR-14 gave them tints and icons):
+    // measured once they are there, not before.
+    cy.contains('a', 'Scoprire la città')
 
     check('/benvenuto')
+
+    cy.viewport(1280, 800)
+    cy.visit('/benvenuto')
+    cy.contains('a', 'Scoprire la città')
+    check('/benvenuto (largo)')
   })
 
   it('a tour, its first stop and its last', () => {

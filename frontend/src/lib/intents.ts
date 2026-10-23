@@ -17,6 +17,15 @@ export const GENRE_INTENT: Record<string, string> = {
   parco: 'camminare',
 }
 
+// The intents that have a colour of their own (assets/main.css, review PR-14):
+// each card on /benvenuto wears a tint of it. The token, never its hex (D8).
+// An intent added in the admin and not given one wears the unknown grey, as a
+// card type the SPA does not know yet does on the map.
+export const TINTED_INTENTS = ['mare', 'citta', 'mangiare', 'camminare']
+
+export const intentVar = (slug: string): string =>
+  `var(${TINTED_INTENTS.includes(slug) ? `--color-intent-${slug}` : '--color-layer-unknown'})`
+
 // Where a genre added in the admin, and not mapped yet, goes: shown, never lost.
 export const OTHER_INTENT = 'altro'
 export const OTHER_INTENT_NAME = 'Altro da vedere'

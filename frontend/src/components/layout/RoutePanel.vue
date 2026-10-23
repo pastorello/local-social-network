@@ -24,7 +24,10 @@ import type { PanelShape } from '@/stores/map'
 // The strip is the same map, not a second one: the panel simply starts below
 // it. Tapping "Allarga la mappa" gives the map the whole screen, with "Torna
 // alla scheda" to come back; that state is in the URL (`?mappa=1`), so Back
-// undoes it like any other step.
+// undoes it like any other step. And the whole screen means up behind the
+// menu too (review PR-14, M-06): the page's words start under the pill, but
+// its ground runs to the top edge, where a band of map around the pill read
+// as a rendering fault.
 //
 // Close, up, back (review PR-22, design.md "Close, up, back"): three actions,
 // and the app imitates the browser's history in none of them. *Close* — the
@@ -173,7 +176,7 @@ const pill =
       withStrip
         ? 'inset-x-0 top-[11.25rem] bottom-0 rounded-t-2xl shadow-[0_-8px_24px_-12px_rgba(31,41,51,0.45)]'
         : !isDesktop
-          ? 'inset-0'
+          ? 'inset-x-0 -top-[var(--header-h,10rem)] bottom-0 pt-[var(--header-h,10rem)]'
           : narrow
             ? 'top-4 right-4 bottom-4 w-[35rem] rounded-2xl border border-hairline shadow-[0_18px_40px_-16px_rgba(31,41,51,0.45)]'
             : editor

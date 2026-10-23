@@ -327,3 +327,31 @@ the build:
   known) and `zones`, by name. `seed_e2e`'s tour gained a third stop (the beach
   in Serapo) and the archive a published ricetta, so `itinerari.cy.ts` walks
   stop 1 → 2 → 3 → the end.
+
+## The welcome page says what it is — 2026-10-23 (review PR-14)
+
+The review of 2026-10-22 ([review-2026-10-22.md](../review-2026-10-22.md):
+P-07, M-09) found `/benvenuto` asking its question without saying what the
+site is, its intents white panels of text, and its way out a small button.
+The address is untouched — I6's one obligation — and so is what the page
+offers; what changed is how it reads:
+
+- **Under «Benvenuti a Gaeta» and the question, the home's own line**: «Gaeta
+  raccontata da chi ci vive: luoghi, chiese, feste, ricette, itinerari.»,
+  from the constant the home reads (`definitions/copy.ts`). The line that
+  was there, «Itinerari scritti da chi Gaeta la conosce: scegli da dove
+  cominciare.», stays under it.
+- **Each intent wears a tint of its own colour and an icon** — the sea, the
+  town, the walk, the table — where a cover will go once the archive has
+  photographs. The colours are tokens (`--color-intent-*`, design.md D8); an
+  intent added in the admin (I5) shows grey with the tours' map icon until
+  it is given its own, so a fifth intent is still an admin edit, not a
+  deploy. The zone card wears the home's pin.
+- **The way out is a link, «Oppure vai alla mappa»** — not «esplora»: the
+  menu's *Esplora* is on the same screen, and the review chose «Vai alla
+  mappa» for the wizard's exit for that reason (its PR-23 point 4, PR-21
+  point 6). This page is to become the wizard's first step (review PR-21);
+  nothing here anticipates it.
+
+The reasons and the measured contrasts are in design.md, "The welcome page,
+and the whole screen on a phone — 2026-10-23".
