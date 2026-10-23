@@ -32,6 +32,13 @@ const makeRouter = () =>
       { path: '/', name: 'home', component: { render: () => null }, meta: { fullBleed: true } },
       // A wide page: on a phone it covers the map entirely.
       { path: '/benvenuto', name: 'benvenuto', component: { render: () => null } },
+      // A card of a type with a place: narrow, unless the card has none.
+      {
+        path: '/ricette/:id',
+        name: 'ricettadetail',
+        component: { render: () => null },
+        meta: { panel: 'narrow' },
+      },
       { path: '/:any(.*)*', component: { render: () => null } },
     ],
   })
@@ -258,6 +265,39 @@ describe('MapStage while a page lists a set (spec cosa-fare.md Part −1, D5)', 
     store.setFrame(null)
     await flushPromises()
     expect(map.props('frame')).toBeNull()
+  })
+})
+
+// Review PR-10 (P-09): the card says whether it has a place, not its type. A
+// ricetta sold nowhere is read like a book, over a map it has nothing to show
+// on — veiled, out of the tab order, with no list offered beside it.
+describe('MapStage beside a card, or under it (review PR-10)', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.mocked(axios.get).mockResolvedValue({ data: [] })
+  })
+
+  it('stays in reach beside a card with a place, and goes out of reach under one without', async () => {
+    const { wrapper } = await mountAt('/ricette/r1')
+    await vi.waitUntil(() => wrapper.findComponent(GaetaMapStub).exists())
+    const map = wrapper.findComponent(GaetaMapStub)
+    // jsdom has no `inert` property, so Vue writes the value out as an
+    // attribute; a browser's is present or absent.
+    const inert = () =>
+      ['', 'true'].includes(wrapper.get('div.fixed.inset-0').attributes('inert') ?? 'false')
+
+    // Its type's shape: beside the narrow panel.
+    expect(inert()).toBe(false)
+    expect(wrapper.text()).toContain('Elenco')
+    expect(map.props('focusPadding').bottomRight[0]).toBe(560 + 16 + 48)
+
+    // The card has no place, and says so.
+    useMapStore().setPanelShape('wide')
+    await flushPromises()
+
+    expect(inert()).toBe(true)
+    expect(wrapper.text()).not.toContain('Elenco')
+    expect(map.props('focusPadding').bottomRight[0]).toBe(48)
   })
 })
 

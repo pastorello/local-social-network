@@ -12,6 +12,7 @@ import FesteForm from '@/components/content/FesteForm.vue'
 import { useIsDesktop } from '@/composables/useBreakpoint'
 import { useMapFocus } from '@/composables/useMapFocus'
 import { usePageTitle } from '@/composables/usePageTitle'
+import { cardPanelShape, usePanelShape } from '@/composables/usePanelShape'
 import { usePanelTrail } from '@/composables/usePanelTrail'
 import { useMapStore } from '@/stores/map'
 import TranslateControl from '@/components/content/TranslateControl.vue'
@@ -26,7 +27,14 @@ const toastStore = useToastStore()
 const mapStore = useMapStore()
 const { isDesktop } = useIsDesktop()
 
-const feste = ref<Feste | null>(null)
+// The festa comes with the route (lib/cardFirst.ts): fetched before this page
+// mounted, so the panel is born in the shape it asks for (review PR-10).
+// Without it — the request failed — the page asks itself.
+const brought = () => {
+  const card = route.meta.card as Feste | undefined
+  return card && card.id === route.params.id ? card : null
+}
+const feste = ref<Feste | null>(brought())
 // A freshly-started translation (see TranslateControl) is an empty draft —
 // its detail page opens straight into edit mode via ?edit=1 rather than
 // showing a blank read view first.
@@ -75,6 +83,12 @@ usePageTitle(() =>
 // PR-3): a reader joins a feast at its start, not at whichever stop is nearest.
 const start = computed(() => feste.value?.route[0] ?? null)
 
+// D17 by the card, not by its type (review PR-10): a festa whose procession
+// nobody has drawn yet has no place to show, and opens wide over a veiled map.
+usePanelShape(() =>
+  feste.value ? cardPanelShape(feste.value.route.length > 0, editing.value) : null,
+)
+
 // The map behind the panel draws this feast's route while it is open (D16).
 useMapFocus(() =>
   feste.value && feste.value.route.length
@@ -105,7 +119,9 @@ const deleteFeste = async () => {
     })
 }
 
-onMounted(getFeste)
+onMounted(() => {
+  if (!feste.value) getFeste()
+})
 
 // Navigating from one card's detail page straight to another's (e.g. a
 // TranslateControl link) keeps the same route record, so Vue Router reuses
@@ -118,7 +134,9 @@ watch(
   () => route.params.id,
   async () => {
     editing.value = false
-    await getFeste()
+    const card = brought()
+    if (card) feste.value = card
+    else await getFeste()
     editing.value = route.query.edit === '1'
   },
 )

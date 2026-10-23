@@ -5,6 +5,8 @@
 // disagree.
 const PUBLISHED = 'Chiesa E2E pubblicata'
 const DRAFT = 'Chiesa E2E in bozza'
+// Sold nowhere: a ricetta with no place on the map (review PR-10).
+const RICETTA = 'Ricetta E2E pubblicata'
 
 // The home's first words and its two other ways in (review of 2026-10-22,
 // P-02/M-02). seed_e2e publishes a tour under «Scoprire la città» and a church
@@ -229,6 +231,37 @@ describe('the reader, on a wide screen', () => {
     cy.get('path.leaflet-interactive[stroke-width="3"]').should('not.exist')
   })
 
+  // Review PR-10 (P-09): the card decides its panel, not its type. The church
+  // above opens narrow beside its pin; a ricetta sold nowhere opens like a
+  // book, wide over a veiled map it has nothing to show on — and is born that
+  // way, never drawn narrow first and widened in front of the reader.
+  it('reads a card without a place in a wide panel, over a veiled map', () => {
+    cy.visit('/ricette')
+    cy.contains('h1', 'Ricette')
+    // Every width the panel is drawn at from the list onwards.
+    const widths: number[] = []
+    cy.get('main section[tabindex="-1"]').then(($panel) => {
+      const win = $panel[0]!.ownerDocument.defaultView!
+      new win.ResizeObserver((entries) => {
+        for (const entry of entries) widths.push(Math.round(entry.contentRect.width))
+      }).observe($panel[0]!)
+    })
+
+    cy.contains('a', RICETTA).click()
+
+    cy.contains('h1', RICETTA)
+    cy.get('.leaflet-container').closest('[inert]').should('exist')
+    cy.contains('a', 'Elenco ·').should('not.exist')
+    cy.get('main section[tabindex="-1"]').should(($panel) => {
+      const panel = $panel[0]!.getBoundingClientRect()
+      const middle = $panel[0]!.ownerDocument.defaultView!.innerWidth / 2
+      expect(panel.left + panel.width / 2).to.be.closeTo(middle, 1)
+    })
+    cy.wrap(widths).should((seen) => {
+      expect(new Set(seen).size, `the panel's widths: ${seen.join(', ')}`).to.equal(1)
+    })
+  })
+
   it('reads a list in a wide panel, over a map it cannot reach', () => {
     cy.visit('/chiese')
 
@@ -324,6 +357,20 @@ describe('the reader, on a phone', () => {
     })
 
     cy.contains('h1', PUBLISHED)
+  })
+
+  // Review PR-10 (P-09): no strip of map over a card that has no place to
+  // show in it — the whole screen, like any page without one.
+  it('reads a card without a place full screen, with no strip of map above it', () => {
+    cy.visit('/ricette')
+    cy.contains('a', RICETTA).click()
+
+    cy.contains('h1', RICETTA)
+    cy.contains('button', 'Allarga la mappa').should('not.exist')
+    cy.get('.leaflet-container').closest('[inert]').should('exist')
+    cy.get('main section[tabindex="-1"]').should(($panel) => {
+      expect($panel[0]!.getBoundingClientRect().top).to.be.closeTo(headerBottom($panel), 1)
+    })
   })
 
   // design.md D18: a card with a place opens under a strip of the map, the

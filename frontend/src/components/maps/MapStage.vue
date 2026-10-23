@@ -3,6 +3,7 @@ import { computed, defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useIsDesktop } from '@/composables/useBreakpoint'
+import { useOpenPanelShape } from '@/composables/usePanelShape'
 import { afterFirstPaint } from '@/lib/firstPaint'
 import { layerRoute } from '@/lib/mapLayers'
 import { useMapStore } from '@/stores/map'
@@ -17,6 +18,12 @@ const userStore = useUserStore()
 const route = useRoute()
 const router = useRouter()
 const { isDesktop } = useIsDesktop()
+
+// A page beside the map rather than over it (D17): a card with a place. Its
+// card says whether it has one, not its type (review PR-10) — a ricetta sold
+// nowhere covers the map like a book.
+const panelShape = useOpenPanelShape()
+const besideMap = computed(() => !route.meta.fullBleed && panelShape.value === 'narrow')
 
 // TD-52: Leaflet, its cluster plugin and vue-leaflet are 58% of what the
 // entry chunk used to hold, and no page's text needs them. So the map is its
@@ -41,7 +48,7 @@ const menuBottom = () => {
 
 const focusPadding = computed<{ topLeft: [number, number]; bottomRight: [number, number] }>(() => {
   const top = menuBottom() + GAP
-  if (isDesktop.value && route.meta.panel === 'narrow') {
+  if (isDesktop.value && besideMap.value) {
     return { topLeft: [GAP, top], bottomRight: [NARROW_PANEL + 16 + GAP, GAP] }
   }
   if (isDesktop.value && route.meta.fullBleed) {
@@ -53,7 +60,7 @@ const focusPadding = computed<{ topLeft: [number, number]; bottomRight: [number,
     // not cover, where Gaeta has to fit.
     return { topLeft: [16, menuBottom() + 16], bottomRight: [16, mapStore.sheetHeight + 16] }
   }
-  if (!isDesktop.value && route.meta.panel === 'narrow') {
+  if (!isDesktop.value && besideMap.value) {
     // D18: framed inside the strip above the article — or, expanded, the
     // whole screen above the "Torna alla scheda" button.
     const phoneTop = menuBottom() + 16
@@ -70,13 +77,13 @@ const focusPadding = computed<{ topLeft: [number, number]; bottomRight: [number,
 // their tab order. A card with a place leaves the map in view — beside it on a
 // wide screen, in the strip above it on a phone (D18).
 const covered = computed(
-  () => route.name !== undefined && !route.meta.fullBleed && route.meta.panel !== 'narrow',
+  () => route.name !== undefined && !route.meta.fullBleed && !besideMap.value,
 )
 
 // D20: the text lists are ADR-0005's equivalent of the pins, so they stay one
 // tap away wherever the map is on screen. The home carries them; beside a
 // narrow panel the map is on screen without them, so it offers the way back.
-const offerList = computed(() => isDesktop.value && route.meta.panel === 'narrow')
+const offerList = computed(() => isDesktop.value && besideMap.value)
 
 // Leaflet's zoom buttons live in the map's top-left corner, which on the wide
 // home is under the floating column: they move out beside it.
@@ -95,14 +102,14 @@ const controlsLeft = computed(() =>
 // sheet with it rather than under the button. Behind a wide panel it stays
 // where it is, veiled with the rest of the map.
 const controlsRight = computed(() =>
-  isDesktop.value && route.meta.panel === 'narrow' ? 'calc(36rem + 0.75rem)' : '0px',
+  isDesktop.value && besideMap.value ? 'calc(36rem + 0.75rem)' : '0px',
 )
 const controlsBottom = computed(() => {
   if (isDesktop.value) return '0px'
   if (route.meta.fullBleed) {
     return 'min(var(--sheet-h, 0px), calc(100% - var(--header-h, 0px) - 4.5rem))'
   }
-  if (route.meta.panel !== 'narrow') return '0px'
+  if (!besideMap.value) return '0px'
   // RoutePanel lays the strip out below the menu, hence the header's height.
   return route.query.mappa === '1' ? '4.25rem' : 'calc(100% - var(--header-h, 0px) - 7.5rem)'
 })

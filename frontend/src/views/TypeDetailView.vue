@@ -11,6 +11,7 @@ import DirectionsLink from '@/components/content/DirectionsLink.vue'
 import { useIsDesktop } from '@/composables/useBreakpoint'
 import { useMapFocus } from '@/composables/useMapFocus'
 import { usePageTitle } from '@/composables/usePageTitle'
+import { cardPanelShape, usePanelShape } from '@/composables/usePanelShape'
 import { usePanelTrail } from '@/composables/usePanelTrail'
 import { useMapStore } from '@/stores/map'
 import TypeForm from '@/components/content/TypeForm.vue'
@@ -31,7 +32,15 @@ const toastStore = useToastStore()
 const mapStore = useMapStore()
 const { isDesktop } = useIsDesktop()
 
-const item = ref<ContentItem | null>(null)
+// The card comes with the route (lib/cardFirst.ts): fetched before this page
+// mounted, so the panel is born in the shape the card asks for (review PR-10).
+// Without it — the request failed, or a type with no place, which is not
+// fetched first — the page asks itself.
+const brought = () => {
+  const card = route.meta.card as ContentItem | undefined
+  return card && card.id === route.params.id ? card : null
+}
+const item = ref<ContentItem | null>(brought())
 // A freshly-started translation (see TranslateControl) is an empty draft —
 // its detail page opens straight into edit mode via ?edit=1 rather than
 // showing a blank read view first.
@@ -74,6 +83,16 @@ usePanelTrail(() =>
 // heading of a translation too (T7).
 usePageTitle(() =>
   shown.value ? [shown.value.original_title || shown.value.title, props.config.label] : null,
+)
+
+// D17 by the card, not by its type (review PR-10): a card of a type with a
+// place that has none — a ricetta sold nowhere — opens wide over a veiled map,
+// like a book; with no strip of map on a phone. A type with no place at all
+// leaves it to its route, which is wide already.
+usePanelShape(() =>
+  props.config.mapMode === 'pins' && item.value
+    ? cardPanelShape(hasPlace.value, editing.value)
+    : null,
 )
 
 // The map behind the panel shows this card's place while it is open (D16).
@@ -140,7 +159,9 @@ const deleteItem = async () => {
     })
 }
 
-onMounted(getItem)
+onMounted(() => {
+  if (!item.value) getItem()
+})
 
 // Navigating from one card's detail page straight to another's (e.g. a
 // TranslateControl link) keeps the same route record, so Vue Router reuses
@@ -152,7 +173,9 @@ watch(
   () => route.params.id,
   async () => {
     editing.value = false
-    await getItem()
+    const card = brought()
+    if (card) item.value = card
+    else await getItem()
     editing.value = route.query.edit === '1'
   },
 )

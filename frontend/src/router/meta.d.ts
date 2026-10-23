@@ -9,8 +9,14 @@ declare module 'vue-router' {
     // Every other page opens as a panel over the map (D15). 'narrow' is the
     // side panel for a card that has a place — the map beside it is doing
     // work (D16); 'wide', the default, is the centred reading panel over a
-    // veiled map, for everything that has no place (D17).
+    // veiled map, for everything that has no place (D17). For a card that is
+    // its type's default: the card itself says whether it has a place
+    // (composables/usePanelShape.ts, review PR-10).
     panel?: 'narrow' | 'wide'
+    // The card a detail page shows, fetched before the page mounts so its
+    // panel is born in the card's shape (lib/cardFirst.ts). Set per
+    // navigation by the route's guard; never declared on a route.
+    card?: unknown
     // The window's title, most specific part first and without the site's
     // name, which lib/pageTitle.ts adds — «Itinerari» becomes «Itinerari ·
     // Vivere Gaeta». None on the home, whose title is its own. A page named by
