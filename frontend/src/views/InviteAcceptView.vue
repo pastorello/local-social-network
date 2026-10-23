@@ -7,7 +7,7 @@ import { useToastStore } from '@/stores/toast'
 import { useUserStore } from '@/stores/user'
 import { parseZodObject, InviteAcceptForm } from '@/forms/user'
 import ActionButton from '@/components/buttons/ActionButton.vue'
-import FormColumn from '@/components/boxes/FormColumn.vue'
+import AccountColumn from '@/components/boxes/AccountColumn.vue'
 import FormErrors from '@/components/forms/FormErrors.vue'
 import FormField from '@/components/forms/FormField.vue'
 import FormInput from '@/components/forms/FormInput.vue'
@@ -60,7 +60,7 @@ const submitForm = () => {
 </script>
 
 <template>
-  <FormColumn>
+  <AccountColumn>
     <MainTitle>Attiva il tuo account</MainTitle>
 
     <p class="mb-6 text-muted">
@@ -105,5 +105,5 @@ const submitForm = () => {
         <ActionButton>Attiva account</ActionButton>
       </div>
     </form>
-  </FormColumn>
+  </AccountColumn>
 </template>

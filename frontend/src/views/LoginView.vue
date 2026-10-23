@@ -7,7 +7,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { LoginForm, parseZodObject } from '@/forms/user'
 import ActionButton from '@/components/buttons/ActionButton.vue'
-import FormColumn from '@/components/boxes/FormColumn.vue'
+import AccountColumn from '@/components/boxes/AccountColumn.vue'
 import FormErrors from '@/components/forms/FormErrors.vue'
 import FormField from '@/components/forms/FormField.vue'
 import FormInput from '@/components/forms/FormInput.vue'
@@ -68,7 +68,7 @@ const submitForm = async () => {
 </script>
 
 <template>
-  <FormColumn>
+  <AccountColumn>
     <MainTitle>Accedi</MainTitle>
 
     <form class="space-y-6" v-on:submit.prevent="submitForm">
@@ -125,5 +125,5 @@ const submitForm = async () => {
         >Scrivici</RouterLink
       >
     </p>
-  </FormColumn>
+  </AccountColumn>
 </template>

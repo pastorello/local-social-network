@@ -471,6 +471,54 @@ describe("the collaborator's surfaces meet WCAG 2.1 AA", { testIsolation: false 
     check('/profile/:id')
   })
 
+  // WCAG 1.4.10 (Reflow), and Luca's report on PR-11: in a quarter of the wide
+  // panel the profile's 200px avatar and its display-size name ran out of
+  // their column and under the reports beside them. One column now (the
+  // account pages' 420px one); measured at a wide screen, at the 1024px line
+  // where the wide layout starts, and on a phone: everything in the column
+  // stays inside it, and nothing scrolls sideways.
+  it('the profile keeps its avatar and its name inside its column, at every width', () => {
+    cy.viewport(1280, 800)
+    cy.visit('/users')
+    cy.get('button[aria-label^="Il tuo account"]').click()
+    cy.get('nav a[href^="/profile/"]')
+      .first()
+      .invoke('attr', 'href')
+      .then((href) => {
+        for (const [width, height] of [
+          [1440, 900],
+          [1024, 768],
+          [390, 844],
+        ] as const) {
+          cy.viewport(width, height)
+          cy.visit(href!)
+          cy.get('h1').should('not.be.empty')
+          cy.get('[aria-label^="Foto profilo di"]').should('be.visible')
+          cy.get('h1').then(($h1) => {
+            const column = $h1
+              .parents()
+              .toArray()
+              .find((el) => getComputedStyle(el).maxWidth === '420px')
+            expect(column, `the 420px column at ${width}px`).not.to.equal(undefined)
+            const edge = column!.getBoundingClientRect()
+            for (const el of column!.querySelectorAll('*')) {
+              const box = el.getBoundingClientRect()
+              if (box.width === 0) continue
+              expect(box.left, `left of ${el.tagName} at ${width}px`).to.be.at.least(edge.left - 1)
+              expect(box.right, `right of ${el.tagName} at ${width}px`).to.be.at.most(
+                edge.right + 1,
+              )
+            }
+            expect(column!.scrollWidth, `the column at ${width}px`).to.be.at.most(
+              column!.clientWidth,
+            )
+            const doc = $h1[0]!.ownerDocument.documentElement
+            expect(doc.scrollWidth, `the page at ${width}px`).to.be.at.most(doc.clientWidth)
+          })
+        }
+      })
+  })
+
   // The profile's two forms, one column like the login (review PR-11). Only
   // visited, never sent: a new password revokes every token (TD-20), and the
   // cases after this one share the block's single sign-in.

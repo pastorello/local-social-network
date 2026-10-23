@@ -5,7 +5,7 @@ import { ref } from 'vue'
 import { useToastStore } from '@/stores/toast'
 import { parseZodObject, PasswordResetRequestForm } from '@/forms/user'
 import ActionButton from '@/components/buttons/ActionButton.vue'
-import FormColumn from '@/components/boxes/FormColumn.vue'
+import AccountColumn from '@/components/boxes/AccountColumn.vue'
 import FormErrors from '@/components/forms/FormErrors.vue'
 import FormField from '@/components/forms/FormField.vue'
 import FormInput from '@/components/forms/FormInput.vue'
@@ -43,7 +43,7 @@ const submitForm = () => {
 </script>
 
 <template>
-  <FormColumn>
+  <AccountColumn>
     <MainTitle>Password dimenticata</MainTitle>
 
     <p v-if="sent">Se l'indirizzo esiste, riceverai un'e-mail a breve.</p>
@@ -74,5 +74,5 @@ const submitForm = () => {
         </div>
       </form>
     </template>
-  </FormColumn>
+  </AccountColumn>
 </template>

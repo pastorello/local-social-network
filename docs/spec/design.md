@@ -425,15 +425,17 @@ more than the frame is a decision for the build (see below).
 
 The review of 2026-10-22 (PR-11: L-09, A-03) found `/login` drawn as two
 boxes in the wide panel: «Accedi» on the left with 350px of nothing under
-three lines, the form on the right. Every account form had that shape. It is
+three lines, the form on the right. Every account form had that shape, and
+the profile page a narrower version of it. It is
 the first page a collaborator sees, so the author took the decision this
 section said was one to take. Built the next day:
 
-- **One box, centred, no wider than 420px** (`components/boxes/FormColumn.vue`):
+- **One box, centred, no wider than 420px** (`components/boxes/AccountColumn.vue`):
   the title, what the page is for, the fields, and under them, past a
   hairline, the way to the page beside it — «Vuoi collaborare? Scrivici» on
   the login, «Hai già un account? Accedi» on *Collabora*, *Cambia password*
-  and back on the profile's two forms. On a phone the box is the panel's
+  and back on the profile's two forms. The profile page wears it too (see
+  below). On a phone the box is the panel's
   width. The panel around it is still the wide one (D17): the box changed,
   not the frame.
 - **One pattern for label and field**, the writing forms' own: `FormField`
@@ -451,9 +453,15 @@ section said was one to take. Built the next day:
   *Modifica profilo*. The honeypot keeps `off`.
 - **Decided by the build**, since the review left them open:
   - **"/profile" is the profile's two forms**, `/profile/edit` and
-    `/profile/edit/password`, which had the login's two-box shape. The
-    profile page, `/profile/:id` — an avatar beside a list of reports — is
-    not a form and keeps its v1 clothes.
+    `/profile/edit/password`, which had the login's two-box shape, **and
+    the profile page**, `/profile/:id`. That one was added the same day,
+    on the author's report: in a quarter of the wide panel (about 170px)
+    the fixed 200px avatar and the display-size name ran out of their
+    column and under the reports beside it. Now the face, the name, the
+    count and *Modifica profilo* head the same column, the reports under
+    them past a hairline; the avatar is never wider than the box and the
+    name wraps. `a11y.cy.ts` measures it at 1440, 1024 and 390px (WCAG
+    1.4.10): nothing in the column leaves it, nothing scrolls sideways.
   - **The invite and the reset forms join them**, though the prompt names
     neither: they are the pages a link opens after *Password dimenticata*
     and after the author's approval, and leaving them in two boxes would

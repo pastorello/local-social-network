@@ -8,7 +8,7 @@ import { parseZodObject, CollaborateForm } from '@/forms/user'
 import FormErrors from '@/components/forms/FormErrors.vue'
 import FormField from '@/components/forms/FormField.vue'
 import FormInput from '@/components/forms/FormInput.vue'
-import FormColumn from '@/components/boxes/FormColumn.vue'
+import AccountColumn from '@/components/boxes/AccountColumn.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import { extractFieldErrors, extractFormErrors } from '@/lib/apiErrors'
@@ -75,7 +75,7 @@ const submitForm = () => {
 </script>
 
 <template>
-  <FormColumn>
+  <AccountColumn>
     <MainTitle>Collabora con noi</MainTitle>
 
     <p class="mb-6 text-muted">
@@ -150,5 +150,5 @@ const submitForm = () => {
         >Accedi</RouterLink
       >
     </p>
-  </FormColumn>
+  </AccountColumn>
 </template>
