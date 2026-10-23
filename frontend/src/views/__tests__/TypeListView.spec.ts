@@ -62,6 +62,18 @@ describe('TypeListView — the genre filter (spec content.md, luoghi)', () => {
     expect(nav.find('a[href="/chiese"]').exists()).toBe(true)
   })
 
+  it('keeps the churches’ chip while no genre has anything to show (review PR-9)', async () => {
+    // The menu no longer names Chiese: this chip is the reader's way to them.
+    const empty = genres.map((genre) => ({ ...genre, count: 0 }))
+    vi.mocked(axios.get).mockImplementation((url: string) =>
+      Promise.resolve({ data: url.includes('generi') ? empty : emptyPage }),
+    )
+    const { wrapper } = await mountAt('/luoghi')
+
+    const nav = wrapper.get('nav[aria-label="Filtra luoghi per genere"]')
+    expect(nav.findAll('a').map((a) => a.text())).toEqual(['Tutti', 'Chiese'])
+  })
+
   it('reads the genre from the URL, asks the API for it, and names the page after it', async () => {
     const { wrapper } = await mountAt('/luoghi?genere=spiaggia')
 
@@ -95,6 +107,24 @@ describe('TypeListView — the genre filter (spec content.md, luoghi)', () => {
 })
 
 describe('TypeListView — what it counts', () => {
+  it('counts the whole list, as the menu does, not the page it has loaded (review PR-9)', async () => {
+    const chiesa = { id: 'c1', title: 'Chiesa', is_published: true, images: [], zones: [] }
+    vi.mocked(axios.get).mockResolvedValue({
+      data: { count: 25, next: '/api/chiese/?page=2', previous: null, results: [chiesa] },
+    })
+    const { wrapper } = await mountAt('/chiese', chiesaConfig)
+
+    expect(wrapper.text()).toContain('25 schede')
+  })
+
+  it('says an empty heading is empty for now (review PR-9)', async () => {
+    vi.mocked(axios.get).mockResolvedValue({ data: emptyPage })
+    const { wrapper } = await mountAt('/chiese', chiesaConfig)
+
+    expect(wrapper.text()).toContain('0 schede')
+    expect(wrapper.text()).toContain('Ancora nessuna scheda.')
+  })
+
   it('counts tours as itinerari, not as schede', async () => {
     const tour = {
       id: 't1',

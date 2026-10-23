@@ -25,6 +25,9 @@ const userStore = useUserStore()
 const route = useRoute()
 
 const items = ref<ContentItem[]>([])
+// The whole list's size, not the page's: the menu prints the same number
+// beside this heading (review PR-9), and a page holds twenty.
+const total = ref(0)
 const nextPage = ref<string | null>(null)
 const loading = ref(true)
 const mineOnly = ref(false)
@@ -70,6 +73,7 @@ const getItems = async () => {
   try {
     const response = await axios.get<PaginatedItems>(endpoint.value)
     items.value = response.data.results
+    total.value = response.data.count
     nextPage.value = response.data.next
   } catch (error) {
     console.log('error:', error)
@@ -143,9 +147,9 @@ onMounted(() => {
         <div>
           <MainTitle>{{ activeOption?.name_plural ?? config.label }}</MainTitle>
           <p v-if="!loading" class="text-muted">
-            {{ entries.length }}
+            {{ total }}
             {{
-              entries.length === 1
+              total === 1
                 ? (config.countNouns?.[0] ?? 'scheda')
                 : (config.countNouns?.[1] ?? 'schede')
             }}
@@ -163,8 +167,10 @@ onMounted(() => {
         </div>
       </header>
 
+      <!-- The churches' chip is the only way to them from the menu (review
+      PR-9), so it stays even while no genre has anything to show. -->
       <nav
-        v-if="config.listFilter && visibleOptions.length"
+        v-if="config.listFilter && (visibleOptions.length || config.listFilter.related?.length)"
         :aria-label="config.listFilter.label"
         class="mb-4 sm:mb-8"
       >
@@ -218,7 +224,7 @@ onMounted(() => {
       </nav>
 
       <p v-if="!loading && entries.length === 0" class="text-muted">
-        {{ mineOnly ? 'Non hai ancora creato nessuna scheda.' : 'Nessuna scheda pubblicata.' }}
+        {{ mineOnly ? 'Non hai ancora creato nessuna scheda.' : 'Ancora nessuna scheda.' }}
       </p>
 
       <CardGrid :entries="entries" :type="config.key" />

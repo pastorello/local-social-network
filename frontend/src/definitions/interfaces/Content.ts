@@ -20,6 +20,10 @@ export interface ZoneRef {
   name: string
 }
 
+// GET /api/content/counts/ (review PR-9): the published originals of each
+// type, keyed by its route segment — `luoghi`, `feste`, … `itinerari`.
+export type CardCounts = Record<string, number>
+
 export interface CardImage {
   id: string
   imageURL: string
