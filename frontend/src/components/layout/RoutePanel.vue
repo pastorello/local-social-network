@@ -10,7 +10,9 @@ import { parentOf, tintOf } from '@/lib/navigation'
 // own URL, so a shared link to a card opens the map *and* the card. Two
 // shapes on a wide screen (D17): a narrow panel on the right for a card with a
 // place, because the map beside it is showing that place (D16); a wide,
-// centred reading panel over a veiled map for everything else.
+// centred reading panel over a veiled map for everything else. Whether a card
+// has a place is the card's to say, not its type's (review PR-10): App.vue
+// hands over the shape its data asked for (composables/usePanelShape.ts).
 //
 // On a phone (D18) a page is the whole screen — except a card with a place,
 // which leaves a strip of the map at its head, already centred on the place.

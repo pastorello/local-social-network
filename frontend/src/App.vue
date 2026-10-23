@@ -7,11 +7,16 @@ import { useRoute, useRouter } from 'vue-router'
 import AppToast from '@/components/modals/AppToast.vue'
 import RoutePanel from '@/components/layout/RoutePanel.vue'
 import MapStage from '@/components/maps/MapStage.vue'
+import { useOpenPanelShape } from '@/composables/usePanelShape'
 import HomeView from '@/views/HomeView.vue'
 import AppHeader from './components/AppHeader.vue'
 
 const route = useRoute()
 const router = useRouter()
+
+// D17's shape: the route's, unless the card it holds said otherwise — a card
+// of a type with a place that has none opens wide (review PR-10).
+const panelShape = useOpenPanelShape()
 
 // The map under every page (spec/design.md D13–D15): the map is mounted once
 // and every route but the home opens as a panel over it. The home's own chrome
@@ -61,12 +66,7 @@ router.afterEach(async (to, from) => {
     class="pointer-events-none fixed inset-x-0 top-[var(--header-h,10rem)] bottom-0 z-10 focus:outline-none"
   >
     <RouterView v-slot="{ Component, route: current }">
-      <!-- Compared, not read through: RouterView's slot types its route
-      loosely enough that router/meta.d.ts does not reach it. -->
-      <RoutePanel
-        v-if="Component && !current.meta.fullBleed"
-        :shape="current.meta.panel === 'narrow' ? 'narrow' : 'wide'"
-      >
+      <RoutePanel v-if="Component && !current.meta.fullBleed" :shape="panelShape">
         <!-- No footer: the credits are a page of their own, Il progetto (D21). -->
         <component :is="Component" />
       </RoutePanel>

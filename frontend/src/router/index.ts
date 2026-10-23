@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '../stores/user'
+import { fetchCardFirst } from '../lib/cardFirst'
 import { setTitle } from '../lib/pageTitle'
 import {
   chiesaConfig,
@@ -106,9 +107,14 @@ const router = createRouter({
       meta: { requiresAuth: true, panel: 'narrow', title: ['Nuova festa', 'Feste'] },
     },
     {
+      // 'narrow' is the type's default; the card says whether it has a place,
+      // and is fetched before its page mounts so the panel is born in the
+      // shape it says (lib/cardFirst.ts, review PR-10). The same for every
+      // type with a place below; dialetto and libri have none, and are wide.
       path: '/feste/:id',
       name: 'festedetail',
       component: () => import('../views/FesteDetailView.vue'),
+      beforeEnter: fetchCardFirst('/api/feste/'),
       meta: { requiresAuth: false, panel: 'narrow', title: ['Feste'] },
     },
     // C3: chiese/ricette/personaggi/dialetto share the same generic
@@ -133,6 +139,7 @@ const router = createRouter({
       name: chiesaConfig.routeNames.detail,
       component: () => import('../views/TypeDetailView.vue'),
       props: { config: chiesaConfig },
+      beforeEnter: fetchCardFirst(chiesaConfig.endpoint),
       meta: { requiresAuth: false, panel: 'narrow', title: [chiesaConfig.label] },
     },
     {
@@ -154,6 +161,7 @@ const router = createRouter({
       name: ricettaConfig.routeNames.detail,
       component: () => import('../views/TypeDetailView.vue'),
       props: { config: ricettaConfig },
+      beforeEnter: fetchCardFirst(ricettaConfig.endpoint),
       meta: { requiresAuth: false, panel: 'narrow', title: [ricettaConfig.label] },
     },
     {
@@ -179,6 +187,7 @@ const router = createRouter({
       name: personaggioConfig.routeNames.detail,
       component: () => import('../views/TypeDetailView.vue'),
       props: { config: personaggioConfig },
+      beforeEnter: fetchCardFirst(personaggioConfig.endpoint),
       meta: { requiresAuth: false, panel: 'narrow', title: [personaggioConfig.label] },
     },
     {
@@ -221,6 +230,7 @@ const router = createRouter({
       name: luogoConfig.routeNames.detail,
       component: () => import('../views/TypeDetailView.vue'),
       props: { config: luogoConfig },
+      beforeEnter: fetchCardFirst(luogoConfig.endpoint),
       meta: { requiresAuth: false, panel: 'narrow', title: [luogoConfig.label] },
     },
     {

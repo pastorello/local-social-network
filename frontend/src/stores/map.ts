@@ -45,6 +45,11 @@ export interface MapEditor {
   joined?: boolean
 }
 
+// The two shapes a page opens in over the map (spec/design.md D17): narrow on
+// the right beside a map that shows its place, or wide and centred over a
+// veiled one.
+export type PanelShape = 'narrow' | 'wide'
+
 // Handles, not data (the same reasoning as stores/toast.ts's timers): the
 // callbacks of the one form that is drawing, kept out of reactive state.
 let onEditorAdd: ((point: { lat: number; lng: number }) => void) | null = null
@@ -102,6 +107,11 @@ export const useMapStore = defineStore('map', {
     // returns to where it stood before the page opened.
     view: null as { lat: number; lng: number; zoom: number } | null,
     editor: null as MapEditor | null,
+    // The shape the open card asked for once its data said whether it has a
+    // place (review PR-10): a ricetta sold nowhere opens wide, though its
+    // type's route is narrow. Null while no page has said, and the route's
+    // own shape stands (composables/usePanelShape.ts).
+    panelShape: null as PanelShape | null,
     loaded: false,
   }),
 
@@ -218,6 +228,10 @@ export const useMapStore = defineStore('map', {
 
     setSheetHeight(pixels: number | null) {
       this.sheetHeight = pixels
+    },
+
+    setPanelShape(shape: PanelShape | null) {
+      this.panelShape = shape
     },
 
     setView(view: { lat: number; lng: number; zoom: number }) {

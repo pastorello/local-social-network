@@ -7,6 +7,8 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import TypeDetailView from '../TypeDetailView.vue'
 import { PANEL_TRAIL, type Trail } from '@/composables/usePanelTrail'
+import { fetchCardFirst } from '@/lib/cardFirst'
+import { useMapStore } from '@/stores/map'
 import {
   chiesaConfig,
   dialettoConfig,
@@ -210,5 +212,79 @@ describe('TypeDetailView — eyebrow and title (review PR-23)', () => {
     const { trail } = await mountWith(chiesaConfig, card({ id: 'altra', zones: [] }))
 
     expect(trail.value).toBeNull()
+  })
+})
+
+// Review PR-10 (P-09): the card decides its panel, not its type — and the
+// panel is born in that shape, from the card the route brought with it.
+describe('TypeDetailView — the panel’s shape (review PR-10)', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  // As the router does it: the card fetched before the page mounts.
+  const mountBrought = async (config: TypeConfig, data: Record<string, unknown>, query = '') => {
+    vi.mocked(axios.get).mockResolvedValue({ data })
+    const stub = { template: '<div />' }
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: `/${config.key}`, name: config.routeNames.list, component: stub },
+        {
+          path: `/${config.key}/:id`,
+          name: config.routeNames.detail,
+          component: stub,
+          beforeEnter: fetchCardFirst(config.endpoint),
+        },
+      ],
+    })
+    await router.push(`/${config.key}/c1${query}`)
+    const wrapper = mount(TypeDetailView, {
+      props: { config },
+      global: { plugins: [createPinia(), router], stubs: { TypeForm: true } },
+    })
+    // No flush: what the page is born with.
+    return { wrapper, store: useMapStore() }
+  }
+
+  it('opens a ricetta sold nowhere wide, from its first render', async () => {
+    const { wrapper, store } = await mountBrought(
+      ricettaConfig,
+      card({ title: 'Tiella', original_title: 'Tiella', pins: [] }),
+    )
+
+    expect(store.panelShape).toBe('wide')
+    expect(wrapper.get('h1').text()).toBe('Tiella')
+    // The card came with the route: the page does not ask again.
+    await flushPromises()
+    expect(axios.get).toHaveBeenCalledTimes(1)
+
+    wrapper.unmount()
+    expect(store.panelShape).toBeNull()
+  })
+
+  it('opens a church with its pin narrow, beside the map that shows it', async () => {
+    const { store } = await mountBrought(
+      chiesaConfig,
+      card({ pins: [{ id: 1, lat: 41.2087, lng: 13.5868, label: '' }] }),
+    )
+
+    expect(store.panelShape).toBe('narrow')
+  })
+
+  it('keeps a card without a place narrow while its form is open: the form draws on the map', async () => {
+    const { store } = await mountBrought(ricettaConfig, card({ pins: [] }), '?edit=1')
+
+    expect(store.panelShape).toBe('narrow')
+  })
+
+  it('leaves a type with no place at all to its route', async () => {
+    const { store } = await mountBrought(dialettoConfig, card({ meaning: 'Lustrascarpe.' }))
+
+    expect(store.panelShape).toBeNull()
+  })
+
+  it('decides once it has the card, when the route could not bring it', async () => {
+    await mountWith(ricettaConfig, card({ pins: [] }))
+
+    expect(useMapStore().panelShape).toBe('wide')
   })
 })

@@ -534,6 +534,15 @@ opening-hours filter is not.
   side column beside a map that has nothing to say about it. Reading wants
   the space.
 
+  *Amended 2026-10-23 — the card decides, not its type.* A card of a type
+  with a place that has none — a ricetta sold nowhere, a personaggio with
+  nothing on the map, a luogo still a draft without its pin, a festa whose
+  procession nobody has drawn — is read like a book: the wide panel over a
+  veiled map, and on a phone the whole screen with no strip (D18). The
+  type's route still says narrow; the card overrules it, and the panel is
+  born in the card's shape rather than changing it in front of the reader.
+  See "The card decides its panel — 2026-10-23" at the end of this section.
+
 - **D18 — On a phone, a card opens full screen.** A strip of the map (about
   180 px) at the head of the article is already centred on the place;
   tapping it expands the map to the whole screen, with *Torna alla scheda* to
@@ -700,7 +709,9 @@ wallpaper. What the build settled, so it is not re-argued:
   to, onto the home when it does not (a deep link). A route declares its
   shape in `meta.panel`; the narrow ones are the card types with a place and a
   report. *(Since 2026-10-23 they close onto the home always, never by going
-  back — "Close, up, back".)*
+  back — "Close, up, back". And for a card the route's shape is its type's
+  default: a card without a place opens wide — "The card decides its
+  panel".)*
 - **The map is `inert` while it cannot be seen** — behind a wide panel's veil,
   and under every panel on a phone — so it is never an invisible tab stop.
 - **The map reacts** through `composables/useMapFocus.ts`: a page hands the
@@ -1015,3 +1026,43 @@ up link "Close, up, back" put at the panel's head:
   - **Up from a report is called «Segnalazioni»**, after what the reader
     finds there, rather than «Mappa».
 
+
+### The card decides its panel — 2026-10-23
+
+The review of 2026-10-22 (PR-10: P-09) found a ricetta with no pin opening
+in the narrow panel beside a full, undimmed map — every pin of every layer
+next to a card they had nothing to do with. D17 already said a card without
+a place is read wide; the build had given the shape to the type instead.
+Built the same day:
+
+- **The card says whether it has a place**: a pin or a route. With either it
+  opens narrow, beside the map that shows it; with neither it opens wide over
+  a veiled, `inert` map, and on a phone as the whole screen with no strip —
+  as dialetto and libri do, whose types have no place at all. The route's
+  `meta.panel` stays the type's default; the page hands the shell what its
+  card says (`composables/usePanelShape.ts`), as it hands the map a frame,
+  and both the panel and the map — its veil, `inert`, the free space it
+  frames in, *Elenco* beside a narrow panel — draw from that one answer. The
+  rule is one function, `cardPanelShape`.
+- **The panel is born in that shape**, never opened narrow and widened in
+  front of the reader: the card is fetched before its page mounts
+  (`lib/cardFirst.ts`, a guard on the detail routes of the five types with a
+  place), so the page the reader came from stays on screen until the card
+  is in, and the page that opens has it from its first render. If the
+  request fails the page asks again itself, and a card that does not exist
+  still sends the reader to its type's list. `reader.cy.ts` records every
+  width the panel is drawn at between a list and a card.
+- **Decided by the build**, since the review left them open:
+  - **Fetching first, not "open wide and narrow it if there are points"**,
+    the review's other way: that would have widened every church for the
+    length of a request — the common case paying for the rare one. Showing
+    no panel until the card is in was tried on paper and dropped too: the
+    veil would blink off and on between a list and its card, and on a phone
+    the map would flash where the list had been.
+  - **A card's form keeps the narrow panel**, place or not: the form draws
+    the place on the map (D19), and a ricetta's first pin is added there.
+  - **The shape follows the card while it is open**: saving its last pin
+    away widens the panel, adding its first narrows it.
+  - **From one card straight to another of the same type** — a translation,
+    a pin clicked beside the panel — the panel keeps its shape until the
+    next card is in, since the guard runs only on entering a route.
