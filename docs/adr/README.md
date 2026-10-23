@@ -24,3 +24,4 @@ records what was decided *then*.
 | [0007](0007-serving-media-from-the-app.md) | Media is served by the app, hardened, on any host (amends 0003) | Accepted |
 | [0008](0008-opening-hours-as-dated-testimony.md) | Opening hours enter the archive as dated testimony, never as a schedule (amends design.md's refusal) | Accepted |
 | [0009](0009-where-it-runs.md) | Where it runs: viveregaeta.it, one OVHcloud VPS, Brevo for mail | Accepted |
+| [0010](0010-businesses-in-the-archive.md) | Businesses enter as their own type (`attivita`: beve, mangia, compra) on editorial merit; beach clubs are businesses, the beach is no one's | Accepted · specified, not built |

@@ -249,6 +249,66 @@ placeholders**: a picture of a real place that is not that place reads as a
 photograph the moment it is screenshotted. A card with no image already has a
 designed look (D7 of design.md, a tint of its layer colour).
 
+## D9 — Events and the feasts' editions (decided 2026-10-23)
+
+The author's decisions, taken in the interview that followed the UX/UI review
+of 2026-10-22 ([../review-2026-10-22.md](../review-2026-10-22.md), *Decisioni
+del 23 ottobre 2026*). They are the "first thing that knows what happens on a
+given day" that D1 was waiting for, and Q5's *«after the deploy»* has come:
+the site has been live since 2026-10-22.
+
+**Feasts and events are dated, and they exist only when they happen.** There
+are three things, not one:
+
+- **A light event**: the live music at a bar on a Friday. A start date and an
+  optional time, and a title. Optionally, the **poster**, one line of
+  description and a link. It is held at a place: a card that has one (a
+  luogo, a chiesa, an `attivita` per [ADR-0010](../adr/0010-businesses-in-the-archive.md))
+  or CF31's one labelled point.
+- **A one-off event that lasts**: the Festival della pizza, the Luminarie.
+  The same light model with an end date, a weekend or one or more weeks.
+  CF29's 60-day cap still guards against a mistyped year.
+- **A patron saint's feast** is neither. It is a festa card that already
+  carries its procession and its places, and it recurs. What it lacks is the
+  date of this year's edition, so it gets **K2's cheap shape**: a per-year row a
+  person types (the festa, a start date, an optional end date, an optional
+  note). There is no recurrence rule. With no row, the card prints its
+  `recurrence` and *«data non ancora confermata»*, never a guess.
+
+**The poster is in, and it zooms** (CF30, amended). *«Cosa si può fare»*
+lives on links and posters in a way the archive's cards do not. A
+collaborator who meets a poster in a bar should be able to photograph it with
+a phone and file the event on the spot, without retyping the programme the
+poster already prints. So the poster is an optional image on an event, shown
+so that it can be enlarged and read. It goes through `common/images.py` like
+every upload. **The line between the two rules** is the author's: the
+archive's own content (traditions, places, recipes) publishes photographs of
+Gaeta. The no-advertising rule (D10, D12, ADR-0010) is about businesses
+themselves and about fixed slots in the site's layout. It does not cover an
+event's own poster.
+
+**In the wizard, two quick ways in, kept apart from the everyday.** Study 10's
+step 1 offers **«Oggi»** and **«Questa settimana»**: what falls on those
+days, light events and feasts' editions together. Each appears only when at
+least one thing falls in its window, by the wizard's own rule that an option
+with nothing behind it does not appear. They are never merged with the
+archive's cards into one ranked list (CF42), and CF33's heading and its
+honest empty sentence hold. *Left to the build, decided by default:* «questa
+settimana» is today and the six days after it, in Gaeta's date
+(`Europe/Rome`). A multi-day event or edition is in a window if any of its
+days is.
+
+**What else in Part II changes with this**:
+- CF25 (an evento is not a card), CF26 (expiry is a query), CF28 (cancelled
+  is shown), CF29 (one occurrence, the 60-day cap), CF32 (the source link, never a
+  checkout), CF33 and CF34 stand.
+- **CF27 is superseded.** A feast's edition is K2's row, not an `evento` with a
+  card. An event held at a card has its own title and line, because the card
+  is its venue, not its subject.
+- **CF41 is amended** by ADR-0010: the venue may be an `attivita` card.
+
+The build is the review's PR-27. The wizard reads it in PR-21.
+
 ## The build, in order
 
 | PR | What | Cost |
@@ -1548,6 +1608,12 @@ is the most dangerous: a `Ristorante` genre is *one Django admin form* — no
 migration, no PR, no spec edit, no review — and it disarms the closed-list guard
 that content.md uses to justify `luoghi`'s existence at all.
 
+*(Answered 2026-10-23 by [ADR-0010](../adr/0010-businesses-in-the-archive.md):
+businesses are a type of their own, `attivita`, with a closed `kind` in code
+(*beve*, *mangia*, *compra*), on the editors' merit. A beach club enters like
+any business, through its bar or its kitchen, and the beach stays public land
+on its own card.)*
+
 ### Also reopened — decide while building, but decide
 
 - **I3, a stop is always a card, never a free point with a caption.** The worked
@@ -1895,7 +1961,9 @@ that content.md uses to justify `luoghi`'s existence at all.
   interval nobody chose — worse than a cron, because it looks deliberate.
 
 - **CF27 — An event anchored to a card is an occurrence, never a second
-  article.** When `card` is set the event carries no body and no title of its own:
+  article.** *(Superseded 2026-10-23, Part −1 D9: a feast's edition is K2's
+  per-year row, and an event held at a card keeps its own title and line,
+  since the card is its venue rather than its subject.)* When `card` is set the event carries no body and no title of its own:
   the module renders the festa's title, prose and route and adds the date and the
   hour; the link goes to `/feste/:id`. The write path refuses an event carrying
   both a card and a description. This is `itinerari.Stop`'s exact shape, and it is
@@ -1929,7 +1997,11 @@ that content.md uses to justify `luoghi`'s existence at all.
   adding a genre** — exactly the move content.md says the closed list exists to
   prevent.
 
-- **CF30 — An event has no images field.** Not a field with a hint. `libri`'s
+- **CF30 — An event has no images field.** *(Amended 2026-10-23, Part −1 D9:
+  an event may carry its poster, zoomable, so it can be filed from a phone
+  photo. The no-advertising rule covers businesses and fixed layout slots, not
+  an event's own poster. The archive's cards still publish photographs of
+  Gaeta.)* Not a field with a hint. `libri`'s
   `imagesHint` works because a collaborator has a legitimate image and needs
   steering between two candidates; a collaborator adding a sagra has exactly one
   image in hand — **the locandina** — and it is a designed advertisement
@@ -2089,6 +2161,9 @@ that content.md uses to justify `luoghi`'s existence at all.
   endorsement), and *«il palco è davanti al lido, sul lato di Via Marina di
   Serapo»* in the collaborator's own sentence. Accuracy at the moment of use,
   presence out of the structured data — which is where presence is worth money.
+  *(Amended 2026-10-23 by [ADR-0010](../adr/0010-businesses-in-the-archive.md):
+  businesses are cards now, `attivita`, on editorial merit, so an event's venue
+  may be one, and its name then sits in the structured field.)*
 
 - **CF42 — Events and archive cards are never merged into one ranked list.** The
   static half is for the tourist; the events half is addressed to whoever is in

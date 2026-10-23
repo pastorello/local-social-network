@@ -253,6 +253,11 @@ is a new token, checked against D9 like every other.
 **Beaches are the seven places, not the businesses on them**: Serapo,
 Fontania, Quaranta Remi, Ariana, San Vito, Arenauta, Sant'Agostino. No beach
 clubs — the archive lists places, and a *stabilimento* is a business.
+*(Superseded 2026-10-23 by [ADR-0010](../adr/0010-businesses-in-the-archive.md):
+businesses enter as their own type, `attivita`, on editorial merit, and a lido
+is one like any other, through its bar or its kitchen. The beaches stay these
+seven places. A beach card is public land and never presents a lido as its
+owner or its part.)*
 
 ### What the build decided — 2026-09-18
 
