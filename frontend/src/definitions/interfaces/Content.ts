@@ -43,6 +43,20 @@ export interface TranslationRef {
   is_published: boolean
 }
 
+// One row of *Le mie schede* (review PR-13): a collaborator's own card, of
+// any type — mirrors content/serializers.py::MyCardSerializer. `type` is the
+// type's route segment, so the row knows where its card lives.
+export interface MyCard {
+  id: string
+  type: string
+  title: string
+  original_title: string
+  is_published: boolean
+  language: string
+  translation_of: string | null
+  updated_at: string
+}
+
 export interface CardBase {
   id: string
   title: string

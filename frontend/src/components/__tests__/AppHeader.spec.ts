@@ -105,6 +105,26 @@ describe('the menu (spec/design.md D14)', () => {
     expect(wrapper.text()).toContain('Esci')
   })
 
+  // Review PR-13 (C-02): what a collaborator signs in for comes first behind
+  // the avatar — their own cards, every type at once — then the profile. On a
+  // phone, in the same order inside Menu.
+  it.each([
+    ['the avatar', true, 'button[aria-label^="Il tuo account"]'],
+    ['Menu, on a phone', false, 'button[aria-label="Menu"]'],
+  ])('puts a collaborator’s own cards first behind %s', async (_, desktop, button) => {
+    stubViewport(desktop)
+    const wrapper = await mountHeader(true)
+    const trigger = wrapper.get(button)
+    await trigger.trigger('click')
+
+    const entries = wrapper.get(`#${trigger.attributes('aria-controls')}`).findAll('a, button')
+    const names = entries.map((entry) => entry.text())
+    const mine = names.indexOf('Le mie schede')
+    expect(mine).toBeGreaterThanOrEqual(0)
+    expect(names[mine + 1]).toBe('Il tuo profilo')
+    expect(entries[mine]!.attributes('href')).toBe('/le-mie-schede')
+  })
+
   // Reports are for people with an account (decided 2026-10-22, spec
   // reports-and-polls.md R1), and so is the way to file one. From the home
   // itself there is no route change to close the menu, so it closes itself.

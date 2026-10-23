@@ -11,8 +11,9 @@ declare module 'vue-router' {
     // work (D16); 'wide', the default, is the centred reading panel over a
     // veiled map, for everything that has no place (D17). For a card that is
     // its type's default: the card itself says whether it has a place
-    // (composables/usePanelShape.ts, review PR-10).
-    panel?: 'narrow' | 'wide'
+    // (composables/usePanelShape.ts, review PR-10). 'editor' is every form
+    // that writes a card: wide, on the right, beside a live map (review PR-13).
+    panel?: 'narrow' | 'wide' | 'editor'
     // The card a detail page shows, fetched before the page mounts so its
     // panel is born in the card's shape (lib/cardFirst.ts). Set per
     // navigation by the route's guard; never declared on a route.

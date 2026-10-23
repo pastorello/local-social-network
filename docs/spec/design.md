@@ -599,6 +599,16 @@ opening-hours filter is not.
   born in the card's shape rather than changing it in front of the reader.
   See "The card decides its panel — 2026-10-23" at the end of this section.
 
+  *Amended 2026-10-23 — a third shape, the editor* (decided by the author
+  on 2026-10-22; review PR-13). Every form that writes a card — the
+  `/…/nuovo` pages, and a card's own form, which opens in place on its
+  page — opens in a panel as wide as the reading panel (808 px) but
+  anchored on the right like the narrow one, beside a live map that is not
+  veiled, because the map is what the form draws on (D19). Below 1280 px it
+  is the narrow panel's 560 px. The types with no place are written in it
+  too: one shape for writing. See "The collaborator's desk — 2026-10-23" at
+  the end of this section.
+
 - **D18 — On a phone, a card opens full screen.** A strip of the map (about
   180 px) at the head of the article is already centred on the place;
   tapping it expands the map to the whole screen, with *Torna alla scheda* to
@@ -637,6 +647,14 @@ opening-hours filter is not.
   *Counter-case, rejected:* keep each form's own map. Cheaper, and it leaves
   alone the component every reader uses — but it means a map inside a panel
   over a map, which is the first oddity anyone notices.
+
+  *Amended 2026-10-23 — the editor is reading-wide, and the banner runs
+  across the map* (review PR-13). The form sits in D17's third shape, 808 px
+  from 1280 px, so the tabs and the toolbar fit on one row and the text is
+  written at the measure it will be read at; the toolbar is icons, each
+  named in words and shown in a tooltip. The banner is no longer a pill in
+  the map's corner: it runs across the map right under the menu, in the
+  accent, with *Fatto*. See "The collaborator's desk — 2026-10-23".
 
 - **D20 — The text lists stay one tap away on every map screen** ("Elenco ·
   N luoghi"). They are ADR-0005's decided equivalent of the pins, not a
@@ -732,13 +750,17 @@ card type and an editorial decision before a technical one.
 
 - ~~Panel widths.~~ Built 2026-09-18 at the drawn values: 560 px (narrow),
   808 px (wide); the editor's 600 px waits for D19. *(D19 chose the narrow
-  560 px instead — "The map as the editor".)*
-- What a signed-in collaborator finds behind the avatar (their cards, a way
-  to start a new one). The drawing shows only the avatar. **Half answered
-  2026-09-18** (D14 below): the profile, *Utenti* and *Esci*. **Still open:**
-  the collaborator's own cards and a way to start one are not behind the
-  avatar — they are reached per type, through each list's *Le mie*
-  filter and its *Nuova scheda* button.
+  560 px instead — "The map as the editor". Since 2026-10-23 the editor is
+  a shape of its own, 808 px from 1280 px and 560 px below — "The
+  collaborator's desk".)*
+- ~~What a signed-in collaborator finds behind the avatar (their cards, a
+  way to start a new one).~~ The drawing shows only the avatar. **Half
+  answered 2026-09-18** (D14 below): the profile, *Utenti* and *Esci*.
+  **Answered 2026-10-23** (review PR-13): *Le mie schede* comes first behind
+  the avatar — the collaborator's own cards of every type, the drafts
+  first, with *Nuova scheda* and a menu of the types — and a collaborator
+  with a draft lands there after signing in. See "The collaborator's desk —
+  2026-10-23" at the end of this section.
 
 ### What the first build decided — 2026-09-18
 
@@ -800,6 +822,8 @@ the polls are reached from:
   *Mappa*, *Schede*, *Il progetto*, then *Accedi* or the avatar. **Behind the
   avatar: the profile, *Utenti* and *Esci*** — the drawing showed only the
   avatar, and those three had to live somewhere a collaborator would look.
+  *(Since 2026-10-23 the collaborator's own cards come first, *Le mie
+  schede* — "The collaborator's desk".)*
   On a phone the pill keeps the wordmark and *Schede*, and the rest sits
   behind one *Menu* button. Both are disclosures of links, not ARIA menus;
   Escape closes them and gives focus back to their button.
@@ -855,7 +879,9 @@ D19, and what the build decided:
   aggiungere la tappa 3", or for pins what the next click does and when the
   cap is reached) is a `role="status"` region, at the map's bottom-left on a
   wide screen and in the strip beside the zoom buttons on a phone. **Fatto**
-  leaves the map tab for the next one, *Pubblicazione*.
+  leaves the map tab for the next one, *Pubblicazione*. *(Since 2026-10-23
+  it runs across the map under the menu, in the accent — "The
+  collaborator's desk".)*
 - **The sections are tabs** (`FormTabs.vue`, ARIA's tabs pattern: one tab
   stop, arrows, Home/End). The panels stay in the DOM while hidden, so every
   field keeps its id and error wiring; a tab holding a rejected field says so
@@ -863,6 +889,8 @@ D19, and what the build decided:
 - **The editing panel is the narrow panel, 560 px**, not the drawing's 600 —
   one narrow shape rather than two. The create pages of the types with a
   place open in it too (`meta.panel: 'narrow'`), so the map is beside them.
+  *(Since 2026-10-23 the editor is a shape of its own, `'editor'`, 808 px
+  from 1280 px, for every type — "The collaborator's desk".)*
 - **Typed coordinates stay**, in the same field — the keyboard path the map
   click does not have; `collaborator.cy.ts` tests it on its own, since the
   WCAG gate excludes the map.
@@ -1117,8 +1145,71 @@ Built the same day:
     the map would flash where the list had been.
   - **A card's form keeps the narrow panel**, place or not: the form draws
     the place on the map (D19), and a ricetta's first pin is added there.
+    *(Since 2026-10-23 it opens in the editor's shape, which is beside the
+    map too — "The collaborator's desk".)*
   - **The shape follows the card while it is open**: saving its last pin
     away widens the panel, adding its first narrows it.
   - **From one card straight to another of the same type** — a translation,
     a pin clicked beside the panel — the panel keeps its shape until the
     next card is in, since the guard runs only on entering a route.
+
+### The collaborator's desk — 2026-10-23
+
+The review of 2026-10-22 (PR-13: C-01, C-02, A-05) followed a collaborator
+through a Sunday's work. After signing in they landed on the map, with
+nothing saying where their drafts were — a draft was found type by type,
+through each list's *Le mie* filter, so they had to remember its type — and
+the form they wrote in was the 560 px narrow panel, where the five tabs and
+the editor's toolbar each broke onto two rows, under a status pill in the
+map's corner that was easy to miss. The author decided the editor's shape
+on 2026-10-22 (D17's third shape); the rest was built on 2026-10-23:
+
+- ***Le mie schede*** (`/le-mie-schede`, a wide panel) is first behind the
+  avatar and in the phone's *Menu*: the collaborator's own cards of every
+  type on one page — **the drafts first, then what is published**, each part
+  by type, in the order the menu offers the types to a reader and the tours
+  last. A translation is filed under its Italian name, with its language
+  beside it (T7). Each row opens its card, and *Modifica* opens it with its
+  form (`?edit=1`): two clicks from the avatar to a draft's form. *Nuova
+  scheda* is a disclosure of the eight types, each to its own form. One
+  endpoint serves the page, `GET /api/content/mine/`: the signed-in author's
+  cards, of every type found as the counts find them (ADR-0004), paged like
+  every list, drafts first.
+- **Where a collaborator lands.** After signing in with nowhere asked for,
+  on *Le mie schede* when they have a draft, and on the map otherwise; a
+  page the router's guard sent them away from still wins. The login asks
+  for one row of the list — drafts come first, so one row says whether there
+  is any — and if the list cannot be had it goes to the map: signing in does
+  not fail over where to go next.
+- **The editor's shape** — `meta.panel: 'editor'` on every create route, and
+  asked for by a card's page while its form is open: 808 px on the right
+  from 1280 px, 560 px between 1024 and 1280, no veil, the map live and not
+  `inert`, framing in the space the panel leaves free. On a phone it is the
+  narrow panel's strip, which, enlarged, is where the place is drawn (D19).
+  Dialetto and libri are written in it too, beside a map with nothing of
+  theirs on it: one shape for writing, as the author asked, rather than one
+  for each kind of card.
+- **The toolbar is icons**, on the app's 20 px grid, each named in words —
+  *Grassetto*, *Titolo H2*, *Lista numerata* — since with no text on the
+  button the name is the whole label (WCAG 2.5.3), and a tooltip shows the
+  same words on hover *and* on keyboard focus. Escape puts a tooltip away
+  (WCAG 1.4.13) and only then reaches the panel, which closes on it. The
+  text is written at the reading measure, `prose`'s 65ch.
+- **The banner** runs across the map right under the menu, in the accent
+  (white on `--color-sea`, 7.23:1), with *Fatto*: on a wide screen from the
+  map's edge to the panel's, its top level with the panel's; on a phone
+  across the strip. Leaflet's zoom buttons step down below it. It is still a
+  `role="status"` region.
+- **Decided by the build**, since the review left them open:
+  - **Drafts and published as two parts**, not one list per type with its
+    drafts on top: a draft church under five published places is not at the
+    top of the page a collaborator was sent to for it.
+  - **A *Modifica* on every row**, though it doubles the tab stops: the page
+    is for unfinished work, and the form is where it is finished.
+  - **No date on a row**: the order — drafts first, then the last changed —
+    says what a date would.
+  - **Below 1280 px the five tabs may wrap**, as before: the review asked for
+    one row at 808 px, and the 560 px panel is the narrow one's width.
+  - **Not here:** filing a report keeps its own flow and form (v1 clothes,
+    "What the pass covered"), and the polls join the avatar's menu after *Le
+    mie schede* with review PR-17.

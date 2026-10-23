@@ -427,6 +427,30 @@ describe("the collaborator's surfaces meet WCAG 2.1 AA", { testIsolation: false 
     check('/chiese/nuova (mappa)')
   })
 
+  // Review PR-13 (A-05): the banner runs across the map under the menu, in
+  // the accent — on a phone across the strip, where the map is drawn on.
+  it('the authoring form drawing on the map on a phone, with its banner', () => {
+    cy.viewport(390, 844)
+    cy.visit('/chiese/nuova')
+    cy.contains('[role="tab"]', 'Mappa').click()
+    cy.contains('[role="status"]', 'Clicca sulla mappa').should('be.visible')
+
+    check('/chiese/nuova (mappa, telefono)')
+  })
+
+  // Review PR-13 (C-02): a collaborator's own cards, every type, behind the
+  // avatar — measured with its «Nuova scheda» menu open, a new control.
+  it('a collaborator’s own cards, with the menu of new ones open', () => {
+    cy.viewport(1280, 800)
+    cy.visit('/le-mie-schede')
+    cy.contains('h1', 'Le mie schede')
+    cy.contains('h2', 'Bozze')
+    cy.get('button[aria-label="Nuova scheda"]').click()
+    cy.contains('a', 'Itinerario').should('be.visible')
+
+    check('/le-mie-schede')
+  })
+
   // The tour form's stops tab lends the map a stops editor (itinerari.md I8);
   // the stops list and its keyboard picker are measured with a stop in it.
   it('the tour form, with a stop picked', () => {
