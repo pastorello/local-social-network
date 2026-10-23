@@ -48,6 +48,32 @@ describe('CardArticle', () => {
     expect(wrapper.find('h1').attributes('lang')).toBe('it')
   })
 
+  // Reported 2026-10-23: the byline passed `inline-block` to UserAvatar, which
+  // replaced the `flex` that centres the initials of an author with no photo.
+  it("keeps an author's initials centred in the byline's circle", () => {
+    const wrapper = mount(CardArticle, {
+      props: {
+        title: 'Santuario della Montagna Spaccata',
+        bodyHtml: '<p>Testo</p>',
+        author,
+        createdAt: '2026-01-01T00:00:00Z',
+        isPublished: true,
+        images: [],
+        translations: [],
+        detailRouteName: 'chiesedetail',
+        backTo: { name: 'chieselist', label: 'chiese' },
+      },
+      global: { stubs: { RouterLink: RouterLinkStub, LanguageSwitch: true } },
+    })
+
+    const initials = wrapper.get('[role="img"][aria-label="Foto profilo di Autore"]')
+    const classes = initials.classes()
+    expect(classes).toEqual(expect.arrayContaining(['flex', 'items-center', 'justify-center']))
+    for (const display of ['block', 'inline-block', 'inline', 'grid', 'inline-flex']) {
+      expect(classes).not.toContain(display)
+    }
+  })
+
   it('has no subtitle on an original', () => {
     const wrapper = mountArticle({ language: 'it' })
 

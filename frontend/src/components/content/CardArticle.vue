@@ -95,10 +95,13 @@ const createdAtFormatted = computed(() =>
       </p>
 
       <p class="flex items-center gap-2 text-sm text-muted">
+        <!-- No display class: UserAvatar centres its initials with flex, and
+        the `inline-block` this used to pass replaced it, leaving the initials
+        in the circle's top-left corner (reported 2026-10-23). -->
         <UserAvatar
           :src="author.avatarURL"
           :name="author.name"
-          class="inline-block h-7 w-7 rounded-full object-cover"
+          class="h-7 w-7 shrink-0 rounded-full object-cover text-xs"
         />
         <span
           ><strong class="font-semibold text-ink">{{ author.name }}</strong> ·
