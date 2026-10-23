@@ -16,7 +16,6 @@ const mountArticle = (props: Record<string, unknown>) =>
       isPublished: true,
       images: [],
       translations: [],
-      typeLabel: 'chiesa',
       detailRouteName: 'chiesedetail',
       backTo: { name: 'chieselist', label: 'chiese' },
       ...props,

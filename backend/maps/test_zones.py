@@ -148,6 +148,33 @@ def test_a_place_names_the_zone_its_pin_is_in(api_client, citizen):
     assert api_client.get(f'/api/luoghi/{card.pk}/').json()['zones'] == [{'slug': 'serapo', 'name': 'Serapo'}]
 
 
+def test_a_festa_names_the_zones_its_procession_stops_in(api_client, citizen):
+    # The eyebrow over its page (review PR-23) links each zone to «Cosa fare»,
+    # so a festa carries them named, like a place; by vertex, as on the map.
+    card = _card(citizen, 'Porto Salvo')
+    Feste.objects.create(card=card)
+    for position, where in enumerate((INSIDE['porto-salvo'], NOWHERE, INSIDE['serapo'])):
+        MapFeature.objects.create(card=card, kind=MapFeature.ROUTE, position=position, lat=where[0], lng=where[1])
+    english = _card(citizen, 'Porto Salvo (EN)', translation_of=card, language='en')
+    Feste.objects.create(card=english)
+
+    assert api_client.get(f'/api/feste/{card.pk}/').json()['zones'] == [
+        {'slug': 'serapo', 'name': 'Serapo'},
+        {'slug': 'porto-salvo', 'name': 'Porto Salvo'},
+    ]
+    # A translation walks its original's route (T5).
+    assert [z['slug'] for z in api_client.get(f'/api/feste/{english.pk}/').json()['zones']] == [
+        'serapo', 'porto-salvo',
+    ]
+
+
+def test_a_festa_without_a_route_is_in_no_zone(api_client, citizen):
+    card = _card(citizen, 'Senza percorso')
+    Feste.objects.create(card=card)
+
+    assert api_client.get(f'/api/feste/{card.pk}/').json()['zones'] == []
+
+
 def test_a_translation_is_in_its_originals_zone(api_client, citizen):
     # It has no pin of its own (T5): it stands where the original stands.
     original = _chiesa(citizen, 'Annunziata', INSIDE['gaeta-medievale'])

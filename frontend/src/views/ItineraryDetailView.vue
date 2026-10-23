@@ -10,6 +10,8 @@ import TranslateControl from '@/components/content/TranslateControl.vue'
 import VisitInfo from '@/components/content/VisitInfo.vue'
 import { useIsDesktop } from '@/composables/useBreakpoint'
 import { useMapFocus } from '@/composables/useMapFocus'
+import { usePageTitle } from '@/composables/usePageTitle'
+import { usePanelTrail } from '@/composables/usePanelTrail'
 import { itinerarioConfig } from '@/definitions/typeConfigs'
 import type Itinerario from '@/definitions/interfaces/Itinerario'
 import type { Intent } from '@/definitions/interfaces/Itinerario'
@@ -59,6 +61,35 @@ const canGuide = computed(() => isPercorso.value && placed.value.length > 0)
 const previous = computed(() =>
   step.value && step.value > 1 ? placed.value[step.value - 2] : null,
 )
+// Where the reader is, over the title (review PR-23). A tour is under
+// «Itinerari», and each of its intents leads to the tours that share it; a
+// stop is under its own tour — up is named after it — and says which stop it
+// is. The tour the URL names, not the previous one while the next loads.
+const shown = computed(() => (tour.value && tour.value.id === route.params.id ? tour.value : null))
+const tourTitle = computed(() =>
+  shown.value ? shown.value.original_title || shown.value.title : '',
+)
+usePanelTrail(() => {
+  const open = shown.value
+  if (!open) return null
+  if (current.value) {
+    return {
+      up: tourTitle.value,
+      steps: [{ label: `Tappa ${step.value} di ${placed.value.length}` }],
+    }
+  }
+  return {
+    steps: open.intents.map((slug, index) => ({
+      label: open.intent_labels[index] ?? slug,
+      to: { name: itinerarioConfig.routeNames.list, query: { intento: slug } },
+    })),
+  }
+})
+usePageTitle(() => {
+  if (!shown.value) return null
+  return current.value ? [current.value.title, tourTitle.value] : [tourTitle.value, 'Itinerari']
+})
+
 const directions = computed(() =>
   current.value?.point
     ? directionsUrl(current.value.point, { from: previous.value?.point ?? null })
@@ -202,19 +233,18 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
 <template>
   <div class="mx-auto w-full max-w-3xl">
     <!-- ============ following a percorso, one stop at a time (I7) ============ -->
+    <!-- Which tour, and which stop of it, is the panel's eyebrow above the
+    title (review PR-23): «Itinerario E2E · Tappa 1 di 3», the tour's name as
+    the way up to it. -->
     <article v-if="tour && !editing && current" class="pt-2">
-      <p class="text-xs font-semibold tracking-[0.12em] text-terracotta uppercase">
-        Tappa {{ step }} di {{ placed.length }}
-      </p>
       <h1
         ref="stepHeading"
         tabindex="-1"
-        class="mt-2 font-display text-display text-balance text-ink focus:outline-none"
+        class="font-display text-display text-balance text-ink focus:outline-none"
         lang="it"
       >
         {{ current.title }}
       </h1>
-      <p class="mt-1 text-sm text-muted">{{ tour.original_title || tour.title }}</p>
       <p v-if="current.point?.label" class="mt-1 text-muted">{{ current.point.label }}</p>
       <p v-if="current.note" class="mt-4 text-reading whitespace-pre-line text-ink">
         {{ current.note }}
@@ -337,7 +367,6 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
       :is-published="tour.is_published"
       :images="tour.images"
       :translations="tour.translations"
-      :type-label="isPercorso ? 'Itinerario · percorso' : 'Itinerario · raccolta'"
       :detail-route-name="itinerarioConfig.routeNames.detail"
       :back-to="{ name: itinerarioConfig.routeNames.list, label: 'itinerari' }"
     >

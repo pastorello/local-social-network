@@ -4,7 +4,7 @@ import axios from 'axios'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import SchedeMenu from '../SchedeMenu.vue'
-import { luogoConfig } from '@/definitions/typeConfigs'
+import { chiesaConfig, luogoConfig } from '@/definitions/typeConfigs'
 
 vi.mock('axios')
 
@@ -22,7 +22,16 @@ const COUNTS = {
 const mountAt = async (path = '/') => {
   const router = createRouter({
     history: createMemoryHistory(),
-    routes: [{ path: '/:pathMatch(.*)*', component: { template: '<div />' } }],
+    routes: [
+      // Named as the app names it: the menu knows its section by the route's
+      // name (lib/navigation.ts::sectionOf).
+      {
+        path: '/chiese/:id',
+        name: chiesaConfig.routeNames.detail,
+        component: { template: '<div />' },
+      },
+      { path: '/:pathMatch(.*)*', component: { template: '<div />' } },
+    ],
   })
   router.push(path)
   await router.isReady()
@@ -39,7 +48,7 @@ const openMenu = async (path = '/') => {
 const entries = (wrapper: Awaited<ReturnType<typeof mountAt>>) =>
   wrapper.findAll('[role="menuitem"]')
 
-describe('the Schede menu (review PR-9)', () => {
+describe('the Esplora menu (review PR-9)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(axios.get).mockResolvedValue({ data: COUNTS })
@@ -110,7 +119,7 @@ describe('the Schede menu (review PR-9)', () => {
   })
 })
 
-describe('the Schede menu and the churches (content.md, luoghi — review PR-9)', () => {
+describe('the Esplora menu and the churches (content.md, luoghi — review PR-9)', () => {
   beforeEach(() => {
     vi.mocked(axios.get).mockResolvedValue({ data: COUNTS })
   })
@@ -130,5 +139,32 @@ describe('the Schede menu and the churches (content.md, luoghi — review PR-9)'
     const wrapper = await mountAt('/chiese/c1')
 
     expect(wrapper.get('button').classes()).toContain('text-sea')
+  })
+})
+
+// Review PR-23 (N-05, N-02): «Schede» was the name of our model; the button
+// says what is behind it, and is the current item while a card is open.
+describe('the Esplora menu’s name and state (review PR-23)', () => {
+  beforeEach(() => {
+    vi.mocked(axios.get).mockResolvedValue({ data: COUNTS })
+  })
+  afterEach(() => {
+    document.body.innerHTML = ''
+  })
+
+  it('is called Esplora', async () => {
+    const wrapper = await mountAt()
+
+    expect(wrapper.get('button').text()).toBe('Esplora')
+  })
+
+  it('is the current item on a card, underlined as well as tinted, and nowhere else', async () => {
+    const card = await mountAt('/chiese/c1')
+    expect(card.get('button').attributes('aria-current')).toBe('page')
+    expect(card.get('button span').classes()).toContain('underline')
+
+    const elsewhere = await mountAt('/il-progetto')
+    expect(elsewhere.get('button').attributes('aria-current')).toBeUndefined()
+    expect(elsewhere.get('button span').classes()).not.toContain('underline')
   })
 })

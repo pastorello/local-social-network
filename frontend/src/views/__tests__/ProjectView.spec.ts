@@ -62,6 +62,20 @@ describe('Il progetto', () => {
     expect(wrapper.text()).toContain('ODbL')
   })
 
+  // Review PR-23 (N-05): «Schede» is the name of our model, and «Esplora» is
+  // the menu's — over the card types — so neither heads a column here: one
+  // screen never has two «Esplora» meaning two things.
+  it('heads the card types «Cosa trovi su Vivere Gaeta», and says neither Schede nor Esplora', async () => {
+    const wrapper = await mountProject()
+
+    expect(wrapper.findAll('h2').map((h2) => h2.text())).toEqual([
+      'Per cominciare',
+      'Cosa trovi su Vivere Gaeta',
+      'Partecipa',
+    ])
+    expect(wrapper.text()).not.toMatch(/Schede|Esplora/)
+  })
+
   it('has the page’s one h1', async () => {
     const wrapper = await mountProject()
 

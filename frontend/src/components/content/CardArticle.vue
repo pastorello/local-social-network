@@ -30,7 +30,6 @@ const props = defineProps<{
   isPublished: boolean
   images: CardImage[]
   translations: TranslationRef[]
-  typeLabel: string
   detailRouteName: string
   backTo: { name: string; label: string }
 }>()
@@ -71,10 +70,15 @@ const createdAtFormatted = computed(() =>
     </div>
 
     <header class="mb-8">
-      <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <p class="text-xs font-semibold tracking-[0.12em] text-terracotta uppercase">
-          {{ typeLabel }}
-          <span v-if="!isPublished" class="ml-2 text-muted normal-case">· bozza</span>
+      <!-- No eyebrow of its own: what kind of card this is, and where, is the
+      panel's eyebrow above it (review PR-23) — the type's name as the way to
+      its list, the zone as the way to «Cosa fare». A draft still says so. -->
+      <div
+        v-if="!isPublished || translations.length"
+        class="mb-3 flex flex-wrap items-center justify-between gap-3"
+      >
+        <p v-if="!isPublished" class="text-xs font-semibold tracking-[0.12em] text-muted uppercase">
+          Bozza
         </p>
         <LanguageSwitch :translations="translations" :detail-route-name="detailRouteName" />
       </div>

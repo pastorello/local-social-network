@@ -287,7 +287,10 @@ the build:
     museum's hours on its card and not at its stop would be one fact in one
     place and missing in the other.
 - **The stop's page.** The eyebrow is the position alone, *Tappa 1 di 3*; the
-  tour's name sits under the title, small. *Tappa successiva →* is the one
+  tour's name sits under the title, small. *(Since 2026-10-23 both are the
+  panel's eyebrow, «Giro del centro · Tappa 1 di 3», with the tour's name as
+  the way up to it, and nothing sits under the title — design.md "Where the
+  reader is".)* *Tappa successiva →* is the one
   primary button, full width; *← Precedente* and *Torna all'itinerario* are
   links in a row under it, and the first stop has no *Precedente*. When the
   pressed control goes away, focus moves to the stop's heading (WCAG 2.4.3), as

@@ -5,6 +5,8 @@ import { useRoute, type RouteLocationRaw } from 'vue-router'
 
 import MainTitle from '@/components/typography/MainTitle.vue'
 import { useIsDesktop } from '@/composables/useBreakpoint'
+import { usePageTitle } from '@/composables/usePageTitle'
+import { usePanelTrail } from '@/composables/usePanelTrail'
 import type { Genre } from '@/definitions/interfaces/Luogo'
 import type { Intent } from '@/definitions/interfaces/Itinerario'
 import type { MapCardFeature, Zone } from '@/definitions/interfaces/MapData'
@@ -108,6 +110,12 @@ const selected = computed(() => {
   const slug = typeof route.query.zona === 'string' ? route.query.zona : ''
   return chips.value.find((chip) => chip.slug === slug) ?? null
 })
+
+// A chosen zone is where the reader stands, under «Cosa fare» — the panel's
+// way up (review PR-23): «Cosa fare · Serapo» over the title, and in the
+// window's title too.
+usePanelTrail(() => (selected.value ? { steps: [{ label: selected.value.name }] } : null))
+usePageTitle(() => (selected.value ? [selected.value.name, 'Cosa fare'] : null))
 
 const placesHere = computed(() =>
   selected.value ? places.value.filter((p) => inZone(p.zones, selected.value!.slug)) : [],
@@ -288,7 +296,11 @@ const shownChips = computed(() =>
 
 <template>
   <article class="mx-auto w-full max-w-2xl pt-2">
-    <p class="text-xs font-semibold tracking-[0.12em] text-terracotta uppercase">A Gaeta</p>
+    <!-- «A Gaeta» until a zone is chosen; then the panel's eyebrow says which
+    (review PR-23), and one eyebrow is enough. -->
+    <p v-if="!selected" class="text-xs font-semibold tracking-[0.12em] text-terracotta uppercase">
+      A Gaeta
+    </p>
     <MainTitle>Cosa si può fare qui</MainTitle>
     <!-- One line on a phone, where the results have to start on the first
     screen (review PR-4, M-07). -->

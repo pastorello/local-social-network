@@ -11,6 +11,8 @@ import DirectionsLink from '@/components/content/DirectionsLink.vue'
 import FesteForm from '@/components/content/FesteForm.vue'
 import { useIsDesktop } from '@/composables/useBreakpoint'
 import { useMapFocus } from '@/composables/useMapFocus'
+import { usePageTitle } from '@/composables/usePageTitle'
+import { usePanelTrail } from '@/composables/usePanelTrail'
 import { useMapStore } from '@/stores/map'
 import TranslateControl from '@/components/content/TranslateControl.vue'
 import { useUserStore } from '@/stores/user'
@@ -47,6 +49,27 @@ const getFeste = async () => {
       router.push('/feste')
     })
 }
+
+// The festa the URL names, not the previous one while the next loads.
+const shown = computed(() =>
+  feste.value && feste.value.id === route.params.id ? feste.value : null,
+)
+
+// Over its title (review PR-23): «Feste» is the panel's way up; each zone the
+// procession stops in leads to what else is there.
+usePanelTrail(() =>
+  shown.value
+    ? {
+        steps: (shown.value.zones ?? []).map((zone) => ({
+          label: zone.name,
+          to: { name: 'cosafare', query: { zona: zone.slug } },
+        })),
+      }
+    : null,
+)
+usePageTitle(() =>
+  shown.value ? [shown.value.original_title || shown.value.title, 'Feste'] : null,
+)
 
 // Where the procession sets off — what "Portami alla partenza" leads to (review
 // PR-3): a reader joins a feast at its start, not at whichever stop is nearest.
@@ -115,7 +138,6 @@ watch(
           :is-published="feste.is_published"
           :images="feste.images"
           :translations="feste.translations"
-          type-label="festa"
           detail-route-name="festedetail"
           :back-to="{ name: 'festelist', label: 'le feste' }"
         >

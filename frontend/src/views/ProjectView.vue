@@ -9,8 +9,8 @@ import { OSM_COPYRIGHT_URL } from '@/lib/osm'
 // The polls are reached from here too (D14).
 const year = new Date().getFullYear()
 
-// Every card type is listed here and in the menu's Schede — two lists by hand,
-// and ProjectView.spec.ts fails when a type is missing from this one.
+// Every card type is listed here and in the menu's Esplora — two lists by
+// hand, and ProjectView.spec.ts fails when a type is missing from this one.
 const schede = [
   { to: '/feste', label: 'Feste' },
   { to: '/luoghi', label: 'Luoghi' },
@@ -38,8 +38,11 @@ const heading = 'mb-3 text-xs font-semibold tracking-[0.12em] text-muted upperca
     </p>
 
     <div class="mt-10 grid gap-8 border-t border-hairline pt-8 sm:grid-cols-3">
-      <nav aria-label="Esplora">
-        <h2 :class="heading">Esplora</h2>
+      <!-- «Esplora» is the menu's, over the card types, since 2026-10-23
+      (review PR-23); this column is the map and the tours, so it is named
+      for what it is, and one screen never has two «Esplora». -->
+      <nav aria-label="Per cominciare">
+        <h2 :class="heading">Per cominciare</h2>
         <ul class="space-y-2 text-sm">
           <li><RouterLink to="/" :class="link">Mappa</RouterLink></li>
           <li><RouterLink to="/itinerari" :class="link">Itinerari</RouterLink></li>
@@ -47,8 +50,8 @@ const heading = 'mb-3 text-xs font-semibold tracking-[0.12em] text-muted upperca
         </ul>
       </nav>
 
-      <nav aria-label="Schede">
-        <h2 :class="heading">Schede</h2>
+      <nav aria-label="Cosa trovi su Vivere Gaeta">
+        <h2 :class="heading">Cosa trovi su Vivere Gaeta</h2>
         <ul class="space-y-2 text-sm">
           <li v-for="scheda in schede" :key="scheda.to">
             <RouterLink :to="scheda.to" :class="link">{{ scheda.label }}</RouterLink>

@@ -10,8 +10,11 @@ import DialettoIcon from '../icons/DialettoIcon.vue'
 import LibroIcon from '../icons/LibroIcon.vue'
 import LuogoIcon from '../icons/LuogoIcon.vue'
 import type { CardCounts } from '@/definitions/interfaces/Content'
+import { sectionOf } from '@/lib/navigation'
 
-// A disclosure menu, not flat MenuButtons: the nav row is sized for 3-4 items,
+// *Esplora* (review PR-23, N-05 — *Schede* until 2026-10-23, which is what the
+// code calls a card, not a word a guest uses; the file keeps its name). A
+// disclosure menu, not flat MenuButtons: the nav row is sized for 3-4 items,
 // and six flat would overflow it and risk a WCAG reflow/target-size regression
 // (ADR-0005). In the order a reader looks for them (review PR-9), and with no
 // *Chiese*: churches are a heading under *Luoghi* (content.md, 2026-09-11),
@@ -26,14 +29,14 @@ const items = [
   { key: 'libri', label: 'Libri consigliati', icon: LibroIcon },
 ]
 
-// A church is still one of this menu's cards, so its page lights the button.
-const sections = [...items.map((item) => `/${item.key}`), '/chiese']
-
 const route = useRoute()
 const open = ref(false)
 const menuRef = ref<HTMLElement | null>(null)
 
-const isActive = computed(() => sections.some((path) => route.path.startsWith(path)))
+// The section the reader is in (lib/navigation.ts::sectionOf): every card
+// type, its list and its form — a church's too, though *Chiese* is no longer
+// an entry here.
+const isActive = computed(() => sectionOf(route) === 'esplora')
 
 // The published count beside each entry, so a reader sees where the archive is
 // growing; an empty heading stays a link, greyed, and its list says so. Asked
@@ -85,16 +88,19 @@ onBeforeUnmount(() => {
 
 <template>
   <div ref="menuRef" class="relative">
-    <!-- A pill item like its neighbours in the menu (spec/design.md D14). -->
+    <!-- A pill item like its neighbours in the menu (spec/design.md D14), and
+    marked as theirs are while the reader is in its section: current to a
+    screen reader, underlined as well as tinted to the eye (review PR-23). -->
     <button
       type="button"
       class="flex h-9 cursor-pointer items-center gap-0.5 rounded-full px-2 text-sm lg:gap-1 lg:px-3 font-semibold text-ink hover:bg-page focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
       :class="{ 'bg-sea/10 text-sea': isActive }"
       aria-haspopup="menu"
       :aria-expanded="open"
+      :aria-current="isActive ? 'page' : undefined"
       @click="toggle"
     >
-      <span>Schede</span>
+      <span :class="{ 'underline decoration-2 underline-offset-4': isActive }">Esplora</span>
       <svg
         viewBox="0 0 20 20"
         class="h-4 w-4"

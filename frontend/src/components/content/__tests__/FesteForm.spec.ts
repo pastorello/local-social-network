@@ -39,6 +39,7 @@ describe('FesteForm', () => {
           language: 'it',
           translation_of: null,
           translations: [],
+          zones: [],
           created_at: '2026-01-01T00:00:00Z',
           updated_at: '2026-01-01T00:00:00Z',
         },

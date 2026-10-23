@@ -440,6 +440,14 @@ opening-hours filter is not.
   tours ([itinerari.md](./itinerari.md) I11). The same session put a *Luoghi*
   heading into the reader's grouping of card types (content.md, luoghi).
 
+  *Amended 2026-10-23 — the eyebrow, the current item, the window's title,
+  and «Esplora».* *Schede* is renamed *Esplora*: it is the name of our data
+  model, not a word a guest uses. Every panel opens on an eyebrow that says
+  where the reader is — up, and what the page is within it, «Chiese · Gaeta
+  Medievale» — the pill marks the item above the page as current, and the
+  window's title names the page. See "Where the reader is — 2026-10-23" at
+  the end of this section.
+
 - **D15 — Every page is a panel over the map, and keeps its URL.** A shared
   link to `/feste/:id` opens the map *and* the panel. Back and Escape close
   the panel, and focus returns to whatever opened it. A panel is a dialog for
@@ -879,3 +887,87 @@ none of them imitates the history. Built the same day:
   for the pointer only: the button and Escape are already the keyboard's
   way. The *Indietro* link PR-8 had planned beside the close button is not
   built: up replaces it.
+
+### Where the reader is — 2026-10-23
+
+The review of 2026-10-22 (PR-23: N-02, N-04, N-05, N-07) found that inside
+a card nothing said *you are in Chiese*: no eyebrow named the type as a
+place one could go back to, the pill lit *Schede* for any type or nothing,
+the window's title was «Vivere Gaeta» on every page, and *Schede* itself is
+what the code calls a card, not a word a guest looks for. D14 and D16
+already meant all three signals; none was built. Built the same day, on the
+up link "Close, up, back" put at the panel's head:
+
+- **The eyebrow is the panel's, and it is a way out.** Every panel with
+  something above it opens on one line over the page's title, in a
+  `<nav aria-label="Dove sei">`: the level above, as the up link, then what
+  this page is within it. A card: «Chiese · Gaeta Medievale», the zone a
+  link to «Cosa fare» there. A festa: «Feste ·» every zone its procession
+  stops in. A tour: «Itinerari ·» its intents, each a link to the tours that
+  share it. A stop: «Giro del centro · Tappa 3 di 7», the tour's name as the
+  way up to it. A chosen zone: «Cosa fare · Serapo». A report:
+  «Segnalazioni», the collaborator's map. A page whose only parent is the
+  map — a list, *Il progetto*, the welcome page — has none, as it has no up
+  link. Not a breadcrumb: the archive is two deep. The panel knows the level
+  above from the route (`lib/navigation.ts::parentOf`); what only the page's
+  data knows, the page hands it (`composables/usePanelTrail.ts`), as it
+  hands the map a frame.
+- **The page draws no eyebrow of its own over its title.** The article's
+  type in the singular («Chiesa»), the report's «Segnalazione», a stop's
+  position and the tour's name under its title are gone, since the panel's
+  eyebrow says them; a draft still says *Bozza*. *Cosa si può fare qui*
+  keeps its «A Gaeta» until a zone is chosen — then the eyebrow says which.
+- **Its look is D6's eyebrow** — small, semibold, spaced capitals — **in
+  the colour of the type's map layer** (D7: the one saturated register,
+  doing here the work it does on the map), read as a token (D8). A page
+  under no layer — a tour, «Cosa fare», a report, dialetto and libri —
+  keeps the terracotta every eyebrow had. Each colour clears 4.5:1 on the
+  panel's ground, which a unit test measures against `main.css` with the
+  relative-luminance formula (D9). The colour is never the only sign of a
+  link: the up link carries its chevron, the other links an underline, and
+  every link is a thumb's 44 px. On a phone it is the same line, at the
+  head of the panel under the strip.
+- **The pill marks the item above the page**, with `aria-current="page"`
+  and an underline as well as the tint, so colour is never the only sign
+  (WCAG 1.4.1): a card of any type, its list and its form under *Esplora*;
+  a tour and its stops under *Itinerari*; *Cosa fare*; *Il progetto*. The
+  phone's *Menu* marks its items the same way. One rule,
+  `lib/navigation.ts::sectionOf`, tested on every route.
+- **The window's title names the page**, most specific first —
+  «Santissima Annunziata · Chiese · Vivere Gaeta», «Itinerari · Vivere
+  Gaeta» — and the home's is «Vivere Gaeta — la mappa di Gaeta»
+  (`lib/pageTitle.ts`). Every route carries its own (`meta.title`), set after
+  each navigation; a page named by its data — a card by its Italian name
+  (translations.md T7), a tour, a stop, a chosen zone, a report — puts that
+  in front once the data is there. Italian today; the reader's language
+  (review PR-19) will hand it strings already translated.
+- **«Schede» becomes «Esplora»**: the pill's button and its menu (the file
+  keeps its name, `SchedeMenu.vue`). Routes and the types' names do not
+  change. On *Il progetto* the column of card types is headed «Cosa trovi su
+  Vivere Gaeta», and the column that was headed «Esplora» — the map, the
+  tours, the polls — is «Per cominciare», so one screen never has two
+  «Esplora» meaning two things. The wizard's exit (review PR-21) is to be
+  «Vai alla mappa» for the same reason; that is PR-21's to build.
+- **Decided by the build**, since the review left them open:
+  - **The home and the sign-in page mark their own link**, and so does the
+    wordmark on the home. The review listed «/ → none»; the pill is about
+    the item *above* a page, and the home has none — but *Mappa* is the
+    link to the very page the reader is on, which is what `aria-current`
+    is for, and the pill always lit it there. The welcome page marks
+    nothing. A report's page lights *Mappa*, where the reports are.
+  - **A tour's eyebrow names its intents as the admin wrote them**,
+    «Itinerari · Scoprire la città»: the review's «Mare» was an
+    illustration, and an intent has no shorter name to print.
+  - **Every zone and every intent is shown**, each its own link; parts wrap
+    onto a second line between one another, never inside one, and a
+    tour's name longer than the line is cut short with an ellipsis rather
+    than broken.
+  - **Feste carry their zones named**, `{slug, name}` on their Read
+    serializer, by the stops of the procession as on the map (cosa-fare.md
+    D2); chiese and luoghi had them since review PR-3. **Itineraries keep
+    their lists of slugs**, as content.md recorded on the same day: the
+    prompt asked for them named too, the spec says otherwise and wins, and
+    the tour's eyebrow is its intents, which need no zone.
+  - **Up from a report is called «Segnalazioni»**, after what the reader
+    finds there, rather than «Mappa».
+

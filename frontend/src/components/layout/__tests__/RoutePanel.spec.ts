@@ -1,12 +1,20 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
+import { defineComponent, h, ref } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import RoutePanel from '../RoutePanel.vue'
+import { usePanelTrail, type Trail } from '@/composables/usePanelTrail'
 
 const stub = { template: '<div />' }
 
-const mountPanel = async (shape: 'narrow' | 'wide' = 'wide', path = '/chiese') => {
+type Slot = string | (() => ReturnType<typeof h>)
+
+const mountPanel = async (
+  shape: 'narrow' | 'wide' = 'wide',
+  path = '/chiese',
+  slot: Slot = '<h1>Chiese</h1><input id="campo" />',
+) => {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
@@ -14,13 +22,15 @@ const mountPanel = async (shape: 'narrow' | 'wide' = 'wide', path = '/chiese') =
       { path: '/chiese', name: 'chieselist', component: stub },
       { path: '/chiese/:id', name: 'chiesedetail', component: stub },
       { path: '/cosa-fare', name: 'cosafare', component: stub },
+      { path: '/itinerari', name: 'itinerarilist', component: stub },
+      { path: '/itinerari/:id', name: 'itinerariodetail', component: stub },
     ],
   })
   router.push(path)
   await router.isReady()
   const wrapper = mount(RoutePanel, {
     props: { shape },
-    slots: { default: '<h1>Chiese</h1><input id="campo" />' },
+    slots: { default: slot },
     global: { plugins: [router] },
     attachTo: document.body,
   })
@@ -194,5 +204,76 @@ describe('RoutePanel on a phone (spec/design.md D18)', () => {
 
     expect(wrapper.get('section').classes()).toContain('inset-0')
     expect(wrapper.text()).not.toContain('Allarga la mappa')
+  })
+})
+
+// A page, as the panel holds one, handing over the rest of its eyebrow.
+const pageWith = (trail: () => Trail | null) =>
+  defineComponent({
+    setup() {
+      usePanelTrail(trail)
+      return () => h('h1', 'Pagina')
+    },
+  })
+
+// Review PR-23 (N-02): the up link is the eyebrow over the page — the level
+// above, and what this page is within it — inside a nav that says what it is.
+describe('RoutePanel’s eyebrow (review PR-23)', () => {
+  afterEach(() => {
+    document.body.innerHTML = ''
+  })
+
+  const eyebrow = (wrapper: Awaited<ReturnType<typeof mountPanel>>['wrapper']) =>
+    wrapper.get('nav[aria-label="Dove sei"]')
+
+  it('names a card’s type and its zone, each a link, in the type’s colour', async () => {
+    const page = pageWith(() => ({
+      steps: [
+        { label: 'Gaeta Medievale', to: { name: 'cosafare', query: { zona: 'gaeta-medievale' } } },
+      ],
+    }))
+    const { wrapper } = await mountPanel('narrow', '/chiese/c1', () => h(page))
+
+    const links = eyebrow(wrapper).findAll('a')
+    expect(links.map((link) => [link.text(), link.attributes('href')])).toEqual([
+      ['Chiese', '/chiese'],
+      ['Gaeta Medievale', '/cosa-fare?zona=gaeta-medievale'],
+    ])
+    expect(eyebrow(wrapper).attributes('style')).toContain('var(--color-layer-chiese)')
+    // The colour is never the only sign of a link (WCAG 1.4.1).
+    expect(links[1]!.classes()).toContain('underline')
+  })
+
+  it('takes a stop up by its tour’s name, and says which stop it is', async () => {
+    const page = pageWith(() => ({ up: 'Giro del centro', steps: [{ label: 'Tappa 3 di 7' }] }))
+    const { wrapper } = await mountPanel('narrow', '/itinerari/t1?tappa=3', () => h(page))
+
+    const nav = eyebrow(wrapper)
+    expect(nav.findAll('a').map((link) => [link.text(), link.attributes('href')])).toEqual([
+      ['Giro del centro', '/itinerari/t1'],
+    ])
+    expect(nav.text()).toContain('Tappa 3 di 7')
+    expect(nav.attributes('style')).toContain('var(--color-terracotta)')
+  })
+
+  it('has no eyebrow on a page with nothing above it but the map', async () => {
+    const { wrapper } = await mountPanel('wide', '/chiese')
+
+    expect(wrapper.find('nav[aria-label="Dove sei"]').exists()).toBe(false)
+  })
+
+  it('forgets a page’s part of it once the page is gone', async () => {
+    const shown = ref(true)
+    const page = pageWith(() => ({ steps: [{ label: 'Serapo' }] }))
+    const { wrapper } = await mountPanel('narrow', '/cosa-fare?zona=serapo', () =>
+      shown.value ? h(page) : h('h1', 'Altro'),
+    )
+    expect(eyebrow(wrapper).text()).toContain('Serapo')
+
+    shown.value = false
+    await flushPromises()
+
+    expect(eyebrow(wrapper).text()).toContain('Cosa fare')
+    expect(eyebrow(wrapper).text()).not.toContain('Serapo')
   })
 })

@@ -1,6 +1,7 @@
 import type { RouteLocationNormalizedLoaded } from 'vue-router'
 
 import { itinerarioConfig, typeConfigs } from '@/definitions/typeConfigs'
+import { CARD_LAYERS, layerVar } from '@/lib/mapLayers'
 
 // Close, up, back (review PR-22, spec/design.md "Close, up, back"): three
 // actions, and none of them imitates the browser's history. This is *up* — one
@@ -22,10 +23,11 @@ export type Where = Pick<RouteLocationNormalizedLoaded, 'path' | 'query'> & {
 // Every card type's list, and the pages under it: a card, and the form that
 // writes one. Feste keeps views of its own, so it has no config to read.
 const LISTS = [
-  { label: 'Feste', path: '/feste', children: ['festedetail', 'festecreate'] },
+  { label: 'Feste', path: '/feste', name: 'festelist', children: ['festedetail', 'festecreate'] },
   ...[...typeConfigs, itinerarioConfig].map((config) => ({
     label: config.label,
     path: `/${config.key}`,
+    name: config.routeNames.list,
     children: [config.routeNames.detail, config.routeNames.create],
   })),
 ]
@@ -40,9 +42,38 @@ export const parentOf = (route: Where): Parent | null => {
   if (route.name === 'cosafare' && route.query.zona) {
     return { to: '/cosa-fare', label: 'Cosa fare' }
   }
-  // A report is a point on the collaborator's map (reports-and-polls.md R1).
-  if (route.name === 'reportdetail') return { to: '/', label: 'Mappa' }
+  // A report is a point on the collaborator's map (reports-and-polls.md R1),
+  // where the reports are: up is named after them (review PR-23).
+  if (route.name === 'reportdetail') return { to: '/', label: 'Segnalazioni' }
 
   const list = LISTS.find((candidate) => candidate.children.includes(String(route.name)))
   return list ? { to: list.path, label: list.label } : null
+}
+
+// The eyebrow wears the colour of its type's map layer (review PR-23,
+// design.md D6/D7): the one saturated register, here doing the same work it
+// does on the map — this is a church, that a festa. A page under no layer — a
+// tour, «Cosa fare», a report, the types with no place — keeps the
+// terracotta every eyebrow had. Read through the layer's route segment, which
+// is its key (lib/mapLayers.ts). Each one clears 4.5:1 on the panel's ground.
+export const tintOf = (parent: Parent | null): string => {
+  const key = parent?.to.split('/')[1] ?? ''
+  return CARD_LAYERS.some((layer) => layer.key === key) ? layerVar(key) : 'var(--color-terracotta)'
+}
+
+// Where the reader is, for the menu (review PR-23, N-02): the item above the
+// page they are on, which the pill marks as current. Any card type, its list
+// and its form are under *Esplora*; a tour under *Itinerari*. The home is
+// *Mappa*'s own page, and so is a report, which is a point on it. Pages under
+// none of them — the welcome page, the account's — mark nothing.
+export type Section = 'mappa' | 'esplora' | 'itinerari' | 'cosa-fare' | 'progetto'
+
+export const sectionOf = (route: Pick<Where, 'name'>): Section | null => {
+  const name = String(route.name)
+  if (name === 'home' || name === 'reportdetail') return 'mappa'
+  if (name === 'cosafare') return 'cosa-fare'
+  if (name === 'progetto') return 'progetto'
+  const list = LISTS.find((candidate) => [candidate.name, ...candidate.children].includes(name))
+  if (!list) return null
+  return list.path === `/${itinerarioConfig.key}` ? 'itinerari' : 'esplora'
 }

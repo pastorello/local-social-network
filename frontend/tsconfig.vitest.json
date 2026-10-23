@@ -3,7 +3,9 @@
 
   // Override to include only test files and clear exclusions.
   // Application code imported in tests is automatically included via module resolution.
-  "include": ["src/**/__tests__/*", "env.d.ts"],
+  // Declaration files are not imported by anything, so they are named: the
+  // router's meta fields (src/router/meta.d.ts) type the router a test imports.
+  "include": ["src/**/__tests__/*", "src/**/*.d.ts", "env.d.ts"],
   "exclude": [],
 
   "compilerOptions": {

@@ -3,7 +3,8 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useIsDesktop } from '@/composables/useBreakpoint'
-import { parentOf } from '@/lib/navigation'
+import { providePanelTrail } from '@/composables/usePanelTrail'
+import { parentOf, tintOf } from '@/lib/navigation'
 
 // Every page but the home opens over the map (spec/design.md D15) and keeps its
 // own URL, so a shared link to a card opens the map *and* the card. Two
@@ -64,6 +65,15 @@ watch(expanded, async (isExpanded) => {
 const close = () => router.push('/')
 
 const parent = computed(() => parentOf(route))
+
+// The eyebrow (review PR-23, N-02): up, and what this page is within it — the
+// zones a card is in, a tour's intents, a stop's position — which the page
+// hands over as its data arrives (composables/usePanelTrail.ts). A stop names
+// its own tour as the way up.
+const trail = providePanelTrail()
+const upLabel = computed(() => trail.value?.up ?? parent.value?.label ?? '')
+const steps = computed(() => trail.value?.steps ?? [])
+const tint = computed(() => tintOf(parent.value))
 
 // Up is a link and, like every step, pushed. The panel takes focus after it
 // even when only the query changed — a stop up to its tour, a zone up to «Cosa
@@ -159,30 +169,58 @@ const pill =
     "
     @keydown="onKeydown"
   >
-    <div class="flex flex-none items-center gap-3 px-3 pt-3">
-      <!-- Up: one level above, named after the page it leads to. Its words
-      and its look are review PR-23's; 44px tall, a thumb's target. -->
-      <RouterLink v-if="parent" v-slot="{ href, navigate }" :to="parent.to" custom>
-        <a
-          :href="href"
-          class="inline-flex min-h-11 min-w-11 items-center gap-1 rounded-full px-2 text-sm font-semibold text-sea underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
-          @click="goUp($event, navigate)"
-        >
-          <svg
-            viewBox="0 0 20 20"
-            class="h-4 w-4 flex-none"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
+    <div class="flex flex-none items-start gap-3 px-3 pt-3">
+      <!-- Where the reader is (review PR-23, N-02; design.md D14's note of
+      2026-10-23): the eyebrow over the page's title, as a way out of it. One
+      level up, named after the page it leads to — the type's list, a stop's
+      own tour — and beside it what this page is within it: the zone a card is
+      in, linked to «Cosa fare», or where the reader stands (a stop's position,
+      the chosen zone). Not a breadcrumb: the archive is two deep. In the
+      colour of the type's layer (D7, a token — D8); the up link carries its
+      chevron and the other links an underline, so the colour is never the
+      only sign of a link (WCAG 1.4.1). Every link is a thumb's 44px. -->
+      <nav
+        v-if="parent || steps.length"
+        aria-label="Dove sei"
+        class="flex min-w-0 flex-1 flex-wrap items-center text-xs font-semibold tracking-[0.12em] uppercase"
+        :style="{ color: tint }"
+      >
+        <RouterLink v-if="parent" v-slot="{ href, navigate }" :to="parent.to" custom>
+          <a
+            :href="href"
+            class="inline-flex min-h-11 max-w-full min-w-11 items-center gap-1 rounded-full px-2 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+            @click="goUp($event, navigate)"
           >
-            <path d="M12 4.5L6.5 10l5.5 5.5" />
-          </svg>
-          {{ parent.label }}
-        </a>
-      </RouterLink>
+            <svg
+              viewBox="0 0 20 20"
+              class="h-4 w-4 flex-none"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 4.5L6.5 10l5.5 5.5" />
+            </svg>
+            <span class="truncate">{{ upLabel }}</span>
+          </a>
+        </RouterLink>
+        <span
+          v-for="(step, index) in steps"
+          :key="index"
+          class="inline-flex items-center whitespace-nowrap"
+        >
+          <span class="px-1" aria-hidden="true">·</span>
+          <RouterLink
+            v-if="step.to"
+            :to="step.to"
+            class="inline-flex min-h-11 items-center rounded-full px-1 underline decoration-1 underline-offset-4 hover:decoration-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+            >{{ step.label }}</RouterLink
+          >
+          <span v-else class="inline-flex min-h-11 items-center px-1">{{ step.label }}</span>
+        </span>
+      </nav>
       <button
         type="button"
         class="ml-auto flex h-11 w-11 flex-none cursor-pointer items-center justify-center rounded-full border border-hairline bg-surface text-ink hover:border-field focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
