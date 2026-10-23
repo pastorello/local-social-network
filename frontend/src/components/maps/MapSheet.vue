@@ -11,10 +11,11 @@ import { useMapStore } from '@/stores/map'
 // Height, not transform: the content has to scroll inside the sheet at every
 // stop, and a transformed element still occupies its original box.
 //
-// The lowest stop is the handle's 44px and two lines of what the sheet opens
-// on — on the home, the presentation (D3's note of 2026-10-23).
+// The lowest stop is the handle's 44px and two whole lines of what the sheet
+// opens on — on the home, the presentation (D3's note of 2026-10-23): two
+// lines of `text-reading` are 2 × 1.65 × 17px = 56.1px, so 102px, not 100.
 const SNAPS = [
-  { key: 'peek', label: 'Mostra i luoghi', height: '6.25rem' },
+  { key: 'peek', label: 'Mostra i luoghi', height: '6.375rem' },
   { key: 'half', label: 'Espandi l’elenco', height: '45vh' },
   { key: 'full', label: 'Riduci l’elenco', height: '85vh' },
 ] as const

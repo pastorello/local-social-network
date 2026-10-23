@@ -19,9 +19,9 @@ describe('MapSheet tells the map how tall it is (review PR-5, M-01)', () => {
     expect(store.sheetHeight).toBe(0.85 * window.innerHeight)
 
     await wrapper.get('button').trigger('click')
-    // Its lowest stop is 6.25rem: the 44px handle and two lines of text
-    // (review PR-15).
-    expect(store.sheetHeight).toBe(100)
+    // Its lowest stop is 6.375rem: the 44px handle and two whole lines of
+    // text (review PR-15).
+    expect(store.sheetHeight).toBe(102)
 
     wrapper.unmount()
     expect(store.sheetHeight).toBeNull()
@@ -124,7 +124,7 @@ describe('MapSheet’s handle says that it drags (review PR-15)', () => {
     await handle.trigger('click')
     await handle.trigger('click')
 
-    expect(useMapStore().sheetHeight).toBe(100)
+    expect(useMapStore().sheetHeight).toBe(102)
     expect(hint(wrapper)).toHaveLength(0)
   })
 

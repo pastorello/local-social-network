@@ -122,8 +122,8 @@ geolocation is a later phase (see Non-goals) rather than the centre of this one.
   *Amended 2026-10-23 — the handle says that it drags* (review PR-15,
   M-11). The grab bar is a 44 px target across the sheet, named «Trascina
   per vedere più mappa», and the first time in a session a line under it
-  says so until the reader drags; the lowest stop grew by the handle's 12 px,
-  so it still shows the line. See "The map's corners and the sheet's handle
+  says so until the reader drags; the lowest stop grew with the handle, to
+  6.375 rem, so it still shows the line. See "The map's corners and the sheet's handle
   — 2026-10-23" at the end of "The map under every page".
 
 - **D4 — The map chrome lands here.** C5 deliberately did not build M1's
@@ -1344,8 +1344,10 @@ nothing about dragging. Built the same day:
   - **The enlarged map's credit goes top-right**, like the home's, rather
     than above *Torna alla scheda*: on a phone the credit is in the top-right
     corner wherever the map has the screen.
-  - **The lowest stop grew by the handle's 12 px**, from 5.5 to 6.25 rem, so
-    it still shows the presentation's two lines (D3's note of 2026-10-23).
+  - **The lowest stop grew with the handle**, from 5.5 to 6.375 rem — the
+    handle's 44 px and two whole lines of the presentation, which at 1.65 ×
+    17 px are 56.1 px — so it still shows the line (D3's note of
+    2026-10-23).
     The line under the handle is not shown there, for the same reason.
   - **The line goes at the first drag, not at the first press** — a press
     shows that the sheet moves, not that it drags — and it is remembered
