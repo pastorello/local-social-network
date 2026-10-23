@@ -12,6 +12,8 @@ const mountPanel = async (shape: 'narrow' | 'wide' = 'wide', path = '/chiese') =
     routes: [
       { path: '/', name: 'home', component: stub },
       { path: '/chiese', name: 'chieselist', component: stub },
+      { path: '/chiese/:id', name: 'chiesedetail', component: stub },
+      { path: '/cosa-fare', name: 'cosafare', component: stub },
     ],
   })
   router.push(path)
@@ -48,7 +50,7 @@ describe('RoutePanel (spec/design.md D15/D17)', () => {
     expect(document.activeElement).toBe(wrapper.get('section').element)
   })
 
-  it('closes onto the home when there is nowhere in the app to go back to — a deep link', async () => {
+  it('closes onto the map from a deep link — not out of the site', async () => {
     const { wrapper, router } = await mountPanel()
 
     await wrapper.get('button[aria-label="Chiudi e torna alla mappa"]').trigger('click')
@@ -57,18 +59,34 @@ describe('RoutePanel (spec/design.md D15/D17)', () => {
     expect(router.currentRoute.value.path).toBe('/')
   })
 
-  it('goes back to where the reader came from when there is somewhere', async () => {
+  // Review PR-22 (N-01): a close button closes. With pages behind it, it is
+  // still one press to the map, never a step back through them.
+  it('closes onto the map with pages behind it, by pushing the home — never by going back', async () => {
     const { wrapper, router } = await mountPanel()
-    window.history.replaceState({ back: '/' }, '')
-    const back = vi.spyOn(router, 'back').mockImplementation(() => {})
+    window.history.replaceState({ back: '/il-progetto' }, '')
+    const push = vi.spyOn(router, 'push')
+    const back = vi.spyOn(router, 'back')
 
     await wrapper.get('button[aria-label="Chiudi e torna alla mappa"]').trigger('click')
 
-    expect(back).toHaveBeenCalled()
+    expect(push).toHaveBeenCalledWith('/')
+    expect(back).not.toHaveBeenCalled()
+  })
+
+  it('closes on a tap on the veil, as on the button', async () => {
+    const { wrapper, router } = await mountPanel('wide')
+    const back = vi.spyOn(router, 'back')
+
+    await wrapper.get('div[aria-hidden="true"]').trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.path).toBe('/')
+    expect(back).not.toHaveBeenCalled()
   })
 
   it('closes on Escape, but leaves Escape to a field the reader is typing in', async () => {
     const { wrapper, router } = await mountPanel()
+    const back = vi.spyOn(router, 'back')
 
     await wrapper.get('#campo').trigger('keydown', { key: 'Escape' })
     await flushPromises()
@@ -77,6 +95,34 @@ describe('RoutePanel (spec/design.md D15/D17)', () => {
     await wrapper.get('section').trigger('keydown', { key: 'Escape' })
     await flushPromises()
     expect(router.currentRoute.value.path).toBe('/')
+    expect(back).not.toHaveBeenCalled()
+  })
+
+  // Review PR-22 (N-03): up is a link one level above, beside the close
+  // button, named after the page it leads to.
+  it('offers a card the way up to its type’s list', async () => {
+    const { wrapper, router } = await mountPanel('narrow', '/chiese/c1')
+
+    const up = wrapper.get('a[href="/chiese"]')
+    expect(up.text()).toBe('Chiese')
+    await up.trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.path).toBe('/chiese')
+    // A list has nothing above it but the map, which the close button is.
+    expect(wrapper.find('a').exists()).toBe(false)
+  })
+
+  it('gives focus to the panel after going up, even when only the query changed', async () => {
+    const { wrapper, router } = await mountPanel('narrow', '/cosa-fare?zona=serapo')
+
+    const up = wrapper.get('a[href="/cosa-fare"]')
+    ;(up.element as HTMLElement).focus()
+    await up.trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.fullPath).toBe('/cosa-fare')
+    expect(document.activeElement).toBe(wrapper.get('section').element)
   })
 
   it('veils the map behind a wide panel, and not beside a narrow one', async () => {
@@ -120,6 +166,25 @@ describe('RoutePanel on a phone (spec/design.md D18)', () => {
     await flushPromises()
 
     expect(router.currentRoute.value.query.mappa).toBeUndefined()
+    expect(wrapper.get('section').isVisible()).toBe(true)
+  })
+
+  // Review PR-22 (N-06): "Torna alla scheda" is the enlarged map's way up, and
+  // like every button of the app it does not imitate Back — even when the
+  // enlarged map was a step of this visit. Back stays the browser's.
+  it('comes back to the card by a step forward, never by going back', async () => {
+    stubPhone()
+    const { wrapper, router } = await mountPanel('narrow', '/chiese/c1')
+    await wrapper.get('button:not([aria-label])').trigger('click')
+    await flushPromises()
+    window.history.replaceState({ back: '/chiese/c1' }, '')
+    const back = vi.spyOn(router, 'back')
+
+    await wrapper.get('button:not([aria-label])').trigger('click')
+    await flushPromises()
+
+    expect(back).not.toHaveBeenCalled()
+    expect(router.currentRoute.value.fullPath).toBe('/chiese/c1')
     expect(wrapper.get('section').isVisible()).toBe(true)
   })
 

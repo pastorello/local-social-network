@@ -9,7 +9,6 @@ import type {
   CircleMarker,
   GeoJSON as GeoJSONLayer,
   ImageOverlay,
-  LatLng,
   Layer,
   LayerGroup,
   LeafletMouseEvent,
@@ -60,6 +59,8 @@ const emit = defineEmits<{
   (e: 'pinClick', id: string): void
   (e: 'featureClick', feature: { type: string; id: string }): void
   (e: 'mapClick', coords: { lat: number; lng: number }): void
+  // Where the map is, after every move: the caller keeps it (stores/map.ts).
+  (e: 'view', view: { lat: number; lng: number; zoom: number }): void
 }>()
 
 // Overlays belong between the base tiles (200) and everything clickable
@@ -75,13 +76,11 @@ let cluster: MarkerClusterGroup | null = null
 let featureLayer: LayerGroup | null = null
 let focusLayer: LayerGroup | null = null
 let editorLayer: LayerGroup | null = null
-// Where the reader was before a page took the map somewhere, so closing the
-// page gives it back (D16) — their own view, or Gaeta if they had not moved
-// the map yet (`own`).
-let viewBeforeFocus: { center: LatLng; zoom: number; own: boolean } | null = null
-// Whether the reader has taken the map: until they do, the map frames Gaeta in
-// whatever space is free (review PR-5) — on a phone, above the home's sheet at
-// whichever stop it rests on.
+// Whether the map has left Gaeta: the reader took it, or a page framed
+// something on it. Until then the map frames Gaeta in whatever space is free
+// (review PR-5) — on a phone, above the home's sheet at whichever stop it
+// rests on. After, it stays where it is when a page closes (review PR-22):
+// closing is not a step back, for the map either.
 let moved = false
 let draftMarker: CircleMarker | null = null
 let resizeObserver: ResizeObserver | null = null
@@ -246,24 +245,19 @@ const fit = (points: Coords[], options: { animate?: boolean } = {}) => {
   if (frame) map?.fitBounds(frame.bounds, { ...frame.options, ...options })
 }
 
-// Frame the open page's place — or, for a page about a set, that set — and
-// give the reader their view back when the page closes (D16). With no page
-// asking for anything, the map frames Gaeta for as long as the reader has not
-// taken it, so the city follows the free space as it changes: a panel opening
-// or closing, the phone's sheet moving to another stop (review PR-5, M-01).
+// Frame the open page's place — or, for a page about a set, that set (D16).
+// When the page closes the map stays on it (review PR-22): the reader closed a
+// page, they did not ask to be taken somewhere else. With nothing framed yet,
+// the map frames Gaeta for as long as the reader has not taken it, so the city
+// follows the free space as it changes: a panel opening or closing, the
+// phone's sheet moving to another stop (review PR-5, M-01).
 const frameView = (options: { animate?: boolean } = {}) => {
   if (!map) return
   const points = framedPoints()
   if (points.length) {
-    if (!viewBeforeFocus) {
-      viewBeforeFocus = { center: map.getCenter(), zoom: map.getZoom(), own: moved }
-    }
     fit(points, options)
-    return
-  }
-  if (viewBeforeFocus?.own) map.setView(viewBeforeFocus.center, viewBeforeFocus.zoom)
-  else if (!moved && !props.editor) fit(GAETA_BOUNDS, options)
-  viewBeforeFocus = null
+    moved = true
+  } else if (!moved && !props.editor) fit(GAETA_BOUNDS, options)
 }
 
 // The draft of the form that is drawing (D19), in the accent colour: a route's
@@ -310,7 +304,9 @@ const renderEditor = () => {
 // When a form starts drawing, the map goes to what it already has, if
 // anything; while it draws, the view is the collaborator's to move.
 const frameEditor = () => {
-  if (props.editor) fit(props.editor.points)
+  if (!props.editor?.points.length) return
+  fit(props.editor.points)
+  moved = true
 }
 
 const buildOverlay = (overlay: Overlay): Layer | null => {
@@ -405,11 +401,10 @@ const onReady = (leafletMap: LeafletMap) => {
   }
 
   // The reader takes the map by putting a hand on it — a drag, a pinch, a tap,
-  // the wheel, an arrow or a zoom key — while it shows their own view. What
-  // they do on a page's frame is undone when the page closes (D16), so it does
-  // not count.
+  // the wheel, an arrow or a zoom key. On a page's frame too: nothing is undone
+  // when the page closes, so what they did there is where the map stays.
   const take = () => {
-    if (!framedPoints().length) moved = true
+    moved = true
   }
   const element = leafletMap.getContainer()
   element.addEventListener('pointerdown', take)
@@ -417,6 +412,13 @@ const onReady = (leafletMap: LeafletMap) => {
   element.addEventListener('keydown', (event) => {
     if (event.key.startsWith('Arrow') || ['+', '-', '='].includes(event.key)) take()
   })
+
+  const reportView = () => {
+    if (!map) return
+    const center = map.getCenter()
+    emit('view', { lat: center.lat, lng: center.lng, zoom: map.getZoom() })
+  }
+  map.on('moveend', reportView)
 
   map.on('click', (event: LeafletMouseEvent) => {
     if (!map) return
@@ -451,6 +453,7 @@ const onReady = (leafletMap: LeafletMap) => {
   frameView({ animate: false })
   renderEditor()
   frameEditor()
+  reportView()
 }
 
 watch(() => props.pins, renderPins, { deep: true })

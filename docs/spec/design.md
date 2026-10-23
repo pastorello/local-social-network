@@ -423,6 +423,12 @@ opening-hours filter is not.
   including `/login` and a phone opening a shared article cold. Measure it on
   the preview build before calling the phase done.
 
+  *Amended 2026-10-23 — the panel closes, it does not go back: close, up,
+  back.* A page over the map is closed onto the map, in one press, from
+  wherever the reader is; going one level up is a link of its own; the
+  browser's Back is left to the history. See "Close, up, back — 2026-10-23"
+  at the end of this section.
+
 - **D14 — A minimal menu, top centre.** The wordmark, *Mappa*, *Schede*,
   *Il progetto*, then *Accedi* (or the collaborator's avatar). *Itinerario*
   is added by its own phase and not before: an empty menu item at launch is
@@ -441,6 +447,11 @@ opening-hours filter is not.
   link retargeted at the panel's content rather than at a `<main>` that no
   longer frames the page.
 
+  *Amended 2026-10-23:* Escape, the close button and a tap on the veil close
+  onto the map; Back is the browser's history, which the app does not
+  imitate — it closes a panel only when the step before was the map. See
+  "Close, up, back — 2026-10-23".
+
 - **D16 — The map reacts.** Opening a card that has a place moves the map so
   the place sits in the space the panel leaves free — never under it —
   highlights its pins or its route, and dims everything else. Closing returns
@@ -453,6 +464,12 @@ opening-hours filter is not.
   *Amended 2026-10-23:* one place is framed at zoom 16, not as close as the
   map goes, and the home frames Gaeta in its own free space — see "How the
   map frames — 2026-10-23" at the end of this section.
+
+  *Amended 2026-10-23 — the panel closes, it does not go back: close, up,
+  back.* Closing no longer returns the map to where the reader left it: the
+  map stays where the page put it — the place, the tour's last stop, the
+  zone — at the same zoom, with every card drawn again. Nothing flies back to
+  Gaeta. See "Close, up, back — 2026-10-23".
 
 - **D17 — Two panel shapes on desktop.** A **narrow panel on the right** for
   a card with a place, because the map beside it is doing work. A **wide
@@ -630,7 +647,8 @@ wallpaper. What the build settled, so it is not re-argued:
   field's), and close by going *back* when the app has somewhere to go back
   to, onto the home when it does not (a deep link). A route declares its
   shape in `meta.panel`; the narrow ones are the card types with a place and a
-  report.
+  report. *(Since 2026-10-23 they close onto the home always, never by going
+  back — "Close, up, back".)*
 - **The map is `inert` while it cannot be seen** — behind a wide panel's veil,
   and under every panel on a phone — so it is never an invisible tab stop.
 - **The map reacts** through `composables/useMapFocus.ts`: a page hands the
@@ -638,6 +656,8 @@ wallpaper. What the build settled, so it is not re-argued:
   shown too), the map frames it inside the space the panel leaves free, draws
   it over everything else, dims the rest to 30%, and returns the reader to
   their own view when the page closes. A report brings its status colour.
+  *(Since 2026-10-23 closing leaves the map where the page put it — "Close,
+  up, back".)*
 - **No map inside a panel on a wide screen.** The detail views keep only the
   words — the stops of a route, the labels of a card's pins, "È evidenziato
   sulla mappa, qui accanto" — because the map beside them is showing the
@@ -691,7 +711,9 @@ D18 as specified, and what the build had to decide:
   so Back undoes it; *Torna alla scheda* goes back when the enlarged map was a
   step of this visit and drops the query in place when it arrived that way (a
   shared link). Focus moves to whichever of the two buttons undoes the state
-  the reader is in, since the one they pressed has just gone.
+  the reader is in, since the one they pressed has just gone. *(Since
+  2026-10-23 that button is the enlarged map's way up, a step forward to the
+  card either way; Back still undoes `?mappa=1` — "Close, up, back".)*
 - **The cover moves below the title on a phone**, as D18 says; the wide screen
   keeps it first (D5).
 - **The wordmark no longer wraps.** The first build of D14 let the browser
@@ -785,7 +807,9 @@ strip's *Allarga la mappa* sitting on the article's edge. Built the same day:
   an arrow or a zoom key), the view is theirs and stays. Closing a page gives
   back the reader's own view, as D16 says, or — if they had not moved the map
   yet — Gaeta in the space there is now, which on a deep link is a different
-  space from the one the page had.
+  space from the one the page had. *(Since 2026-10-23 a page that framed
+  something leaves the map there when it closes; only a map still on Gaeta
+  follows the free space — "Close, up, back".)*
 - **Decided by the build**, since the review left them open: the wide home is
   framed the same way, beside its floating column, so Sant'Agostino is on
   screen there too (it was off the left edge at the old zoom 14); the cap of
@@ -805,3 +829,53 @@ strip's *Allarga la mappa* sitting on the article's edge. Built the same day:
   stays as it was until the author chooses: a shorter credit in the strip
   (no "Leaflet" prefix, as PR-15 does elsewhere), a collapsed credit that is
   open on first load, or hiding it and accepting the policy risk.
+
+### Close, up, back — 2026-10-23
+
+The review of 2026-10-22 (PR-22: N-01, N-03, N-06) found the close button
+doing the browser's job: it went *back*. After a card, *Itinerari*, *Cosa
+fare* and *Il progetto* it took four presses to see the map; a reader who
+came in from a QR code or a search left the site with it, or stayed where
+they were; from a tour's third stop it went to the second. On the web a
+cross closes. The model taken is Android's *Up vs Back*: three actions, and
+none of them imitates the history. Built the same day:
+
+- **Close** — the button, Escape, and on a wide screen a tap on the veil —
+  pushes the home, `/`, from every page. One press shows the map whatever
+  came before, and nothing leaves the site. It closes a tour from any of its
+  stops, so the map draws every card again. Focus still goes back to the
+  link that opened the first panel (D15). Because it is pushed, the
+  browser's Back reopens what was closed.
+- **The map stays as it was.** Closing moves nothing: the map stays on what
+  the page framed — a place at its zoom, a tour's last stop, a zone — and the
+  reader's layers stay as they were. The store keeps the view the map reports
+  after every move (`stores/map.ts`, `view`), beside the layers. The rule of
+  "How the map frames" changes in one point: a page that framed something
+  takes the map off Gaeta, as the reader's own hand does. Only a map still on
+  Gaeta — nobody has touched it, no page has framed anything, *Il progetto*
+  opened cold — is framed again in the space there is once the page closes:
+  it is still Gaeta, in the space the page has left.
+- **Up** is a link at the head of the panel, beside the close button, named
+  after the page it leads to: a card to its type's list (*Chiese*, *Luoghi*,
+  …), a card's form to the same list, a stop (`?tappa=N`) to its tour
+  (*Itinerario*, the same page without the query), a tour to *Itinerari*, a
+  chosen zone to *Cosa fare*, a report to the map. One level is all there
+  is: the archive is at most two deep. A page whose only parent is the map —
+  a list, *Cosa fare* without a zone, *Il progetto*, the account pages — has
+  no up link, because the close button already goes there. The rule is one
+  function, `lib/navigation.ts::parentOf`, tested against every route the
+  router has. Up is pushed like any step, and the panel takes focus after it
+  even when only the query changed: the link pressed may have gone.
+- **Back** is the browser's and the system's gesture, and the app imitates it
+  nowhere. The two states in the URL stay steps that Back undoes: from stop 3
+  Back goes to stop 2, from the enlarged map to the card. *Torna alla scheda*
+  is the enlarged map's way up and is pushed too; so is the profile form's
+  save, which went back to the profile and now goes up to it.
+- **Decided by the build**, since the review left them open: the up link's
+  words are the parent page's own name, unstyled beyond a link, because the
+  eyebrow it becomes — type and zone, its colour, the tour's name for a stop
+  — is review PR-23's; until then a stop's parent is called *Itinerario*. It
+  is 44 px tall, a thumb's target, on every screen. The veil closes on a tap
+  for the pointer only: the button and Escape are already the keyboard's
+  way. The *Indietro* link PR-8 had planned beside the close button is not
+  built: up replaces it.

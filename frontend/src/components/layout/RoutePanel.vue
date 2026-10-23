@@ -3,6 +3,7 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useIsDesktop } from '@/composables/useBreakpoint'
+import { parentOf } from '@/lib/navigation'
 
 // Every page but the home opens over the map (spec/design.md D15) and keeps its
 // own URL, so a shared link to a card opens the map *and* the card. Two
@@ -16,6 +17,13 @@ import { useIsDesktop } from '@/composables/useBreakpoint'
 // it. Tapping "Allarga la mappa" gives the map the whole screen, with "Torna
 // alla scheda" to come back; that state is in the URL (`?mappa=1`), so Back
 // undoes it like any other step.
+//
+// Close, up, back (review PR-22, design.md "Close, up, back"): three actions,
+// and the app imitates the browser's history in none of them. *Close* — the
+// button, Escape, a tap on the veil — goes to the map, from any page, from a
+// tour's stop too. *Up* is the link at the panel's head, one level above
+// (lib/navigation.ts). *Back* is the browser's and the system's own, and the
+// two states in the URL, `?mappa=1` and `?tappa=N`, are steps it undoes.
 const props = defineProps<{ shape: 'narrow' | 'wide' }>()
 
 const router = useRouter()
@@ -49,24 +57,31 @@ watch(expanded, async (isExpanded) => {
   else expandButton.value?.focus()
 })
 
-// Back to where the reader came from — which, for someone who opened the card
-// from the map, is the map. A deep link has no "back" inside the app, so it
-// closes onto the home instead of leaving the site.
-const close = () => {
-  if (window.history.state?.back) router.back()
-  else router.push('/')
+// Onto the map, whatever came before: four pages deep or a link from outside,
+// one press shows the map — never a step back through the pages, never out of
+// the site. Pushed, so the browser's Back reopens what was closed. The map
+// stays as it was; the store keeps its view (stores/map.ts).
+const close = () => router.push('/')
+
+const parent = computed(() => parentOf(route))
+
+// Up is a link and, like every step, pushed. The panel takes focus after it
+// even when only the query changed — a stop up to its tour, a zone up to «Cosa
+// fare» — because the link the reader pressed may have gone, and focus with it.
+const goUp = async (event: MouseEvent, navigate: (event?: MouseEvent) => Promise<unknown>) => {
+  await navigate(event)
+  if (event.defaultPrevented) takeFocus()
 }
 
 const expand = () => router.push({ query: { ...route.query, mappa: '1' } })
 
-// Back when the expanded map was one step of this visit; a link shared with
-// `?mappa=1` has no step to go back to, so the query is dropped in place.
+// The enlarged map's way up to its card: the same page without `?mappa=1`,
+// pushed like any step — whether the enlarged map was a step of this visit or
+// arrived in a shared link. Back is the browser's.
 const collapse = () => {
   const withoutMap = { ...route.query }
   delete withoutMap.mappa
-  const back = window.history.state?.back as string | undefined
-  if (back && back.split('?')[0] === route.path) router.back()
-  else router.replace({ query: withoutMap })
+  router.push({ query: withoutMap })
 }
 
 // Escape closes the panel, unless the reader is typing: Escape inside a field
@@ -83,11 +98,14 @@ const pill =
 </script>
 
 <template>
-  <!-- The veil: behind a wide panel the map is scenery, not a control. -->
+  <!-- The veil: behind a wide panel the map is scenery, not a control. A tap
+  on it closes the panel, as the button and Escape do — for the pointer only,
+  since those two are already the keyboard's way. -->
   <div
     v-if="!narrow && isDesktop"
     class="pointer-events-auto absolute inset-0 bg-page/70"
     aria-hidden="true"
+    @click="close"
   ></div>
 
   <!-- The phone's strip: the map shows through above the article. Its button
@@ -141,10 +159,33 @@ const pill =
     "
     @keydown="onKeydown"
   >
-    <div class="flex flex-none justify-end px-3 pt-3">
+    <div class="flex flex-none items-center gap-3 px-3 pt-3">
+      <!-- Up: one level above, named after the page it leads to. Its words
+      and its look are review PR-23's; 44px tall, a thumb's target. -->
+      <RouterLink v-if="parent" v-slot="{ href, navigate }" :to="parent.to" custom>
+        <a
+          :href="href"
+          class="inline-flex min-h-11 min-w-11 items-center gap-1 rounded-full px-2 text-sm font-semibold text-sea underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+          @click="goUp($event, navigate)"
+        >
+          <svg
+            viewBox="0 0 20 20"
+            class="h-4 w-4 flex-none"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M12 4.5L6.5 10l5.5 5.5" />
+          </svg>
+          {{ parent.label }}
+        </a>
+      </RouterLink>
       <button
         type="button"
-        class="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-hairline bg-surface text-ink hover:border-field focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+        class="ml-auto flex h-11 w-11 flex-none cursor-pointer items-center justify-center rounded-full border border-hairline bg-surface text-ink hover:border-field focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
         aria-label="Chiudi e torna alla mappa"
         @click="close"
       >

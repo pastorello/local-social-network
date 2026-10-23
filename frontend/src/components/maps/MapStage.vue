@@ -198,6 +198,7 @@ onMounted(async () => {
       @map-click="onMapClick"
       @pin-click="onPinClick"
       @feature-click="onFeatureClick"
+      @view="mapStore.setView"
     />
     <!-- D19: a map that sometimes takes clicks as edits and sometimes does not
     must never leave it ambiguous which it is doing now. -->
