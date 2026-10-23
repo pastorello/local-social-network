@@ -19,6 +19,8 @@ interface PaginatedFeste {
 const userStore = useUserStore()
 
 const feste = ref<Feste[]>([])
+// The whole list's size, as the menu prints it (review PR-9).
+const total = ref(0)
 const nextPage = ref<string | null>(null)
 const loading = ref(true)
 const mineOnly = ref(false)
@@ -30,6 +32,7 @@ const getFeste = async () => {
   try {
     const response = await axios.get<PaginatedFeste>(endpoint.value)
     feste.value = response.data.results
+    total.value = response.data.count
     nextPage.value = response.data.next
   } catch (error) {
     console.log('error:', error)
@@ -67,7 +70,7 @@ onMounted(getFeste)
         <div>
           <MainTitle>Feste</MainTitle>
           <p v-if="!loading" class="text-muted">
-            {{ entries.length }} {{ entries.length === 1 ? 'scheda' : 'schede' }}
+            {{ total }} {{ total === 1 ? 'scheda' : 'schede' }}
           </p>
         </div>
 
@@ -81,7 +84,7 @@ onMounted(getFeste)
       </header>
 
       <p v-if="!loading && entries.length === 0" class="text-muted">
-        {{ mineOnly ? 'Non hai ancora creato nessuna festa.' : 'Nessuna festa pubblicata.' }}
+        {{ mineOnly ? 'Non hai ancora creato nessuna festa.' : 'Ancora nessuna festa.' }}
       </p>
 
       <CardGrid :entries="entries" type="feste" />

@@ -276,7 +276,8 @@ re-argued:
 - **The menu does not carry the genres yet.** *Luoghi* sits right above
   *Chiese* in the Schede menu and in the footer; the full *Luoghi* heading with
   its genres belongs to the menu design.md D14 redraws, rather than to a menu
-  that is about to be replaced.
+  that is about to be replaced. *(Since 2026-10-23 the menu leaves Chiese to
+  this chip — see "The menu" below.)*
 - **A translation shows its original's genre**, as it shows its original's pin
   (translations.md T5): what kind of place it is belongs to the place.
 - **The layer colour is magenta**, `--color-layer-luoghi: #be185d` — the one hue
@@ -321,6 +322,50 @@ What the review left to the build, decided here:
 - **`how_to_get_there` moved under *Dove si trova*** through
   `FieldConfig.inPlace`; on a luogo still without a pin it stays among the
   facts, where it was, rather than disappear with the section.
+
+### The menu: *Chiese* under *Luoghi*, and a count on every heading — 2026-10-23 (review PR-9)
+
+The review found *Chiese* in two places a reader chooses from — an entry of
+the *Schede* menu and a chip on `/luoghi` — and seven headings with no sign of
+which have anything under them ([review](../review-2026-10-22.md) P-06, L-04,
+L-12). It offered two cures, one of them conditional on this file; **the
+decision of 2026-09-11 above already takes it**: the reader meets one heading,
+*Luoghi*, with the churches under it, and the chip on `/luoghi` is that
+grouping "on the surface where a reader actually chooses". So **the menu no
+longer names *Chiese*, and the chip stays** — one place, not two. Nothing
+about the type changes: `/chiese`, its layer, its list and its cards are where
+they were, and a church's page still lights the menu's button.
+
+What the review left to the build, decided here:
+
+- **Every heading carries its published count**, right-aligned and heard as
+  «Luoghi, 9 schede». It comes from `GET /api/content/counts/` — one query,
+  published originals only (translations are not a second card, as on every
+  public list), the same for everyone: a draft never moves it, not even for
+  its author, and it asks for no token. The types are **found, not listed**:
+  every one-to-one row a type app adds to a `Card` (ADR-0004 — the core does
+  not know its types), so a ninth type is counted the day it exists. It is
+  `content`'s first endpoint; the menu asks for it each time it opens.
+- **The number beside an entry is the number its page lists.** *Luoghi*
+  counts the luoghi, not the churches with them: `/luoghi` opens on *Tutti*,
+  which lists luoghi, and a menu that promised fourteen in front of nine would
+  be wrong on arrival. The list's own line under its title now says the same
+  number — the API's total, not the twenty cards a page holds.
+- **An empty heading stays a link**, in the muted ink — the count, *0*, says
+  it too, so the colour is never the only sign — and its list reads *Ancora
+  nessuna scheda.* (*Ancora nessuna festa.* on `/feste`): the archive is
+  growing, not missing.
+- **The order is the reader's**: Luoghi, Feste, Ricette, Personaggi storici,
+  Dialetto, Libri consigliati — the review's, without *Chiese*.
+- **The chip is the way to the churches from the menu**, so `/luoghi` now
+  shows *Tutti* and *Chiese* even while no genre has a published place;
+  before, the whole row hid with the genres.
+- **On a phone the menu hangs from the button's right edge.** From its left
+  edge it ran twenty pixels past a 360 px screen, unnoticed while that side of
+  it was empty; the counts sit there now.
+- ***Il progetto* still lists every type, *Chiese* included.** It is the
+  site's index, not a choice between headings, and the review's PR-12 redraws
+  it; `ProjectView.spec.ts` keeps asserting every type's path is there.
 
 ### Why this is not `tradizioni` again
 
