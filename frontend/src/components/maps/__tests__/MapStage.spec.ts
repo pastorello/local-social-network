@@ -21,7 +21,7 @@ vi.mock('@/lib/firstPaint', () => ({ afterFirstPaint: () => paint.done() }))
 const GaetaMapStub = defineComponent({
   name: 'GaetaMap',
   props: ['pins', 'features', 'overlays', 'placing', 'focus', 'frame', 'editor', 'focusPadding'],
-  emits: ['mapClick', 'pinClick', 'featureClick'],
+  emits: ['mapClick', 'pinClick', 'featureClick', 'view'],
   setup: () => () => h('div'),
 })
 
@@ -129,6 +129,23 @@ describe('MapStage while a form draws on the map (design.md D19)', () => {
     map.vm.$emit('pinClick', 'r1')
 
     expect(push).toHaveBeenCalledTimes(2)
+  })
+})
+
+// Closing a page leaves the map as it was (review PR-22): where it is lives in
+// the store with the layers, not only inside Leaflet.
+describe('MapStage keeps the map’s view', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.mocked(axios.get).mockResolvedValue({ data: [] })
+  })
+
+  it('keeps the centre and zoom the map reports after every move', async () => {
+    const { map } = await mountStage()
+
+    map.vm.$emit('view', { lat: 41.2105, lng: 13.5702, zoom: 16 })
+
+    expect(useMapStore().view).toEqual({ lat: 41.2105, lng: 13.5702, zoom: 16 })
   })
 })
 

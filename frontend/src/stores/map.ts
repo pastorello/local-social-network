@@ -96,6 +96,11 @@ export const useMapStore = defineStore('map', {
     // null while there is no sheet. The map frames Gaeta in the band above it
     // (review PR-5, M-01) — at rest only, so a drag does not move the map.
     sheetHeight: null as number | null,
+    // Where the map is — its centre and zoom after the last move, reported by
+    // the map itself. Kept here with the layers because closing a page leaves
+    // the map as it was (review PR-22): nothing flies back to Gaeta, nothing
+    // returns to where it stood before the page opened.
+    view: null as { lat: number; lng: number; zoom: number } | null,
     editor: null as MapEditor | null,
     loaded: false,
   }),
@@ -213,6 +218,10 @@ export const useMapStore = defineStore('map', {
 
     setSheetHeight(pixels: number | null) {
       this.sheetHeight = pixels
+    },
+
+    setView(view: { lat: number; lng: number; zoom: number }) {
+      this.view = view
     },
 
     startEditing(

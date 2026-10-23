@@ -70,7 +70,9 @@ const submitForm = () => {
           avatarURL: response.data.user.avatarURL,
         })
 
-        router.back()
+        // Up to the profile, not back: no button of the app imitates the
+        // browser's Back (review PR-22).
+        router.push({ name: 'profile', params: { id: userStore.user.id } })
       })
       .catch((error) => {
         fieldErrors.value = extractFieldErrors(error)

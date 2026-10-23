@@ -16,7 +16,7 @@ const FOCUS: MapFocus = {
 describe('useMapFocus (spec/design.md D16)', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  it('hands the map the open page’s place, follows it, and takes it back on close', async () => {
+  it('hands the map the open page’s place, follows it, and lets go of it on close', async () => {
     const focus = ref<MapFocus | null>(null)
     const Page = defineComponent({
       setup() {

@@ -200,7 +200,8 @@ describe('the reader, on a wide screen', () => {
 
   // The map under every page (design.md D13/D15/D16/D17): a card opens over
   // the map, the map shows the card's place, and closing the card gives the
-  // reader back the map and their place in it.
+  // reader back the map — still on that place (review PR-22) — and the link
+  // that opened it.
   it('opens a card over the map, sees the map show it, and closes back onto the link', () => {
     cy.visit('/')
 
