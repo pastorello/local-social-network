@@ -314,6 +314,36 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
     check('/login (in errore)')
   })
 
+  // The account forms are one column since review PR-11 (design.md "The
+  // account forms in one column"); on a phone that column is the panel.
+  it('the login form on a phone', () => {
+    cy.viewport(375, 812)
+    cy.visit('/login')
+    cy.get('#login-email').should('exist')
+
+    check('/login (phone)')
+  })
+
+  // A keyboard signs in without reaching for the button: Enter in a field
+  // submits the form. With a password the client refuses, so — like the case
+  // above — it costs nothing against the login rate limit.
+  it('the login form answers Enter in a field, as it answers «Accedi»', () => {
+    cy.viewport(1280, 800)
+    cy.visit('/login')
+
+    cy.get('#login-email').type('collaboratore@e2e.test')
+    cy.get('#login-password').type('corta{enter}')
+    cy.get('#login-password').should('have.attr', 'aria-invalid', 'true')
+  })
+
+  it('the forgotten-password form', () => {
+    cy.viewport(1280, 800)
+    cy.visit('/password-dimenticata')
+    cy.contains('h1', 'Password dimenticata')
+
+    check('/password-dimenticata')
+  })
+
   // The design pass left /polls in its v1 clothes on purpose (design.md's
   // closing note), and that changes nothing here: ADR-0005's bar is the whole
   // app, not the redesigned part of it. Style and accessibility are different
@@ -439,6 +469,68 @@ describe("the collaborator's surfaces meet WCAG 2.1 AA", { testIsolation: false 
     cy.get('nav a[href^="/profile/"]').first().click()
     cy.location('pathname').should('match', /^\/profile\/[0-9a-f-]+$/)
     check('/profile/:id')
+  })
+
+  // WCAG 1.4.10 (Reflow), and Luca's report on PR-11: in a quarter of the wide
+  // panel the profile's 200px avatar and its display-size name ran out of
+  // their column and under the reports beside them. One column now (the
+  // account pages' 420px one); measured at a wide screen, at the 1024px line
+  // where the wide layout starts, and on a phone: everything in the column
+  // stays inside it, and nothing scrolls sideways.
+  //
+  // The profile's address comes from the session the block signed in with,
+  // not from the avatar's menu: the case above already walks that path, and
+  // a menu opened the instant a page loads is a race this case is not about.
+  it('the profile keeps its avatar and its name inside its column, at every width', () => {
+    cy.window()
+      .then((win) => win.localStorage.getItem('user.id'))
+      .then((id) => {
+        expect(id, 'the signed-in user').to.match(/^[0-9a-f-]{36}$/)
+        for (const [width, height] of [
+          [1440, 900],
+          [1024, 768],
+          [390, 844],
+        ] as const) {
+          cy.viewport(width, height)
+          cy.visit(`/profile/${id}`)
+          cy.get('h1').should('not.be.empty')
+          cy.get('[aria-label^="Foto profilo di"]').should('be.visible')
+          cy.get('h1').then(($h1) => {
+            const column = $h1
+              .parents()
+              .toArray()
+              .find((el) => getComputedStyle(el).maxWidth === '420px')
+            expect(column, `the 420px column at ${width}px`).not.to.equal(undefined)
+            const edge = column!.getBoundingClientRect()
+            for (const el of column!.querySelectorAll('*')) {
+              const box = el.getBoundingClientRect()
+              if (box.width === 0) continue
+              expect(box.left, `left of ${el.tagName} at ${width}px`).to.be.at.least(edge.left - 1)
+              expect(box.right, `right of ${el.tagName} at ${width}px`).to.be.at.most(
+                edge.right + 1,
+              )
+            }
+            expect(column!.scrollWidth, `the column at ${width}px`).to.be.at.most(
+              column!.clientWidth,
+            )
+            const doc = $h1[0]!.ownerDocument.documentElement
+            expect(doc.scrollWidth, `the page at ${width}px`).to.be.at.most(doc.clientWidth)
+          })
+        }
+      })
+  })
+
+  // The profile's two forms, one column like the login (review PR-11). Only
+  // visited, never sent: a new password revokes every token (TD-20), and the
+  // cases after this one share the block's single sign-in.
+  it('the profile form and the password form', () => {
+    cy.visit('/profile/edit')
+    cy.get('#editprofile-name').should('exist')
+    check('/profile/edit')
+
+    cy.visit('/profile/edit/password')
+    cy.get('#editpassword-old').should('exist')
+    check('/profile/edit/password')
   })
 
   it('an authoring form showing a real validation error', () => {

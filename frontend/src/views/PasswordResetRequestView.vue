@@ -5,12 +5,11 @@ import { ref } from 'vue'
 import { useToastStore } from '@/stores/toast'
 import { parseZodObject, PasswordResetRequestForm } from '@/forms/user'
 import ActionButton from '@/components/buttons/ActionButton.vue'
+import AccountColumn from '@/components/boxes/AccountColumn.vue'
 import FormErrors from '@/components/forms/FormErrors.vue'
 import FormField from '@/components/forms/FormField.vue'
 import FormInput from '@/components/forms/FormInput.vue'
-import PanelBox from '@/components/boxes/PanelBox.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
-import ViewContainer from '@/components/boxes/ViewContainer.vue'
 
 const toastStore = useToastStore()
 
@@ -44,43 +43,36 @@ const submitForm = () => {
 </script>
 
 <template>
-  <ViewContainer class="grid-cols-2">
-    <div>
-      <PanelBox>
-        <MainTitle>Password dimenticata</MainTitle>
-        <p class="text-muted">
-          Inserisci la tua e-mail: se corrisponde a un account, riceverai un link per reimpostare la
-          password.
-        </p>
-      </PanelBox>
-    </div>
+  <AccountColumn>
+    <MainTitle>Password dimenticata</MainTitle>
 
-    <div>
-      <PanelBox>
-        <template v-if="sent">
-          <p>Se l'indirizzo esiste, riceverai un'e-mail a breve.</p>
-        </template>
-        <form v-else class="space-y-6" v-on:submit.prevent="submitForm">
-          <FormField field-id="reset-request-email" label="E-mail" :errors="fieldErrors.email">
-            <template #default="{ describedBy, invalid }">
-              <FormInput
-                id="reset-request-email"
-                type="email"
-                v-model="form.email"
-                :invalid="invalid"
-                :aria-describedby="describedBy"
-                placeholder="La tua e-mail"
-              />
-            </template>
-          </FormField>
+    <p v-if="sent">Se l'indirizzo esiste, riceverai un'e-mail a breve.</p>
+    <template v-else>
+      <p class="mb-6 text-muted">
+        Inserisci la tua e-mail: se corrisponde a un account, riceverai un link per reimpostare la
+        password.
+      </p>
 
-          <FormErrors :errors="formErrors" />
+      <form class="space-y-6" v-on:submit.prevent="submitForm">
+        <FormField field-id="reset-request-email" label="E-mail" :errors="fieldErrors.email">
+          <template #default="{ describedBy, invalid }">
+            <FormInput
+              id="reset-request-email"
+              type="email"
+              autocomplete="username"
+              v-model="form.email"
+              :invalid="invalid"
+              :aria-describedby="describedBy"
+            />
+          </template>
+        </FormField>
 
-          <div>
-            <ActionButton>Invia link</ActionButton>
-          </div>
-        </form>
-      </PanelBox>
-    </div>
-  </ViewContainer>
+        <FormErrors :errors="formErrors" />
+
+        <div>
+          <ActionButton>Invia link</ActionButton>
+        </div>
+      </form>
+    </template>
+  </AccountColumn>
 </template>

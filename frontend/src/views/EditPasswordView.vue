@@ -6,12 +6,11 @@ import { useRouter } from 'vue-router'
 import { useToastStore } from '@/stores/toast'
 import { useUserStore } from '@/stores/user'
 import ActionButton from '@/components/buttons/ActionButton.vue'
+import AccountColumn from '@/components/boxes/AccountColumn.vue'
 import FormErrors from '@/components/forms/FormErrors.vue'
 import FormField from '@/components/forms/FormField.vue'
 import FormInput from '@/components/forms/FormInput.vue'
-import PanelBox from '@/components/boxes/PanelBox.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
-import ViewContainer from '@/components/boxes/ViewContainer.vue'
 import { extractFieldErrors, extractFormErrors } from '@/lib/apiErrors'
 
 const toastStore = useToastStore()
@@ -66,76 +65,74 @@ const submitForm = () => {
 </script>
 
 <template>
-  <ViewContainer class="grid-cols-2">
-    <div>
-      <PanelBox>
-        <MainTitle>Cambia password</MainTitle>
-        <p class="mb-6 text-muted">Da qui puoi cambiare la tua password.</p>
-        <RouterLink to="/profile/edit" class="underline">← Torna al profilo</RouterLink>
-      </PanelBox>
-    </div>
+  <AccountColumn>
+    <MainTitle>Cambia password</MainTitle>
 
-    <div>
-      <PanelBox>
-        <form class="space-y-6" v-on:submit.prevent="submitForm">
-          <FormField
-            field-id="editpassword-old"
-            label="Password attuale"
-            :errors="fieldErrors.old_password"
-          >
-            <template #default="{ describedBy, invalid }">
-              <FormInput
-                id="editpassword-old"
-                type="password"
-                v-model="form.old_password"
-                :invalid="invalid"
-                :aria-describedby="describedBy"
-                placeholder="La tua password attuale"
-              />
-            </template>
-          </FormField>
+    <p class="mb-6 text-muted">Da qui puoi cambiare la tua password.</p>
 
-          <FormField
-            field-id="editpassword-new1"
-            label="Nuova password"
-            :errors="fieldErrors.new_password1"
-          >
-            <template #default="{ describedBy, invalid }">
-              <FormInput
-                id="editpassword-new1"
-                type="password"
-                v-model="form.new_password1"
-                :invalid="invalid"
-                :aria-describedby="describedBy"
-                placeholder="La nuova password"
-              />
-            </template>
-          </FormField>
+    <form class="space-y-6" v-on:submit.prevent="submitForm">
+      <FormField
+        field-id="editpassword-old"
+        label="Password attuale"
+        :errors="fieldErrors.old_password"
+      >
+        <template #default="{ describedBy, invalid }">
+          <FormInput
+            id="editpassword-old"
+            type="password"
+            autocomplete="current-password"
+            v-model="form.old_password"
+            :invalid="invalid"
+            :aria-describedby="describedBy"
+          />
+        </template>
+      </FormField>
 
-          <FormField
-            field-id="editpassword-new2"
-            label="Ripeti password"
-            :errors="fieldErrors.new_password2"
-          >
-            <template #default="{ describedBy, invalid }">
-              <FormInput
-                id="editpassword-new2"
-                type="password"
-                v-model="form.new_password2"
-                :invalid="invalid"
-                :aria-describedby="describedBy"
-                placeholder="Ripeti la password"
-              />
-            </template>
-          </FormField>
+      <FormField
+        field-id="editpassword-new1"
+        label="Nuova password"
+        :errors="fieldErrors.new_password1"
+      >
+        <template #default="{ describedBy, invalid }">
+          <FormInput
+            id="editpassword-new1"
+            type="password"
+            autocomplete="new-password"
+            v-model="form.new_password1"
+            :invalid="invalid"
+            :aria-describedby="describedBy"
+          />
+        </template>
+      </FormField>
 
-          <FormErrors :errors="formErrors" />
+      <FormField
+        field-id="editpassword-new2"
+        label="Ripeti password"
+        :errors="fieldErrors.new_password2"
+      >
+        <template #default="{ describedBy, invalid }">
+          <FormInput
+            id="editpassword-new2"
+            type="password"
+            autocomplete="new-password"
+            v-model="form.new_password2"
+            :invalid="invalid"
+            :aria-describedby="describedBy"
+          />
+        </template>
+      </FormField>
 
-          <div>
-            <ActionButton>Salva modifiche</ActionButton>
-          </div>
-        </form>
-      </PanelBox>
-    </div>
-  </ViewContainer>
+      <FormErrors :errors="formErrors" />
+
+      <div>
+        <ActionButton>Salva modifiche</ActionButton>
+      </div>
+    </form>
+
+    <p class="mt-8 border-t border-hairline pt-6">
+      <RouterLink to="/profile/edit" class="font-semibold text-sea underline"
+        >← Torna al profilo</RouterLink
+      >
+    </p>
+  </AccountColumn>
 </template>

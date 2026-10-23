@@ -421,6 +421,62 @@ one (they became part of the reader's path), not tidiness.
 panel over the map, so each gets at least the wide panel's frame. How much
 more than the frame is a decision for the build (see below).
 
+### The account forms in one column — 2026-10-23
+
+The review of 2026-10-22 (PR-11: L-09, A-03) found `/login` drawn as two
+boxes in the wide panel: «Accedi» on the left with 350px of nothing under
+three lines, the form on the right. Every account form had that shape, and
+the profile page a narrower version of it. It is
+the first page a collaborator sees, so the author took the decision this
+section said was one to take. Built the next day:
+
+- **One box, centred, no wider than 420px** (`components/boxes/AccountColumn.vue`):
+  the title, what the page is for, the fields, and under them, past a
+  hairline, the way to the page beside it — «Vuoi collaborare? Scrivici» on
+  the login, «Hai già un account? Accedi» on *Collabora*, *Cambia password*
+  and back on the profile's two forms. The profile page wears it too (see
+  below). On a phone the box is the panel's
+  width. The panel around it is still the wide one (D17): the box changed,
+  not the frame.
+- **One pattern for label and field**, the writing forms' own: `FormField`
+  with `FormInput`, the label above the field, and a placeholder only where
+  it says something the label does not («Il tuo nome completo», «Chi sei e
+  perché vuoi collaborare»). The ones that repeated their label («La tua
+  e-mail», «La tua password») are gone. Validation stays attributed to its
+  field, what has no field stays in `FormErrors`, and the login's answer
+  stays vague on purpose.
+- **Every field names its purpose** (WCAG 1.3.5, inside ADR-0005's bar):
+  `username` and `current-password` on the login; `username` on *Password
+  dimenticata*, where the address asked for is the account's name;
+  `new-password` on the invite and the reset; `current-password` and
+  `new-password` on *Cambia password*; `name` and `email` on *Collabora* and
+  *Modifica profilo*. The honeypot keeps `off`.
+- **Decided by the build**, since the review left them open:
+  - **"/profile" is the profile's two forms**, `/profile/edit` and
+    `/profile/edit/password`, which had the login's two-box shape, **and
+    the profile page**, `/profile/:id`. That one was added the same day,
+    on the author's report: in a quarter of the wide panel (about 170px)
+    the fixed 200px avatar and the display-size name ran out of their
+    column and under the reports beside it. Now the face, the name, the
+    count and *Modifica profilo* head the same column, the reports under
+    them past a hairline; the avatar is never wider than the box and the
+    name wraps. `a11y.cy.ts` measures it at 1440, 1024 and 390px (WCAG
+    1.4.10): nothing in the column leaves it, nothing scrolls sideways.
+  - **The invite and the reset forms join them**, though the prompt names
+    neither: they are the pages a link opens after *Password dimenticata*
+    and after the author's approval, and leaving them in two boxes would
+    have kept two patterns where the prompt asked for one.
+  - **«Bentornato!» is gone from the login**: the prompt lists the title, the
+    fields and the two links, and nothing else.
+  - **Once a reset link is requested, the page says only that**: the
+    instructions above the field leave with the field.
+  - **What the browser fills in stays visible.** A-03 asked whether to hide
+    an autofilled address until the field has focus, since Chrome ignores
+    `autocomplete="off"`. Not built: a form that shows less than it will
+    send is the worse fault, and on a shared computer the address is the
+    browser profile's to forget, which the page cannot do for it. Hiding it
+    would be a decision of its own, for the author.
+
 ## The map under every page
 
 > **Decided 2026-09-11. Built 2026-09-18**, all of it, in four steps — see

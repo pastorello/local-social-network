@@ -8,7 +8,7 @@ import { parseZodObject, CollaborateForm } from '@/forms/user'
 import FormErrors from '@/components/forms/FormErrors.vue'
 import FormField from '@/components/forms/FormField.vue'
 import FormInput from '@/components/forms/FormInput.vue'
-import PanelBox from '@/components/boxes/PanelBox.vue'
+import AccountColumn from '@/components/boxes/AccountColumn.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import { extractFieldErrors, extractFormErrors } from '@/lib/apiErrors'
@@ -75,86 +75,80 @@ const submitForm = () => {
 </script>
 
 <template>
-  <div class="max-w-7xl mx-auto grid grid-cols-2 gap-4">
-    <div>
-      <PanelBox>
-        <MainTitle>Collabora con noi</MainTitle>
+  <AccountColumn>
+    <MainTitle>Collabora con noi</MainTitle>
 
-        <p class="mb-6 text-muted">
-          Vivere Gaeta è scritto da un piccolo gruppo di collaboratori scelti dall'autore.
-          Raccontaci chi sei e perché vuoi contribuire: ti risponderemo se la tua richiesta viene
-          approvata.
-        </p>
+    <p class="mb-6 text-muted">
+      Vivere Gaeta è scritto da un piccolo gruppo di collaboratori scelti dall'autore. Raccontaci
+      chi sei e perché vuoi contribuire: ti risponderemo se la tua richiesta viene approvata.
+    </p>
 
-        <p class="font-bold">
-          Hai già un account?
-          <RouterLink :to="{ name: 'login' }" class="underline">Accedi qui</RouterLink>!
-        </p>
-      </PanelBox>
-    </div>
+    <form class="space-y-6" v-on:submit.prevent="submitForm">
+      <FormField field-id="collabora-name" label="Nome" :errors="fieldErrors.name">
+        <template #default="{ describedBy, invalid }">
+          <FormInput
+            id="collabora-name"
+            type="text"
+            autocomplete="name"
+            v-model="form.name"
+            :invalid="invalid"
+            :aria-describedby="describedBy"
+            placeholder="Il tuo nome completo"
+          />
+        </template>
+      </FormField>
 
-    <div>
-      <PanelBox>
-        <form class="space-y-6" v-on:submit.prevent="submitForm">
-          <FormField field-id="collabora-name" label="Nome" :errors="fieldErrors.name">
-            <template #default="{ describedBy, invalid }">
-              <FormInput
-                id="collabora-name"
-                type="text"
-                v-model="form.name"
-                :invalid="invalid"
-                :aria-describedby="describedBy"
-                placeholder="Il tuo nome completo"
-              />
-            </template>
-          </FormField>
+      <FormField field-id="collabora-email" label="E-mail" :errors="fieldErrors.email">
+        <template #default="{ describedBy, invalid }">
+          <FormInput
+            id="collabora-email"
+            type="email"
+            autocomplete="email"
+            v-model="form.email"
+            :invalid="invalid"
+            :aria-describedby="describedBy"
+          />
+        </template>
+      </FormField>
 
-          <FormField field-id="collabora-email" label="E-mail" :errors="fieldErrors.email">
-            <template #default="{ describedBy, invalid }">
-              <FormInput
-                id="collabora-email"
-                type="email"
-                v-model="form.email"
-                :invalid="invalid"
-                :aria-describedby="describedBy"
-                placeholder="La tua e-mail"
-              />
-            </template>
-          </FormField>
+      <FormField field-id="collabora-message" label="Messaggio" :errors="fieldErrors.message">
+        <template #default="{ describedBy, invalid }">
+          <textarea
+            id="collabora-message"
+            v-model="form.message"
+            placeholder="Chi sei e perché vuoi collaborare"
+            rows="5"
+            :aria-describedby="describedBy"
+            :aria-invalid="invalid || undefined"
+            class="w-full rounded-lg border bg-surface px-4 py-3 text-ink placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+            :class="invalid ? 'border-status-open' : 'border-field'"
+          ></textarea>
+        </template>
+      </FormField>
 
-          <FormField field-id="collabora-message" label="Messaggio" :errors="fieldErrors.message">
-            <template #default="{ describedBy, invalid }">
-              <textarea
-                id="collabora-message"
-                v-model="form.message"
-                placeholder="Chi sei e perché vuoi collaborare"
-                rows="5"
-                :aria-describedby="describedBy"
-                :aria-invalid="invalid || undefined"
-                class="w-full rounded-lg border bg-surface px-4 py-3 text-ink placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
-                :class="invalid ? 'border-status-open' : 'border-field'"
-              ></textarea>
-            </template>
-          </FormField>
+      <div class="sr-only" aria-hidden="true">
+        <label for="collabora-website">Non compilare questo campo</label>
+        <input
+          id="collabora-website"
+          type="text"
+          v-model="website"
+          tabindex="-1"
+          autocomplete="off"
+        />
+      </div>
 
-          <div class="sr-only" aria-hidden="true">
-            <label for="collabora-website">Non compilare questo campo</label>
-            <input
-              id="collabora-website"
-              type="text"
-              v-model="website"
-              tabindex="-1"
-              autocomplete="off"
-            />
-          </div>
+      <FormErrors :errors="formErrors" />
 
-          <FormErrors :errors="formErrors" />
+      <div>
+        <ActionButton>Invia richiesta</ActionButton>
+      </div>
+    </form>
 
-          <div>
-            <ActionButton>Invia richiesta</ActionButton>
-          </div>
-        </form>
-      </PanelBox>
-    </div>
-  </div>
+    <p class="mt-8 border-t border-hairline pt-6">
+      Hai già un account?
+      <RouterLink :to="{ name: 'login' }" class="font-semibold text-sea underline"
+        >Accedi</RouterLink
+      >
+    </p>
+  </AccountColumn>
 </template>
