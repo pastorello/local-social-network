@@ -207,12 +207,29 @@ describe('RoutePanel on a phone (spec/design.md D18)', () => {
     expect(wrapper.get('section').isVisible()).toBe(true)
   })
 
-  it('is the whole screen for a page without a place', async () => {
+  // Review PR-14 (M-06): the whole screen, up behind the menu — the page
+  // starts under the pill, but no band of map shows around it.
+  it('is the whole screen for a page without a place, the band around the menu included', async () => {
     stubPhone()
     const { wrapper } = await mountPanel('wide')
 
-    expect(wrapper.get('section').classes()).toContain('inset-0')
+    expect(wrapper.get('section').classes()).toEqual(
+      expect.arrayContaining([
+        'inset-x-0',
+        'bottom-0',
+        '-top-[var(--header-h,10rem)]',
+        'pt-[var(--header-h,10rem)]',
+        'bg-page',
+      ]),
+    )
     expect(wrapper.text()).not.toContain('Allarga la mappa')
+  })
+
+  it('leaves a card with a place its strip of map, under the menu', async () => {
+    stubPhone()
+    const { wrapper } = await mountPanel('narrow')
+
+    expect(wrapper.get('section').classes()).not.toContain('-top-[var(--header-h,10rem)]')
   })
 })
 

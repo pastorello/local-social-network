@@ -368,9 +368,53 @@ describe('the reader, on a phone', () => {
     cy.contains('h1', RICETTA)
     cy.contains('button', 'Allarga la mappa').should('not.exist')
     cy.get('.leaflet-container').closest('[inert]').should('exist')
+    // The whole screen, to the top edge (review PR-14, M-06), with the page's
+    // own words starting under the menu.
     cy.get('main section[tabindex="-1"]').should(($panel) => {
-      expect($panel[0]!.getBoundingClientRect().top).to.be.closeTo(headerBottom($panel), 1)
+      expect($panel[0]!.getBoundingClientRect().top).to.equal(0)
+      const close = $panel[0]!.querySelector('button[aria-label="Chiudi e torna alla mappa"]')!
+      expect(close.getBoundingClientRect().top).to.be.closeTo(headerBottom($panel) + 12, 1)
     })
+  })
+
+  // Review PR-14 (M-06): a page without a place is the whole screen, up to
+  // the top edge — the menu floats over the page's own ground, and no band of
+  // the veiled map shows around it, which read as a rendering fault.
+  it('sees no map around the menu over a page without a place', () => {
+    for (const [path, title] of [
+      ['/benvenuto', 'Che cosa ti va di fare?'],
+      ['/luoghi', 'Luoghi'],
+      ['/il-progetto', 'Il progetto'],
+    ]) {
+      cy.visit(path!)
+      cy.contains('main section[tabindex="-1"] h1', title!)
+      cy.get('main section[tabindex="-1"]').should(($panel) => {
+        const header = headerBottom($panel)
+        // At the left edge, beside the pill: the top, the pill's middle, and
+        // just above where the page's words begin.
+        for (const y of [1, header / 2, header - 2]) {
+          const hit = $panel[0]!.ownerDocument.elementFromPoint(2, y)
+          expect($panel[0]!.contains(hit), `${path} at y=${y}`).to.equal(true)
+        }
+      })
+    }
+  })
+
+  // Review PR-14 (M-09): the guest from the QR code chooses among cards that
+  // each wear their intent's tint and icon, and leaves by a link to the map.
+  it('meets the welcome page’s choices as cards with a tint and an icon', () => {
+    cy.visit('/benvenuto')
+
+    cy.contains('a', 'Scoprire la città')
+      .find('span[aria-hidden="true"]')
+      .should(($tile) => {
+        expect(getComputedStyle($tile[0]!).backgroundColor).not.to.equal('rgba(0, 0, 0, 0)')
+        expect($tile.find('svg')).to.have.length(1)
+      })
+    cy.contains('main section[tabindex="-1"] p', PRESENTATION)
+    cy.contains('a', 'Oppure vai alla mappa').should('have.attr', 'href', '/').click()
+    cy.location('pathname').should('eq', '/')
+    cy.get('main section[tabindex="-1"]').should('not.exist')
   })
 
   // design.md D18: a card with a place opens under a strip of the map, the

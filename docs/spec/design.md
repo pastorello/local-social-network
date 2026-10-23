@@ -617,6 +617,11 @@ opening-hours filter is not.
   bottom-right corner; the credit question is parked — see "How the map
   frames — 2026-10-23" at the end of this section.
 
+  *Amended 2026-10-23:* a page without a strip is the whole screen up to the
+  top edge — its ground runs behind the menu, so no band of map shows around
+  the pill. See "The welcome page, and the whole screen on a phone —
+  2026-10-23" at the end of this section.
+
 - **D19 — The background map is the collaborator's editor.** The form sits in
   the panel; the route or the pins are drawn on the real map. The form's
   sections become tabs at the head of the panel (*Contenuto*, *Immagini*,
@@ -1122,3 +1127,69 @@ Built the same day:
   - **From one card straight to another of the same type** — a translation,
     a pin clicked beside the panel — the panel keeps its shape until the
     next card is in, since the guard runs only on entering a route.
+
+### The welcome page, and the whole screen on a phone — 2026-10-23
+
+The review of 2026-10-22 (PR-14: P-07, M-09, M-06) found `/benvenuto` — the
+page a B&B's card prints ([itinerari.md](./itinerari.md) I6) — saying what to
+do but not what the site is; its choices white panels of text, one of them
+wearing a dark border that read as a leftover focus ring; its way out a small
+button. And on a phone, every page without a place — the welcome page, a
+list, *Il progetto* — sat under a band of map about 70 px tall around the
+menu, which looked like a rendering fault rather than a space anyone meant.
+Built the same day:
+
+- **The welcome page says what the site is**, under its eyebrow and its
+  question, in the home's own line (`definitions/copy.ts`, D3's note of
+  2026-10-23) — one constant, so the two front doors cannot describe the
+  archive two ways.
+- **Each intent is a card with its tint and its icon** — the sea, the town,
+  the walk, the table — in the place a cover will take once the archive has
+  photographs (P-07). The tile is `components/content/IntentTile.vue`, the
+  recipe of `CoverPlaceholder` (D5's note): an 18 % tint over the page ground,
+  the icon in the full colour, the card itself a surface, so every word on it
+  is a pairing `main.css` already measured.
+- **The way out is a closing link, «Oppure vai alla mappa»**: underlined, a
+  thumb's 44 px tall, no longer a button. The review's prompt said «Oppure
+  esplora la mappa»; the menu's *Esplora* (review PR-23, "Where the reader
+  is") is on the same screen, and the review had already decided «Vai alla
+  mappa» for the wizard's exit for that reason (PR-23 point 4, PR-21 point
+  6). This page is the wizard's first step to be; it says it the same way now.
+- **The whole screen means the whole screen** (amends D17's and D18's "on a
+  phone the whole screen"): a page without a place starts under the menu as
+  before, but its ground runs up to the top edge behind the pill, so no map
+  shows around it — the map is `inert` there anyway. A card with a place
+  keeps its strip, and the wide screen is unchanged. `RoutePanel.vue` draws
+  it; `reader.cy.ts` checks the band beside the pill on `/benvenuto`,
+  `/luoghi` and *Il progetto*.
+- **Decided by the build**, since the review left them open:
+  - **The intents' colours are tokens of their own**, `--color-intent-*` in
+    `main.css`, each naming a colour the palette already has rather than a
+    new hex: the sea wears `--color-sea`, the town the roofs' terracotta, the
+    table the ricette's layer and the walk the luoghi's — what each leads to
+    on «Cosa si può fare qui». An intent the admin adds after these wears the
+    unknown grey and the tours' map icon until it is given its own. Each
+    colour clears 3:1 on its tint and 4.5:1 on the surface (D9), measured in
+    `lib/__tests__/intents.spec.ts` with the tint mixed in Oklab as the
+    browser mixes it: 5.08, 4.67, 3.70 and 4.36 on the tints.
+  - **The dark border was hover's, not focus's**: the card's ring was
+    already `focus-visible`, so no click or tap draws it, and the one darker
+    border the card had was `hover:border-field` — which, under a pointer
+    resting on the second card, reads exactly as a ring left behind. The
+    pointer is now told by the intent's name underlined, which nobody reads
+    as focus; the ring stays the keyboard's alone, and a unit test holds
+    every card to `focus-visible` and to no border that darkens.
+  - **The zone card wears the home's door**: the same pin on the same sea
+    tile as *Cosa c'è in una zona* on the home, so the two pages draw one
+    door one way. Its fixed second line («Serapo, il centro medievale, Monte
+    Orlando…») is untouched — naming only zones with a place, as the home
+    does, is a change of its own.
+  - **The line under the question stays**: «Itinerari scritti da chi Gaeta
+    la conosce: scegli da dove cominciare.» follows the presentation, muted.
+    Both say who writes the archive; the review asked for a line added, not
+    one replaced, and the wizard (review PR-21) will rewrite this page anyway.
+  - **Four icons are new**, drawn in the set's stroke (24 px grid, 1.5
+    stroke, round caps): `MareIcon`, `CittaIcon`, `CamminoIcon`,
+    `TavolaIcon`. `/benvenuto` paints in the first frame (TD-52), so they
+    are inline SVG on the entry path: about 0.9 KB gzipped, measured against
+    `main`'s build.

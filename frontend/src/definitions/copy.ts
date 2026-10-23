@@ -3,6 +3,7 @@
 // PR-2; the interface's second language will be written against this file).
 
 // What Vivere Gaeta is, in one line: the first words of the home, in both of
-// its layouts, for the reader who did not arrive from a B&B's card.
+// its layouts, for the reader who did not arrive from a B&B's card — and,
+// since review PR-14, the line under /benvenuto's question for the one who did.
 export const PRESENTATION =
   'Gaeta raccontata da chi ci vive: luoghi, chiese, feste, ricette, itinerari.'
