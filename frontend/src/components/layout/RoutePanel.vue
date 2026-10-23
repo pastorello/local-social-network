@@ -221,10 +221,15 @@ const pill =
           <span v-else class="inline-flex min-h-11 items-center px-1">{{ step.label }}</span>
         </span>
       </nav>
+      <!-- Escape does what this does, and says so (review PR-8, A-04): to the
+      pointer in a tooltip, to a screen reader as the button's shortcut. No
+      «Indietro» beside it — the up link is that, and Back is the browser's. -->
       <button
         type="button"
         class="ml-auto flex h-11 w-11 flex-none cursor-pointer items-center justify-center rounded-full border border-hairline bg-surface text-ink hover:border-field focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
         aria-label="Chiudi e torna alla mappa"
+        title="Chiudi (Esc)"
+        aria-keyshortcuts="Escape"
         @click="close"
       >
         <svg

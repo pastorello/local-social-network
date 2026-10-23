@@ -48,7 +48,7 @@ const submitForm = () => {
       // for it — someone else's, or this account's own, which the server has
       // just revoked (TD-20) but whose access token would still look alive.
       void userStore.logout()
-      toastStore.showToast(5000, 'Password aggiornata. Accedi di nuovo.', 'bg-emerald-500')
+      toastStore.showToast(5000, 'Password aggiornata. Accedi di nuovo.')
       router.push('/login')
     })
     .catch((error) => {

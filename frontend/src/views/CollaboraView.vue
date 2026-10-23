@@ -57,11 +57,7 @@ const submitForm = () => {
       rendered_at: renderedAt,
     })
     .then(() => {
-      toastStore.showToast(
-        5000,
-        'Richiesta inviata! Ti contatteremo se verrà approvata.',
-        'bg-emerald-500',
-      )
+      toastStore.showToast(5000, 'Richiesta inviata! Ti contatteremo se verrà approvata.')
 
       resetForm()
       router.push('/')
@@ -73,7 +69,7 @@ const submitForm = () => {
       fieldErrors.value = extractFieldErrors(error)
       formErrors.value = extractFormErrors(error)
 
-      toastStore.showToast(5000, 'Qualcosa è andato storto. Riprova.', 'bg-red-300')
+      toastStore.showToast(5000, 'Qualcosa è andato storto. Riprova.')
     })
 }
 </script>

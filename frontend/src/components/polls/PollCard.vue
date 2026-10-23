@@ -46,7 +46,7 @@ const formatDate = (value: string) =>
   new Date(value).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })
 
 const goToLogin = () => {
-  toastStore.showToast(5000, 'Accedi per votare nei sondaggi', 'bg-red-300')
+  toastStore.showToast(5000, 'Accedi per votare nei sondaggi')
   router.push('/login')
 }
 
@@ -59,7 +59,7 @@ const vote = async () => {
     const response = await axios.post(`/api/polls/${props.poll.id}/vote/`, {
       option: selectedOption.value,
     })
-    toastStore.showToast(5000, 'Voto registrato. Grazie!', 'bg-emerald-500')
+    toastStore.showToast(5000, 'Voto registrato. Grazie!')
     emit('updated', response.data)
   } catch (error) {
     formErrors.value = extractApiErrors(error)
@@ -74,7 +74,7 @@ const closePoll = async () => {
 
   try {
     const response = await axios.patch(`/api/polls/${props.poll.id}/close/`)
-    toastStore.showToast(5000, 'Sondaggio chiuso', 'bg-emerald-500')
+    toastStore.showToast(5000, 'Sondaggio chiuso')
     emit('updated', response.data)
   } catch (error) {
     formErrors.value = extractApiErrors(error)

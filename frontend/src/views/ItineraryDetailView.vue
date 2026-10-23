@@ -192,7 +192,7 @@ const getTour = async () => {
   try {
     tour.value = (await axios.get<Itinerario>(`/api/itinerari/${route.params.id}/`)).data
   } catch {
-    toastStore.showToast(5000, 'Itinerario non trovato', 'bg-red-300')
+    toastStore.showToast(5000, 'Itinerario non trovato')
     router.push({ name: itinerarioConfig.routeNames.list })
   }
 }
@@ -207,10 +207,10 @@ const deleteTour = async () => {
   if (!window.confirm('Vuoi davvero eliminare questo itinerario?')) return
   try {
     await axios.delete(`/api/itinerari/${tour.value.id}/`)
-    toastStore.showToast(5000, 'Itinerario eliminato', 'bg-emerald-500')
+    toastStore.showToast(5000, 'Itinerario eliminato')
     router.push({ name: itinerarioConfig.routeNames.list })
   } catch {
-    toastStore.showToast(5000, 'Impossibile eliminare l’itinerario.', 'bg-red-300')
+    toastStore.showToast(5000, 'Impossibile eliminare l’itinerario.')
   }
 }
 

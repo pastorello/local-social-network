@@ -48,7 +48,7 @@ const submitForm = () => {
       // it, or the new collaborator goes on to write as them (accounts.md).
       // Only on success, so a dead link does not sign anyone out.
       void userStore.logout()
-      toastStore.showToast(5000, 'Account attivato. Ora puoi accedere.', 'bg-emerald-500')
+      toastStore.showToast(5000, 'Account attivato. Ora puoi accedere.')
       router.push('/login')
     })
     .catch((error) => {

@@ -108,6 +108,15 @@ describe('RoutePanel (spec/design.md D15/D17)', () => {
     expect(back).not.toHaveBeenCalled()
   })
 
+  // Review PR-8 (A-04): Escape worked and nothing said so.
+  it('tells the reader its close button has Escape for a shortcut', async () => {
+    const { wrapper } = await mountPanel()
+    const button = wrapper.get('button[aria-label="Chiudi e torna alla mappa"]')
+
+    expect(button.attributes('title')).toBe('Chiudi (Esc)')
+    expect(button.attributes('aria-keyshortcuts')).toBe('Escape')
+  })
+
   // Review PR-22 (N-03): up is a link one level above, beside the close
   // button, named after the page it leads to.
   it('offers a card the way up to its type’s list', async () => {

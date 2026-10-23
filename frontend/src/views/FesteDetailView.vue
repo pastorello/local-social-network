@@ -45,7 +45,7 @@ const getFeste = async () => {
       feste.value = response.data
     })
     .catch(() => {
-      toastStore.showToast(5000, 'Festa non trovata', 'bg-red-300')
+      toastStore.showToast(5000, 'Festa non trovata')
       router.push('/feste')
     })
 }
@@ -96,12 +96,12 @@ const deleteFeste = async () => {
   await axios
     .delete(`/api/feste/${feste.value.id}/`)
     .then(() => {
-      toastStore.showToast(5000, 'Scheda eliminata', 'bg-emerald-500')
+      toastStore.showToast(5000, 'Scheda eliminata')
       mapStore.fetchFeatures()
       router.push('/feste')
     })
     .catch(() => {
-      toastStore.showToast(5000, 'Impossibile eliminare la scheda.', 'bg-red-300')
+      toastStore.showToast(5000, 'Impossibile eliminare la scheda.')
     })
 }
 

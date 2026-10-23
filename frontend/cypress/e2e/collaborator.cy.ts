@@ -40,8 +40,11 @@ describe('the collaborator', () => {
     cy.get('[role="status"]').should('contain', 'toglilo per sceglierne un altro')
     cy.contains('[role="status"] button', 'Fatto').click()
 
-    // "Fatto" leaves the map tab for the next one, and the map stops editing.
-    cy.get('[role="status"]').should('not.exist')
+    // "Fatto" leaves the map tab for the next one, and the map stops editing:
+    // its banner, Fatto and all, is gone. (Named by its button, not by its
+    // role alone: the toast's live region is a status too, and is always in
+    // the document — review PR-8.)
+    cy.contains('[role="status"] button', 'Fatto').should('not.exist')
     cy.get('#is-published').check()
     cy.contains('button', 'Crea scheda').click()
 
