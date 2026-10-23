@@ -119,6 +119,13 @@ geolocation is a later phase (see Non-goals) rather than the centre of this one.
   the end state: the wizard decided on 2026-10-22 (review proposal 1, PR-21)
   absorbs the two links into its first question; the line stays.
 
+  *Amended 2026-10-23 — the handle says that it drags* (review PR-15,
+  M-11). The grab bar is a 44 px target across the sheet, named «Trascina
+  per vedere più mappa», and the first time in a session a line under it
+  says so until the reader drags; the lowest stop grew by the handle's 12 px,
+  so it still shows the line. See "The map's corners and the sheet's handle
+  — 2026-10-23" at the end of "The map under every page".
+
 - **D4 — The map chrome lands here.** C5 deliberately did not build M1's
   "minimal top menu" as a chrome redesign — layer toggles live in a side panel
   and the nav kept C3's `SchedeMenu`. The full-bleed map with floating controls
@@ -824,7 +831,9 @@ the polls are reached from:
 
 - **D14.** The menu is a pill at the top centre, floating over the map — the
   map now runs edge to edge under it, and Leaflet's zoom buttons are pushed
-  below it (and, on the wide home, out beside the floating column). Wordmark,
+  below it (and, on the wide home, out beside the floating column — *since
+  2026-10-23 in the bottom-right corner instead, above the credit: "The
+  map's corners and the sheet's handle"*). Wordmark,
   *Mappa*, *Schede*, *Il progetto*, then *Accedi* or the avatar. **Behind the
   avatar: the profile, *Utenti* and *Esci*** — the drawing showed only the
   avatar, and those three had to live somewhere a collaborator would look.
@@ -981,7 +990,10 @@ strip's *Allarga la mappa* sitting on the article's edge. Built the same day:
   does not count for an interactive map (`lib/osm.ts`, #106) — so the credit
   stays as it was until the author chooses: a shorter credit in the strip
   (no "Leaflet" prefix, as PR-15 does elsewhere), a collapsed credit that is
-  open on first load, or hiding it and accepting the policy risk.
+  open on first load, or hiding it and accepting the policy risk. *(Since
+  review PR-15 the credit is the short one everywhere, the strip included;
+  where it sits in the strip is left to review PR-25 — "The map's corners
+  and the sheet's handle".)*
 
 ### Close, up, back — 2026-10-23
 
@@ -1285,3 +1297,73 @@ Built the same day:
     `TavolaIcon`. `/benvenuto` paints in the first frame (TD-52), so they
     are inline SVG on the entry path: about 0.9 KB gzipped, measured against
     `main`'s build.
+
+### The map's corners and the sheet's handle — 2026-10-23
+
+The review of 2026-10-22 (PR-15: M-03, M-11, L-02) found the map's own
+controls where an earlier layout had left them rather than where this one
+leaves the map free. On a phone the credit, «Leaflet | © contributori di
+OpenStreetMap», rode the sheet's edge and took a quarter of the map's
+width; on the wide home the zoom buttons sat 16 px from the floating
+column, in its margin; and the sheet's handle was a 36 × 4 px bar that said
+nothing about dragging. Built the same day:
+
+- **The credit is short**: «© OpenStreetMap», linked to the copyright page,
+  with Leaflet's own name and flag turned off (`prefix: false`). What the
+  tile policy and the OSMF's attribution guidelines ask for is
+  OpenStreetMap's credit, near the map and readable without touching it,
+  and they accept this form. The full sentence, with the ODbL and the zones
+  derived from OSM, stays on *Il progetto* (D21).
+- **Where it sits.** On a wide screen bottom-right, as before, and left of a
+  narrow or editor panel. On a phone's home top-right, under *Livelli* and
+  lined up with its edge, so no text of the map touches the sheet at any
+  stop — with the sheet all the way up it is behind it, with the rest of the
+  map. On the phone's enlarged map (`?mappa=1`) top-right as well, under the
+  menu, on the same rule. **In the strip above a card it has not moved**:
+  it is above *Allarga la mappa*, as "How the map frames" left it, because
+  where it goes there was decided by the author on 2026-10-23 and is review
+  PR-25's to build.
+- **The zoom buttons** are top-left, under the menu — and under the editing
+  banner while there is one — everywhere but the wide home, where that
+  corner is the floating column's: there they are bottom-right, above the
+  credit. `MapStage` says which corner each control goes in on each layout
+  and `GaetaMap` has Leaflet put it there (`setPosition`); the map still
+  only draws what it is handed. The sheet no longer publishes `--sheet-h`:
+  the credit riding its edge was the one thing that read it.
+- **The sheet's handle** is a 44 px target across the sheet's width, with
+  the bar drawn as before — the target grew, not the mark. Its name says
+  what it is for, «Trascina per vedere più mappa», and its description what
+  pressing it does at this stop (*Espandi l'elenco*, *Riduci l'elenco*,
+  *Mostra i luoghi*), because a keyboard cannot drag: pressing still cycles
+  the stops (D3). The first time in a session a line under it says the
+  same, and goes at the first drag. The session is remembered in
+  `sessionStorage`, read and written inside `try`: where storage is refused
+  the line shows on every visit until the first drag, and nothing else
+  changes.
+- **Decided by the build**, since the review left them open:
+  - **The enlarged map's credit goes top-right**, like the home's, rather
+    than above *Torna alla scheda*: on a phone the credit is in the top-right
+    corner wherever the map has the screen.
+  - **The lowest stop grew by the handle's 12 px**, from 5.5 to 6.25 rem, so
+    it still shows the presentation's two lines (D3's note of 2026-10-23).
+    The line under the handle is not shown there, for the same reason.
+  - **The line goes at the first drag, not at the first press** — a press
+    shows that the sheet moves, not that it drags — and it is remembered
+    when it is first shown, so a reload in the same session does not bring
+    it back. It is hidden from assistive technology, which has the handle's
+    name for it.
+  - **A drag no longer also moves the sheet on.** A drag ends on a click,
+    which the handle took for a press: the sheet came to the stop nearest
+    where it was let go, then went on to the next one. A press that moves
+    more than 6 px is a drag, and its click is not a press. The handle also
+    keeps a phone's browser from taking the drag for a scroll or a pull to
+    refresh (`touch-action: none`).
+  - **The focus ring is drawn inside the handle**, along the sheet's
+    rounded top: a full-width button's outer ring was off both sides of the
+    screen.
+- **Parked, for the author: «Elenco · N luoghi» at the lowest stop.** The
+  prompt asks that the lowest stop "tiene visibile la riga «Elenco · N
+  luoghi»" (M-11, from D20). D3's note of 2026-10-23 decided otherwise:
+  "at the lowest stop what shows is the line", with the list "one drag or
+  one tap away", which is what D20 asks for. The stop shows the line, as D3
+  says, until the author chooses between the two.

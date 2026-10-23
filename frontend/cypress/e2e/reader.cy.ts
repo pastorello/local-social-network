@@ -231,6 +231,40 @@ describe('the reader, on a wide screen', () => {
     cy.get('path.leaflet-interactive[stroke-width="3"]').should('not.exist')
   })
 
+  // Review PR-15 (L-02, M-03): on the home the top-left corner is the floating
+  // column's, so the zoom buttons go to the bottom-right, by the credit —
+  // OpenStreetMap's, and nothing before it. Beside a card they are top-left.
+  it('finds the zoom by the credit on the home, out of the column’s way, and top-left beside a card', () => {
+    cy.viewport(1440, 800)
+    cy.visit('/')
+
+    cy.get('.leaflet-control-attribution')
+      .should('have.text', '© OpenStreetMap')
+      .find('a')
+      .should('have.attr', 'href', 'https://www.openstreetmap.org/copyright')
+    cy.contains('h1', 'La mappa di Gaeta')
+      .closest('.overflow-y-auto')
+      .then(($column) => {
+        const column = $column[0]!.getBoundingClientRect()
+        cy.get('.leaflet-control-zoom').should(($zoom) => {
+          const zoom = $zoom[0]!.getBoundingClientRect()
+          const doc = $zoom[0]!.ownerDocument
+          const credit = doc.querySelector('.leaflet-control-attribution')!.getBoundingClientRect()
+          expect(zoom.left - column.right).to.be.greaterThan(600)
+          expect(doc.defaultView!.innerWidth - zoom.right).to.be.closeTo(10, 1)
+          expect(zoom.bottom).to.be.at.most(credit.top)
+        })
+      })
+
+    cy.get('ul[aria-label="Luoghi sulla mappa"]').contains('a', PUBLISHED).click()
+    cy.contains('h1', PUBLISHED)
+    cy.get('.leaflet-control-zoom').should(($zoom) => {
+      const zoom = $zoom[0]!.getBoundingClientRect()
+      expect(zoom.left).to.be.closeTo(10, 1)
+      expect(zoom.top).to.be.at.least(headerBottom($zoom))
+    })
+  })
+
   // Review PR-10 (P-09): the card decides its panel, not its type. The church
   // above opens narrow beside its pin; a ricetta sold nowhere opens like a
   // book, wide over a veiled map it has nothing to show on — and is born that
@@ -345,6 +379,68 @@ describe('the reader, on a phone', () => {
         }
       })
     })
+  })
+
+  // Review PR-15 (M-03): no text of the map rides the sheet's edge — the
+  // credit, short, sits under «Livelli», lined up with it.
+  it('reads the map’s credit under «Livelli», clear of the sheet', () => {
+    cy.viewport(390, 720)
+    cy.visit('/')
+
+    cy.contains('button', 'Livelli').then(($layers) => {
+      const layers = $layers[0]!.getBoundingClientRect()
+      cy.get('.leaflet-control-attribution')
+        .should('have.text', '© OpenStreetMap')
+        .and(($credit) => {
+          const credit = $credit[0]!.getBoundingClientRect()
+          const sheet = $credit[0]!.ownerDocument.querySelector(
+            'section[aria-label="La mappa di Gaeta"]',
+          )!
+          expect(credit.top).to.be.at.least(layers.bottom)
+          expect(credit.top - layers.bottom).to.be.at.most(12)
+          expect(credit.right).to.be.closeTo(layers.right, 1)
+          expect(credit.bottom).to.be.lessThan(sheet.getBoundingClientRect().top)
+        })
+    })
+  })
+
+  // Review PR-15 (M-11): a 36 × 4px bar did not say that it drags. It is a
+  // 44px target the keyboard reaches, named for the drag, and the first time
+  // in a session a line under it says so — until the reader drags.
+  it('is told the sheet’s handle drags, once a session, until it does', () => {
+    const HINT = 'Trascina per vedere più mappa'
+    const pointer = (clientY: number) => ({
+      eventConstructor: 'PointerEvent',
+      pointerId: 1,
+      clientY,
+    })
+    cy.viewport(390, 720)
+    cy.visit('/')
+
+    cy.get('section[aria-label="La mappa di Gaeta"]').as('sheet')
+    cy.get('@sheet').find(`button[aria-label="${HINT}"]`).as('handle')
+    cy.get('@handle').should(($handle) => {
+      expect($handle[0]!.getBoundingClientRect().height).to.be.at.least(44)
+    })
+    cy.get('@handle').focus()
+    cy.get('@handle').should('have.focus')
+    cy.get('@sheet').contains('p', HINT).should('be.visible')
+
+    // Pulled down to the lowest stop.
+    cy.get('@handle').then(($handle) => {
+      const y = $handle[0]!.getBoundingClientRect().top + 20
+      cy.wrap($handle).trigger('pointerdown', pointer(y))
+      cy.wrap($handle).trigger('pointermove', pointer(y + 250))
+      cy.wrap($handle).trigger('pointerup', pointer(y + 250))
+    })
+    cy.get('@sheet').contains('p', HINT).should('not.exist')
+    // There the sheet shows the first line of the home, and nothing over it.
+    cy.get('@sheet').contains('p', PRESENTATION).should('be.visible').and(onScreen)
+
+    // Not again in this session.
+    cy.reload()
+    cy.contains('a', TOURS_DOOR)
+    cy.get('section[aria-label="La mappa di Gaeta"]').contains('p', HINT).should('not.exist')
   })
 
   it('gets the sheet, and the places in it link to their cards', () => {

@@ -20,7 +20,18 @@ vi.mock('@/lib/firstPaint', () => ({ afterFirstPaint: () => paint.done() }))
 // MapStage listens to.
 const GaetaMapStub = defineComponent({
   name: 'GaetaMap',
-  props: ['pins', 'features', 'overlays', 'placing', 'focus', 'frame', 'editor', 'focusPadding'],
+  props: [
+    'pins',
+    'features',
+    'overlays',
+    'placing',
+    'focus',
+    'frame',
+    'editor',
+    'focusPadding',
+    'zoomPosition',
+    'attributionPosition',
+  ],
   emits: ['mapClick', 'pinClick', 'featureClick', 'view'],
   setup: () => () => h('div'),
 })
@@ -428,5 +439,66 @@ describe('MapStage on the phone’s home (review PR-5, M-01)', () => {
     store.setSheetHeight(88)
     await flushPromises()
     expect(map.props('focusPadding').bottomRight).toEqual([16, 104])
+  })
+})
+
+// Review PR-15 (M-03, L-02): Leaflet's zoom buttons and its OpenStreetMap
+// credit go where each layout leaves the map free.
+describe('MapStage places the map’s controls (review PR-15)', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.mocked(axios.get).mockResolvedValue({ data: [] })
+  })
+  afterEach(() => {
+    // @ts-expect-error — putting jsdom back the way it was found
+    delete window.matchMedia
+  })
+
+  const onAPhone = () =>
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      configurable: true,
+      value: () => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} }),
+    })
+  const controlsAt = async (path: string) => {
+    const { wrapper, router } = await mountAt(path)
+    await vi.waitUntil(() => wrapper.findComponent(GaetaMapStub).exists())
+    const map = wrapper.findComponent(GaetaMapStub)
+    return {
+      router,
+      zoom: () => map.props('zoomPosition'),
+      credit: () => map.props('attributionPosition'),
+    }
+  }
+
+  it('on a wide screen: the zoom by the credit on the home, back top-left beside a panel', async () => {
+    const { router, zoom, credit } = await controlsAt('/')
+
+    // The home's floating column is on the left, over the top-left corner.
+    expect(zoom()).toBe('bottomright')
+    expect(credit()).toBe('bottomright')
+
+    await router.push('/ricette/r1')
+    await flushPromises()
+    expect(zoom()).toBe('topleft')
+    expect(credit()).toBe('bottomright')
+  })
+
+  it('on a phone: the credit top-right on the home and on the enlarged map, not on the sheet', async () => {
+    onAPhone()
+    const { router, zoom, credit } = await controlsAt('/')
+
+    expect(credit()).toBe('topright')
+    expect(zoom()).toBe('topleft')
+
+    // The strip above a card keeps it where it was: PR-25 moves it.
+    await router.push('/ricette/r1')
+    await flushPromises()
+    expect(credit()).toBe('bottomright')
+
+    await router.push('/ricette/r1?mappa=1')
+    await flushPromises()
+    expect(credit()).toBe('topright')
+    expect(zoom()).toBe('topleft')
   })
 })
