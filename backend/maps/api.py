@@ -6,7 +6,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from account.models import User
 from content.models import MapFeature
 
-from .models import Overlay, Zona
+from .models import Overlay, Zona, ZonaAlias
 from .serializers import OverlaySerializer
 from .zones import zones_containing_any, zones_of_feature
 
@@ -141,6 +141,17 @@ def zone_list(request):
         }
         for zone in zones
     ])
+
+
+@api_view(['GET'])
+@permission_classes([])
+def zone_alias_list(request):
+    """The names behind «Dove sei?» (review of 2026-10-22, decision 3): what a
+    guest calls the place they stand in, and the zone's slug, in the author's
+    order. Unpaginated, like the zones: a few dozen rows the field reads whole
+    and matches in the browser, so nothing a reader types ever leaves it."""
+    aliases = ZonaAlias.objects.select_related('zona')
+    return Response([{'name': alias.name, 'zone': alias.zona.slug} for alias in aliases])
 
 
 @api_view(['GET'])

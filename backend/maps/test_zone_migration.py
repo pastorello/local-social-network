@@ -7,7 +7,7 @@ import importlib
 import pytest
 from django.apps import apps
 
-from maps.models import Zona
+from maps.models import Zona, ZonaAlias
 from maps.zones import geometry_contains
 
 pytestmark = pytest.mark.django_db
@@ -20,7 +20,9 @@ CORRECTED = {'type': 'Polygon', 'coordinates': [[
 
 
 def _as_after_0005():
-    """The table as 0005 left it: the six drafts, nothing added."""
+    """The table as 0005 left it: the six drafts, nothing added — and no names
+    for «Dove sei?», which came two migrations later and hold their zones."""
+    ZonaAlias.objects.all().delete()
     Zona.objects.filter(slug__in=[slug for slug, _, _ in redrawn.ADDED]).delete()
     for slug, geometry in redrawn.SEEDED.items():
         Zona.objects.filter(slug=slug).update(geometry=geometry)
@@ -64,6 +66,8 @@ def test_the_added_zones_go_after_the_others_and_keep_a_slug_already_taken():
 def test_the_reverse_restores_the_drafts_and_leaves_corrections_alone():
     Zona.objects.filter(slug='serapo').update(geometry=CORRECTED)
     Zona.objects.filter(slug='arenauta').update(geometry=CORRECTED)
+    # Going back, 0008 takes its names away before this runs.
+    ZonaAlias.objects.all().delete()
 
     redrawn.undraw(apps, None)
 

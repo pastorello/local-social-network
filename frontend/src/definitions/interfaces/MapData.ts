@@ -36,6 +36,14 @@ export interface Zone {
   count: number
 }
 
+// GET /api/map/zone/alias/ (review of 2026-10-22, decision 3): what a guest
+// calls the place they stand in, and the slug of the zone it is in, in the
+// author's order. The field «Dove sei?» matches against these in the browser.
+export interface ZoneAlias {
+  name: string
+  zone: string
+}
+
 // GET /api/map/overlays/ (spec map.md M3). The list is already filtered by
 // the server for who is asking (politics.md) — there is deliberately no
 // visibility field here to filter on, and the SPA must never grow one.

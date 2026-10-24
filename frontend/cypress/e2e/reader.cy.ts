@@ -355,6 +355,56 @@ describe('the reader, on a wide screen', () => {
     })
   })
 
+  // Review PR-20: «Dove sei?» — the guest who does not know the zones' names
+  // names where they stand instead, from the keyboard alone: type, the arrows,
+  // Enter, Escape, focus never leaving the field. The names are the archive's
+  // own (maps/migrations/0008), matched in the browser.
+  it('finds its zone by the name of where it stands, from the keyboard', () => {
+    cy.viewport(1280, 800)
+    cy.visit('/cosa-fare')
+    cy.get('nav[aria-label="Zone"]').contains('a', 'Porto Salvo')
+    cy.get('main input[role="combobox"]').as('field').focus()
+
+    cy.get('@field').type('borgo')
+    cy.get('@field').should('have.attr', 'aria-expanded', 'true')
+    cy.get('main [role="option"][aria-selected="true"]').should('contain', 'Il Borgo')
+    cy.get('@field').type('{enter}')
+    cy.location('search').should('eq', '?zona=porto-salvo')
+    cy.contains('Sei al Borgo: ti mostriamo Porto Salvo.')
+    cy.get('main section[tabindex="-1"]').contains('a', PUBLISHED)
+    cy.focused().should('have.attr', 'role', 'combobox')
+
+    // «ca» is the castle, the cathedral, Corso Cavour: the arrows walk them.
+    cy.get('@field').clear()
+    cy.get('@field').type('ca{downarrow}')
+    cy.get('main [role="option"][aria-selected="true"]').should('contain', 'La Cattedrale')
+    cy.get('@field').type('{enter}')
+    cy.location('search').should('eq', '?zona=gaeta-medievale')
+    cy.contains('Sei alla Cattedrale: ti mostriamo Gaeta Medievale.')
+
+    // A name nobody listed changes nothing, and says where to go instead.
+    cy.get('@field').clear()
+    cy.get('@field').type('xyz{enter}')
+    cy.location('search').should('eq', '?zona=gaeta-medievale')
+    cy.contains('Non conosciamo questo posto: scegli una zona qui sotto.')
+
+    // «il porto» is no name of the archive's — Gaeta has two harbours, in two
+    // zones — so «porto» finds the zone that begins with it, and says only that.
+    cy.get('@field').clear()
+    cy.get('@field').type('porto{enter}')
+    cy.location('search').should('eq', '?zona=porto-salvo')
+    cy.contains('Ti mostriamo Porto Salvo.')
+
+    // Escape closes the list and leaves the page where it is.
+    cy.get('@field').clear()
+    cy.get('@field').type('s')
+    cy.get('@field').should('have.attr', 'aria-expanded', 'true')
+    cy.get('@field').type('{esc}')
+    cy.get('@field').should('have.attr', 'aria-expanded', 'false')
+    cy.get('main [role="listbox"]').should('not.be.visible')
+    cy.location('pathname').should('eq', '/cosa-fare')
+  })
+
   it('sees a feste route drawn as a list of stops', () => {
     cy.visit('/feste')
     cy.contains('a', 'Festa E2E pubblicata').click()
@@ -643,5 +693,38 @@ describe('the reader, on a phone', () => {
     cy.get('nav[aria-label="Zone"]').contains('a', 'Gaeta Medievale').click()
     cy.location('search').should('eq', '?zona=gaeta-medievale')
     cy.get('nav[aria-label="Zone"] a').should('have.length', 1).and('contain', 'Gaeta Medievale')
+  })
+
+  // Review PR-20: on a phone «Dove sei?» is above the row of zones, and once
+  // it has chosen one it steps aside with them — the line saying what it
+  // chose stays, focus goes to «Cambia zona», and the zone's places still
+  // start within the first screen.
+  it('names where it stands, then sees the question put away with the zones', () => {
+    cy.visit('/cosa-fare')
+    cy.get('nav[aria-label="Zone"]').contains('a', 'Porto Salvo')
+    cy.get('main input[role="combobox"]').then(($field) => {
+      cy.get('#zone-chips').should(($chips) => {
+        expect($field[0]!.getBoundingClientRect().bottom).to.be.at.most(
+          $chips[0]!.getBoundingClientRect().top,
+        )
+      })
+    })
+
+    cy.get('main input[role="combobox"]').type('borgo{enter}')
+    cy.location('search').should('eq', '?zona=porto-salvo')
+    cy.contains('Sei al Borgo: ti mostriamo Porto Salvo.').should('be.visible')
+    cy.get('main input[role="combobox"]').should('not.be.visible')
+    cy.focused().should('contain', 'Cambia zona').and('have.attr', 'aria-expanded', 'false')
+    cy.get('main section[tabindex="-1"]').then(($panel) => {
+      cy.wrap($panel)
+        .contains('a', PUBLISHED)
+        .should(($link) => {
+          const top = $link[0]!.getBoundingClientRect().top - $panel[0]!.getBoundingClientRect().top
+          expect(top).to.be.at.most(420)
+        })
+    })
+
+    cy.focused().click()
+    cy.get('main input[role="combobox"]').should('be.visible')
   })
 })

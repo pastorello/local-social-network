@@ -220,6 +220,58 @@ me what is here". On a phone it is also in the pill's **Menu**; on a wide
 screen, in the pill itself. The phone pill is unchanged (the 2026-09-19
 decision stands).
 
+**«Dove sei?», before geolocation — 2026-10-24** (review of 2026-10-22,
+decision 3; PR-20). Above the chips — on a phone too, over their row — a field
+asks *«Dove sei?»*: the guest types or picks the name of where they stand
+(*«il castello»*, *«Piazza XIX Maggio»*, *«Serapo»*) and the page shows that
+zone, through `?zona=` as a chip does, with a line saying so: *«Sei al
+castello: ti mostriamo Gaeta Medievale.»* The names are `maps.ZonaAlias`, a
+dictionary the author keeps in Django admin (a name, its zone, a position),
+read whole from `/api/map/zone/alias/` and matched in the browser. No
+geocoding, no outside service, no browser permission, nothing about the reader
+in the address: geolocation stays a phase of its own (roadmap 5), and this is
+not its first half. A name nobody listed changes nothing — *«Non conosciamo
+questo posto: scegli una zona qui sotto.»* — and the chips stay the main way.
+It is ARIA's combobox, all from the keyboard (ADR-0005): one tab stop, the
+arrows, Enter, Escape, and the number of matches said in a live region.
+
+**The 25 names seeded (`maps/migrations/0008`) were placed against D2's
+outlines, not from memory**: each looked up once on OpenStreetMap's Nominatim
+on 2026-10-24, and the place it names tested inside the zones;
+`maps/test_zone_aliases.py` keeps the points and fails on a name in the wrong
+zone. **Four of the review's names are left to the author, because each names
+two zones**: *«il porto»* (the marina on Lungomare Caboto is in Porto Salvo,
+the harbour of Santa Maria and the Capitaneria in Gaeta Medievale), *«il
+molo»* (OSM has no pier of that name, and both harbours have piers), *«il
+lungomare Caboto»* (it runs from the Annunziata, in Gaeta Medievale, to Formia)
+and *«Via Firenze»* (Serapo's border). A name two zones share does not go in
+the dictionary: it would send half the guests who type it to the wrong side of
+town. Until the author decides, *«porto»* finds the zone *Porto Salvo* by its
+own name, and the line says only *«Ti mostriamo Porto Salvo.»*
+
+Decided by the build, since the review left them open: every zone is found by
+its own name too, with no entry in the dictionary, so a zone added in the
+admin is found at once; the match ignores accents, capitals, the article a
+name is written with and what a guest puts before it (*«sono al»*, *«davanti
+al»*), and orders only by how well the words match — the name itself, a name
+it begins, a word it begins, a name the query holds whole — then by the
+author's order; the first match is selected as one types, so Enter takes it
+(the APG's "automatic selection"), and Tab closes the list without choosing;
+the line's preposition comes from how the name is written (*al porto*, *alla
+Cattedrale*, *ai Quaranta Remi*, *in Piazza XIX Maggio*, *a Serapo*), and a
+zone chosen by its own name is not told where it is. **On a phone the field is
+a way of choosing, so it steps aside with the chips** once a zone is chosen
+(D5's note): it folds behind *«Cambia zona»*, which brings both back, the line
+saying what it chose stays, and a choice made in the field hands focus to
+*«Cambia zona»*, since the field it was made in has gone. Without that the
+field pushed the first result to about 480 px, past PR-4's 420. A page opened
+on `?zona=` starts with the field put away, trusting the address until the
+zones arrive, so it is never drawn and then folded under the reader's eyes.
+
+*Parked for the author:* the field's label and the panel's eyebrow (`<nav
+aria-label="Dove sei">`, review PR-23) share their word, for two different
+questions — where one is in Gaeta, and where one is in the site.
+
 ## D7 — The closed church: «Se la trovi chiusa», church by church
 
 `Chiesa.from_outside`, free text, plain-text on the wire (TD-36), translated
