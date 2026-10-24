@@ -35,6 +35,19 @@ describe('anonymous visitor', () => {
     cy.visit('/users')
     cy.location('pathname').should('equal', '/login')
   })
+
+  // The polls are for someone with an account (decided 2026-10-22, spec
+  // reports-and-polls.md P1, review PR-17). A reader who follows a link to
+  // them is told why they are asked to sign in, and is sent back after it.
+  it('is sent from the polls to sign in, and told why', () => {
+    cy.visit('/polls')
+    cy.location('pathname').should('equal', '/login')
+    cy.location('search').should((search) => {
+      expect(new URLSearchParams(search).get('redirect')).to.equal('/polls')
+    })
+    cy.contains('[role="status"]', "I sondaggi sono per chi collabora all'archivio")
+    cy.contains('h1', 'Accedi')
+  })
 })
 
 describe('login page', () => {

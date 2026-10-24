@@ -542,6 +542,10 @@ opening-hours filter is not.
   is added by its own phase and not before: an empty menu item at launch is
   worse than none. **The polls leave the top level** and are reached from
   *Il progetto* — the v2 spec already says there is no new work on them.
+  *(2026-10-24, review PR-17: the polls are for someone signed in —
+  [reports-and-polls.md](./reports-and-polls.md) P1 — so they are reached
+  from the account menu, after *Le mie schede*, and from *Il progetto*'s
+  *Partecipa*, which shows the link to them alone.)*
   **No search in this phase:** it was drawn and dropped, because search is a
   feature with an endpoint of its own, not a place in a menu.
   **2026-09-11:** the reserved item arrives as *Itinerari*, plural — curated

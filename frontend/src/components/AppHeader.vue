@@ -16,7 +16,9 @@ import { sectionOf, type Section } from '@/lib/navigation'
 // floating over the map rather than a bar above it — the map is the ground of
 // every page (D13). The wordmark, Mappa, Esplora, Itinerari, Cosa fare, Il
 // progetto, then Accedi or the collaborator's avatar, behind which are their
-// own cards first (review PR-13). The polls are reached from Il progetto; there is no search in this phase. Itinerari (spec
+// own cards first (review PR-13), then the polls — for someone with an account
+// since 2026-10-24 (review PR-17, reports-and-polls.md P1), so a reader is
+// never offered them. There is no search in this phase. Itinerari (spec
 // itinerari.md) is its own item rather than an Esplora entry: a tour is how a
 // guest starts, not a card type. *Esplora* was *Schede* until 2026-10-23
 // (review PR-23, N-05).
@@ -151,8 +153,10 @@ const menuActive = 'font-semibold text-sea underline decoration-2 underline-offs
         </template>
         <template #default="{ close }">
           <!-- First, before the profile: what a collaborator signs in for
-          (review PR-13, C-02). The polls will follow it (review PR-17). -->
+          (review PR-13, C-02), then the polls, which are theirs alone (review
+          PR-17). -->
           <RouterLink to="/le-mie-schede" :class="menuLink">Le mie schede</RouterLink>
+          <RouterLink to="/polls" :class="menuLink">Sondaggi</RouterLink>
           <RouterLink :to="{ name: 'profile', params: { id: user.id } }" :class="menuLink">
             Il tuo profilo
           </RouterLink>
@@ -235,6 +239,7 @@ const menuActive = 'font-semibold text-sea underline decoration-2 underline-offs
           >
           <template v-if="user.isAuthenticated && user.id">
             <RouterLink to="/le-mie-schede" :class="menuLink">Le mie schede</RouterLink>
+            <RouterLink to="/polls" :class="menuLink">Sondaggi</RouterLink>
             <RouterLink :to="{ name: 'profile', params: { id: user.id } }" :class="menuLink">
               Il tuo profilo
             </RouterLink>

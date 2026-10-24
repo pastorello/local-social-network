@@ -4,6 +4,10 @@ import 'vue-router'
 declare module 'vue-router' {
   interface RouteMeta {
     requiresAuth?: boolean
+    // Why a page behind the login sent a reader to sign in, said in a toast
+    // over the login form — for a page a reader can reach by a link, like the
+    // polls (review PR-17). Without one the guard just redirects.
+    signInToast?: string
     // The home: the map itself is the page, with its chrome floating over it.
     fullBleed?: boolean
     // Every other page opens as a panel over the map (D15). 'narrow' is the

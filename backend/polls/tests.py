@@ -34,13 +34,29 @@ def option_id(poll, position=0):
     return str(poll.options.get(position=position).id)
 
 
+# --- who may read them (decided 2026-10-22, spec reports-and-polls.md P1) ---
+
+
+@pytest.mark.parametrize('path', ['/api/polls/', '/api/polls/{id}/'])
+def test_anonymous_cannot_read_polls(api_client, make_poll, path):
+    """Polls are an internal tool for the people working on the archive, not
+    part of it: a reader without an account is shown none of them — not the
+    list, not one poll by its address."""
+    poll = make_poll()
+
+    response = api_client.get(path.format(id=poll.id))
+
+    assert response.status_code == 401
+    assert poll.question not in response.content.decode()
+
+
 # --- list (F3.4) ---
 
 
-def test_poll_list_is_public_and_paginated(api_client, make_poll):
+def test_poll_list_is_paginated(make_client, citizen, make_poll):
     make_poll()
 
-    response = api_client.get('/api/polls/')
+    response = make_client(citizen).get('/api/polls/')
 
     assert response.status_code == 200
     data = response.json()
@@ -52,22 +68,22 @@ def test_poll_list_is_public_and_paginated(api_client, make_poll):
     assert 'email' not in item['created_by']
 
 
-def test_open_polls_come_before_closed(api_client, make_poll):
+def test_open_polls_come_before_closed(make_client, citizen, make_poll):
     make_poll(question='Scaduto', closes_at=timezone.now() - timedelta(hours=1))
     make_poll(question='Chiuso a mano', is_closed=True)
     make_poll(question='Aperto')
 
-    response = api_client.get('/api/polls/')
+    response = make_client(citizen).get('/api/polls/')
 
     questions = [poll['question'] for poll in response.json()['results']]
     # open first; closed group newest-first (spec F3.4)
     assert questions == ['Aperto', 'Chiuso a mano', 'Scaduto']
 
 
-def test_list_hides_results_from_anonymous_on_open_polls(api_client, make_poll):
+def test_list_hides_results_before_voting_on_open_polls(make_client, citizen, make_poll):
     make_poll()
 
-    item = api_client.get('/api/polls/').json()['results'][0]
+    item = make_client(citizen).get('/api/polls/').json()['results'][0]
 
     assert item['results_visible'] is False
     assert item['total_votes'] is None
@@ -173,10 +189,10 @@ def test_create_rejects_closing_date_in_the_past(make_client, admin):
 # --- detail & results visibility (F3.3) ---
 
 
-def test_detail_is_public_but_results_hidden_while_open(api_client, make_poll):
+def test_detail_shows_the_poll_but_hides_results_while_open(make_client, citizen, make_poll):
     poll = make_poll()
 
-    response = api_client.get(f'/api/polls/{poll.id}/')
+    response = make_client(citizen).get(f'/api/polls/{poll.id}/')
 
     assert response.status_code == 200
     data = response.json()
@@ -186,8 +202,8 @@ def test_detail_is_public_but_results_hidden_while_open(api_client, make_poll):
     assert all(option['votes_count'] is None for option in data['options'])
 
 
-def test_detail_unknown_poll_is_404_with_detail(api_client):
-    response = api_client.get('/api/polls/00000000-0000-0000-0000-000000000000/')
+def test_detail_unknown_poll_is_404_with_detail(make_client, citizen):
+    response = make_client(citizen).get('/api/polls/00000000-0000-0000-0000-000000000000/')
 
     assert response.status_code == 404
     assert 'detail' in response.json()
@@ -233,13 +249,14 @@ def test_voting_in_one_poll_reveals_only_that_polls_results(make_client, citizen
     assert listed[str(voted.id)]['total_votes'] == 1
 
 
-def test_everyone_sees_results_once_closed(api_client, make_client, citizen, make_poll):
+def test_everyone_sees_results_once_closed(make_client, citizen, other_citizen, make_poll):
     poll = make_poll()
     make_client(citizen).post(f'/api/polls/{poll.id}/vote/', {'option': option_id(poll)})
     poll.is_closed = True
     poll.save(update_fields=('is_closed',))
 
-    data = api_client.get(f'/api/polls/{poll.id}/').json()
+    # Someone who never voted in it: closing is what shows them the results.
+    data = make_client(other_citizen).get(f'/api/polls/{poll.id}/').json()
 
     assert data['is_closed'] is True
     assert data['results_visible'] is True
@@ -247,10 +264,10 @@ def test_everyone_sees_results_once_closed(api_client, make_client, citizen, mak
     assert data['total_votes'] == 1
 
 
-def test_expired_closing_date_counts_as_closed(api_client, make_poll):
+def test_expired_closing_date_counts_as_closed(make_client, citizen, make_poll):
     poll = make_poll(closes_at=timezone.now() - timedelta(minutes=5))
 
-    data = api_client.get(f'/api/polls/{poll.id}/').json()
+    data = make_client(citizen).get(f'/api/polls/{poll.id}/').json()
 
     assert data['is_closed'] is True
     assert data['results_visible'] is True
@@ -406,7 +423,7 @@ def test_admin_closes_poll(make_client, admin, make_poll):
 # --- F3.1 option ordering (TD-22) ---
 
 
-def test_options_are_ordered_by_position_not_by_insertion(api_client, admin):
+def test_options_are_ordered_by_position_not_by_insertion(make_client, citizen, admin):
     """The existing ordering assertions cannot fail.
 
     Every other fixture inserts options in ascending `position`, so with no
@@ -419,8 +436,9 @@ def test_options_are_ordered_by_position_not_by_insertion(api_client, admin):
     PollOption.objects.create(poll=poll, text='Seconda', position=1)
     PollOption.objects.create(poll=poll, text='Prima', position=0)
 
-    listed = api_client.get('/api/polls/').json()['results'][0]
-    detailed = api_client.get(f'/api/polls/{poll.id}/').json()
+    client = make_client(citizen)
+    listed = client.get('/api/polls/').json()['results'][0]
+    detailed = client.get(f'/api/polls/{poll.id}/').json()
 
     assert [o['text'] for o in listed['options']] == ['Prima', 'Seconda']
     assert [o['text'] for o in detailed['options']] == ['Prima', 'Seconda']

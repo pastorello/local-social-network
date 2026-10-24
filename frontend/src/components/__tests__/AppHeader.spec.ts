@@ -106,8 +106,9 @@ describe('the menu (spec/design.md D14)', () => {
   })
 
   // Review PR-13 (C-02): what a collaborator signs in for comes first behind
-  // the avatar — their own cards, every type at once — then the profile. On a
-  // phone, in the same order inside Menu.
+  // the avatar — their own cards, every type at once — then the polls, which
+  // are for someone with an account since review PR-17 (reports-and-polls.md
+  // P1), then the profile. On a phone, in the same order inside Menu.
   it.each([
     ['the avatar', true, 'button[aria-label^="Il tuo account"]'],
     ['Menu, on a phone', false, 'button[aria-label="Menu"]'],
@@ -121,8 +122,19 @@ describe('the menu (spec/design.md D14)', () => {
     const names = entries.map((entry) => entry.text())
     const mine = names.indexOf('Le mie schede')
     expect(mine).toBeGreaterThanOrEqual(0)
-    expect(names[mine + 1]).toBe('Il tuo profilo')
+    expect(names.slice(mine, mine + 3)).toEqual(['Le mie schede', 'Sondaggi', 'Il tuo profilo'])
     expect(entries[mine]!.attributes('href')).toBe('/le-mie-schede')
+    expect(entries[mine + 1]!.attributes('href')).toBe('/polls')
+  })
+
+  // The polls are behind the login (review PR-17): a reader's Menu does not
+  // offer a page that would only send them to sign in.
+  it('does not offer the polls to a reader on a phone', async () => {
+    stubViewport(false)
+    const wrapper = await mountHeader()
+    await wrapper.get('button[aria-label="Menu"]').trigger('click')
+
+    expect(wrapper.find('a[href="/polls"]').exists()).toBe(false)
   })
 
   // Reports are for people with an account (decided 2026-10-22, spec
