@@ -152,13 +152,24 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
     check('/luoghi (mobile)')
   })
 
-  it('a card, read as an article', () => {
+  // With its «Dove» before the text (review PR-24), in both layouts: a church
+  // wide, a luogo — whose line says how to get there — on a phone.
+  it('a card, read as an article, wide and on a phone', () => {
     cy.viewport(1280, 800)
     cy.visit('/chiese')
     cy.contains('a', PUBLISHED).click()
     cy.contains('h1', PUBLISHED)
+    cy.get('article .prose').prev('p').should('contain.text', 'Come arrivarci')
 
     check('/chiese/:id')
+
+    cy.viewport(390, 844)
+    cy.visit('/luoghi')
+    cy.contains('a', PLACE).click()
+    cy.contains('h1', PLACE)
+    cy.get('article .prose').prev('p').should('contain.text', 'A piedi dal lungomare.')
+
+    check('/luoghi/:id (mobile)')
   })
 
   // The credits surface since the footer went (design.md D21) — reached from

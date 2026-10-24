@@ -1496,3 +1496,56 @@ on 2026-10-24:
   the form's own words speak to someone asking to write. If reports of
   mistakes become common, a reason field or an address of their own is a
   change to accounts.md A1, not to this page.
+
+### A place's card opens on «Dove» — 2026-10-24
+
+The review of 2026-10-22 proposed (its decisions of that day, 2) that a
+place's card answer «cosa fare adesso» before it reads as an entry in an
+archive, and the author approved its one line on 2026-10-23 (decision 4 of
+that day; review PR-24). On a church or a luogo the way there was at the end
+of the article, in *Dove si trova* (review PR-3, content.md): a reader standing
+in front of the castle scrolled the whole text to find it. Built on
+2026-10-24:
+
+- **One line under the title and the cover, before the text**: «Dove» in the
+  eyebrow's small capitals, in muted ink; the first sentence of the luogo's
+  `how_to_get_there`, when someone wrote one; and *Come arrivarci (apre Google
+  Maps)*, the link *Dove si trova*'s button opens
+  (`lib/directions.ts::directionsUrl`), in the article's own link style: the
+  accent, underlined. It is typographic, as D6 asks and as the review's
+  counter-case put it: a line of service under the title keeps the register
+  if it is set like an eyebrow, not as a coloured button.
+  `components/content/WhereLine.vue`, in `CardArticle`'s `lead` slot, which
+  only `TypeDetailView` fills.
+- **The zone is not in it.** The panel's eyebrow over the title already says
+  «Chiese · Porto Salvo» ("Where the reader is"), on both layouts and from the
+  same `zones` field, so a card in a zone always shows it there, and a card
+  outside every zone has no zone to name anywhere.
+- **The rest stays at the end**: *Dove si trova* keeps the whole of
+  `how_to_get_there`, the button and, on a phone, *Allarga la mappa*. The
+  reader on the sofa reads the article; the reader in the street reads one
+  line.
+- **On a phone the line wraps before the link, never inside it**: the link is
+  one unbroken run, «(apre Google Maps)» included.
+- **Decided by the build**, since the review left them open:
+  - **Only on a card that is a place**: a type whose footprint is one fixed
+    pin (`maxPoints: 1`), which today means chiese and luoghi. A ricetta's
+    shops and a personaggio's birthplace and monument are places a card
+    *has*. One line would have to choose one of them, so they keep a way
+    there per pin under *Dove si trova*. A type added later with one fixed
+    pin gets the line without a change here.
+  - **The first sentence** ends at the first full stop, question mark or
+    exclamation mark that closes a word, or at the first line break the
+    author typed (`lib/firstSentence.ts`). «S.», «n.» and «S.S.» are
+    abbreviations, and a stop before a number («ca. 10 minuti») ends nothing.
+    A text of one sentence is printed whole, in both places.
+  - **A church has no `how_to_get_there`**, so its line is «Dove» and the way
+    there.
+  - **On a translation** the link goes to the original's pin, as the map does
+    (translations.md T5). The sentence is the translation's own
+    `how_to_get_there`, in the language the article is read in, as *Dove si
+    trova* already has it. A translation that has not written one shows the
+    link alone, never an Italian sentence inside an English article.
+  - **The same link twice on one page**, the line's and the section's
+    button, carries one name to one destination, which is what WCAG 2.4.4
+    asks of links that do the same thing.

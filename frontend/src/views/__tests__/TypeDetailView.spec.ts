@@ -169,6 +169,83 @@ describe('TypeDetailView — «Dove si trova» (review PR-3)', () => {
   })
 })
 
+// Review PR-24 (proposal 2, approved 2026-10-23): a place's card opens on a
+// line for the reader standing in town, before its text; «Dove si trova»
+// keeps the whole of it after.
+describe('TypeDetailView — «Dove» over the text (review PR-24)', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  const whereLine = (wrapper: Awaited<ReturnType<typeof mountWith>>['wrapper']) =>
+    wrapper.findAll('p').find((p) => p.text().startsWith('Dove'))
+  const follows = (first: Element, second: Element) =>
+    Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING)
+
+  it('opens a church on the way there, under its title and before its text', async () => {
+    const { wrapper } = await mountWith(
+      chiesaConfig,
+      card({
+        pins: [{ id: 1, lat: 41.2087, lng: 13.5868, label: '' }],
+        zones: [{ slug: 'gaeta-medievale', name: 'Gaeta Medievale' }],
+      }),
+    )
+
+    const line = whereLine(wrapper)!
+    expect(follows(wrapper.get('header').element, line.element)).toBe(true)
+    expect(follows(line.element, wrapper.get('.prose').element)).toBe(true)
+    expect(line.get('a').attributes('href')).toBe(
+      'https://www.google.com/maps/dir/?api=1&destination=41.2087%2C13.5868&travelmode=walking',
+    )
+    // The panel's eyebrow says the zone; the line does not say it twice.
+    expect(line.text()).not.toContain('Gaeta Medievale')
+  })
+
+  it('reads a place’s first sentence of how to get there, and leaves the rest to «Dove si trova»', async () => {
+    const { wrapper } = await mountWith(
+      luogoConfig,
+      card({
+        title: 'Spiaggia di Serapo',
+        original_title: 'Spiaggia di Serapo',
+        genre: 'spiaggia',
+        genre_label: 'Spiaggia',
+        how_to_get_there: 'A piedi dal centro, dieci minuti. In auto, parcheggio sulla Flacca.',
+        pins: [{ id: 1, lat: 41.2119, lng: 13.5637, label: '' }],
+        zones: [{ slug: 'serapo', name: 'Serapo' }],
+      }),
+    )
+
+    const line = whereLine(wrapper)!
+    expect(line.text()).toContain('A piedi dal centro, dieci minuti.')
+    expect(line.text()).not.toContain('Flacca')
+    expect(section(wrapper)!.text()).toContain(
+      'A piedi dal centro, dieci minuti. In auto, parcheggio sulla Flacca.',
+    )
+  })
+
+  it('has no such line for a place with no pin', async () => {
+    const { wrapper } = await mountWith(
+      luogoConfig,
+      card({ genre: 'spiaggia', genre_label: 'Spiaggia', how_to_get_there: 'In barca.', pins: [] }),
+    )
+
+    expect(whereLine(wrapper)).toBeUndefined()
+  })
+
+  it('has none for a card that has places rather than being one: a ricetta’s shop', async () => {
+    const { wrapper } = await mountWith(
+      ricettaConfig,
+      card({
+        title: 'Tiella',
+        original_title: 'Tiella',
+        pins: [{ id: 1, lat: 41.21, lng: 13.57, label: 'Forno Rossi' }],
+      }),
+    )
+
+    expect(whereLine(wrapper)).toBeUndefined()
+    // Its way there stays under «Dove si trova».
+    expect(section(wrapper)!.find('a[target="_blank"]').exists()).toBe(true)
+  })
+})
+
 // Review PR-23 (N-02, N-04): the card's type is the panel's way up; the zone
 // it is in goes beside it, as the way to what else is there, and the window
 // is named after the card.

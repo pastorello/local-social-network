@@ -125,6 +125,10 @@ const createdAtFormatted = computed(() =>
       />
     </div>
 
+    <!-- Under the title and the cover, before the text: what a reader standing
+    in town needs first — a place's «Dove» (review PR-24). -->
+    <slot name="lead"></slot>
+
     <!-- The measure is the point: reading text kept near 65 characters is
     half of what makes a sans read as an article rather than an interface. -->
     <RichText
