@@ -5,6 +5,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import axios from 'axios'
 
 import ProjectView from '../ProjectView.vue'
+import { PROJECT_STORY } from '@/definitions/copy'
 import { useUserStore } from '@/stores/user'
 
 vi.mock('axios')
@@ -81,7 +82,7 @@ describe('Il progetto', () => {
     expect(reader.text()).not.toContain('Sondaggi')
 
     const collaborator = await mountProject(true)
-    const partecipa = collaborator.get('nav[aria-label="Partecipa"]')
+    const partecipa = collaborator.get('section[aria-labelledby="progetto-partecipa"]')
     expect(partecipa.get('a[href="/polls"]').text()).toBe('Sondaggi')
     expect(collaborator.findAll('a[href="/polls"]')).toHaveLength(1)
   })
@@ -101,7 +102,10 @@ describe('Il progetto', () => {
 
     expect(osm?.attributes('href')).toBe('https://www.openstreetmap.org/copyright')
     expect(wrapper.text()).toContain('Mappa e zone')
-    expect(wrapper.text()).toContain('ODbL')
+    // Review PR-12: the licence is named and linked, in the credits' body size.
+    const credits = wrapper.get('section[aria-label="Crediti"]')
+    expect(credits.classes()).toContain('text-sm')
+    expect(credits.get('a[href="https://opendatacommons.org/licenses/odbl/"]').text()).toBe('ODbL')
   })
 
   // Review PR-23 (N-05): «Schede» is the name of our model, and «Esplora» is
@@ -110,20 +114,72 @@ describe('Il progetto', () => {
   it('heads the card types «Cosa trovi su Vivere Gaeta», and says neither Schede nor Esplora', async () => {
     const wrapper = await mountProject()
 
-    expect(wrapper.findAll('h2').map((h2) => h2.text())).toEqual([
-      'Per cominciare',
+    expect(wrapper.get('nav[aria-label="Cosa trovi su Vivere Gaeta"] h2').text()).toBe(
       'Cosa trovi su Vivere Gaeta',
-      'Partecipa',
-    ])
+    )
     expect(wrapper.text()).not.toMatch(/Schede|Esplora/)
   })
 
-  // Review PR-18: the archive's line, under the title until review PR-12
-  // writes the page's own presentation and moves it beneath that.
-  it('says how many cards the archive has and when the latest changed', async () => {
+  // Review PR-12 (P-08, L-11): the page said what links there were and not who
+  // makes the archive. It reads from the top now — the story, how it is used,
+  // the rule, how to take part — and the index and the credits come last.
+  it('reads from the top as a page: the story, then how it is used, the rule, taking part, the index', async () => {
     const wrapper = await mountProject()
 
-    const line = wrapper.get('h1 + p')
+    expect(wrapper.findAll('h1 + div > p').map((p) => p.text())).toEqual([...PROJECT_STORY])
+    expect(wrapper.get('h1 + div').classes()).toContain('text-reading')
+    expect(wrapper.findAll('h2').map((h2) => h2.text())).toEqual([
+      'Come si usa',
+      'La regola',
+      'Partecipa',
+      'Per cominciare',
+      'Cosa trovi su Vivere Gaeta',
+    ])
+    // «Partecipa» is a section of the page now, not a third column of the
+    // index under it: one «Partecipa», not two.
+    expect(wrapper.findAll('nav').map((nav) => nav.attributes('aria-label'))).toEqual([
+      'Per cominciare',
+      'Cosa trovi su Vivere Gaeta',
+    ])
+  })
+
+  it('says how it is used — the tours, the zones, the map — each with its link', async () => {
+    const wrapper = await mountProject()
+    const rows = wrapper.findAll('section[aria-labelledby="progetto-uso"] li')
+
+    expect(rows.map((li) => li.get('a').attributes('href'))).toEqual([
+      '/itinerari',
+      '/cosa-fare',
+      '/',
+    ])
+    expect(rows.map((li) => li.get('a').text())).toEqual([
+      'Itinerari',
+      'Cosa si può fare qui',
+      'La mappa',
+    ])
+  })
+
+  // The way to report a mistake is the collaboration request, whose message
+  // is free text: the form has no field for why someone writes and none is
+  // added for this, so the line says what to put in the message — and the link
+  // carries no query the form would not read.
+  it('asks a reader who found a mistake to write, through the collaboration request', async () => {
+    const wrapper = await mountProject()
+    const partecipa = wrapper.get('section[aria-labelledby="progetto-partecipa"]')
+    const row = partecipa.findAll('li').find((li) => li.text().includes('Hai trovato un errore'))
+
+    expect(row?.text()).toContain('Hai trovato un errore o una cosa che manca?')
+    expect(row?.get('a').text()).toBe('Scrivici')
+    expect(row?.get('a').attributes('href')).toBe('/collabora')
+    expect(partecipa.get('a').text()).toBe('Collabora con noi')
+  })
+
+  // Review PR-18: the archive's line — under the title until review PR-12
+  // wrote the page's story, and under the story since.
+  it('says how many cards the archive has and when the latest changed, under the story', async () => {
+    const wrapper = await mountProject()
+
+    const line = wrapper.get('h1 + div + p')
     expect(line.text()).toBe('15 schede, l’ultima aggiornata il 22 ottobre 2026')
   })
 
@@ -138,12 +194,12 @@ describe('Il progetto', () => {
     const wrapper = await mountProject()
 
     // Held, so the words under it do not jump when it arrives.
-    expect(wrapper.get('h1 + p').text()).toBe('')
+    expect(wrapper.get('h1 + div + p').text()).toBe('')
 
     answer({ data: { published: 0, last_updated: null } })
     await flushPromises()
 
-    expect(wrapper.get('h1 + p').text()).toContain('Vivere Gaeta')
+    expect(wrapper.find('h1 + div + p').exists()).toBe(false)
     expect(wrapper.text()).not.toMatch(/0 schede|aggiornata/)
   })
 
