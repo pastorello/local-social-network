@@ -115,6 +115,10 @@ export const useMapStore = defineStore('map', {
     // own shape stands (composables/usePanelShape.ts).
     panelShape: null as PanelShape | null,
     loaded: false,
+    // Whether the features have come back once, answered or not. `loaded`
+    // says only that they were asked for; a page that lists them waits for
+    // this, so its rows land in one frame (TD-53).
+    featuresLoaded: false,
   }),
 
   getters: {
@@ -165,6 +169,8 @@ export const useMapStore = defineStore('map', {
         this.features = (await axios.get<MapCardFeature[]>('/api/map/features/')).data
       } catch (error) {
         console.log('error', error)
+      } finally {
+        this.featuresLoaded = true
       }
     },
 

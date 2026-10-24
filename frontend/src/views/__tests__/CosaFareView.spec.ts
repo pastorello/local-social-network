@@ -136,11 +136,14 @@ const mountAt = async (
   trail = shallowRef<Trail | null>(null),
   // In the document, for what focus and visibility need.
   attached = false,
+  // Whether the map's features have come back yet (TD-53).
+  featuresIn = true,
 ) => {
   setActivePinia(createPinia())
   const store = useMapStore()
-  store.features = FEATURES
+  store.features = featuresIn ? FEATURES : []
   store.loaded = true
+  store.featuresLoaded = featuresIn
   const stub = { template: '<div />' }
   const router = createRouter({
     history: createMemoryHistory(),
@@ -360,7 +363,65 @@ describe('CosaFareView on a phone (review PR-4, M-07)', () => {
     const { wrapper } = await mountAt({ zona: 'atlantide' }, undefined, true)
 
     expect(wrapper.get('input[role="combobox"]').isVisible()).toBe(true)
+    expect(wrapper.text()).toContain('A Gaeta')
     wrapper.unmount()
+  })
+
+  // TD-53: what a phone draws before the zones come is what stays once they
+  // have — no «A Gaeta» taken back from over the title, no row of chips
+  // growing under it.
+  it('draws a zone’s address as chosen from the first frame, its row of zones already a row tall', async () => {
+    vi.mocked(axios.get).mockImplementation(() => new Promise(() => {}))
+    const { wrapper } = await mountAt({ zona: 'serapo' })
+
+    expect(wrapper.text()).not.toContain('A Gaeta')
+    expect(wrapper.get('nav[aria-label="Zone"] > div').classes()).toContain('min-h-10')
+  })
+})
+
+// TD-53: the rows come from the page's own lists and from the map's features,
+// and land together — with the closing note, which they would otherwise push.
+describe('CosaFareView — the rows land in one piece (TD-53)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(axios.get).mockImplementation(async (url: string) => ({ data: ANSWERS[url] }))
+  })
+
+  const NOTE = "Questo è quello che c'è in archivio"
+
+  it('draws nothing under the zones until the map’s features are in too, then all of it', async () => {
+    const { wrapper, store } = await mountAt({ zona: 'serapo' }, undefined, false, false)
+
+    // The tours and the dishes are in, but not the zone's places: drawing them
+    // would put the places above them a moment later, or call the zone empty.
+    expect(wrapper.findAll('h2')).toHaveLength(0)
+    expect(wrapper.text()).not.toContain('non ha ancora niente')
+    expect(wrapper.text()).not.toContain(NOTE)
+
+    store.features = FEATURES
+    store.featuresLoaded = true
+    await flushPromises()
+
+    expect(wrapper.findAll('h2').map((h) => h.text())[0]).toBe('Andare al mare')
+    expect(wrapper.text()).toContain(NOTE)
+  })
+
+  it('waits for the page’s own lists too', async () => {
+    vi.mocked(axios.get).mockImplementation(() => new Promise(() => {}))
+    const { wrapper } = await mountAt({ zona: 'serapo' })
+
+    expect(wrapper.text()).not.toContain(NOTE)
+    expect(wrapper.text()).not.toContain("Scegli una zona per vedere cosa c'è.")
+  })
+
+  // Nothing under the zones depends on an answer then, and the note is the
+  // largest text on a phone's first screen: drawn late, it is the page's LCP.
+  it('says everything at once when no zone is chosen, waiting for nothing', async () => {
+    vi.mocked(axios.get).mockImplementation(() => new Promise(() => {}))
+    const { wrapper } = await mountAt({}, undefined, false, false)
+
+    expect(wrapper.text()).toContain("Scegli una zona per vedere cosa c'è.")
+    expect(wrapper.text()).toContain(NOTE)
   })
 })
 

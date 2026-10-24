@@ -122,6 +122,21 @@ const selected = computed(() => {
 // window's title too.
 usePanelTrail(() => (selected.value ? { steps: [{ label: selected.value.name }] } : null))
 usePageTitle(() => (selected.value ? [selected.value.name, 'Cosa fare'] : null))
+// Until the zones have come, the address is all there is to go on: a page
+// opened on ?zona= is a chosen zone from its first frame, rather than saying
+// «A Gaeta» and taking it back from over the title once they come (TD-53).
+const zoneChosen = computed(() => (loaded.value ? !!selected.value : !!route.query.zona))
+
+// A zone's rows come from two answers, this page's lists and the map's
+// features, and are drawn once both are in. Drawn as each came, the tours and
+// the dishes landed first and the zone's places pushed them down, or a zone
+// said for a moment that it held nothing; and the closing note under them was
+// pushed off a phone's screen — a layout shift of 0.204 (TD-53). So the note
+// waits with them. Without a zone it depends on no answer and is drawn at
+// once, as «Scegli una zona…» is: it is the largest text on a phone's first
+// screen, the paint Lighthouse times the page by (LCP).
+const ready = computed(() => loaded.value && mapStore.featuresLoaded)
+const noteShown = computed(() => ready.value || !zoneChosen.value)
 
 const placesHere = computed(() =>
   selected.value ? places.value.filter((p) => inZone(p.zones, selected.value!.slug)) : [],
@@ -326,7 +341,7 @@ const chooseZone = async (slug: string) => {
   <article class="mx-auto w-full max-w-2xl pt-2">
     <!-- «A Gaeta» until a zone is chosen; then the panel's eyebrow says which
     (review PR-23), and one eyebrow is enough. -->
-    <p v-if="!selected" class="text-xs font-semibold tracking-[0.12em] text-terracotta uppercase">
+    <p v-if="!zoneChosen" class="text-xs font-semibold tracking-[0.12em] text-terracotta uppercase">
       A Gaeta
     </p>
     <MainTitle>Cosa si può fare qui</MainTitle>
@@ -354,8 +369,10 @@ const chooseZone = async (slug: string) => {
 
     <nav aria-label="Zone" class="mt-6">
       <!-- On a phone the open row runs to the panel's edges, so it reads as a
-      row that scrolls, and «Cambia zona» goes under it. -->
-      <div class="flex flex-wrap items-center gap-2">
+      row that scrolls, and «Cambia zona» goes under it. A row tall before the
+      zones come, so they do not push the page down when they do (TD-53): all
+      a phone draws, open or put away; the first row where they wrap. -->
+      <div class="flex min-h-10 flex-wrap items-center gap-2">
         <ul
           id="zone-chips"
           class="flex gap-2"
@@ -418,7 +435,7 @@ const chooseZone = async (slug: string) => {
       Una parte dell'archivio non si è caricata: quello che vedi potrebbe essere incompleto.
     </p>
 
-    <template v-if="selected">
+    <template v-if="selected && ready">
       <p v-if="emptyHere" class="mt-8 text-ink">
         In questa zona l'archivio non ha ancora niente.
         <template v-if="zonesWithSomething.length">
@@ -452,9 +469,9 @@ const chooseZone = async (slug: string) => {
         </ul>
       </section>
     </template>
-    <p v-else-if="loaded" class="mt-8 text-muted">Scegli una zona per vedere cosa c'è.</p>
+    <p v-else-if="!zoneChosen" class="mt-8 text-muted">Scegli una zona per vedere cosa c'è.</p>
 
-    <p class="mt-10 border-t border-hairline pt-4 text-sm text-muted">
+    <p v-if="noteShown" class="mt-10 border-t border-hairline pt-4 text-sm text-muted">
       Questo è quello che c'è in archivio, non tutto quello che succede a Gaeta. Gli orari, quando
       li conosciamo, sono sulla scheda di ogni luogo, con la data in cui ce li hanno detti.
     </p>
