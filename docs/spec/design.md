@@ -568,6 +568,11 @@ opening-hours filter is not.
   imitate — it closes a panel only when the step before was the map. See
   "Close, up, back — 2026-10-23".
 
+  *Amended 2026-10-24 — a card says how to share it* (review PR-16). The
+  link D15 makes work is now one press away: «Condividi» beside the byline
+  of a card, a festa and a tour, and on a stop of a guided tour. See
+  "Sharing a card — 2026-10-24" at the end of this section.
+
 - **D16 — The map reacts.** Opening a card that has a place moves the map so
   the place sits in the space the panel leaves free — never under it —
   highlights its pins or its route, and dims everything else. Closing returns
@@ -1369,3 +1374,56 @@ nothing about dragging. Built the same day:
   "at the lowest stop what shows is the line", with the list "one drag or
   one tap away", which is what D20 asks for. The stop shows the line, as D3
   says, until the author chooses between the two.
+
+### Sharing a card — 2026-10-24
+
+The review of 2026-10-22 (PR-16: P-11) found no way to send a card on: the
+reader copied the address from the browser's bar — Nunzia in Turin gets a
+feast's link on WhatsApp from someone who did — and on a phone, where the bar
+shows little more than the domain, that is the step most people do not know.
+Built on 2026-10-24:
+
+- **«Condividi» sits beside the byline**, under the title: on the first
+  screen, where a reader standing in front of the place is, rather than at the
+  foot of the article, which on a phone is several screens down. It is
+  `CardArticle`'s (`components/content/ShareButton.vue`), so a card of every
+  type, a festa and a tour have it from one place and the footer stays as it
+  was. In a tour's guided mode the stop has it beside *Come arrivarci* and
+  *Leggi la scheda*, read «Condividi la tappa» by a screen reader.
+- **Two ways, both the browser's.** Where the browser has a share sheet — a
+  phone — it opens with the page's name and address. Where it has none — most
+  desktop browsers — the address goes to the clipboard and the toast says
+  «Link copiato». No social buttons, no shortener, nothing of anybody else's
+  loaded or called (TD-30, D6b): sharing makes no request at all. Both run
+  only from the reader's press, which the browser requires before a page may
+  open the sheet or write to the clipboard; a clipboard refused — an http
+  address has none, a permission may be withheld — is said in the toast, with
+  the address bar as the way to do it by hand. A sheet the reader closes is an
+  answer, and nothing is said. One function, `lib/share.ts::shareLink`.
+- **The address shared is the page's own**: its path, with nothing of how the
+  sender happened to be looking — no `?mappa=1`, no `?edit=1`. A stop is the
+  one exception, because the stop is what is shared there:
+  `/itinerari/:id?tappa=N` opens on that stop, as a reload does
+  ([itinerari.md](./itinerari.md) I7), with the tour one level up. From the
+  tour's article the tour is shared, without a stop.
+- **Decided by the build**, since the review left them open:
+  - **Beside the byline, not under «Torna a…»**, which the prompt allowed
+    too: the footer holds the collaborator's *Modifica*, *Elimina* and
+    *Traduci*, and a reader on a phone reaches it only after the whole
+    article and the map's section.
+  - **The name handed to the sheet is the window's** — «Santissima
+    Annunziata · Chiese · Vivere Gaeta», "Where the reader is" — so the
+    subject of a mail or the line over a link in a chat says the site as well
+    as the card, and there is one name for a page, not two.
+  - **Not on a draft**, nor on any stop of a tour in draft: a draft opens for
+    its author and the admins alone, so its link would be a «not found» for
+    whoever it was sent to.
+  - **No toast over the sheet**: the sheet shows what happened. The toast is
+    for the copy, which otherwise happens out of sight.
+  - **A sheet that will not open** — a page in a frame without the
+    permission, a target that fails to start — falls back to the clipboard
+    rather than to an error.
+  - **The look is the reader's secondary pill**, the one *Leggi la scheda*
+    wears: bordered, the accent's text, 44 px tall. Its icon is the three
+    joined dots, neutral between the platforms' own share signs, and
+    decorative: the word names the button (WCAG 2.5.3).

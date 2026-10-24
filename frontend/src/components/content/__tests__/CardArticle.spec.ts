@@ -20,7 +20,14 @@ const mountArticle = (props: Record<string, unknown>) =>
       backTo: { name: 'chieselist', label: 'chiese' },
       ...props,
     },
-    global: { stubs: { RouterLink: RouterLinkStub, LanguageSwitch: true, UserAvatar: true } },
+    global: {
+      stubs: {
+        RouterLink: RouterLinkStub,
+        LanguageSwitch: true,
+        UserAvatar: true,
+        ShareButton: true,
+      },
+    },
   })
 
 // The decision of 2026-09-09: the Italian name is the identity, because that
@@ -63,7 +70,7 @@ describe('CardArticle', () => {
         detailRouteName: 'chiesedetail',
         backTo: { name: 'chieselist', label: 'chiese' },
       },
-      global: { stubs: { RouterLink: RouterLinkStub, LanguageSwitch: true } },
+      global: { stubs: { RouterLink: RouterLinkStub, LanguageSwitch: true, ShareButton: true } },
     })
 
     const initials = wrapper.get('[role="img"][aria-label="Foto profilo di Autore"]')
@@ -72,6 +79,19 @@ describe('CardArticle', () => {
     for (const display of ['block', 'inline-block', 'inline', 'grid', 'inline-flex']) {
       expect(classes).not.toContain(display)
     }
+  })
+
+  // Review PR-16: a published card can be sent on; a draft opens for nobody
+  // it could be sent to, so it offers nothing to send.
+  it('offers «Condividi» on a published card, beside its byline, and not on a draft', () => {
+    const published = mountArticle({})
+    const share = published.findComponent({ name: 'ShareButton' })
+    expect(share.exists()).toBe(true)
+    expect(share.element.parentElement?.textContent).toContain('Autore')
+
+    expect(
+      mountArticle({ isPublished: false }).findComponent({ name: 'ShareButton' }).exists(),
+    ).toBe(false)
   })
 
   it('has no subtitle on an original', () => {

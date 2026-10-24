@@ -63,6 +63,17 @@ const tileView = ($tiles: JQuery<HTMLElement>) => {
     },
   }
 }
+// «Condividi» (review PR-16): the browser's two ways, as a test wants them. A
+// stub, not the real clipboard: what is checked is what the page hands over,
+// and a real clipboard asks the machine running the suite for permission.
+const withoutShareSheet = (win: Cypress.AUTWindow) => {
+  Object.defineProperty(win.navigator, 'share', { value: undefined, configurable: true })
+  Object.defineProperty(win.navigator, 'clipboard', {
+    value: { writeText: cy.stub().resolves().as('copy') },
+    configurable: true,
+  })
+}
+
 // Gaeta's ends, as seed_demo places them: the Flacca's last beach, the
 // mountain, the medieval quarter's point.
 const SANT_AGOSTINO = { lat: 41.2337, lng: 13.4946 }
@@ -193,6 +204,21 @@ describe('the reader, on a wide screen', () => {
         'eq',
         'https://www.google.com/maps/dir/?api=1&destination=41.2172608%2C13.5625165&travelmode=walking',
       )
+  })
+
+  // Review PR-16 (P-11): a desktop browser has no share sheet, so «Condividi»
+  // copies the card's own address — and the reader is told it did.
+  it('copies a card’s own address to send it on, and is told so', () => {
+    cy.visit('/chiese')
+    cy.contains('a', PUBLISHED).click()
+    cy.contains('h1', PUBLISHED)
+    cy.window().then(withoutShareSheet)
+
+    cy.contains('button', 'Condividi').click()
+    cy.contains('[role="status"]', 'Link copiato')
+    cy.location().then(({ origin, pathname }) => {
+      cy.get('@copy').should('have.been.calledOnceWith', `${origin}${pathname}`)
+    })
   })
 
   it('is not shown anyone else’s draft', () => {
@@ -560,6 +586,33 @@ describe('the reader, on a phone', () => {
     cy.go('back')
     cy.location('search').should('eq', '')
     cy.contains('h1', PUBLISHED).should('be.visible')
+  })
+
+  // Review PR-16 (P-11): a phone has the system's share sheet, which is
+  // handed the card's name and its own address — not the enlarged map the
+  // reader just left — and needs no toast of ours on top.
+  it('sends a card on through the system’s share sheet', () => {
+    cy.visit('/chiese')
+    cy.contains('a', PUBLISHED).click()
+    cy.contains('button', 'Allarga la mappa').click()
+    cy.location('search').should('eq', '?mappa=1')
+    cy.contains('button', 'Torna alla scheda').click()
+    cy.contains('h1', PUBLISHED).should('be.visible')
+    cy.window().then((win) => {
+      Object.defineProperty(win.navigator, 'share', {
+        value: cy.stub().resolves().as('share'),
+        configurable: true,
+      })
+    })
+
+    cy.contains('button', 'Condividi').click()
+    cy.location().then(({ origin, pathname }) => {
+      cy.get('@share').should('have.been.calledOnceWith', {
+        title: `${PUBLISHED} · Chiese · Vivere Gaeta`,
+        url: `${origin}${pathname}`,
+      })
+    })
+    cy.contains('[role="status"]', 'Link copiato').should('not.exist')
   })
 
   // Review PR-4 (M-07): on a phone a chosen zone is framed in the strip
