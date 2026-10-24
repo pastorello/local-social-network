@@ -108,23 +108,28 @@ const zoomPosition = computed(() =>
 // visible — is bottom-right on a wide screen, left of a narrow panel. On a
 // phone it goes to the top-right, under «Livelli» on the home and under the
 // menu on the enlarged map, because at the bottom it rode the sheet's edge
-// (M-03). The strip above a card keeps it bottom-right, above «Allarga la
-// mappa» (PR-25 moves it). Behind a wide panel it stays where it is, veiled
-// with the rest of the map.
-const attributionPosition = computed(() =>
-  !isDesktop.value && (route.meta.fullBleed || enlarged.value) ? 'topright' : 'bottomright',
-)
+// (M-03). In the strip above a card it is bottom-left, across from «Allarga
+// la mappa», which has the other corner (decided by the author on 2026-10-23,
+// review PR-25). Behind a wide panel it stays where it is, veiled with the
+// rest of the map.
+const attributionPosition = computed(() => {
+  if (isDesktop.value) return 'bottomright'
+  if (route.meta.fullBleed || enlarged.value) return 'topright'
+  return besideMap.value ? 'bottomleft' : 'bottomright'
+})
 
 // The corners themselves move to where the map is still in view: the right
 // ones left of a panel beside it, the bottom ones, in the phone's strip, up
-// to just above «Allarga la mappa» (D18).
+// to the strip's own bottom, 12px above the article — the line «Allarga la
+// mappa» stands on (D18).
 const controlsRight = computed(() =>
   isDesktop.value && besideMap.value ? `calc(${panelWidth.value + 16}px + 0.75rem)` : '0px',
 )
 const controlsBottom = computed(() => {
   if (isDesktop.value || !besideMap.value || enlarged.value) return '0px'
-  // RoutePanel lays the strip out below the menu, hence the header's height.
-  return 'calc(100% - var(--header-h, 0px) - 7.5rem)'
+  // RoutePanel lays the strip out below the menu, hence the header's height:
+  // the strip is 11.25rem tall, and its button ends 0.75rem above the article.
+  return 'calc(100% - var(--header-h, 0px) - 10.5rem)'
 })
 
 // The banner over a map a form is drawing on (D19) runs across the map right
@@ -327,6 +332,13 @@ div :deep(.leaflet-control-attribution) {
    with «Livelli»'s edge, rather than sitting in the corner (review PR-15). */
 div :deep(.leaflet-top .leaflet-control-attribution) {
   margin: 0.5rem 0.75rem 0 0;
+  border-radius: 0.375rem;
+}
+
+/* In the strip's bottom-left corner, 12px in from the side, as «Allarga la
+   mappa» is from the other (review PR-25). */
+div :deep(.leaflet-bottom.leaflet-left .leaflet-control-attribution) {
+  margin: 0 0 0 0.75rem;
   border-radius: 0.375rem;
 }
 

@@ -249,6 +249,20 @@ the dictionary: it would send half the guests who type it to the wrong side of
 town. Until the author decides, *«porto»* finds the zone *Porto Salvo* by its
 own name, and the line says only *«Ti mostriamo Porto Salvo.»*
 
+**Two of them decided by the author — 2026-10-24, confirmed** (review PR-25).
+*«il porto»* is the marina on Lungomare Caboto, which OpenStreetMap calls
+*Porto di Gaeta*, in **Porto Salvo**; *«il molo»* is the pier of the harbour
+of Santa Maria, in **Gaeta Medievale** — so each harbour has a name of its
+own. A data migration, `maps/migrations/0009`, adds them, written with their
+article like the others (the match ignores it: *«porto»*, *«al molo»*), and
+placed against D2's outlines the same way: the harbour's node lies in Porto
+Salvo, 115 m from the nearest other zone, and every vertex of the pier in
+Gaeta Medievale; `maps/test_zone_aliases.py` keeps a point for each. A name
+the author had already added in the admin is left as it was. *«porto»* now
+finds *il porto* first, and the line says *«Sei al porto: ti mostriamo Porto
+Salvo.»* **«il lungomare Caboto» and «Via Firenze» stay out, by decision**:
+they run along two zones, and a guest there chooses from the chips.
+
 Decided by the build, since the review left them open: every zone is found by
 its own name too, with no entry in the dictionary, so a zone added in the
 admin is found at once; the match ignores accents, capitals, the article a
@@ -270,7 +284,9 @@ zones arrive, so it is never drawn and then folded under the reader's eyes.
 
 *Parked for the author:* the field's label and the panel's eyebrow (`<nav
 aria-label="Dove sei">`, review PR-23) share their word, for two different
-questions — where one is in Gaeta, and where one is in the site.
+questions — where one is in Gaeta, and where one is in the site. *(Decided
+2026-10-24, confirmed by the author — review PR-25: the eyebrow's landmark is
+named «Percorso»; «Dove sei?» is the field's alone.)*
 
 ## D7 — The closed church: «Se la trovi chiusa», church by church
 

@@ -272,7 +272,7 @@ describe('RoutePanel’s eyebrow (review PR-23)', () => {
   })
 
   const eyebrow = (wrapper: Awaited<ReturnType<typeof mountPanel>>['wrapper']) =>
-    wrapper.get('nav[aria-label="Dove sei"]')
+    wrapper.get('nav[aria-label="Percorso"]')
 
   it('names a card’s type and its zone, each a link, in the type’s colour', async () => {
     const page = pageWith(() => ({
@@ -307,7 +307,7 @@ describe('RoutePanel’s eyebrow (review PR-23)', () => {
   it('has no eyebrow on a page with nothing above it but the map', async () => {
     const { wrapper } = await mountPanel('wide', '/chiese')
 
-    expect(wrapper.find('nav[aria-label="Dove sei"]').exists()).toBe(false)
+    expect(wrapper.find('nav[aria-label="Percorso"]').exists()).toBe(false)
   })
 
   it('forgets a page’s part of it once the page is gone', async () => {

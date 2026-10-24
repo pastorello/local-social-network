@@ -423,12 +423,17 @@ describe('the reader, on a wide screen', () => {
     cy.location('search').should('eq', '?zona=gaeta-medievale')
     cy.contains('Non conosciamo questo posto: scegli una zona qui sotto.')
 
-    // «il porto» is no name of the archive's — Gaeta has two harbours, in two
-    // zones — so «porto» finds the zone that begins with it, and says only that.
+    // Gaeta has two harbours, in two zones; the author decided on 2026-10-24
+    // (maps/migrations/0009) that «il porto» is the marina, in Porto Salvo,
+    // and «il molo» the pier of Santa Maria, in Gaeta Medievale.
     cy.get('@field').clear()
     cy.get('@field').type('porto{enter}')
     cy.location('search').should('eq', '?zona=porto-salvo')
-    cy.contains('Ti mostriamo Porto Salvo.')
+    cy.contains('Sei al porto: ti mostriamo Porto Salvo.')
+    cy.get('@field').clear()
+    cy.get('@field').type('al molo{enter}')
+    cy.location('search').should('eq', '?zona=gaeta-medievale')
+    cy.contains('Sei al molo: ti mostriamo Gaeta Medievale.')
 
     // Escape closes the list and leaves the page where it is.
     cy.get('@field').clear()
@@ -692,6 +697,33 @@ describe('the reader, on a phone', () => {
     cy.go('back')
     cy.location('search').should('eq', '')
     cy.contains('h1', PUBLISHED).should('be.visible')
+  })
+
+  // Review PR-25 (decided by the author on 2026-10-23): the strip keeps
+  // OpenStreetMap's credit on the map, short, in the corner across from
+  // «Allarga la mappa» — 12px in from the side and from the article, as the
+  // button is from the other — at the narrowest width the pill promises.
+  it('reads the map’s credit in the strip’s bottom-left corner, clear of «Allarga la mappa»', () => {
+    cy.viewport(360, 720)
+    cy.visit('/chiese')
+    cy.contains('a', PUBLISHED).click()
+    cy.contains('h1', PUBLISHED)
+
+    cy.get('main section[tabindex="-1"]').then(($panel) => {
+      const panelTop = $panel[0]!.getBoundingClientRect().top
+      cy.contains('button', 'Allarga la mappa').then(($button) => {
+        const button = $button[0]!.getBoundingClientRect()
+        cy.get('.leaflet-control-attribution')
+          .should('have.text', '© OpenStreetMap')
+          .and(($credit) => {
+            const credit = $credit[0]!.getBoundingClientRect()
+            expect(credit.left).to.be.closeTo(12, 0.5)
+            expect(panelTop - credit.bottom).to.be.closeTo(12, 0.5)
+            expect(credit.top).to.be.at.least(headerBottom($credit))
+            expect(credit.right).to.be.lessThan(button.left)
+          })
+      })
+    })
   })
 
   // Review PR-16 (P-11): a phone has the system's share sheet, which is

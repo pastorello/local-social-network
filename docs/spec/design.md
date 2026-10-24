@@ -126,6 +126,15 @@ geolocation is a later phase (see Non-goals) rather than the centre of this one.
   6.375 rem, so it still shows the line. See "The map's corners and the sheet's handle
   — 2026-10-23" at the end of "The map under every page".
 
+  *2026-10-24, confirmed by the author* (review PR-25). The lowest stop shows
+  the presentation's line, not «Elenco · N luoghi», as the note above has it:
+  the list stays one drag or one tap away, which is what D20 asks for. PR-15's
+  parked point is decided, and no code changed for it. And the sheet counts
+  what it lists as places — «Luoghi sulla mappa · 16 luoghi», «1 luogo» — the
+  word of its heading and of the wide screen's *Elenco*: «schede» is the
+  archive line's word, a few lines above it ([content.md](./content.md), the
+  archive's line).
+
 - **D4 — The map chrome lands here.** C5 deliberately did not build M1's
   "minimal top menu" as a chrome redesign — layer toggles live in a side panel
   and the nav kept C3's `SchedeMenu`. The full-bleed map with floating controls
@@ -560,6 +569,15 @@ opening-hours filter is not.
   window's title names the page. See "Where the reader is — 2026-10-23" at
   the end of this section.
 
+  *2026-10-24, confirmed by the author* (review PR-25). On the home and on
+  the welcome page no item of the pill is current — not *Mappa*, not the
+  wordmark — and none in the phone's *Menu*: the build of 2026-10-23 had lit
+  *Mappa* on the home, and the review's «/ → none» stands. A report's page
+  still lights *Mappa*, and the sign-in page *Accedi*. And the eyebrow's
+  landmark is named «Percorso», not «Dove sei»: «Dove sei?» is the question
+  the field on `/cosa-fare` asks, about where one is in Gaeta
+  ([cosa-fare.md](./cosa-fare.md) D6).
+
 - **D15 — Every page is a panel over the map, and keeps its URL.** A shared
   link to `/feste/:id` opens the map *and* the panel. Back and Escape close
   the panel, and focus returns to whatever opened it. A panel is a dialog for
@@ -642,7 +660,8 @@ opening-hours filter is not.
 
   *Amended 2026-10-23:* *Allarga la mappa* sits inside the strip's
   bottom-right corner; the credit question is parked — see "How the map
-  frames — 2026-10-23" at the end of this section.
+  frames — 2026-10-23" at the end of this section. *(Decided 2026-10-24: the
+  credit stays in the strip, short, in its bottom-left corner.)*
 
   *Amended 2026-10-23:* a page without a strip is the whole screen up to the
   top edge — its ground runs behind the menu, so no band of map shows around
@@ -682,6 +701,10 @@ opening-hours filter is not.
   N luoghi"). They are ADR-0005's decided equivalent of the pins, not a
   convenience; a layout that makes them harder to reach quietly undoes that
   decision.
+
+  *2026-10-24, confirmed by the author* (review PR-25): on the phone's home
+  that tap is at the sheet's lowest stop, which shows the presentation's line
+  rather than «Elenco · N luoghi» (D3's note of the same day).
 
 - **D21 — *Il progetto* is the credits surface.** What `AppFooter` carries
   today moves here: the editorial rule in the reader's words ("nessuna
@@ -994,7 +1017,8 @@ strip's *Allarga la mappa* sitting on the article's edge. Built the same day:
   since fitting the city into a sliver would throw the map out to the region.
 - **The strip's button** sits inside its bottom-right corner, 12 px in from
   the side and from the article's edge; the OpenStreetMap credit moves up
-  with it and stays above it, visible.
+  with it and stays above it, visible. *(Since 2026-10-24 the credit has the
+  other corner — the last point below.)*
 - **Parked, for the author: whether the credit leaves the strip.** The review
   asked for the attribution to be hidden in the strip (M-04) and kept on the
   enlarged map and on *Il progetto*. That contradicts what the map's credit
@@ -1007,6 +1031,16 @@ strip's *Allarga la mappa* sitting on the article's edge. Built the same day:
   review PR-15 the credit is the short one everywhere, the strip included;
   where it sits in the strip is left to review PR-25 — "The map's corners
   and the sheet's handle".)*
+- **The credit stays in the strip — 2026-10-24, confirmed by the author**
+  (decided on 2026-10-23, review PR-25; this answers PR-5's point 3a). It is
+  the first of the three options: short, «© OpenStreetMap» linked to the
+  copyright page with nothing before it, in the colours and with the
+  underline it has everywhere (4.5:1). It moves to the strip's
+  **bottom-left** corner, across from *Allarga la mappa*: 12 px in from the
+  side and from the article's edge, as the button is from the other, so the
+  two stand on one line and never touch, down to 360 px. On the enlarged map
+  and on every other layout it stays where "The map's corners and the
+  sheet's handle" put it.
 
 ### Close, up, back — 2026-10-23
 
@@ -1070,7 +1104,8 @@ up link "Close, up, back" put at the panel's head:
 
 - **The eyebrow is the panel's, and it is a way out.** Every panel with
   something above it opens on one line over the page's title, in a
-  `<nav aria-label="Dove sei">`: the level above, as the up link, then what
+  `<nav aria-label="Dove sei">` (named «Percorso» since 2026-10-24 — D14's
+  note): the level above, as the up link, then what
   this page is within it. A card: «Chiese · Gaeta Medievale», the zone a
   link to «Cosa fare» there. A festa: «Feste ·» every zone its procession
   stops in. A tour: «Itinerari ·» its intents, each a link to the tours that
@@ -1125,6 +1160,8 @@ up link "Close, up, back" put at the panel's head:
     link to the very page the reader is on, which is what `aria-current`
     is for, and the pill always lit it there. The welcome page marks
     nothing. A report's page lights *Mappa*, where the reports are.
+    *(Overruled by the author, 2026-10-24, review PR-25: the home marks
+    nothing, like the welcome page — D14's note.)*
   - **A tour's eyebrow names its intents as the admin wrote them**,
     «Itinerari · Scoprire la città»: the review's «Mare» was an
     illustration, and an intent has no shorter name to print.
@@ -1335,7 +1372,8 @@ nothing about dragging. Built the same day:
   menu, on the same rule. **In the strip above a card it has not moved**:
   it is above *Allarga la mappa*, as "How the map frames" left it, because
   where it goes there was decided by the author on 2026-10-23 and is review
-  PR-25's to build.
+  PR-25's to build. *(Built in review PR-25: bottom-left, across from the
+  button — "How the map frames".)*
 - **The zoom buttons** are top-left, under the menu — and under the editing
   banner while there is one — everywhere but the wide home, where that
   corner is the floating column's: there they are bottom-right, above the
@@ -1381,7 +1419,8 @@ nothing about dragging. Built the same day:
   luoghi»" (M-11, from D20). D3's note of 2026-10-23 decided otherwise:
   "at the lowest stop what shows is the line", with the list "one drag or
   one tap away", which is what D20 asks for. The stop shows the line, as D3
-  says, until the author chooses between the two.
+  says, until the author chooses between the two. *(Decided 2026-10-24,
+  confirmed by the author: the line, as D3 says — review PR-25.)*
 
 ### Sharing a card — 2026-10-24
 

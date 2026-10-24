@@ -13,11 +13,17 @@
   link as «ivere aeta», the initials falling out of the name. They are plain
   spans now, set apart by their colour alone, and the name is written down —
   the visible «Vivere Gaeta» first, so a speech-input user can say what they
-  see (WCAG 2.5.3), then where the link goes. -->
+  see (WCAG 2.5.3), then where the link goes.
+
+  Never marked current, not even on the home it leads to: on the home and the
+  welcome page nothing in the pill is (decided by the author on 2026-10-23,
+  review PR-25). RouterLink marks the link to the page one is on by itself;
+  the explicit attribute is what turns that off. -->
   <div>
     <RouterLink
       to="/"
       aria-label="Vivere Gaeta — torna alla mappa"
+      :aria-current="undefined"
       class="animate-fade-in-up block text-lg font-bold tracking-wide text-ink lg:text-xl lg:tracking-wider transition-colors duration-300 hover:text-sea"
     >
       <span class="text-terracotta">V</span>ivere <span class="text-terracotta">G</span>aeta

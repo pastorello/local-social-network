@@ -15,6 +15,9 @@ from maps.zones import geometry_contains
 pytestmark = pytest.mark.django_db
 
 seeded = importlib.import_module('maps.migrations.0008_seed_zone_aliases')
+# The two names 0008 left to the author, decided on 2026-10-24.
+decided = importlib.import_module('maps.migrations.0009_seed_porto_and_molo')
+NAMES = [name for name, _ in seeded.ALIASES] + [name for name, _, _ in decided.ALIASES]
 
 # Where each seeded name is, as OpenStreetMap has it (Nominatim, one lookup per
 # name, 2026-10-24): a node, or the centre of the outline or the street the
@@ -45,6 +48,9 @@ WHERE = {
     'il Tempio di San Francesco': (41.2108487, 13.5809506),  # way 454852270
     'Via Indipendenza': (41.2236472, 13.5686683),  # way 333224954
     'Villa delle Sirene': (41.2207848, 13.5696561),  # way 333224959
+    # Decided by the author on 2026-10-24 (0009), placed the same way.
+    'il molo': (41.2094723, 13.5878922),  # the pier of the harbour of Santa Maria, way 1382988502
+    'il porto': (41.2165218, 13.5729608),  # Porto di Gaeta, the marina, node 8922784305
 }
 
 
@@ -60,7 +66,7 @@ def test_every_name_is_seeded_and_points_at_a_zone_that_exists():
 
     aliases = list(ZonaAlias.objects.select_related('zona'))
 
-    assert sorted(alias.name for alias in aliases) == sorted(name for name, _ in seeded.ALIASES)
+    assert sorted(alias.name for alias in aliases) == sorted(NAMES)
     for alias in aliases:
         assert alias.zona.slug in slugs, alias.name
 
@@ -72,28 +78,54 @@ def test_every_name_lies_in_the_zone_it_points_at_and_in_no_other():
     assert ZonaAlias.objects.get(name='Piazza XIX Maggio').zona.slug == 'porto-salvo'
     assert ZonaAlias.objects.get(name='Serapo').zona.slug == 'serapo'
 
-    assert set(WHERE) == {name for name, _ in seeded.ALIASES}
+    assert set(WHERE) == set(NAMES)
     for alias in ZonaAlias.objects.select_related('zona'):
         assert _zones_holding(*WHERE[alias.name]) == {alias.zona.slug}, alias.name
 
 
-def test_a_name_that_two_zones_share_is_not_seeded():
-    # «il porto»: the marina on Lungomare Caboto and the harbour of Santa Maria
-    # are in two zones. «il lungomare Caboto» runs from the Annunziata to
-    # Formia. Via Firenze is Serapo's border. Each would send half the guests
-    # who type it to the wrong zone, so the author decides them, not the seed.
-    two_ports = _zones_holding(41.2165218, 13.5729608) | _zones_holding(41.2093986, 13.5878467)
+def test_a_name_that_runs_along_two_zones_is_not_seeded():
+    # «il lungomare Caboto» runs from the Annunziata to Formia, and Via Firenze
+    # is Serapo's border. Either would send half the guests who type it to the
+    # wrong zone, so it is left out — decided by the author on 2026-10-24: a
+    # guest there chooses from the chips.
     lungomare = _zones_holding(41.2397803, 13.5724349) | _zones_holding(41.2132372, 13.5767311)
     via_firenze = set().union(*(
         _zones_holding(lat, lng)
         for lng, lat in ([13.5731592, 41.2131089], [13.5720278, 41.2123936],
                          [13.571453, 41.2114914], [13.5713826, 41.2106588])
     ))
-    assert two_ports == lungomare == {'porto-salvo', 'gaeta-medievale'}
+    assert lungomare == {'porto-salvo', 'gaeta-medievale'}
     assert via_firenze == {'porto-salvo', 'serapo'}
 
-    names = {name.lower() for name, _ in seeded.ALIASES}
-    assert not names & {'il porto', 'porto', 'il molo', 'il lungomare caboto', 'via firenze'}
+    names = {name.lower() for name in NAMES}
+    assert not names & {'il lungomare caboto', 'lungomare caboto', 'via firenze'}
+
+
+def test_the_port_and_the_pier_go_where_the_author_decided():
+    # Gaeta has two harbours, in two zones — the marina on Lungomare Caboto and
+    # the harbour of Santa Maria — which is why 0008 left «il porto» and «il
+    # molo» out. The author decided on 2026-10-24: «il porto» is the marina,
+    # in Porto Salvo; «il molo» is Santa Maria's pier, in Gaeta Medievale.
+    two_harbours = _zones_holding(41.2165218, 13.5729608) | _zones_holding(41.2093986, 13.5878467)
+    assert two_harbours == {'porto-salvo', 'gaeta-medievale'}
+
+    assert ZonaAlias.objects.get(name='il porto').zona.slug == 'porto-salvo'
+    assert ZonaAlias.objects.get(name='il molo').zona.slug == 'gaeta-medievale'
+    # Between 0008's names, in their alphabetical order.
+    order = list(ZonaAlias.objects.order_by('position').values_list('name', flat=True))
+    assert order.index('il mausoleo di Planco') < order.index('il molo') < order.index('la Montagna Spaccata')
+    assert order.index('Piazza XIX Maggio') < order.index('il porto') < order.index('i Quaranta Remi')
+
+
+def test_the_decision_leaves_a_name_the_author_already_set():
+    ZonaAlias.objects.filter(name__in=['il porto', 'il molo']).delete()
+    ZonaAlias.objects.create(name='il porto', zona=Zona.objects.get(slug='gaeta-medievale'), position=7)
+
+    decided.seed(apps, None)
+
+    porto = ZonaAlias.objects.get(name='il porto')
+    assert (porto.zona.slug, porto.position) == ('gaeta-medievale', 7)
+    assert ZonaAlias.objects.get(name='il molo').zona.slug == 'gaeta-medievale'
 
 
 def test_the_reverse_takes_back_only_what_it_seeded():
@@ -104,7 +136,21 @@ def test_the_reverse_takes_back_only_what_it_seeded():
 
     seeded.unseed(apps, None)
 
-    assert sorted(ZonaAlias.objects.values_list('name', flat=True)) == ['Corso Cavour', 'la Villa Comunale']
+    # 0009's names are not 0008's to take back.
+    assert sorted(ZonaAlias.objects.values_list('name', flat=True)) == [
+        'Corso Cavour', 'il molo', 'il porto', 'la Villa Comunale',
+    ]
+
+
+def test_the_decisions_reverse_takes_back_only_what_it_seeded():
+    moved = ZonaAlias.objects.get(name='il porto')
+    moved.zona = Zona.objects.get(slug='gaeta-medievale')
+    moved.save()
+
+    decided.unseed(apps, None)
+
+    assert ZonaAlias.objects.filter(name='il porto').exists()
+    assert not ZonaAlias.objects.filter(name='il molo').exists()
 
 
 def test_a_zone_with_names_cannot_be_deleted_from_under_them():
@@ -124,7 +170,7 @@ def test_anyone_reads_the_names_with_their_zone_in_the_authors_order(api_client)
     body = response.json()
     assert body[0] == {'name': 'Serapo', 'zone': 'serapo'}
     assert {'name': 'il castello', 'zone': 'gaeta-medievale'} in body
-    assert len(body) == len(seeded.ALIASES)
+    assert len(body) == len(NAMES)
     # Unpaginated, and nothing else in a row: no geometry, no id.
     assert all(set(row) == {'name', 'zone'} for row in body)
 

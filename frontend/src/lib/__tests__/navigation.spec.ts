@@ -98,9 +98,10 @@ describe('parentOf', () => {
 })
 
 // The menu's current item (review PR-23, N-02): the item above the page, for
-// every page the router knows.
+// every page the router knows. The home and the welcome page mark nothing
+// (review PR-25).
 const SECTIONS: Record<string, Section | null> = {
-  '/': 'mappa',
+  '/': null,
   '/il-progetto': 'progetto',
   '/reports/:id': 'mappa',
   '/collabora': null,

@@ -8,7 +8,7 @@ const CHIESA = 'Chiesa E2E pubblicata'
 const FESTA = 'Festa E2E pubblicata'
 const LUOGO = 'Luogo E2E pubblicato'
 // The panel's eyebrow (review PR-23): which tour, and which stop of it.
-const WHERE = 'nav[aria-label="Dove sei"]'
+const WHERE = 'nav[aria-label="Percorso"]'
 
 describe('a guest following a curated tour', () => {
   beforeEach(() => cy.viewport(1280, 800))
