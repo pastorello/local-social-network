@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '../stores/user'
+import { useToastStore } from '../stores/toast'
 import { fetchCardFirst } from '../lib/cardFirst'
 import { setTitle } from '../lib/pageTitle'
 import {
@@ -86,11 +87,17 @@ const router = createRouter({
       meta: { requiresAuth: true, title: ['Utenti'] },
     },
     {
-      // poll reading is open to visitors (spec §3; M2 decision)
+      // Behind the login since 2026-10-24, like the API it reads: the polls
+      // are an internal tool for the people working on the archive (spec
+      // reports-and-polls.md P1). A reader who follows a link here is told so.
       path: '/polls',
       name: 'polls',
       component: () => import('../views/PollsView.vue'),
-      meta: { requiresAuth: false, title: ['Sondaggi'] },
+      meta: {
+        requiresAuth: true,
+        signInToast: "I sondaggi sono per chi collabora all'archivio",
+        title: ['Sondaggi'],
+      },
     },
     {
       // published feste are readable by anyone (spec content.md); the
@@ -332,6 +339,7 @@ router.beforeEach((to) => {
   const userStore = useUserStore()
 
   if (to.meta.requiresAuth && !userStore.user.isAuthenticated) {
+    if (to.meta.signInToast) useToastStore().showToast(5000, to.meta.signInToast)
     return {
       path: '/login',
       query: { redirect: to.fullPath },

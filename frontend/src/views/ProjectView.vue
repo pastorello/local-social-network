@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import MainTitle from '@/components/typography/MainTitle.vue'
 import { OSM_COPYRIGHT_URL } from '@/lib/osm'
+import { useUserStore } from '@/stores/user'
 
 // Il progetto (spec/design.md D21): the credits surface D11 asked for. It was a
 // footer until the map went under every page (D13) — there is no route left
 // for a footer to sit on — so it is a page of its own, reached from the menu.
 // D11's rule moves with it: dignified, fixed, and no invented endorsement.
-// The polls are reached from here too (D14).
+// The polls are reached from here too (D14) — by someone with an account, and
+// only by them since 2026-10-24 (review PR-17, reports-and-polls.md P1): a
+// reader is not shown a link to a page that would send them to sign in.
+const user = useUserStore().user
 const year = new Date().getFullYear()
 
 // Every card type is listed here and in the menu's Esplora — two lists by
@@ -46,7 +50,6 @@ const heading = 'mb-3 text-xs font-semibold tracking-[0.12em] text-muted upperca
         <ul class="space-y-2 text-sm">
           <li><RouterLink to="/" :class="link">Mappa</RouterLink></li>
           <li><RouterLink to="/itinerari" :class="link">Itinerari</RouterLink></li>
-          <li><RouterLink to="/polls" :class="link">Sondaggi</RouterLink></li>
         </ul>
       </nav>
 
@@ -63,6 +66,9 @@ const heading = 'mb-3 text-xs font-semibold tracking-[0.12em] text-muted upperca
         <h2 :class="heading">Partecipa</h2>
         <ul class="space-y-2 text-sm">
           <li><RouterLink to="/collabora" :class="link">Collabora con noi</RouterLink></li>
+          <li v-if="user.isAuthenticated">
+            <RouterLink to="/polls" :class="link">Sondaggi</RouterLink>
+          </li>
         </ul>
       </nav>
     </div>

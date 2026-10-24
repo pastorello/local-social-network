@@ -1,17 +1,27 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import ProjectView from '../ProjectView.vue'
+import { useUserStore } from '@/stores/user'
 
-const mountProject = async () => {
+const mountProject = async (signedIn = false) => {
+  const pinia = createPinia()
+  setActivePinia(pinia)
+  if (signedIn) {
+    const user = useUserStore().user
+    user.isAuthenticated = true
+    user.id = 'u1'
+    user.name = 'Maria Conte'
+  }
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [{ path: '/:pathMatch(.*)*', component: { template: '<div />' } }],
   })
   router.push('/il-progetto')
   await router.isReady()
-  return mount(ProjectView, { global: { plugins: [router] } })
+  return mount(ProjectView, { global: { plugins: [pinia, router] } })
 }
 
 // Il progetto is the credits surface (spec/design.md D21) — what the footer
@@ -35,13 +45,26 @@ describe('Il progetto', () => {
     }
   })
 
-  it('is where the polls and "Collabora con noi" are reached from (D14)', async () => {
+  it('is where "Collabora con noi" is reached from (D14)', async () => {
     const wrapper = await mountProject()
     const hrefs = wrapper.findAll('a').map((a) => a.attributes('href'))
 
-    expect(hrefs).toContain('/polls')
     expect(hrefs).toContain('/collabora')
     expect(hrefs).toContain('/itinerari')
+  })
+
+  // Review PR-17 (decided 2026-10-22, reports-and-polls.md P1): the polls are
+  // an internal tool. A reader is not offered a link that would only send
+  // them to sign in; someone with an account finds them under «Partecipa».
+  it('offers the polls under «Partecipa» to someone signed in, and not to a reader', async () => {
+    const reader = await mountProject()
+    expect(reader.find('a[href="/polls"]').exists()).toBe(false)
+    expect(reader.text()).not.toContain('Sondaggi')
+
+    const collaborator = await mountProject(true)
+    const partecipa = collaborator.get('nav[aria-label="Partecipa"]')
+    expect(partecipa.get('a[href="/polls"]').text()).toBe('Sondaggi')
+    expect(collaborator.findAll('a[href="/polls"]')).toHaveLength(1)
   })
 
   it('states the editorial rule (D10) rather than showing a sponsor slot (D12)', async () => {

@@ -48,8 +48,8 @@ not mean).
 
 | Role | Who | Can |
 |---|---|---|
-| **Reader** | anyone, no account | see the map and published cards, switch card language, browse recipes — **not the reports** (since 2026-10-22, [reports-and-polls.md](./reports-and-polls.md) R1) |
-| **Collaborator** | approved personally by the admin | author and translate cards, see and file reports, see internal overlays |
+| **Reader** | anyone, no account | see the map and published cards, switch card language, browse recipes — **not the reports** (since 2026-10-22, [reports-and-polls.md](./reports-and-polls.md) R1) **nor the polls** (since 2026-10-24, P1) |
+| **Collaborator** | approved personally by the admin | author and translate cards, see and file reports, see and vote in polls, see internal overlays |
 | **Admin** | the author | approve/reject collaboration requests; everything below; manage categories and overlays |
 | **Steering** *(confidential)* | admin-selected trusted people who also do city politics | everything a collaborator can, plus the seggi overlay and future political tooling — with **no public sign that this tier exists** |
 
@@ -61,7 +61,7 @@ not mean).
 | Content core + typed cards | [content.md](./content.md) | delivered (core + feste C2, 2026-08-22; chiese/ricette/personaggi/dialetto C3, 2026-08-22); sixth type libri consigliati 2026-09-09; seventh, luoghi, 2026-09-18 |
 | Translations | [translations.md](./translations.md) | delivered (C4, 2026-08-22) |
 | The map: layers & overlays | [map.md](./map.md) | delivered (C5, 2026-08-27) |
-| Reports & polls (from v1) | [reports-and-polls.md](./reports-and-polls.md) | delivered; reports change author, and since 2026-10-22 only someone signed in sees them |
+| Reports & polls (from v1) | [reports-and-polls.md](./reports-and-polls.md) | delivered; reports change author, and since 2026-10-22 only someone signed in sees them — the polls too, since 2026-10-24 |
 | Steering tier & political tooling | [politics.md](./politics.md) | tier delivered (C1); its first consumer is C5's seggi overlay (2026-08-27); the tooling is future, out of current build |
 | Design & visual direction | [design.md](./design.md) | interviewed 2026-08-27, built 2026-08-31; **layout reopened 2026-09-11** (D13–D21), built 2026-09-18 |
 | Itinerari — curated tours for a visitor's stay | [itinerari.md](./itinerari.md) | decided 2026-09-11; built 2026-09-18 — backend, the guest's pages and the collaborator's editor |

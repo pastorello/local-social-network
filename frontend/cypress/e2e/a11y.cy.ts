@@ -352,18 +352,6 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
     check('/password-dimenticata')
   })
 
-  // The design pass left /polls in its v1 clothes on purpose (design.md's
-  // closing note), and that changes nothing here: ADR-0005's bar is the whole
-  // app, not the redesigned part of it. Style and accessibility are different
-  // undertakings and this one covers everything.
-  it('the polls, a v1 surface the design pass did not redraw', () => {
-    cy.viewport(1280, 800)
-    cy.visit('/polls')
-    cy.contains('h1', 'Sondaggi')
-
-    check('/polls')
-  })
-
   // The colour rule has to run before it can pass (see `blendTilesNormally`).
   // If it ever throws again — another blend mode, another gap in the engine —
   // axe files it as "incomplete", cypress-axe says nothing, and every case
@@ -485,6 +473,20 @@ describe("the collaborator's surfaces meet WCAG 2.1 AA", { testIsolation: false 
     cy.contains('li', 'Copertina').should('exist')
 
     check('/chiese/nuova (con immagini)')
+  })
+
+  // The design pass left /polls in its v1 clothes on purpose (design.md's
+  // closing note), and that changes nothing here: ADR-0005's bar is the whole
+  // app, not the redesigned part of it. Style and accessibility are different
+  // undertakings and this one covers everything. Measured signed in since the
+  // polls went behind the login (review PR-17, reports-and-polls.md P1): in
+  // the reader's block this case would measure the login form instead.
+  it('the polls, a v1 surface the design pass did not redraw, a collaborator’s alone', () => {
+    cy.viewport(1280, 800)
+    cy.visit('/polls')
+    cy.contains('h1', 'Sondaggi')
+
+    check('/polls')
   })
 
   it('the user directory and a profile, both login-only', () => {

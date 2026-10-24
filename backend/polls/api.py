@@ -4,8 +4,8 @@ from django.db.models import Case, Count, IntegerField, Prefetch, Q, Value, When
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.exceptions import NotAuthenticated, PermissionDenied, ValidationError
+from rest_framework.decorators import api_view
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 
 from account.models import User
@@ -44,22 +44,18 @@ def _poll_queryset():
 
 
 def _serializer_context(request, polls):
-    votes_by_poll = {}
-    if request.user.is_authenticated:
-        votes_by_poll = dict(
-            Vote.objects.filter(
-                user=request.user, poll__in=[poll.id for poll in polls]
-            ).values_list('poll_id', 'option_id')
-        )
+    votes_by_poll = dict(
+        Vote.objects.filter(
+            user=request.user, poll__in=[poll.id for poll in polls]
+        ).values_list('poll_id', 'option_id')
+    )
     return {
         'votes_by_poll': votes_by_poll,
-        'is_admin': request.user.is_authenticated and request.user.role == User.ADMIN,
+        'is_admin': request.user.role == User.ADMIN,
     }
 
 
 def _require_admin(request):
-    if not request.user.is_authenticated:
-        raise NotAuthenticated()
     if request.user.role != User.ADMIN:
         raise PermissionDenied('Solo gli amministratori possono gestire i sondaggi.')
 
@@ -70,10 +66,15 @@ def _poll_response(request, pk, status=200):
     return Response(serializer.data, status=status)
 
 
+# Polls are for people with an account (decided 2026-10-22, spec
+# reports-and-polls.md P1): reading them as much as voting in them. Nothing in
+# this file opts out of the global IsAuthenticated default, and that is what
+# says so — an anonymous request is a 401 before any of it runs.
+
+
 @api_view(['GET', 'POST'])
-@permission_classes([])
 def poll_list(request):
-    # GET is open to visitors (spec §3); POST is admin-only (F3.1).
+    # POST is admin-only (F3.1).
     if request.method == 'POST':
         _require_admin(request)
 
@@ -90,7 +91,6 @@ def poll_list(request):
 
 
 @api_view(['GET'])
-@permission_classes([])
 def poll_detail(request, pk):
     poll = get_object_or_404(_poll_queryset(), pk=pk)
     serializer = PollSerializer(poll, context=_serializer_context(request, [poll]))
