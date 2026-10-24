@@ -330,6 +330,27 @@ What the review left to the build, decided here:
   `FieldConfig.inPlace`; on a luogo still without a pin it stays among the
   facts, where it was, rather than disappear with the section.
 
+### «Dove» before the text — 2026-10-24 (review PR-24)
+
+The review's proposal 2 (2026-10-22), approved by the author on 2026-10-23:
+a place's card opens with what the reader standing in town needs first. On a chiesa or a luogo with its pin, **one line sits under
+the title and the cover, before the text**: «Dove», the first sentence of the
+luogo's `how_to_get_there` (chiese have no such field), and *Come arrivarci
+(apre Google Maps)*. The zone is not repeated there, because the panel's
+eyebrow above the title carries it. *Dove si trova* stays at the end with the
+whole text, the button and *Allarga la mappa*, as built above.
+
+- **Not on ricette or personaggi**, whose pins are places the card has rather
+  than the place it is: the line is for a type with one fixed pin
+  (`maxPoints: 1`). Not on a card with no pin either.
+- **On a translation** the link is the original's pin (translations.md T5)
+  and the sentence is the translation's own `how_to_get_there`, written in
+  its language, as under *Dove si trova*. Without one, the line is the link
+  alone.
+
+The look, and what the build decided about «the first sentence», are in
+design.md, "A place's card opens on «Dove»".
+
 ### The menu: *Chiese* under *Luoghi*, and a count on every heading — 2026-10-23 (review PR-9)
 
 The review found *Chiese* in two places a reader chooses from — an entry of

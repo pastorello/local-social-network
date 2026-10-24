@@ -7,6 +7,8 @@ const PUBLISHED = 'Chiesa E2E pubblicata'
 const DRAFT = 'Chiesa E2E in bozza'
 // Sold nowhere: a ricetta with no place on the map (review PR-10).
 const RICETTA = 'Ricetta E2E pubblicata'
+// On Serapo's beach, with a sentence of how to get there (review PR-24).
+const PLACE = 'Luogo E2E pubblicato'
 
 // The home's first words and its two other ways in (review of 2026-10-22,
 // P-02/M-02). seed_e2e publishes a tour under «Scoprire la città» and a church
@@ -204,6 +206,39 @@ describe('the reader, on a wide screen', () => {
         'eq',
         'https://www.google.com/maps/dir/?api=1&destination=41.2172608%2C13.5625165&travelmode=walking',
       )
+  })
+
+  // Review PR-24 (proposal 2, approved 2026-10-23): the way there opens the
+  // card, before its text, as a line rather than a button — and «Dove si
+  // trova» still gives it at the end.
+  it('opens a place on how to get there, before its text', () => {
+    cy.visit('/chiese')
+    cy.contains('a', PUBLISHED).click()
+    cy.contains('h1', PUBLISHED)
+
+    cy.get('article .prose').prev('p').as('where')
+    cy.get('@where').should('contain.text', 'Come arrivarci (apre Google Maps)')
+    cy.get('@where')
+      .find('a')
+      .should('have.attr', 'target', '_blank')
+      .and('have.attr', 'rel', 'noopener')
+      .and(
+        'have.attr',
+        'href',
+        'https://www.google.com/maps/dir/?api=1&destination=41.2172608%2C13.5625165&travelmode=walking',
+      )
+
+    // A luogo's line says how one gets there, in its author's first sentence.
+    cy.visit('/luoghi')
+    cy.contains('a', PLACE).click()
+    cy.contains('h1', PLACE)
+    cy.get('article .prose').prev('p').as('where')
+    cy.get('@where').should('contain.text', 'A piedi dal lungomare.')
+    cy.contains('h2', 'Dove si trova')
+      .parent()
+      .contains('a', 'Come arrivarci')
+      .invoke('attr', 'href')
+      .then((href) => cy.get('@where').find('a').should('have.attr', 'href', href))
   })
 
   // Review PR-16 (P-11): a desktop browser has no share sheet, so «Condividi»
@@ -529,6 +564,27 @@ describe('the reader, on a phone', () => {
     })
 
     cy.contains('h1', PUBLISHED)
+  })
+
+  // Review PR-24: on a phone the line is on the card's first screen, under
+  // the strip, and wraps before its link rather than inside it.
+  it('reads how to get to a place on the card’s first screen, its link whole', () => {
+    cy.visit('/luoghi')
+    cy.contains('a', PLACE).click()
+    cy.contains('h1', PLACE)
+
+    cy.get('article .prose').prev('p').should('contain.text', 'A piedi dal lungomare.')
+    cy.get('article .prose')
+      .prev('p')
+      .find('a')
+      .should('be.visible')
+      .and(onScreen)
+      .and(($link) => {
+        // One box per run of text — «Come arrivarci» and its «(apre Google
+        // Maps)» are two — but every one of them on the same line.
+        const tops = [...$link[0]!.getClientRects()].map((rect) => Math.round(rect.top))
+        expect(new Set(tops)).to.have.property('size', 1)
+      })
   })
 
   // Review PR-10 (P-09): no strip of map over a card that has no place to

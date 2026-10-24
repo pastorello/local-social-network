@@ -17,6 +17,7 @@ import { useMapStore } from '@/stores/map'
 import TypeForm from '@/components/content/TypeForm.vue'
 import TranslateControl from '@/components/content/TranslateControl.vue'
 import VisitInfo from '@/components/content/VisitInfo.vue'
+import WhereLine from '@/components/content/WhereLine.vue'
 import { useUserStore } from '@/stores/user'
 import { useToastStore } from '@/stores/toast'
 import type { TypeConfig } from '@/definitions/typeConfigs'
@@ -60,6 +61,11 @@ const hasPlace = computed(() => props.config.mapMode === 'pins' && pins.value.le
 // card with several (the shops a dish is sold in, a figure's birthplace and
 // monument) gives each its own.
 const onlyPin = computed(() => (pins.value.length === 1 ? (pins.value[0] ?? null) : null))
+// «Dove» over the text (review PR-24) is for a card that *is* a place — a
+// type whose footprint is one fixed pin, a church or a luogo — not for one
+// that has places: a ricetta's shops or a personaggio's birthplace would make
+// the line choose one, and they keep their ways there under «Dove si trova».
+const whereLine = computed(() => (props.config.maxPoints === 1 ? onlyPin.value : null))
 const zones = computed(() => (item.value?.zones as ZoneRef[] | undefined) ?? [])
 const zoneNames = computed(() => zones.value.map((zone) => zone.name).join(' · '))
 
@@ -199,6 +205,17 @@ watch(
           :detail-route-name="config.routeNames.detail"
           :back-to="{ name: config.routeNames.list, label: config.label.toLowerCase() }"
         >
+          <!-- The pin is the original's on a translation, as the map's is
+          (translations.md T5); the sentence is the card's own, in the
+          language it is read in, as under «Dove si trova». -->
+          <template #lead>
+            <WhereLine
+              v-if="whereLine"
+              :place="whereLine"
+              :how-to-get-there="(item.how_to_get_there as string | undefined) ?? ''"
+            />
+          </template>
+
           <!-- A type's own fields are a small table of facts, not sentences
           with a bold word in front of them: "Dosi: per 8 persone" reads as a
           label and a value, so it is marked up as one. -->
