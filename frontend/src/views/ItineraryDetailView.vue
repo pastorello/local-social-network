@@ -6,6 +6,7 @@ import { useRoute, useRouter } from 'vue-router'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import CardArticle from '@/components/content/CardArticle.vue'
 import ItineraryForm from '@/components/content/ItineraryForm.vue'
+import ShareButton from '@/components/content/ShareButton.vue'
 import TranslateControl from '@/components/content/TranslateControl.vue'
 import VisitInfo from '@/components/content/VisitInfo.vue'
 import { useIsDesktop } from '@/composables/useBreakpoint'
@@ -271,6 +272,11 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
         >
           Leggi la scheda
         </RouterLink>
+        <!-- The stop itself, `?tappa=N` (review PR-16): the link opens on this
+        stop, as a reload does (I7), with the tour one level up. -->
+        <ShareButton v-if="tour.is_published" :query="{ tappa: String(step) }">
+          Condividi<span class="sr-only"> la tappa</span>
+        </ShareButton>
       </div>
 
       <!-- What the stop is, without a second tap (review PR-7): its cover if

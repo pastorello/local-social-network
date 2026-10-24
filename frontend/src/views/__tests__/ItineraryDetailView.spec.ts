@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import axios from 'axios'
 import { createPinia } from 'pinia'
@@ -304,6 +304,57 @@ describe('ItineraryDetailView (spec itinerari.md I7)', () => {
 
     expect(wrapper.get('h1').text()).toBe('Gaeta medievale')
     expect(wrapper.text()).not.toContain('Inizia il tour')
+  })
+})
+
+// Review PR-16 (P-11): the tour is shared by its own address, a stop by the
+// tour's with the stop in it — the link opens where the sender was reading.
+describe('ItineraryDetailView’s «Condividi» (review PR-16)', () => {
+  const writeText = vi.fn()
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    serve(tour)
+    writeText.mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText },
+      configurable: true,
+      writable: true,
+    })
+  })
+
+  afterEach(() => {
+    // @ts-expect-error — putting jsdom back the way it was found
+    delete navigator.clipboard
+  })
+
+  const shareButton = (wrapper: Awaited<ReturnType<typeof mountAt>>['wrapper']) =>
+    wrapper.findAll('button').find((b) => b.text().startsWith('Condividi'))
+
+  it('shares the tour from its article, without the stop', async () => {
+    const { wrapper } = await mountAt('/itinerari/t1')
+
+    await shareButton(wrapper)!.trigger('click')
+    await flushPromises()
+    expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/itinerari/t1`)
+  })
+
+  it('shares a stop as the stop, beside its way there and its card', async () => {
+    const { wrapper } = await mountAt('/itinerari/t1?tappa=2')
+
+    const share = shareButton(wrapper)!
+    expect(share.element.textContent?.trim()).toBe('Condividi la tappa')
+    expect(share.element.parentElement?.textContent).toContain('Leggi la scheda')
+    await share.trigger('click')
+    await flushPromises()
+    expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/itinerari/t1?tappa=2`)
+  })
+
+  it('offers nothing to send from a draft, which opens for nobody else', async () => {
+    serve({ ...tour, is_published: false } as Itinerario)
+
+    expect(shareButton((await mountAt('/itinerari/t1')).wrapper)).toBeUndefined()
+    expect(shareButton((await mountAt('/itinerari/t1?tappa=1')).wrapper)).toBeUndefined()
   })
 })
 

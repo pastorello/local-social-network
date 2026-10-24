@@ -118,6 +118,33 @@ describe('a guest following a curated tour', () => {
     cy.contains('button', 'Tappa successiva').invoke('outerHeight').should('be.lessThan', 56)
   })
 
+  // Review PR-16 (P-11): the tour is sent by its own address, a stop by the
+  // tour's with the stop in it, so the link opens where the sender was.
+  it('shares the tour, and a stop of it as that stop', () => {
+    cy.visit('/itinerari')
+    cy.contains('a', TOUR).click()
+    cy.contains('h1', TOUR)
+    cy.window().then((win) => {
+      Object.defineProperty(win.navigator, 'share', { value: undefined, configurable: true })
+      Object.defineProperty(win.navigator, 'clipboard', {
+        value: { writeText: cy.stub().resolves().as('copy') },
+        configurable: true,
+      })
+    })
+
+    cy.location().then(({ origin, pathname }) => {
+      cy.contains('button', 'Condividi').click()
+      cy.get('@copy').should('have.been.calledWith', `${origin}${pathname}`)
+
+      cy.contains('button', 'Inizia il tour').click()
+      cy.contains('button', 'Tappa successiva').click()
+      cy.contains('h1', FESTA)
+      cy.contains('button', 'Condividi la tappa').click()
+      cy.get('@copy').should('have.been.calledWith', `${origin}${pathname}?tappa=2`)
+    })
+    cy.contains('[role="status"]', 'Link copiato')
+  })
+
   it('reaches the tours from the menu', () => {
     cy.visit('/')
     cy.get('nav[aria-label="Principale"]').contains('a', 'Itinerari').click()

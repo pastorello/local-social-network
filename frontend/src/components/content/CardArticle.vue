@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import UserAvatar from '@/components/cards/UserAvatar.vue'
 import RichText from '@/components/content/RichText.vue'
 import LanguageSwitch from '@/components/content/LanguageSwitch.vue'
+import ShareButton from '@/components/content/ShareButton.vue'
 import { useIsDesktop } from '@/composables/useBreakpoint'
 import type { CardImage, TranslationRef } from '@/definitions/interfaces/Content'
 import type User from '@/definitions/interfaces/User'
@@ -94,20 +95,26 @@ const createdAtFormatted = computed(() =>
         {{ subtitle }}
       </p>
 
-      <p class="flex items-center gap-2 text-sm text-muted">
-        <!-- No display class: UserAvatar centres its initials with flex, and
-        the `inline-block` this used to pass replaced it, leaving the initials
-        in the circle's top-left corner (reported 2026-10-23). -->
-        <UserAvatar
-          :src="author.avatarURL"
-          :name="author.name"
-          class="h-7 w-7 shrink-0 rounded-full object-cover text-xs"
-        />
-        <span
-          ><strong class="font-semibold text-ink">{{ author.name }}</strong> ·
-          {{ createdAtFormatted }}</span
-        >
-      </p>
+      <!-- «Condividi» beside who wrote it (review PR-16): on the first screen,
+      where a reader in front of the place is, rather than after the whole
+      article. Not on a draft, which opens for nobody it could be sent to. -->
+      <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <p class="flex items-center gap-2 text-sm text-muted">
+          <!-- No display class: UserAvatar centres its initials with flex, and
+          the `inline-block` this used to pass replaced it, leaving the
+          initials in the circle's top-left corner (reported 2026-10-23). -->
+          <UserAvatar
+            :src="author.avatarURL"
+            :name="author.name"
+            class="h-7 w-7 shrink-0 rounded-full object-cover text-xs"
+          />
+          <span
+            ><strong class="font-semibold text-ink">{{ author.name }}</strong> ·
+            {{ createdAtFormatted }}</span
+          >
+        </p>
+        <ShareButton v-if="isPublished" />
+      </div>
     </header>
 
     <div v-if="cover && !isDesktop" class="-mx-4 mb-8">
