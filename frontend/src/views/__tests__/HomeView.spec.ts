@@ -103,9 +103,17 @@ const ZONES = [
   },
 ]
 
+// The archive's line under the presentation (review PR-18).
+const STATS = { published: 15, last_updated: '2026-10-22' }
+const ARCHIVE_LINE = '15 schede, l’ultima aggiornata il 22 ottobre 2026'
+
 const mockApi = (
   overlays: unknown[] = OVERLAYS,
-  { intents = INTENTS, zones = ZONES }: { intents?: unknown[]; zones?: unknown[] } = {},
+  {
+    intents = INTENTS,
+    zones = ZONES,
+    stats = STATS,
+  }: { intents?: unknown[]; zones?: unknown[]; stats?: unknown } = {},
 ) => {
   vi.mocked(axios.get).mockImplementation((url: string) => {
     if (url === '/api/map/features/') return Promise.resolve({ data: FEATURES })
@@ -113,6 +121,7 @@ const mockApi = (
     if (url === '/api/reports/map/') return Promise.resolve({ data: PINS })
     if (url === '/api/itinerari/intenti/') return Promise.resolve({ data: intents })
     if (url === '/api/map/zone/') return Promise.resolve({ data: zones })
+    if (url === '/api/content/stats/') return Promise.resolve({ data: stats })
     return Promise.resolve({ data: [] })
   })
 }
@@ -201,6 +210,66 @@ describe('HomeView (the map, spec map.md M1/M2/M3)', () => {
 
     expect(wrapper.find('a[href="/benvenuto"]').exists()).toBe(false)
     expect(wrapper.find('a[href="/cosa-fare"]').exists()).toBe(true)
+  })
+
+  // Review PR-18: that the archive is alive, said once for all of it, between
+  // what the site is and its two other ways in.
+  it('says how many cards there are and when the latest changed, under the presentation', async () => {
+    const wrapper = await mountHome()
+
+    const text = wrapper.text()
+    expect(text).toContain(ARCHIVE_LINE)
+    expect(text.indexOf(PRESENTATION)).toBeLessThan(text.indexOf(ARCHIVE_LINE))
+    expect(text.indexOf(ARCHIVE_LINE)).toBeLessThan(text.indexOf('Che cosa ti va di fare?'))
+  })
+
+  it('prints no line for an empty archive — not «0 schede»', async () => {
+    mockApi(OVERLAYS, { stats: { published: 0, last_updated: null } })
+    const wrapper = await mountHome()
+
+    expect(wrapper.text()).toContain(PRESENTATION)
+    expect(wrapper.text()).not.toMatch(/0 schede|aggiornata/)
+  })
+
+  // Between the presentation and the doors, so whichever answered second
+  // would push the other down: they are drawn together.
+  it('waits for the archive’s line as it waits for the doors', async () => {
+    let answerStats: (value: { data: unknown }) => void = () => {}
+    mockApi()
+    const answerTheRest = vi.mocked(axios.get).getMockImplementation()!
+    vi.mocked(axios.get).mockImplementation((url: string, ...rest) =>
+      url === '/api/content/stats/'
+        ? new Promise((resolve) => {
+            answerStats = resolve
+          })
+        : answerTheRest(url, ...rest),
+    )
+    const wrapper = await mountHome()
+
+    expect(wrapper.text()).toContain(PRESENTATION)
+    expect(wrapper.find('a[href="/benvenuto"]').exists()).toBe(false)
+    expect(wrapper.find('#layer-chiese').exists()).toBe(false)
+
+    answerStats({ data: STATS })
+    await flushPromises()
+
+    expect(wrapper.text()).toContain(ARCHIVE_LINE)
+    expect(wrapper.find('a[href="/benvenuto"]').exists()).toBe(true)
+    expect(wrapper.find('#layer-chiese').exists()).toBe(true)
+  })
+
+  it('opens its doors all the same when the line could not be had', async () => {
+    mockApi()
+    const answerTheRest = vi.mocked(axios.get).getMockImplementation()!
+    vi.mocked(axios.get).mockImplementation((url: string, ...rest) =>
+      url === '/api/content/stats/'
+        ? Promise.reject(new Error('offline'))
+        : answerTheRest(url, ...rest),
+    )
+    const wrapper = await mountHome()
+
+    expect(wrapper.text()).not.toContain('aggiornata')
+    expect(wrapper.find('a[href="/benvenuto"]').exists()).toBe(true)
   })
 
   // The doors sit above the layers and the list: until they are known nothing
@@ -364,7 +433,9 @@ describe('HomeView on a phone (spec/design.md D3/D4/D5)', () => {
     const sheet = wrapper.get('section[aria-label="La mappa di Gaeta"]')
     const text = sheet.text()
     expect(text.indexOf(PRESENTATION)).toBeGreaterThanOrEqual(0)
-    expect(text.indexOf(PRESENTATION)).toBeLessThan(text.indexOf('Che cosa ti va di fare?'))
+    // Review PR-18: the archive's line comes between the two.
+    expect(text.indexOf(PRESENTATION)).toBeLessThan(text.indexOf(ARCHIVE_LINE))
+    expect(text.indexOf(ARCHIVE_LINE)).toBeLessThan(text.indexOf('Che cosa ti va di fare?'))
     expect(text.indexOf('Che cosa ti va di fare?')).toBeLessThan(
       text.indexOf('Cosa c’è in una zona'),
     )

@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
+
 import MainTitle from '@/components/typography/MainTitle.vue'
+import { useArchiveLine } from '@/composables/useArchiveLine'
 import { OSM_COPYRIGHT_URL } from '@/lib/osm'
 import { useUserStore } from '@/stores/user'
 
@@ -12,6 +15,13 @@ import { useUserStore } from '@/stores/user'
 // reader is not shown a link to a page that would send them to sign in.
 const user = useUserStore().user
 const year = new Date().getFullYear()
+
+// The archive's line, under the title (review PR-18, content.md): how many
+// cards and the day the latest changed. Its line is held while it is asked
+// for, so the words under it do not jump when it arrives; with nothing in the
+// archive there is no line, and nothing held.
+const { line: archive, loaded: archiveKnown, load: loadArchive } = useArchiveLine()
+onMounted(loadArchive)
 
 // Every card type is listed here and in the menu's Esplora — two lists by
 // hand, and ProjectView.spec.ts fails when a type is missing from this one.
@@ -32,6 +42,7 @@ const heading = 'mb-3 text-xs font-semibold tracking-[0.12em] text-muted upperca
 <template>
   <article class="mx-auto w-full max-w-3xl pt-2">
     <MainTitle>Il progetto</MainTitle>
+    <p v-if="archive || !archiveKnown" class="min-h-5 text-sm text-muted">{{ archive }}</p>
     <p class="mt-2 max-w-[60ch] text-reading text-ink">
       <span class="font-semibold"
         ><span class="text-terracotta">V</span>ivere

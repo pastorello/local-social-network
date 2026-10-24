@@ -16,6 +16,7 @@ import SearchBar from '@/components/forms/SearchBar.vue'
 import { useUserStore } from '@/stores/user'
 import { useMapStore } from '@/stores/map'
 import type { ReportStatus } from '@/definitions/interfaces/Report'
+import { useArchiveLine } from '@/composables/useArchiveLine'
 import { useIsDesktop } from '@/composables/useBreakpoint'
 import { useDoors } from '@/composables/useDoors'
 import { PRESENTATION } from '@/definitions/copy'
@@ -71,6 +72,13 @@ const featureCount = (key: string) => mapStore.featureCount(key)
 // rest, and arriving after it would push down what the reader had started on.
 const { withTours, zonesWithPlaces, loaded: doorsKnown, load: loadDoors } = useDoors()
 
+// Between the presentation and the doors, the archive's own line — how many
+// cards and the day the latest changed (review PR-18, content.md). It comes
+// from the API too, so it waits for the doors and they for it: whichever came
+// second would push the other down.
+const { line: archive, loaded: archiveKnown, load: loadArchive } = useArchiveLine()
+const known = computed(() => doorsKnown.value && archiveKnown.value)
+
 // The reports are for people with an account (decided 2026-10-22, spec
 // reports-and-polls.md R1). A reader's home is the places and nothing else —
 // no reports section, no reports layer — and its wide column is two blocks:
@@ -114,6 +122,7 @@ const onReportSaved = () => {
 onMounted(() => {
   mapStore.load()
   loadDoors()
+  loadArchive()
 })
 </script>
 
@@ -140,7 +149,8 @@ onMounted(() => {
     <MapSheet class="pointer-events-auto" title="La mappa di Gaeta" :force-peek="chromeOpen">
       <p class="text-reading text-ink">{{ PRESENTATION }}</p>
 
-      <template v-if="doorsKnown">
+      <template v-if="known">
+        <p v-if="archive" class="mt-2 text-sm text-muted">{{ archive }}</p>
         <HomeShortcuts :with-tours="withTours" :zones="zonesWithPlaces" class="mt-3" />
 
         <div class="mt-5 flex items-baseline justify-between">
@@ -154,7 +164,7 @@ onMounted(() => {
       </template>
 
       <div
-        v-if="doorsKnown && isAuthenticated && activeLayers[REPORTS_LAYER_KEY]"
+        v-if="known && isAuthenticated && activeLayers[REPORTS_LAYER_KEY]"
         class="mt-6 border-t border-hairline pt-4"
       >
         <h2
@@ -207,7 +217,8 @@ onMounted(() => {
         <MainTitle>La mappa di Gaeta</MainTitle>
         <p class="text-reading text-ink">{{ PRESENTATION }}</p>
 
-        <template v-if="doorsKnown">
+        <template v-if="known">
+          <p v-if="archive" class="mt-2 text-sm text-muted">{{ archive }}</p>
           <HomeShortcuts :with-tours="withTours" :zones="zonesWithPlaces" class="mt-4" />
 
           <LayerToggles
@@ -223,7 +234,7 @@ onMounted(() => {
       </PanelBox>
     </div>
 
-    <div v-if="doorsKnown && visibleFeatures.length">
+    <div v-if="known && visibleFeatures.length">
       <PanelBox>
         <h2 class="mb-1 font-display text-title">Luoghi sulla mappa</h2>
         <p class="mb-3 text-xs text-muted">Gli stessi luoghi disegnati sulla mappa.</p>
@@ -231,7 +242,7 @@ onMounted(() => {
       </PanelBox>
     </div>
 
-    <div v-if="doorsKnown && isAuthenticated && activeLayers[REPORTS_LAYER_KEY]">
+    <div v-if="known && isAuthenticated && activeLayers[REPORTS_LAYER_KEY]">
       <PanelBox>
         <h2
           ref="reportsHeading"
