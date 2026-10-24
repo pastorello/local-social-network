@@ -94,7 +94,7 @@ describe('matchPlaces', () => {
     expect(names('serapo')).toEqual(['Serapo'])
     expect(names('piazza')).toEqual(['Piazza XIX Maggio'])
     expect(names('mag')).toEqual(['Piazza XIX Maggio'])
-    // «porto» is no name of the author's: it begins a zone's.
+    // «porto» is no name in this list: it begins a zone's.
     expect(names('porto')).toEqual(['Porto Salvo'])
   })
 

@@ -443,6 +443,21 @@ describe('HomeView on a phone (spec/design.md D3/D4/D5)', () => {
     expect(sheet.get('h2').text()).toBe('Luoghi sulla mappa')
   })
 
+  // Review PR-25: the sheet counts places, as its heading says; «schede» is
+  // the archive line's word, a few lines above.
+  it('counts what it lists as places, not as cards', async () => {
+    const wrapper = await mountHome()
+    const header = () =>
+      wrapper.get('section[aria-label="La mappa di Gaeta"] h2').element.parentElement!
+
+    expect(header().textContent).toContain('2 luoghi')
+    expect(header().textContent).not.toContain('schede')
+
+    useMapStore().activeLayers.feste = false
+    await flushPromises()
+    expect(header().textContent).toContain('1 luogo')
+  })
+
   it('offers no door in the sheet when there is nothing behind it', async () => {
     mockApi(OVERLAYS, { intents: [], zones: [] })
     const wrapper = await mountHome()

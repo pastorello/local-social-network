@@ -63,14 +63,15 @@ export const tintOf = (parent: Parent | null): string => {
 
 // Where the reader is, for the menu (review PR-23, N-02): the item above the
 // page they are on, which the pill marks as current. Any card type, its list
-// and its form are under *Esplora*; a tour under *Itinerari*. The home is
-// *Mappa*'s own page, and so is a report, which is a point on it. Pages under
-// none of them — the welcome page, the account's — mark nothing.
+// and its form are under *Esplora*; a tour under *Itinerari*; a report under
+// *Mappa*, as a point on the collaborator's map. Pages under none of them —
+// the home and the welcome page (decided by the author on 2026-10-23, review
+// PR-25), the account's — mark nothing.
 export type Section = 'mappa' | 'esplora' | 'itinerari' | 'cosa-fare' | 'progetto'
 
 export const sectionOf = (route: Pick<Where, 'name'>): Section | null => {
   const name = String(route.name)
-  if (name === 'home' || name === 'reportdetail') return 'mappa'
+  if (name === 'reportdetail') return 'mappa'
   if (name === 'cosafare') return 'cosa-fare'
   if (name === 'progetto') return 'progetto'
   const list = LISTS.find((candidate) => [candidate.name, ...candidate.children].includes(name))

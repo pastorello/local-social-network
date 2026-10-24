@@ -491,10 +491,11 @@ describe('MapStage places the map’s controls (review PR-15)', () => {
     expect(credit()).toBe('topright')
     expect(zoom()).toBe('topleft')
 
-    // The strip above a card keeps it where it was: PR-25 moves it.
+    // Review PR-25: in the strip above a card it is bottom-left, across from
+    // «Allarga la mappa».
     await router.push('/ricette/r1')
     await flushPromises()
-    expect(credit()).toBe('bottomright')
+    expect(credit()).toBe('bottomleft')
 
     await router.push('/ricette/r1?mappa=1')
     await flushPromises()

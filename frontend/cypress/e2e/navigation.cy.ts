@@ -12,7 +12,7 @@ const CLOSE = 'button[aria-label="Chiudi e torna alla mappa"]'
 const PANEL = 'main section[tabindex="-1"]'
 // The panel's eyebrow (review PR-23), whose first link is up. Its words are
 // set in capitals by the stylesheet, so they are matched without case.
-const WHERE = 'nav[aria-label="Dove sei"]'
+const WHERE = 'nav[aria-label="Percorso"]'
 const up = (label: string) => cy.get(WHERE).contains('a', label, { matchCase: false })
 const CARD_PATH = /^\/chiese\/[0-9a-f-]+$/
 
@@ -264,6 +264,19 @@ describe('where the reader is (review PR-23)', () => {
     cy.get(WHERE).should('contain.text', 'Porto Salvo')
     current().should('have.length', 1).and('contain.text', 'Cosa fare')
     cy.title().should('eq', 'Porto Salvo · Cosa fare · Vivere Gaeta')
+  })
+
+  // Review PR-25 (decided by the author on 2026-10-23): the home and the
+  // welcome page are under no item — not even *Mappa*, nor the wordmark.
+  it('on the home and the welcome page: nothing current', () => {
+    cy.visit('/')
+    cy.contains('h1', 'La mappa di Gaeta')
+    cy.get('nav[aria-label="Principale"]').contains('a', 'Mappa')
+    current().should('not.exist')
+
+    cy.visit('/benvenuto')
+    cy.contains('h1', 'Che cosa ti va di fare?')
+    current().should('not.exist')
   })
 
   it('on Il progetto: no eyebrow, nothing above it but the map, Il progetto current', () => {

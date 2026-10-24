@@ -195,9 +195,9 @@ describe('the menu (spec/design.md D14)', () => {
 
 // Review PR-23 (N-02): the item above the page the reader is on is current —
 // to a screen reader, and to the eye by an underline as well as the tint
-// (WCAG 1.4.1). The home and the sign-in page are what their own links lead
-// to — the wordmark's too, on the home — and the welcome page is under no
-// item.
+// (WCAG 1.4.1). The sign-in page is what its own link leads to. The home and
+// the welcome page mark nothing, not even the wordmark or *Mappa* on the home
+// they lead to (decided by the author on 2026-10-23, review PR-25).
 describe('the menu’s current item (review PR-23)', () => {
   afterEach(() => {
     document.body.innerHTML = ''
@@ -206,7 +206,7 @@ describe('the menu’s current item (review PR-23)', () => {
   })
 
   it.each([
-    ['/', ['Vivere Gaeta', 'Mappa']],
+    ['/', []],
     ['/benvenuto', []],
     ['/luoghi', ['Esplora']],
     ['/chiese/c1', ['Esplora']],
@@ -231,6 +231,19 @@ describe('the menu’s current item (review PR-23)', () => {
     const card = await mountHeader(false, null, '/chiese/c1')
     expect(card.get('button[aria-haspopup="menu"] span').classes()).toContain('underline')
   })
+
+  it.each(['/', '/benvenuto'])(
+    'marks nothing on %s inside the phone’s Menu either',
+    async (path) => {
+      stubViewport(false)
+      const wrapper = await mountHeader(false, null, path)
+      await wrapper.get('button[aria-label="Menu"]').trigger('click')
+
+      expect(wrapper.findAll('a[href="/"]').map((link) => link.text())).toContain('Mappa')
+      expect(currentItems(wrapper)).toEqual([])
+      expect(wrapper.find('.underline').exists()).toBe(false)
+    },
+  )
 
   it('is marked inside the phone’s Menu too', async () => {
     stubViewport(false)

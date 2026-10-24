@@ -64,6 +64,13 @@ const statusOptions = (Object.keys(STATUS_META) as ReportStatus[]).map((status) 
 
 const featureCount = (key: string) => mapStore.featureCount(key)
 
+// The sheet counts places, the word its heading uses; «schede» is the archive
+// line's word, a few lines above (decided by the author on 2026-10-24, review
+// PR-25).
+const placesCount = computed(() =>
+  visibleFeatures.value.length === 1 ? '1 luogo' : `${visibleFeatures.value.length} luoghi`,
+)
+
 // The home says what the site is and opens its two other ways in (review of
 // 2026-10-22, P-02/M-02; design.md D3's note of 2026-10-23): a reader from a
 // search engine never sees /benvenuto. The presentation is static and paints
@@ -155,7 +162,7 @@ onMounted(() => {
 
         <div class="mt-5 flex items-baseline justify-between">
           <h2 class="font-display text-title">Luoghi sulla mappa</h2>
-          <span class="text-xs text-muted">{{ visibleFeatures.length }} schede</span>
+          <span class="text-xs text-muted">{{ placesCount }}</span>
         </div>
         <PlacesList v-if="visibleFeatures.length" :features="visibleFeatures" />
         <p v-else class="py-6 text-sm text-muted">

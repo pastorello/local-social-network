@@ -458,7 +458,9 @@ What the review left to the build, decided here:
 - *Left to the author:* on the phone's home the line («22 schede») and the
   sheet's own count of the map («Luoghi sulla mappa · 16 schede») are two
   numbers in *schede* on one screen — the archive, and what the map draws.
-  They are left as they are.
+  They are left as they are. *(Decided 2026-10-24, confirmed by the author —
+  review PR-25: the sheet counts places, «Luoghi sulla mappa · 16 luoghi»;
+  «schede» stays the line's word.)*
 
 ## Seeding the archive from public sources — 2026-09-11
 

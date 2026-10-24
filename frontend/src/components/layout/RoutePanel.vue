@@ -194,10 +194,12 @@ const pill =
       the chosen zone). Not a breadcrumb: the archive is two deep. In the
       colour of the type's layer (D7, a token — D8); the up link carries its
       chevron and the other links an underline, so the colour is never the
-      only sign of a link (WCAG 1.4.1). Every link is a thumb's 44px. -->
+      only sign of a link (WCAG 1.4.1). Every link is a thumb's 44px. Named
+      «Percorso» (review PR-25, 2026-10-24): «Dove sei?» is the question the
+      field on «Cosa si può fare qui» asks, about Gaeta, not about the site. -->
       <nav
         v-if="parent || steps.length"
-        aria-label="Dove sei"
+        aria-label="Percorso"
         class="flex min-w-0 flex-1 flex-wrap items-center text-xs font-semibold tracking-[0.12em] uppercase"
         :style="{ color: tint }"
       >
