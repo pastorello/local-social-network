@@ -1,6 +1,6 @@
 # Technical debt register
 
-> **What is open, and nothing else.** Fifty-two items have been recorded
+> **What is open, and nothing else.** Fifty-three items have been recorded
 > since the first audit on 2026-08-19; fifty are paid and live, with their
 > evidence, in [tech-debt-archive.md](./tech-debt-archive.md). Read that file
 > for how a defect got in and what proved the fix. Read **this** one before
@@ -14,7 +14,7 @@
 > coverage gaps nobody had re-walked, half of which had been paid in passing.
 > All three are corrected in the archive rather than deleted.
 >
-> **Adding an item:** next number is **TD-53**, continuous across both files.
+> **Adding an item:** next number is **TD-54**, continuous across both files.
 > It goes here; it moves to the archive when it is paid, with what proved it.
 
 ## The gates — re-run 2026-10-15
@@ -48,6 +48,29 @@ day one, and TD-47 — a whole status nothing exercised under a green suite,
 paid 2026-10-12 — is why it is still here.
 
 ---
+
+## TD-53 · `/cosa-fare?zona=` shifts its layout on a phone — CLS 0.204, twice the budget — open
+
+Found 2026-10-24 while building «Dove sei?» (review PR-20, #138), and measured
+again on `main` @ `74882a7` the same evening, on an isolated stack (its own
+SQLite, `seed_e2e`, the API on :8128, `vite preview` on :4328) with
+`lighthouserc.yml`'s own settings: **CLS 0.204 in all three runs** on
+`/cosa-fare?zona=porto-salvo`, on Lighthouse's simulated phone. The budget is
+0.1. The gate never saw it: it measures `/cosa-fare` without a zone (0.024),
+and a zone's page is where both «Dove sei?» and a chip lead.
+
+**One shift, in the frame the page's data lands**, read off a
+`PerformanceObserver` on the same build — Lighthouse's audit names only the
+node it moved most:
+
+- the closing note («Questo è quello che c'è in archivio…») is pushed off the
+  screen by the zone's rows, which arrive above it — most of the score;
+- the row of zone chips is empty until the zones come, then 36 px tall;
+- «A Gaeta» is drawn over the title until the zones say which zone the address
+  names, then taken away, and the title and the line under it rise 16 px.
+
+The same single shift with the network and the CPU throttled (0.222), so it is
+not an artefact of a local API answering in milliseconds.
 
 ## TD-08 · `IssueReport.status` has no index — open, deliberately
 
