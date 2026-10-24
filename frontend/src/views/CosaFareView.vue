@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import axios from 'axios'
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useRoute, type RouteLocationRaw } from 'vue-router'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter, type RouteLocationRaw } from 'vue-router'
 
+import WhereAreYouField from '@/components/forms/WhereAreYouField.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
 import { useIsDesktop } from '@/composables/useBreakpoint'
 import { usePageTitle } from '@/composables/usePageTitle'
 import { usePanelTrail } from '@/composables/usePanelTrail'
 import type { Genre } from '@/definitions/interfaces/Luogo'
 import type { Intent } from '@/definitions/interfaces/Itinerario'
-import type { MapCardFeature, Zone } from '@/definitions/interfaces/MapData'
+import type { MapCardFeature, Zone, ZoneAlias } from '@/definitions/interfaces/MapData'
 import { STATE_SENTENCE } from '@/lib/availability'
 import {
   ELSEWHERE,
@@ -29,7 +30,8 @@ import { useMapStore } from '@/stores/map'
 // Gaeta (D3); alphabetical, and saying so (D5). It composes the map's own
 // payload with six short lists; it never ranks, and it never says a place is
 // open (ADR-0008). The zone's own blocks come first and the dishes last
-// (2026-10-23, review PR-4).
+// (2026-10-23, review PR-4). Above the chips, «Dove sei?» picks the zone from
+// the name of where the guest stands (2026-10-24, review PR-20).
 
 interface Row {
   id: string
@@ -46,10 +48,12 @@ interface Page<T> {
 }
 
 const route = useRoute()
+const router = useRouter()
 const mapStore = useMapStore()
 const { isDesktop } = useIsDesktop()
 
 const zones = ref<Zone[]>([])
+const aliases = ref<ZoneAlias[]>([])
 const intents = ref<Intent[]>([])
 const genres = ref<Genre[]>([])
 const tours = ref<TourRow[]>([])
@@ -69,6 +73,7 @@ onMounted(async () => {
     axios.get<Page<TourRow>>('/api/itinerari/', ALL),
     axios.get<Page<FestaRow>>('/api/feste/', ALL),
     axios.get<Page<Row>>('/api/ricette/', ALL),
+    axios.get<ZoneAlias[]>('/api/map/zone/alias/'),
   ])
   const value = <T,>(result: PromiseSettledResult<{ data: T }>, fallback: T): T =>
     result.status === 'fulfilled' ? result.value.data : ((failed.value = true), fallback)
@@ -78,6 +83,7 @@ onMounted(async () => {
   tours.value = value(results[3], { results: [] }).results
   feste.value = value(results[4], { results: [] }).results
   ricette.value = value(results[5], { results: [] }).results.slice().sort(byTitle)
+  aliases.value = value(results[6], [])
   loaded.value = true
 })
 
@@ -292,6 +298,28 @@ const collapsed = computed(() => !isDesktop.value && !!selected.value && !choosi
 const shownChips = computed(() =>
   collapsed.value ? chips.value.filter((chip) => chip.slug === selected.value?.slug) : chips.value,
 )
+
+// «Dove sei?» chooses a zone the way a chip does: the address is the choice
+// (review PR-20). On a phone the question then steps aside with the chips,
+// so the field it was asked in folds away under the reader's focus — which
+// goes to «Cambia zona», the control that brings it back, as the panel's own
+// controls hand focus on when they disappear.
+// Until the zones have come, the address is all there is to go on: a page
+// opened on ?zona= starts with the question put away, rather than drawing it
+// and folding it a moment later under the reader's eyes (a layout shift
+// Lighthouse measured at 0.18 on a phone). A zone the archive does not have
+// unfolds it again, since there is no «Cambia zona» then.
+const asking = computed(() =>
+  loaded.value ? !collapsed.value : isDesktop.value || choosing.value || !route.query.zona,
+)
+const changeZone = ref<HTMLButtonElement | null>(null)
+const chooseZone = async (slug: string) => {
+  choosing.value = false
+  await router.push({ query: { zona: slug } })
+  if (isDesktop.value) return
+  await nextTick()
+  changeZone.value?.focus()
+}
 </script>
 
 <template>
@@ -311,6 +339,18 @@ const shownChips = computed(() =>
           : 'Luoghi, itinerari e feste, zona per zona.'
       }}
     </p>
+
+    <!-- Above the chips, and the first thing on a phone too (review PR-20):
+    the guest who does not know the zones' names knows where they stand. -->
+    <WhereAreYouField
+      class="mt-6"
+      :aliases="aliases"
+      :zones="zones"
+      :current="selected?.slug ?? null"
+      :folded="!asking"
+      ask-id="dove-sei"
+      @choose="chooseZone"
+    />
 
     <nav aria-label="Zone" class="mt-6">
       <!-- On a phone the open row runs to the panel's edges, so it reads as a
@@ -348,8 +388,9 @@ const shownChips = computed(() =>
         </ul>
         <button
           v-if="!isDesktop && selected"
+          ref="changeZone"
           type="button"
-          aria-controls="zone-chips"
+          aria-controls="dove-sei zone-chips"
           :aria-expanded="!collapsed"
           class="inline-flex h-10 flex-none cursor-pointer items-center gap-1.5 rounded-full px-3 text-sm font-semibold text-sea underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
           @click="choosing = !choosing"

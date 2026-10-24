@@ -253,3 +253,34 @@ class Zona(models.Model):
                 f'longitudine {lng}, latitudine {lat}. Il GeoJSON vuole l’ordine '
                 f'[longitudine, latitudine].'
             )})
+
+
+class ZonaAlias(models.Model):
+    """A name a guest uses for where they stand — *«il castello»*, *«Piazza XIX
+    Maggio»* — and the zone it is in (review of 2026-10-22, decision 3: «Dove
+    sei?» on «Cosa si può fare qui», before geolocation). A dictionary the
+    author keeps here, not a geocoder: the page asks no service and no browser
+    permission, and a reader's position is never known.
+
+    The zone is the one the place is *in*, by the zones as drawn — checked
+    against the outlines, never from memory. A name that two zones share (a
+    street on a border, a word for two places) does not belong here: one wrong
+    name sends a guest to the wrong side of town."""
+
+    name = models.CharField(
+        'nome', max_length=80, unique=True,
+        help_text=(
+            'Come lo direbbe un ospite, con l’articolo se ce l’ha: «il castello», '
+            '«Piazza XIX Maggio». La ricerca ignora articoli, accenti e maiuscole.'
+        ),
+    )
+    zona = models.ForeignKey(Zona, on_delete=models.PROTECT, related_name='aliases', verbose_name='zona')
+    position = models.PositiveIntegerField('posizione', default=0)
+
+    class Meta:
+        ordering = ('position', 'name')
+        verbose_name = 'nome di un posto'
+        verbose_name_plural = 'nomi dei posti («Dove sei?»)'
+
+    def __str__(self):
+        return f'{self.name} → {self.zona.name}'

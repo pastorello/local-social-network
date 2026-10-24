@@ -270,6 +270,25 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
     check('/cosa-fare?zona=porto-salvo (phone)')
   })
 
+  // Review PR-20: «Dove sei?» measured with its list open, in both layouts —
+  // a listbox the gate never saw open is one it never measured.
+  it('Cosa si può fare qui, with «Dove sei?» open', () => {
+    cy.viewport(1280, 800)
+    cy.visit('/cosa-fare')
+    cy.get('nav[aria-label="Zone"]').contains('a', 'Porto Salvo')
+    cy.get('main input[role="combobox"]').type('ca')
+    cy.get('main [role="listbox"]').should('be.visible')
+    cy.get('main [role="option"]').should('have.length.at.least', 2)
+    check('/cosa-fare, «Dove sei?» open')
+
+    cy.viewport(390, 844)
+    cy.visit('/cosa-fare')
+    cy.get('nav[aria-label="Zone"]').contains('a', 'Porto Salvo')
+    cy.get('main input[role="combobox"]').type('{downarrow}')
+    cy.get('main [role="listbox"]').should('be.visible')
+    check('/cosa-fare, «Dove sei?» open (phone)')
+  })
+
   it('Cosa si può fare qui: the zones are links a keyboard reaches and follows', () => {
     cy.viewport(1280, 800)
     cy.visit('/cosa-fare')

@@ -125,11 +125,17 @@ const ANSWERS: Record<string, unknown> = {
       { id: 'r1', title: 'Tiella' },
     ],
   },
+  '/api/map/zone/alias/': [
+    { name: 'il castello', zone: 'gaeta-medievale' },
+    { name: 'la Cattedrale', zone: 'gaeta-medievale' },
+  ],
 }
 
 const mountAt = async (
   query: Record<string, string> = {},
   trail = shallowRef<Trail | null>(null),
+  // In the document, for what focus and visibility need.
+  attached = false,
 ) => {
   setActivePinia(createPinia())
   const store = useMapStore()
@@ -148,6 +154,7 @@ const mountAt = async (
   // What the panel would draw over the page (review PR-23).
   const wrapper = mount(CosaFareView, {
     global: { plugins: [router], provide: { [PANEL_TRAIL as symbol]: trail } },
+    ...(attached ? { attachTo: document.body } : {}),
   })
   await flushPromises()
   return { wrapper, store, router, trail }
@@ -294,14 +301,14 @@ describe('CosaFareView on a phone (review PR-4, M-07)', () => {
     expect(wrapper.text()).not.toContain('gli itinerari che ci passano')
     expect(chipNames(wrapper)).toHaveLength(4)
     expect(wrapper.find('#zone-chips').classes()).toContain('overflow-x-auto')
-    expect(wrapper.find('button[aria-controls="zone-chips"]').exists()).toBe(false)
+    expect(wrapper.find('button[aria-controls~="zone-chips"]').exists()).toBe(false)
   })
 
   it('puts the other zones away once one is chosen, and «Cambia zona» brings them back', async () => {
     const { wrapper, router } = await mountAt({ zona: 'serapo' })
 
     expect(chipNames(wrapper)).toEqual(['Serapo 3'])
-    const toggle = wrapper.find('button[aria-controls="zone-chips"]')
+    const toggle = wrapper.find('button[aria-controls~="zone-chips"]')
     expect(toggle.text()).toBe('Cambia zona')
     expect(toggle.attributes('aria-expanded')).toBe('false')
 
@@ -314,6 +321,46 @@ describe('CosaFareView on a phone (review PR-4, M-07)', () => {
     await flushPromises()
     expect(chipNames(wrapper)).toEqual(['Gaeta Medievale 1'])
     expect(router.currentRoute.value.query.zona).toBe('gaeta-medievale')
+  })
+
+  // Review PR-20: «Dove sei?» is a way of choosing, so it steps aside with
+  // the chips — and the line saying what it chose stays.
+  it('puts «Dove sei?» away with the chips, and hands focus to «Cambia zona»', async () => {
+    const { wrapper, router } = await mountAt({}, undefined, true)
+    const field = wrapper.get<HTMLInputElement>('input[role="combobox"]')
+    expect(field.isVisible()).toBe(true)
+
+    field.element.focus()
+    await field.setValue('castello')
+    await field.trigger('keydown', { key: 'Enter' })
+    await flushPromises()
+
+    expect(router.currentRoute.value.query).toEqual({ zona: 'gaeta-medievale' })
+    expect(field.isVisible()).toBe(false)
+    expect(wrapper.text()).toContain('Sei al castello: ti mostriamo Gaeta Medievale.')
+    const toggle = wrapper.get('button[aria-controls~="zone-chips"]')
+    expect(document.activeElement).toBe(toggle.element)
+    expect(toggle.attributes('aria-controls')!.split(' ')).toContain('dove-sei')
+
+    await toggle.trigger('click')
+    expect(field.isVisible()).toBe(true)
+    wrapper.unmount()
+  })
+
+  it('opens a zone’s address with the question already put away, not folding it later', async () => {
+    // The zones never come: what is drawn first is all there is.
+    vi.mocked(axios.get).mockImplementation(() => new Promise(() => {}))
+    const { wrapper } = await mountAt({ zona: 'serapo' }, undefined, true)
+
+    expect(wrapper.get('input[role="combobox"]').isVisible()).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('asks again on the address of a zone the archive does not have', async () => {
+    const { wrapper } = await mountAt({ zona: 'atlantide' }, undefined, true)
+
+    expect(wrapper.get('input[role="combobox"]').isVisible()).toBe(true)
+    wrapper.unmount()
   })
 })
 
@@ -338,5 +385,50 @@ describe('CosaFareView — eyebrow and title (review PR-23)', () => {
 
     expect(trail.value).toBeNull()
     expect(wrapper.text()).toContain('A Gaeta')
+  })
+})
+
+// Review PR-20: «Dove sei?» picks the zone from the name of where the guest
+// stands, as a chip would — the address is the choice.
+describe('CosaFareView — «Dove sei?» (review PR-20)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(axios.get).mockImplementation(async (url: string) => ({ data: ANSWERS[url] }))
+  })
+
+  it('asks above the zones, and asks no service but the archive', async () => {
+    const { wrapper } = await mountAt()
+
+    const field = wrapper.get('input[role="combobox"]')
+    const chips = wrapper.get('nav[aria-label="Zone"]')
+    expect(
+      field.element.compareDocumentPosition(chips.element) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    const asked = vi.mocked(axios.get).mock.calls.map(([url]) => url)
+    expect(asked).toContain('/api/map/zone/alias/')
+    expect(asked.every((url) => url.startsWith('/api/'))).toBe(true)
+  })
+
+  it('shows the zone of the place named, and says so', async () => {
+    const { wrapper, router } = await mountAt()
+
+    await wrapper.get('input[role="combobox"]').setValue('castello')
+    await wrapper.get('input[role="combobox"]').trigger('keydown', { key: 'Enter' })
+    await flushPromises()
+
+    expect(router.currentRoute.value.query).toEqual({ zona: 'gaeta-medievale' })
+    expect(wrapper.text()).toContain('Sei al castello: ti mostriamo Gaeta Medievale.')
+    expect(wrapper.text()).toContain('Duomo')
+  })
+
+  it('leaves the zone alone for a name it does not know', async () => {
+    const { wrapper, router } = await mountAt({ zona: 'serapo' })
+
+    await wrapper.get('input[role="combobox"]').setValue('xyz')
+    await wrapper.get('input[role="combobox"]').trigger('keydown', { key: 'Enter' })
+    await flushPromises()
+
+    expect(router.currentRoute.value.query).toEqual({ zona: 'serapo' })
+    expect(wrapper.text()).toContain('Non conosciamo questo posto: scegli una zona qui sotto.')
   })
 })

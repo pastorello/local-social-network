@@ -3,7 +3,7 @@ from django.contrib import admin
 
 from common.images import ImageRejected, validate_image
 
-from .models import Overlay, Zona
+from .models import Overlay, Zona, ZonaAlias
 
 
 class OverlayAdminForm(forms.ModelForm):
@@ -64,3 +64,16 @@ class ZonaAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug', 'position')
     list_editable = ('position',)
     prepopulated_fields = {'slug': ('name',)}
+
+
+@admin.register(ZonaAlias)
+class ZonaAliasAdmin(admin.ModelAdmin):
+    """The names «Dove sei?» knows (review of 2026-10-22, decision 3), each
+    with the zone the place is in. Before adding one, find the place on the map
+    and check which zone's outline holds it: a street on a border, or a word
+    for two places, sends half the guests who type it to the wrong zone."""
+
+    list_display = ('name', 'zona', 'position')
+    list_editable = ('position',)
+    list_filter = ('zona',)
+    search_fields = ('name',)
