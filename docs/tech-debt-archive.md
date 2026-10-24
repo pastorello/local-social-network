@@ -1605,6 +1605,96 @@ one met at 7.0 is an outage.
 >   500 from the ORM. Now a 400 on that field; ids as numbers or digit
 >   strings, as the SPA sends them.
 
+### TD-53 · `/cosa-fare?zona=` shifted its layout on a phone, CLS 0.204 — **FIXED 2026-10-24** ✔
+
+> Found 2026-10-24 while building «Dove sei?» (review PR-20, #138), and
+> measured on `main` @ `74882a7` the same evening on an isolated stack (its own
+> SQLite, `seed_e2e`, the API on :8128, `vite preview` on :4328) with
+> `lighthouserc.yml`'s own settings: **CLS 0.204 in all three runs** on
+> `/cosa-fare?zona=porto-salvo`, on Lighthouse's simulated phone, against a 0.1
+> budget. The gate never saw it: it measured `/cosa-fare` without a zone
+> (0.024), and a zone's page is where both «Dove sei?» and a chip lead. Every
+> zone failed, not only the full one: 0.112 on Serapo, 0.106 on an empty zone.
+>
+> **One shift, in the frame the page's data landed**, read off a
+> `PerformanceObserver` on the same build — Lighthouse's audit names only the
+> node it moved most, the closing note:
+>
+> - the closing note («Questo è quello che c'è in archivio…») was pushed off the
+>   screen by the zone's rows, which arrive above it — most of the score;
+> - the row of zone chips was empty until the zones came, then 36 px tall;
+> - «A Gaeta» was drawn over the title until the zones said which zone the
+>   address names, then taken away, and the title and the line under it rose
+>   16 px.
+>
+> The same single shift with the network and the CPU throttled (0.222), so not
+> an artefact of a local API answering in milliseconds. Behind it, a fault no
+> metric showed: the rows come from two answers — the page's six lists and the
+> map's features, which `MapStage` asks for — and were drawn as each came. On a
+> network where the lists won, the tours and the dishes were drawn and then
+> pushed down by the zone's places, or a zone with no tour said for a moment
+> that the archive held nothing there.
+>
+> **Fixed without taking anything off the page** (`views/CosaFareView.vue`):
+>
+> - **A zone's rows land in one piece, and the note with them.**
+>   `stores/map.ts` gained `featuresLoaded` — set when the features have come
+>   back once, answered or not, since `loaded` says only that they were asked
+>   for — and a zone's rows are drawn once both the page's lists and the
+>   features are in, the closing note with them. The note is what the rows
+>   pushed; arriving together, nothing moves.
+> - **The chips' row is a row tall before the zones come** (`min-h-10`):
+>   exactly what a phone draws, open or put away. On a wide screen, where they
+>   wrap, it reserves the first row only (0.001 there).
+> - **The address is the chosen zone from the first frame**: «A Gaeta» is left
+>   out while `?zona=` is there and the zones have not come — the trust in the
+>   address «Dove sei?»'s fold already had (PR-20) — and comes back only if the
+>   zones say the archive has no such zone.
+>
+> **The first attempt failed the gate, and that is the lesson worth keeping.**
+> It held the note back on every page, and `/cosa-fare`'s LCP went from 1.86 to
+> 3.26 s: the note is the largest text on a phone's first screen, so it *is*
+> the paint Lighthouse times the page by, and held back it was timed by the
+> API's answers. Without a zone the note depends on no answer, so it — and
+> «Scegli una zona…» — is drawn at once there, as before.
+>
+> **Proved** on the gate's own terms, medians of three runs on a Mac with the
+> tiles blocked, the same build of `main` before and this commit after:
+>
+> | Page | CLS before | CLS after | LCP before | LCP after |
+> |---|---|---|---|---|
+> | `/benvenuto` | 0.035 | 0.035 | 1.86 s | 1.86 s |
+> | `/` | 0.000 | 0.000 | 1.85 s | 1.86 s |
+> | `/cosa-fare` | 0.024 | 0.002 | 1.86 s | 1.86 s |
+> | `/cosa-fare?zona=porto-salvo` | **0.204** | 0.000 | 1.87 s | 1.85 s |
+> | `?zona=serapo`, not in the gate | **0.112** | 0.000 | 1.92 s | **3.28 s** |
+> | `?zona=monte-orlando` (empty), not in the gate | **0.106** | 0.000 | 1.85 s | **3.28 s** |
+>
+> TBT medians 8–24 ms before and 10–36 ms after, `benchmarkIndex` 2,900–3,100
+> throughout. With every source listed by a `PerformanceObserver` on a throttled
+> load, the zone pages keep only the web font's swap (0.0003–0.0004).
+>
+> **The gate measures it now**: `lighthouserc.yml` has a fourth URL,
+> `/cosa-fare?zona=porto-salvo`, the zone `seed_e2e` fills most. Unit tests pin
+> the three moves (`CosaFareView.spec.ts`, `map.spec.ts`) and fail on `main`'s
+> view.
+>
+> **What it cost, opened as TD-54**: on a zone whose rows are short — every
+> zone in production on 2026-10-24, where none holds a published place — the
+> largest text on the first screen is now the zone's own answer, so LCP is when
+> it comes: 3.28 s, the last two rows above.
+> On `main` the note painted in the first frame took LCP, and then jumped — red
+> on CLS there, red on LCP here. Nothing reaches the reader later than before;
+> it no longer moves when it does. Served under the SPA's own origin, as
+> production serves the API, the same two pages measured 3.16 and 3.18 s: the
+> second origin of CI and of this stack is about 0.1 s of it.
+>
+> **Not taken:** on a phone narrower than Lighthouse's 412 px, a long zone
+> name wraps the panel's eyebrow when it comes — 0.037 at 360 px for «Piana di
+> Sant'Agostino», the panel's body dropping 44 px. Under the budget, and a
+> change to the eyebrow (review PR-23) rather than to this page: the name
+> exists only once the zones have come.
+
 ### TD-52 · Mobile LCP was over the 2.5 s "good" threshold — **FIXED 2026-10-15** ✔
 
 > Found 2026-10-15 by the Lighthouse gate on the day it was added

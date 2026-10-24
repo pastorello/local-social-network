@@ -51,6 +51,20 @@ describe('the map store (spec/design.md D13)', () => {
     expect(store.features).toHaveLength(2)
   })
 
+  // A page that lists the features waits for them (TD-53), so a failure has
+  // to say so as well, or the page would wait for ever.
+  it('says when the features have come back, answered or not', async () => {
+    vi.mocked(axios.get).mockRejectedValue(new Error('offline'))
+    vi.spyOn(console, 'log').mockImplementation(() => {})
+    const store = useMapStore()
+    expect(store.featuresLoaded).toBe(false)
+
+    await store.load()
+
+    expect(store.featuresLoaded).toBe(true)
+    expect(store.features).toEqual([])
+  })
+
   it('draws only the layers the reader left on', async () => {
     const store = useMapStore()
     await store.load()

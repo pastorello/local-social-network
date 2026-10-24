@@ -10,11 +10,15 @@ ci:
     # The reader's ways in, on a phone: /benvenuto is the address printed on
     # the B&B cards, / is the map, /cosa-fare is where /benvenuto sends them.
     # Every route draws the map under it (design.md D13), so these three
-    # measure the shell as well.
+    # measure the shell as well. The fourth is /cosa-fare with a zone chosen —
+    # where «Dove sei?» and a chip both lead — on the zone `seed_e2e` fills
+    # most (a church, a feast's route, a tour): its rows arrive after the page,
+    # and the zone-less page never measured them (TD-53, CLS 0.204).
     url:
       - http://127.0.0.1:4173/benvenuto
       - http://127.0.0.1:4173/
       - http://127.0.0.1:4173/cosa-fare
+      - http://127.0.0.1:4173/cosa-fare?zona=porto-salvo
     # Three runs per page; every assertion below reads the median.
     numberOfRuns: 3
     settings:
