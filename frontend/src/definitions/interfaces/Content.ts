@@ -24,6 +24,13 @@ export interface ZoneRef {
 // type, keyed by its route segment — `luoghi`, `feste`, … `itinerari`.
 export type CardCounts = Record<string, number>
 
+// GET /api/content/stats/ (review PR-18): the same cards, all types together,
+// and the day in Gaeta the latest of them changed — `null` while there is none.
+export interface ArchiveStats {
+  published: number
+  last_updated: string | null
+}
+
 export interface CardImage {
   id: string
   imageURL: string

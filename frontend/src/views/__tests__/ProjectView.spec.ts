@@ -1,10 +1,22 @@
-import { describe, it, expect } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
+import axios from 'axios'
 
 import ProjectView from '../ProjectView.vue'
 import { useUserStore } from '@/stores/user'
+
+vi.mock('axios')
+
+const answerStats = (data: unknown) =>
+  vi
+    .mocked(axios.get)
+    .mockImplementation((url: string) =>
+      url === '/api/content/stats/'
+        ? Promise.resolve({ data })
+        : Promise.reject(new Error(`unexpected ${url}`)),
+    )
 
 const mountProject = async (signedIn = false) => {
   const pinia = createPinia()
@@ -21,13 +33,20 @@ const mountProject = async (signedIn = false) => {
   })
   router.push('/il-progetto')
   await router.isReady()
-  return mount(ProjectView, { global: { plugins: [pinia, router] } })
+  const wrapper = mount(ProjectView, { global: { plugins: [pinia, router] } })
+  await flushPromises()
+  return wrapper
 }
 
 // Il progetto is the credits surface (spec/design.md D21) — what the footer
 // carried until the map went under every page. These are the footer's own
 // tests, moved with it.
 describe('Il progetto', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    answerStats({ published: 15, last_updated: '2026-10-22' })
+  })
+
   it('links to every card type, so the archive is reachable from the credits', async () => {
     const wrapper = await mountProject()
     const hrefs = wrapper.findAll('a').map((a) => a.attributes('href'))
@@ -97,6 +116,35 @@ describe('Il progetto', () => {
       'Partecipa',
     ])
     expect(wrapper.text()).not.toMatch(/Schede|Esplora/)
+  })
+
+  // Review PR-18: the archive's line, under the title until review PR-12
+  // writes the page's own presentation and moves it beneath that.
+  it('says how many cards the archive has and when the latest changed', async () => {
+    const wrapper = await mountProject()
+
+    const line = wrapper.get('h1 + p')
+    expect(line.text()).toBe('15 schede, l’ultima aggiornata il 22 ottobre 2026')
+  })
+
+  it('holds the line’s place while it is asked for, and gives it up for an empty archive', async () => {
+    let answer: (value: { data: unknown }) => void = () => {}
+    vi.mocked(axios.get).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          answer = resolve
+        }),
+    )
+    const wrapper = await mountProject()
+
+    // Held, so the words under it do not jump when it arrives.
+    expect(wrapper.get('h1 + p').text()).toBe('')
+
+    answer({ data: { published: 0, last_updated: null } })
+    await flushPromises()
+
+    expect(wrapper.get('h1 + p').text()).toContain('Vivere Gaeta')
+    expect(wrapper.text()).not.toMatch(/0 schede|aggiornata/)
   })
 
   it('has the page’s one h1', async () => {

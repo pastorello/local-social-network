@@ -383,6 +383,61 @@ castle, a mausoleum, a park and its paths — and its genre is a **closed list
 an admin controls**, so nothing lands in it by default: a card that fits no
 genre is a sign it belongs to another type.
 
+## The archive's line — 2026-10-24 (review PR-18)
+
+The archive starts nearly empty and grows, and nothing told a reader it is
+alive. The author approved on 2026-10-22 one line about the archive, never one
+per card ([review](../review-2026-10-22.md), decision 8): **«127 schede,
+l'ultima aggiornata il 3 marzo 2026»**. It is on the home, under the
+presentation in both layouts, and on *Il progetto*.
+
+What the review left to the build, decided here:
+
+- **`GET /api/content/stats/` counts what the menu counts** — published cards
+  of a type, translations left out (one thing in the world, one row) — so its
+  `published` is the menu's numbers added up, and a test says so. The prompt
+  also asked for `language='it'`: by T1 ([translations.md](./translations.md))
+  every original is Italian already, so that filter would add nothing but a
+  way for the line and the menu to disagree over a card Django admin made
+  against T1. A card with no type row is on no page and in no count. Public,
+  no token, the same for everyone.
+- **`last_updated` is the latest `updated_at` among the same cards**, so
+  neither a draft nor a translation ever moves the date or the number, not
+  even for their author — like every public count (map.md M5), and a test
+  says that too. A card has no `published_at`, but publishing is a save: a
+  card written three weeks ago and published today is dated today. Correcting
+  an old card dates the archive as well, which is what «l'ultima aggiornata»
+  says. If a `published_at` ever arrives, `content/api.py::_archive_stats` is
+  the one place that changes.
+- **The day is Gaeta's.** The API turns the instant into a calendar date in
+  `Europe/Rome`, as `today_in_gaeta` dates a place's hours, and the SPA prints
+  it with `lib/availability.ts::formatDay` — the formatter that already prints
+  those hours, which reads a calendar day so no time zone can move it to the
+  day before. (The prompt named `Intl.DateTimeFormat` with `timeZone:
+  'Europe/Rome'` on the client; the day is Europe/Rome's either way, and one
+  formatter for the two dates a reader meets keeps them alike.)
+- **Cached for five minutes** in the default cache — the database cache in
+  production, shared by every worker (settings.py `CACHES`) — because the home
+  asks on every visit and a line about the archive's life can be a few minutes
+  behind it. Nothing invalidates it on a publish.
+- **The words are `lib/archiveLine.ts::archiveLine`.** Many: «N schede,
+  l'ultima aggiornata il …». One: «1 scheda, aggiornata il …» — the latest of
+  one is no latest. None: **no line at all**, never «0 schede». A request that
+  fails prints nothing, and the page is otherwise the same.
+- **On the home it arrives with the doors** (design.md D3's note of
+  2026-10-23): it sits between the presentation and them, so whichever
+  answered second would push the other down, and the home draws the two
+  together. At the sheet's lowest stop it stays below the edge — what shows
+  there is still the presentation's two lines.
+- **On *Il progetto* it sits under the title for now**, its line held while
+  it is asked for so the words beneath do not jump. Review PR-12 writes that
+  page's own presentation and **moves the line under it**, where the prompt
+  puts it; nothing else about the line changes then.
+- *Left to the author:* on the phone's home the line («22 schede») and the
+  sheet's own count of the map («Luoghi sulla mappa · 16 schede») are two
+  numbers in *schede* on one screen — the archive, and what the map draws.
+  They are left as they are.
+
 ## Seeding the archive from public sources — 2026-09-11
 
 > **Withdrawn 2026-10-22.** The author judged the seeded drafts a trial, not
