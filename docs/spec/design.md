@@ -687,6 +687,10 @@ opening-hours filter is not.
   today moves here: the editorial rule in the reader's words ("nessuna
   presenza è acquistata") and the reserved place for a patrocinio. D11's rule
   moves with it: no invented endorsement.
+  *(2026-10-24, review PR-12: it reads as a page now, not as a footer — who
+  writes the archive and for whom, how it is used, the rule, how to take
+  part, and only then the index and the credits. See "*Il progetto* as a
+  page — 2026-10-24" at the end of this section.)*
 
 ### The itinerary — the next phase, not this one
 
@@ -1431,3 +1435,64 @@ Built on 2026-10-24:
     wears: bordered, the accent's text, 44 px tall. Its icon is the three
     joined dots, neutral between the platforms' own share signs, and
     decorative: the word names the button (WCAG 2.5.3).
+
+### *Il progetto* as a page — 2026-10-24
+
+The review of 2026-10-22 (PR-12: P-08, L-11) found *Il progetto* to be the
+site's index and nothing else: three columns of links, then the editorial
+rule and the credits in small print under a line. It said nothing about who
+makes the archive, why, how to use it, or how a reader who finds a mistake
+says so — and it is the one page that answers «di chi posso fidarmi». Built
+on 2026-10-24:
+
+- **It reads from the top, as a page.** The title; two paragraphs on who
+  writes the archive, why and for whom; the archive's line (review PR-18,
+  content.md), which waited under the title for this page; *Come si usa*,
+  three rows each led by its link — the tours, *Cosa si può fare qui*, the
+  map; *La regola*, with the sentence as it was («nessuna presenza è
+  acquistata»); *Partecipa*; and only then the index and the credits.
+- **The two paragraphs are the author's to correct**, so they live in one
+  place, `definitions/copy.ts::PROJECT_STORY`, in the register of the cards
+  (D6). Every fact in them is one the spec states — README.md and the spec's
+  README for what the archive is and whom it is for, accounts.md for
+  collaborators chosen one by one, content.md's rules for writing from
+  published sources, "Not a wayfinding app" for why — and they name no one,
+  count nothing and claim no endorsement (D11). The build wrote them; the
+  author reviews them.
+- **The patrocinio's place stays, and stays empty** (D11): beside the rule,
+  in its register, and nothing there until a patrocinio exists — no logo, no
+  "coming soon". The test that the page says neither *patrocinio* nor
+  *sponsor* stays.
+- **«Hai trovato un errore o una cosa che manca? Scrivici»** leads to the
+  collaboration request, `/collabora`. The prompt asked for the form to open
+  with `?motivo=errore` filled in, but the form has no field for why someone
+  writes, and none is added: the request is accounts.md A1's — a name, an
+  address, a free-text message — and a reason would change that flow for
+  this page's sake. So the link carries no query that nothing reads, and the
+  line says what to put in the message instead: «nel messaggio indica la
+  scheda e che cosa non torna».
+- **The credits are at 14 px**, under the index, and the ODbL is now a link
+  to the licence (`lib/osm.ts::ODBL_URL`) beside OpenStreetMap's copyright
+  page.
+- **Decided by the build**, since the review left them open:
+  - **One *Partecipa*, not a section and a column.** The prompt kept the
+    index's three columns "as they are" and put a *Partecipa* above them;
+    that is two *Partecipa* on one page, with *Collabora con noi* in both.
+    The column became the section, the polls with it for someone signed in
+    (review PR-17), and the index keeps *Per cominciare* and *Cosa trovi su
+    Vivere Gaeta*, in two columns.
+  - **The archive's line closes the story**, under both paragraphs rather
+    than between them: the story is the presentation review PR-18 meant, and
+    the number and the date say it is still being written.
+  - **The sections' headings wear the cards' title step** (`text-title`), so
+    the page has an article's scale; the index keeps its small capitals,
+    which mark it as the index.
+  - **A link inside a sentence is underlined**, in the accent, as the
+    OpenStreetMap credit already was (WCAG 1.4.1); the index's links, each
+    alone on its line, are as they were.
+- **For the author**: the two paragraphs, word by word; whether «l'autore»
+  should be named there; and that a mistake reported through *Scrivici*
+  reaches Django admin as a collaboration request, to be read and rejected —
+  the form's own words speak to someone asking to write. If reports of
+  mistakes become common, a reason field or an address of their own is a
+  change to accounts.md A1, not to this page.

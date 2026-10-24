@@ -432,7 +432,8 @@ What the review left to the build, decided here:
 - **On *Il progetto* it sits under the title for now**, its line held while
   it is asked for so the words beneath do not jump. Review PR-12 writes that
   page's own presentation and **moves the line under it**, where the prompt
-  puts it; nothing else about the line changes then.
+  puts it; nothing else about the line changes then. *(Moved 2026-10-24:
+  it closes the page's two paragraphs — design.md "*Il progetto* as a page".)*
 - *Left to the author:* on the phone's home the line («22 schede») and the
   sheet's own count of the map («Luoghi sulla mappa · 16 schede») are two
   numbers in *schede* on one screen — the archive, and what the map draws.

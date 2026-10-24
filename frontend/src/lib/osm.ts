@@ -12,6 +12,10 @@ export const OSM_TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
 
 export const OSM_COPYRIGHT_URL = 'https://www.openstreetmap.org/copyright'
 
+// The licence itself, which Il progetto's credit names and links (review
+// PR-12): the page OpenStreetMap's own copyright page links to.
+export const ODBL_URL = 'https://opendatacommons.org/licenses/odbl/'
+
 // Leaflet renders an attribution as HTML (`innerHTML`, like a string tooltip —
 // see mapText.ts), which is why this is a constant written here and nothing
 // else: never a value that comes from the API or from a person.
