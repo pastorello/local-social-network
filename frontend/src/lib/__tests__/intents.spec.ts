@@ -13,6 +13,15 @@ describe('intents (spec cosa-fare.md Part −1, D4)', () => {
     expect(intentOf({ type: 'chiese', genre: null })).toBe('citta')
   })
 
+  // ADR-0010: «Bere» leads to where one drinks; «Mangiare» to a table and to a
+  // bottega alike, beside the dishes.
+  it('files a business by its kind', () => {
+    expect(intentOf({ type: 'attivita', kind: 'beve' })).toBe('bere')
+    expect(intentOf({ type: 'attivita', kind: 'mangia' })).toBe('mangiare')
+    expect(intentOf({ type: 'attivita', kind: 'compra' })).toBe('mangiare')
+    expect(intentOf({ type: 'attivita', kind: null })).toBe(OTHER_INTENT)
+  })
+
   it('shows a genre nobody has mapped yet instead of losing it', () => {
     expect(intentOf({ type: 'luoghi', genre: 'grotta' })).toBe(OTHER_INTENT)
     expect(intentOf({ type: 'luoghi', genre: null })).toBe(OTHER_INTENT)
@@ -82,7 +91,8 @@ describe('the intents’ colours on /benvenuto (review PR-14, M-09)', () => {
   it('are tokens, never hexes, and an intent nobody coloured wears the unknown grey', () => {
     expect(intentVar('mare')).toBe('var(--color-intent-mare)')
     expect(intentVar('camminare')).toBe('var(--color-intent-camminare)')
-    expect(intentVar('bere')).toBe('var(--color-layer-unknown)')
+    expect(intentVar('bere')).toBe('var(--color-intent-bere)')
+    expect(intentVar('sport')).toBe('var(--color-layer-unknown)')
   })
 
   it('mixes as the browser does: a colour on itself, the ground at none of it', () => {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
-import { CARD_LAYERS } from '@/lib/mapLayers'
+import { CARD_LAYERS, STOP_TYPES } from '@/lib/mapLayers'
 import { moveItem } from '@/lib/reorder'
 import { useMapStore } from '@/stores/map'
 import type { MapPoint } from '@/definitions/interfaces/Content'
@@ -34,20 +34,23 @@ const typeLabel = (key: string | null) =>
 
 // The cards a stop can be: those with a place, as the map has them — the
 // author's own drafts too (map.md M5), which a tour may hold while it is a
-// draft; I4 refuses to publish it until they are published. Grouped by type
-// for the keyboard path.
+// draft; I4 refuses to publish it until they are published. Not a business,
+// which a tour never picks among the others (ADR-0010). Grouped by type for
+// the keyboard path.
 const candidates = computed(() =>
-  CARD_LAYERS.map((layer) => ({
-    label: layer.label,
-    cards: mapStore.features
-      .filter((feature) => feature.type === layer.key)
-      .sort((a, b) => a.title.localeCompare(b.title, 'it')),
-  })).filter((group) => group.cards.length),
+  CARD_LAYERS.filter((layer) => STOP_TYPES.includes(layer.key))
+    .map((layer) => ({
+      label: layer.label,
+      cards: mapStore.features
+        .filter((feature) => feature.type === layer.key)
+        .sort((a, b) => a.title.localeCompare(b.title, 'it')),
+    }))
+    .filter((group) => group.cards.length),
 )
 
 const draftFor = (id: string): StopDraft | null => {
   const feature = mapStore.features.find((candidate) => candidate.id === id)
-  if (!feature) return null
+  if (!feature || !STOP_TYPES.includes(feature.type)) return null
   return {
     card: feature.id,
     type: feature.type,

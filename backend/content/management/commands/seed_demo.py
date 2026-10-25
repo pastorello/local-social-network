@@ -17,6 +17,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from account.models import User
+from attivita.models import Attivita
 from chiese.models import Chiesa
 from content.models import Availability, Card, MapFeature
 from feste.models import Feste
@@ -62,6 +63,17 @@ CHIESE = (
     }, 'Il sentiero sulla roccia resta percorribile anche a chiesa chiusa.'),
     ('Chiesa di prova del borgo', PORTO_SALVO, None, ''),
 )
+# One business of each kind (ADR-0010), a few steps from the zone's other pins
+# so the two do not sit on one point. The hours are a sample, dated by the
+# server like every other (ADR-0008).
+ATTIVITA = (
+    ('Bar di prova sul lungomare', Attivita.BEVE, (SERAPO[0] + 0.0004, SERAPO[1] + 0.0006),
+     'Sul lungomare, davanti alla spiaggia.', 'Tutti i giorni dalle 7 a mezzanotte (orario di esempio).'),
+    ('Trattoria di prova', Attivita.MANGIA, (MEDIEVALE[0] + 0.0004, MEDIEVALE[1] - 0.0004),
+     '', 'A pranzo e a cena, chiuso il martedì (orario di esempio).'),
+    ('Forno di prova', Attivita.COMPRA, (PORTO_SALVO[0] - 0.0004, PORTO_SALVO[1] + 0.0004),
+     'Nella via del mercato.', ''),
+)
 
 
 class Command(BaseCommand):
@@ -94,6 +106,13 @@ class Command(BaseCommand):
             if availability:
                 Availability.objects.create(card=card, **availability)
             places[title] = card
+
+        for title, kind, where, how, hours in ATTIVITA:
+            card = self._card(title, author)
+            Attivita.objects.create(card=card, kind=kind, how_to_get_there=how)
+            self._point(card, where)
+            if hours:
+                Availability.objects.create(card=card, hours=hours)
 
         festa = self._card('Festa di prova', author)
         Feste.objects.create(card=festa, recurrence='Ogni anno, data di esempio', programme='')

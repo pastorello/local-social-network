@@ -65,6 +65,7 @@ const check = (label: string) => {
 
 const PUBLISHED = 'Chiesa E2E pubblicata'
 const PLACE = 'Luogo E2E pubblicato'
+const BUSINESS = 'Attività E2E pubblicata'
 const EMAIL = 'collaboratore@e2e.test'
 const PASSWORD = 'E2ePassw0rd!'
 
@@ -170,6 +171,30 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
     cy.get('article .prose').prev('p').should('contain.text', 'A piedi dal lungomare.')
 
     check('/luoghi/:id (mobile)')
+  })
+
+  // The businesses (ADR-0010, review PR-26): their list — with the line that
+  // prints its order, and the kinds as one row of chips on a phone — and a
+  // card with its hours, in both layouts.
+  it('the businesses: their list and a card, wide and on a phone', () => {
+    cy.viewport(1280, 800)
+    cy.visit('/attivita')
+    cy.contains('a', BUSINESS).should('contain', 'Serapo · Dove si beve')
+    check('/attivita (desktop)')
+    cy.contains('a', BUSINESS).click()
+    cy.contains('h1', BUSINESS)
+    cy.contains('h2', 'Orari')
+    check('/attivita/:id (desktop)')
+
+    cy.viewport(390, 844)
+    cy.visit('/attivita')
+    cy.contains('a', BUSINESS)
+    cy.get('nav[aria-label="Filtra attività per tipo"] ul').should('have.css', 'overflow-x', 'auto')
+    check('/attivita (mobile)')
+    cy.contains('a', BUSINESS).click()
+    cy.contains('h1', BUSINESS)
+    cy.contains('h2', 'Orari')
+    check('/attivita/:id (mobile)')
   })
 
   // The credits surface since the footer went (design.md D21) — reached from

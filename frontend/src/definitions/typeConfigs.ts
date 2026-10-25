@@ -52,8 +52,12 @@ export interface TypeConfig {
   // A type with a door (ADR-0008): its form gets a *Visita* tab — what is
   // known about getting in — and, with `fromOutside`, «Se la trovi chiusa»
   // (cosa-fare.md D7). `noDoor` offers the open-air state, which a church
-  // never is.
-  visit?: { fromOutside: boolean; noDoor: boolean }
+  // never is. `hoursOnly` is a business's door (ADR-0010): its opening hours
+  // and nothing else — no state, no keeper — under *Orari*.
+  visit?: { fromOutside: boolean; noDoor: boolean; hoursOnly?: boolean }
+  // A line under the list's title, where the list owes the reader a word on
+  // how it is made: the businesses' order is printed (cosa-fare.md CF40).
+  listNote?: string
 }
 
 export const chiesaConfig: TypeConfig = {
@@ -175,6 +179,46 @@ export const luogoConfig: TypeConfig = {
   },
 }
 
+// Businesses (ADR-0010): a luogo's shape plus a kind closed in code — the
+// select's three choices come from the API, which reads them from the model,
+// not from a table an admin could add to. Alphabetical on every list, and the
+// list says so, with why each one is there (design.md D10, cosa-fare.md CF40).
+export const attivitaConfig: TypeConfig = {
+  key: 'attivita',
+  label: 'Attività',
+  singularLabel: 'attività',
+  endpoint: '/api/attivita/',
+  routeNames: { list: 'attivitalist', detail: 'attivitadetail', create: 'attivitacreate' },
+  titlePlaceholder: 'Es. Forno Rossi',
+  extraFields: [
+    {
+      key: 'kind',
+      label: 'Tipo',
+      kind: 'select',
+      placeholder: 'Scegli un tipo',
+      optionsEndpoint: '/api/attivita/kinds/',
+      displayKey: 'kind_label',
+    },
+    {
+      key: 'how_to_get_there',
+      label: 'Come arrivarci',
+      kind: 'textarea',
+      placeholder: 'Es. In fondo al molo, dietro la fontana...',
+      inPlace: true,
+    },
+  ],
+  mapMode: 'pins',
+  maxPoints: 1,
+  visit: { fromOutside: false, noDoor: false, hoursOnly: true },
+  listFilter: {
+    param: 'kind',
+    optionsEndpoint: '/api/attivita/kinds/',
+    label: 'Filtra attività per tipo',
+  },
+  listNote:
+    'In ordine alfabetico. Ci sono perché la redazione le ritiene degne di nota: nessuna paga per esserci.',
+}
+
 // Curated tours (spec itinerari.md). Their list is the generic one, narrowed by
 // intent; their detail, form and guided mode are their own views, because a
 // tour's stops are cards and do not fit TypeForm's field list.
@@ -209,6 +253,7 @@ export const itinerarioConfig: TypeConfig = {
 
 export const typeConfigs: TypeConfig[] = [
   luogoConfig,
+  attivitaConfig,
   chiesaConfig,
   ricettaConfig,
   personaggioConfig,

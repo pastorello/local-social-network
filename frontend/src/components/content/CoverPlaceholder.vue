@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
 
+import AttivitaIcon from '@/components/icons/AttivitaIcon.vue'
 import ChiesaIcon from '@/components/icons/ChiesaIcon.vue'
 import DialettoIcon from '@/components/icons/DialettoIcon.vue'
 import FesteIcon from '@/components/icons/FesteIcon.vue'
@@ -20,6 +21,7 @@ import { layerVar } from '@/lib/mapLayers'
 const props = defineProps<{ type: string }>()
 
 const ICONS: Record<string, Component> = {
+  attivita: AttivitaIcon,
   chiese: ChiesaIcon,
   dialetto: DialettoIcon,
   feste: FesteIcon,

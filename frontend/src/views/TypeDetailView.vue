@@ -236,7 +236,10 @@ watch(
               </div>
             </dl>
 
-            <VisitInfo :availability="availability" />
+            <VisitInfo
+              :availability="availability"
+              :heading="config.visit?.hoursOnly ? 'Orari' : undefined"
+            />
 
             <!-- For the reader already at the door (cosa-fare.md D7): after the
             text, and only when someone wrote it — a reader who got in skips

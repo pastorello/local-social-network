@@ -283,6 +283,122 @@ describe('CosaFareView — «Cosa si può fare qui» (spec cosa-fare.md Part −
   })
 })
 
+// ADR-0010 (built 2026-10-25): a zone's businesses are rows of it, under
+// «Bere» and — beside the dishes, never instead of them — under «Mangiare»;
+// alphabetical like every row here, and never counted on a zone's chip.
+describe('CosaFareView — the businesses (ADR-0010)', () => {
+  const BUSINESSES = [
+    feature({
+      id: 'a1',
+      type: 'attivita',
+      title: 'Vineria',
+      kind: 'beve',
+      zones: ['serapo'],
+      points: at(41.211, 13.561),
+    }),
+    feature({
+      id: 'a2',
+      type: 'attivita',
+      title: 'Bar Ariana',
+      kind: 'beve',
+      zones: ['serapo'],
+      points: at(41.212, 13.562),
+    }),
+    feature({ id: 'a3', type: 'attivita', title: 'Trattoria', kind: 'mangia', zones: ['serapo'] }),
+    feature({ id: 'a4', type: 'attivita', title: 'Forno', kind: 'compra', zones: ['serapo'] }),
+    feature({
+      id: 'a5',
+      type: 'attivita',
+      title: 'Chiosco',
+      kind: 'beve',
+      zones: ['monte-orlando'],
+    }),
+  ]
+  const intents = ANSWERS['/api/itinerari/intenti/'] as { slug: string; name: string }[]
+  const WITH_BERE: Record<string, unknown> = {
+    ...ANSWERS,
+    '/api/itinerari/intenti/': [...intents, { slug: 'bere', name: 'Bere' }],
+  }
+  const mountWithBusinesses = async (query: Record<string, string>) => {
+    const mounted = await mountAt(query)
+    mounted.store.features = [...FEATURES, ...BUSINESSES]
+    await flushPromises()
+    return mounted
+  }
+  const section = (wrapper: Awaited<ReturnType<typeof mountAt>>['wrapper'], name: string) =>
+    wrapper.findAll('section').find((s) => s.find('h2').text() === name)!
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(axios.get).mockImplementation(async (url: string) => ({ data: WITH_BERE[url] }))
+  })
+
+  it('lists where one drinks under «Bere», alphabetically, saying what each is', async () => {
+    const { wrapper } = await mountWithBusinesses({ zona: 'serapo' })
+
+    expect(wrapper.findAll('h2').map((h) => h.text())).toEqual([
+      'Andare al mare',
+      'Scoprire la città',
+      'Camminare',
+      'Bere',
+      'Itinerari che passano di qui',
+      'Le feste di questa zona',
+      'Mangiare',
+    ])
+    const bere = section(wrapper, 'Bere')
+    expect(bere.findAll('li a').map((a) => a.text())).toEqual(['Bar Ariana', 'Vineria'])
+    expect(bere.text()).toContain('Dove si beve')
+    expect(bere.text()).toContain('in ordine alfabetico')
+  })
+
+  it('opens «Mangiare» on the zone’s tables and botteghe, then the dishes for all of Gaeta', async () => {
+    const { wrapper } = await mountWithBusinesses({ zona: 'serapo' })
+
+    const mangiare = section(wrapper, 'Mangiare')
+    const lists = mangiare.findAll('ul')
+    expect(lists).toHaveLength(2)
+    expect(lists[0]!.findAll('li a').map((a) => a.text())).toEqual(['Forno', 'Trattoria'])
+    expect(lists[0]!.text()).toContain('Dove si compra')
+    expect(lists[0]!.text()).toContain('Dove si mangia')
+    expect(lists[1]!.findAll('li a').map((a) => a.text())).toEqual(['Tiella', 'Zuppa'])
+    // The note stands between the two: it is about the dishes alone.
+    expect(mangiare.text().indexOf('Trattoria')).toBeLessThan(
+      mangiare.text().indexOf('valgono per tutta Gaeta'),
+    )
+    expect(mangiare.text().indexOf('valgono per tutta Gaeta')).toBeLessThan(
+      mangiare.text().indexOf('Tiella'),
+    )
+  })
+
+  it('never counts a business on a zone’s chip, but a zone that has one is not empty', async () => {
+    const { wrapper } = await mountWithBusinesses({ zona: 'monte-orlando' })
+
+    const chips = wrapper.findAll('nav[aria-label="Zone"] a').map((a) => a.text())
+    expect(chips).toContain('Monte Orlando 0')
+    expect(wrapper.text()).not.toContain("l'archivio non ha ancora niente")
+    expect(
+      section(wrapper, 'Bere')
+        .findAll('li a')
+        .map((a) => a.text()),
+    ).toEqual(['Chiosco'])
+  })
+
+  it('has the map draw the zone’s businesses with its places, and frame them', async () => {
+    const { store } = await mountWithBusinesses({ zona: 'serapo' })
+
+    expect([...(store.restrictTo ?? [])].sort()).toEqual([
+      'a1',
+      'a2',
+      'a3',
+      'a4',
+      'c1',
+      'f1',
+      'l1',
+      'l2',
+    ])
+  })
+})
+
 describe('CosaFareView on a phone (review PR-4, M-07)', () => {
   beforeEach(() => {
     vi.clearAllMocks()

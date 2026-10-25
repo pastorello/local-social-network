@@ -22,6 +22,9 @@ export interface MapCardFeature {
   // A luogo's genre slug (null for every other type) — what «Cosa si può fare
   // qui» files it under (D4).
   genre?: string | null
+  // A business's kind (null for every other type) — what files it under
+  // «Bere» or «Mangiare» there (ADR-0010).
+  kind?: string | null
   // How one gets in, only when someone knows (ADR-0008); never the hours,
   // which are read on the card with their date.
   access?: AvailabilityState | null

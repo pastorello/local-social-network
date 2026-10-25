@@ -5,6 +5,7 @@ import { createPinia } from 'pinia'
 
 import TypeForm from '../TypeForm.vue'
 import {
+  attivitaConfig,
   chiesaConfig,
   dialettoConfig,
   libroConfig,
@@ -43,6 +44,7 @@ describe.each([
   ['dialetto', dialettoConfig],
   ['libri', libroConfig],
   ['luoghi', luogoConfig],
+  ['attivita', attivitaConfig],
 ])('TypeForm (%s)', (_key, config) => {
   it('renders the create-mode fields and button copy', () => {
     const wrapper = mount(TypeForm, {
@@ -345,5 +347,72 @@ describe('the Visita tab (ADR-0008, cosa-fare.md D7)', () => {
     const body = vi.mocked(axios.patch).mock.calls[0]![1] as FormData
     expect(body.has('availability')).toBe(false)
     expect(body.get('from_outside')).toBe('The bell tower.')
+  })
+})
+
+// ADR-0010: a business's kind is one of three, closed in code — the select
+// offers what the API reads from the model, and nothing to type.
+describe('the kind choice (attività)', () => {
+  const kinds = [
+    { slug: 'beve', name: 'Dove si beve', name_plural: 'Dove si beve', count: 0 },
+    { slug: 'mangia', name: 'Dove si mangia', name_plural: 'Dove si mangia', count: 0 },
+    { slug: 'compra', name: 'Dove si compra', name_plural: 'Dove si compra', count: 0 },
+  ]
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(axios.get).mockResolvedValue({ data: kinds })
+  })
+
+  it('offers the three kinds and no way to write a fourth', async () => {
+    const wrapper = mount(TypeForm, {
+      props: { config: attivitaConfig },
+      global: { plugins: [createPinia()], stubs: globalStubs },
+    })
+    await flushPromises()
+
+    expect(axios.get).toHaveBeenCalledWith('/api/attivita/kinds/')
+    const kind = wrapper.get('#type-form-kind')
+    expect(kind.element.tagName).toBe('SELECT')
+    expect(kind.findAll('option').map((option) => option.text())).toEqual([
+      'Scegli un tipo',
+      'Dove si beve',
+      'Dove si mangia',
+      'Dove si compra',
+    ])
+    expect(wrapper.get('label[for="type-form-kind"]').text()).toContain('Tipo')
+  })
+})
+
+describe('the Orari tab of a business (ADR-0008, ADR-0010)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(axios.get).mockResolvedValue({ data: [] })
+  })
+
+  it('asks for the hours and nothing else, and sends no way in and no keeper', async () => {
+    vi.mocked(axios.patch).mockResolvedValue({ data: { id: '1' } })
+    const wrapper = mount(TypeForm, {
+      props: { config: attivitaConfig, item: { ...baseItem, kind: 'beve' } },
+      global: { plugins: [createPinia()], stubs: globalStubs },
+    })
+
+    expect(wrapper.get('#type-form-tab-visita').text()).toBe('Orari')
+    expect(wrapper.find('#type-form-visit-state').exists()).toBe(false)
+    expect(wrapper.find('#type-form-visit-keeper').exists()).toBe(false)
+    expect(wrapper.find('#type-form-visit-phone').exists()).toBe(false)
+    expect(wrapper.find('#type-form-from-outside').exists()).toBe(false)
+
+    await wrapper.get('#type-form-visit-hours').setValue('Tutti i giorni dalle 7.')
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+
+    const body = vi.mocked(axios.patch).mock.calls[0]![1] as FormData
+    expect(JSON.parse(body.get('availability') as string)).toEqual({
+      state: 'unknown',
+      hours: 'Tutti i giorni dalle 7.',
+      keeper: '',
+      keeper_phone: '',
+    })
   })
 })

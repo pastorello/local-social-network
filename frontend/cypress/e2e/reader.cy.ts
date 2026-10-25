@@ -9,6 +9,8 @@ const DRAFT = 'Chiesa E2E in bozza'
 const RICETTA = 'Ricetta E2E pubblicata'
 // On Serapo's beach, with a sentence of how to get there (review PR-24).
 const PLACE = 'Luogo E2E pubblicato'
+// A bar on the same beach, with its hours (ADR-0010).
+const BUSINESS = 'Attività E2E pubblicata'
 
 // The home's first words and its two other ways in (review of 2026-10-22,
 // P-02/M-02). seed_e2e publishes a tour under «Scoprire la città» and a church
@@ -239,6 +241,41 @@ describe('the reader, on a wide screen', () => {
       .contains('a', 'Come arrivarci')
       .invoke('attr', 'href')
       .then((href) => cy.get('@where').find('a').should('have.attr', 'href', href))
+  })
+
+  // ADR-0010 (built 2026-10-25, review PR-26): a business is a type of its
+  // own — in the menu, on the map in a layer of its own with its row in the
+  // text list, on a page that prints its order and why it is there, and on
+  // «Cosa si può fare qui» under «Bere». Its hours carry their date, and
+  // nothing says it is open.
+  it('finds a business from the menu, the map and its zone, never told it is open', () => {
+    cy.visit('/')
+    cy.get('#layer-attivita').should('be.checked')
+    cy.get('label[for="layer-attivita"]').should('contain', 'Attività')
+    cy.get('ul[aria-label="Luoghi sulla mappa"]').contains('a', BUSINESS)
+
+    cy.contains('button', 'Esplora').click()
+    cy.contains('[role="menuitem"]', 'Attività').click()
+    cy.location('pathname').should('eq', '/attivita')
+    cy.contains('h1', 'Attività')
+    cy.contains('In ordine alfabetico.')
+    cy.contains('nessuna paga per esserci')
+    cy.get('nav[aria-label="Filtra attività per tipo"]').contains('a', 'Dove si beve')
+
+    cy.contains('a', BUSINESS).click()
+    cy.contains('h1', BUSINESS)
+    cy.title().should('eq', `${BUSINESS} · Attività · Vivere Gaeta`)
+    cy.get('article .prose').prev('p').should('contain.text', 'Sul lungomare')
+    cy.contains('h2', 'Orari')
+    cy.contains('Tutti i giorni dalle 7 a mezzanotte.')
+    cy.contains(/Orari segnalati il \d{1,2} \w+ \d{4}/)
+    cy.contains('h2', 'Visitare').should('not.exist')
+    cy.get('article')
+      .invoke('text')
+      .should('not.match', /\baperto\b|\baperta\b/i)
+
+    cy.visit('/cosa-fare?zona=serapo')
+    cy.contains('h2', 'Bere').parents('section').first().contains('a', BUSINESS)
   })
 
   // Review PR-16 (P-11): a desktop browser has no share sheet, so «Condividi»

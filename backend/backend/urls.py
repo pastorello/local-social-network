@@ -14,6 +14,7 @@ urlpatterns = [
     path('api/dialetto/', include('dialetto.urls')),
     path('api/libri/', include('libri.urls')),
     path('api/luoghi/', include('luoghi.urls')),
+    path('api/attivita/', include('attivita.urls')),
     path('api/itinerari/', include('itinerari.urls')),
     path('api/content/', include('content.urls')),
     path('api/map/', include('maps.urls')),

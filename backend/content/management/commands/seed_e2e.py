@@ -16,6 +16,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from account.models import CollaborationRequest, User
+from attivita.models import Attivita
 from chiese.models import Chiesa
 from content.models import Availability, Card, MapFeature
 from feste.models import Feste
@@ -41,6 +42,7 @@ SERAPO_LNG = 13.5640
 PUBLISHED_CHIESA = 'Chiesa E2E pubblicata'
 DRAFT_CHIESA = 'Chiesa E2E in bozza'
 PUBLISHED_LUOGO = 'Luogo E2E pubblicato'
+PUBLISHED_ATTIVITA = 'Attività E2E pubblicata'
 PUBLISHED_FESTA = 'Festa E2E pubblicata'
 PUBLISHED_RICETTA = 'Ricetta E2E pubblicata'
 PUBLISHED_TOUR = 'Itinerario E2E'
@@ -119,6 +121,22 @@ class Command(BaseCommand):
         )
         self._point(
             luogo_card, 'Battigia', dlat=SERAPO_LAT - GAETA_LAT, dlng=SERAPO_LNG - GAETA_LNG
+        )
+
+        # A bar on the same beach (ADR-0010), so /attivita has a row and a
+        # chip, the map a layer, and «Cosa si può fare qui» a «Bere» under
+        # Serapo — with its hours, for the a11y gate to read the card whole.
+        attivita_card = self._card(PUBLISHED_ATTIVITA, collaborator, is_published=True)
+        Attivita.objects.update_or_create(
+            card=attivita_card, defaults={
+                'kind': Attivita.BEVE, 'how_to_get_there': 'Sul lungomare, davanti alla spiaggia.',
+            },
+        )
+        self._point(
+            attivita_card, 'Ingresso', dlat=SERAPO_LAT + 0.0005 - GAETA_LAT, dlng=SERAPO_LNG - GAETA_LNG
+        )
+        Availability.objects.update_or_create(
+            card=attivita_card, defaults={'hours': 'Tutti i giorni dalle 7 a mezzanotte.'},
         )
 
         # A draft must stay invisible to a reader — the one fixture that cannot
@@ -210,7 +228,7 @@ class Command(BaseCommand):
             )
 
         self.stdout.write(self.style.SUCCESS(
-            f'Seeded: {collaborator.email}, {admin.email}, 4 published cards, 1 draft, 1 tour, '
+            f'Seeded: {collaborator.email}, {admin.email}, 5 published cards, 1 draft, 1 tour, '
             f'2 overlays, 1 report ({report.upvotes_count} upvotes), 1 open poll; '
             f'cleared {removed} card(s) and every trace of previous v1 runs.'
         ))
@@ -232,8 +250,8 @@ class Command(BaseCommand):
         """
         leftovers = Card.objects.filter(author=collaborator).exclude(
             title__in=(
-                PUBLISHED_CHIESA, DRAFT_CHIESA, PUBLISHED_LUOGO, PUBLISHED_FESTA,
-                PUBLISHED_RICETTA, PUBLISHED_TOUR,
+                PUBLISHED_CHIESA, DRAFT_CHIESA, PUBLISHED_LUOGO, PUBLISHED_ATTIVITA,
+                PUBLISHED_FESTA, PUBLISHED_RICETTA, PUBLISHED_TOUR,
             )
         )
         count = leftovers.count()

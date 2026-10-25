@@ -22,7 +22,7 @@ from content.api_helpers import (
     start_translation,
 )
 from content.models import Card, MapFeature
-from maps.api import CARD_TYPES
+from maps.api import CARD_TYPES, STOP_TYPES
 
 from .models import Intent, Itinerario, Stop
 from .rules import publish_problem, stop_card_problem
@@ -36,7 +36,7 @@ MAX_PATH_POINTS = 500
 
 def _stops_queryset():
     return Stop.objects.select_related(
-        'card', 'card__availability', *(f'card__{type_key}' for type_key in CARD_TYPES)
+        'card', 'card__availability', *(f'card__{type_key}' for type_key in STOP_TYPES)
     ).prefetch_related('card__map_features', 'card__images')
 
 
@@ -107,6 +107,8 @@ def _parse_stops(raw, user, kept=()):
         cards = {
             str(card.pk): card
             for card in Card.objects.filter(pk__in=ids)
+            # Every layer, not only the stop types: the rules name a business
+            # as what it is rather than as a card with no place (rules.py).
             .select_related(*CARD_TYPES)
             .prefetch_related('map_features')
         }

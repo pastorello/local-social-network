@@ -7,6 +7,7 @@ import pytest
 from django.test import Client
 
 from account.models import User
+from attivita.models import Attivita
 from chiese.models import Chiesa
 from common.testing import PASSWORD
 from content.models import Card, MapFeature
@@ -119,6 +120,21 @@ def test_a_card_with_no_place_is_not_a_stop_in_the_admin_either(author_client):
 
     assert not _saved(response)
     assert 'non ha un luogo sulla mappa' in response.content.decode()
+    assert not Stop.objects.exists()
+
+
+def test_a_business_is_not_a_stop_in_the_admin_either(author_client):
+    """It has a place, so the rule is not I3's "no place": a tour that chose one
+    business among many would rank them (CF40, ADR-0010)."""
+    tour = _tour(author_client.user)
+    bar = _card(author_client.user, 'Bar del porto')
+    Attivita.objects.create(card=bar, kind=Attivita.BEVE)
+    MapFeature.objects.create(card=bar, kind=MapFeature.POINT, position=0, lat=41.2087, lng=13.5868)
+
+    response = _save_stops(author_client, tour, [{'card': bar}])
+
+    assert not _saved(response)
+    assert 'è un’attività' in response.content.decode()
     assert not Stop.objects.exists()
 
 
