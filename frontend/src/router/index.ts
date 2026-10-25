@@ -330,14 +330,32 @@ const router = createRouter({
       meta: { requiresAuth: false, title: [libroConfig.label] },
     },
     {
+      // «Gli eventi che conosciamo» (spec cosa-fare.md CF33, Part −1 D9):
+      // events and the feasts' editions, in date order; `?finestra=` narrows
+      // it to today or this week. Not in the Esplora menu nor on *Il
+      // progetto*: a transient notice is not a permanent thing (CF25).
+      path: '/eventi',
+      name: 'eventilist',
+      component: () => import('../views/EventListView.vue'),
+      meta: { requiresAuth: false, title: ['Gli eventi che conosciamo'] },
+    },
+    {
       // An event, filed from a phone (spec cosa-fare.md Part −1 D9) — not a
-      // card (CF25), so not under a type's list: a collaborator files it from
-      // *Le mie schede*, where their events are. The editor's shape: its one
-      // labelled point is drawn on the map beside it.
+      // card (CF25): a collaborator files it from *Le mie schede*, where their
+      // events are, or from the list. The editor's shape: its one labelled
+      // point is drawn on the map beside it.
       path: '/eventi/nuovo',
       name: 'eventocreate',
       component: () => import('../views/EventFormView.vue'),
       meta: { requiresAuth: true, panel: 'editor', title: ['Nuovo evento'] },
+    },
+    {
+      // An event's own page: narrow, beside the map showing where it is held
+      // (D16) — or wide, should it have no place left to show.
+      path: '/eventi/:id',
+      name: 'eventodetail',
+      component: () => import('../views/EventDetailView.vue'),
+      meta: { requiresAuth: false, panel: 'narrow', title: ['Eventi'] },
     },
     {
       path: '/eventi/:id/modifica',

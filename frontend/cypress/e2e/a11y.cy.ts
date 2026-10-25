@@ -340,6 +340,36 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
     cy.get('nav[aria-label="Zone"] a[aria-current="page"]').should('contain', 'Porto Salvo')
   })
 
+  // Cosa-fare.md Part −1 D9 (review PR-27b): the events we know, a window
+  // and the whole list with its cancelled event struck through.
+  it('the events we know, this week and the whole list', () => {
+    cy.viewport(1280, 800)
+    cy.visit('/eventi?finestra=settimana')
+    cy.contains('li', 'Evento E2E in settimana')
+    check('/eventi?finestra=settimana')
+
+    cy.visit('/eventi')
+    cy.contains('li', 'Evento E2E annullato')
+    check('/eventi')
+  })
+
+  // An event's page on a phone, then its poster on the whole screen, where the
+  // rest of the app is inert and the dialog is all there is.
+  it('an event’s page, and its poster opened, on a phone', () => {
+    cy.viewport(390, 844)
+    cy.visit('/eventi')
+    cy.contains('a', 'Evento E2E in settimana').click()
+    cy.contains('h1', 'Evento E2E in settimana')
+    check('/eventi/:id (telefono)')
+
+    cy.get('button[aria-label^="Ingrandisci la locandina"]').click()
+    cy.get('[role="dialog"]').should('be.visible')
+    check('/eventi/:id (locandina aperta)')
+    cy.contains('[role="dialog"] button', 'Dimensione reale').click()
+    cy.get('[role="dialog"] [role="region"]').should('exist')
+    check('/eventi/:id (locandina a dimensione reale)')
+  })
+
   it('the public request form, where a would-be collaborator arrives', () => {
     cy.viewport(1280, 800)
     cy.visit('/collabora')

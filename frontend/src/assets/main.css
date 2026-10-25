@@ -116,6 +116,12 @@
   --color-status-resolved: #15803d;
   --color-status-rejected: #6b7280;
 
+  /* An event called off (cosa-fare.md CF28, review PR-27): said at the top of
+     its page and struck through in the list — a token, never a component's
+     hex. The report’s open red, for the same "stop": 6.05 on page, 6.47 on
+     white, tested in lib/__tests__/tokens.spec.ts. */
+  --color-event-cancelled: #b91c1c;
+
   /* Map layers (spec map.md M2). D7 keeps these the one saturated register in
      the product, because there colour does a job: it distinguishes. */
   --color-layer-chiese: #1d4ed8;

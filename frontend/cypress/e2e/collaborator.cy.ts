@@ -176,7 +176,7 @@ describe('the collaborator', () => {
   // Cosa-fare.md Part −1 D9: a collaborator meets a poster in a bar,
   // photographs it and files the event on the spot — on a phone, from *Le mie
   // schede*, the date said back in words before it is saved; then calls it
-  // off in the same form, and it stays on their list struck through (CF28).
+  // off from its page, and it stays on their list struck through (CF28).
   it('files an event from a phone, with its poster, and calls it off', () => {
     const title = `Evento E2E creato ${Date.now()}`
     cy.viewport(390, 844)
@@ -211,16 +211,19 @@ describe('the collaborator', () => {
         })
     })
 
-    cy.location('pathname').should('equal', '/le-mie-schede')
-    cy.contains('section[aria-labelledby="miei-eventi"] li', title).within(() => {
-      cy.contains('a', 'Modifica').click()
-    })
+    // Saved, it opens its own page (review PR-27b), the poster on it.
+    cy.location('pathname').should('match', /^\/eventi\/[0-9a-f-]+$/)
+    cy.contains('h1', title)
+    cy.get('button[aria-label^="Ingrandisci la locandina"]').should('be.visible')
+    cy.contains('a', 'Modifica l’evento').click()
     cy.location('pathname').should('match', /^\/eventi\/[0-9a-f-]+\/modifica$/)
     cy.get('#evento-title').should('have.value', title)
     cy.contains('label', 'Annullato').click()
     cy.contains('button', 'Salva le modifiche').click()
 
-    cy.location('pathname').should('equal', '/le-mie-schede')
+    // Called off: said first on its page (CF28), struck through on the list.
+    cy.contains('article > p', 'Annullato: questo evento non si tiene.')
+    cy.visit('/le-mie-schede')
     cy.contains('section[aria-labelledby="miei-eventi"] li', title).within(() => {
       cy.get('.line-through').should('have.text', title)
       cy.contains('Annullato')

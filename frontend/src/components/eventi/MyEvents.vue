@@ -67,10 +67,11 @@ const tag = 'text-xs font-semibold tracking-[0.12em] uppercase'
         :class="{ 'text-muted': evento.is_over }"
       >
         <span class="min-w-0 flex-1">
-          <span
-            class="block font-semibold"
+          <RouterLink
+            :to="`/eventi/${evento.id}`"
+            class="block font-semibold text-ink underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
             :class="{ 'line-through': evento.state === 'annullato' }"
-            >{{ evento.title }}</span
+            >{{ evento.title }}</RouterLink
           >
           <span class="block text-sm">{{ formatEventWhen(evento) }}</span>
         </span>

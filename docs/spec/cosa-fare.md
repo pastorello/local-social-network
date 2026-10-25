@@ -483,6 +483,48 @@ build:
   tuoi eventi»* on *Le mie schede*, by when they happen (`mine/`, CF34), with
   *«Nuovo evento»* — in two taps from the avatar.
 
+### Built: the reader's pages — 2026-10-25 (review PR-27b)
+
+The second half, from main once 27a had merged. What it built and decided:
+
+- **«Gli eventi che conosciamo» is `/eventi`** (CF33): the heading, *«In
+  ordine di data e ora»* and that the list holds what somebody reported, not
+  everything happening in Gaeta; three chips, *Tutti*, *Oggi*, *Questa
+  settimana*, which are `?finestra=` and nothing else, so a window has an
+  address PR-21 can link to. Under a window a line says the cancelled events
+  are not there and where they are (CF28). Empty, one true sentence per
+  window — *«Per oggi non ne conosciamo.»* — and that the full calendar is the
+  comune's and the organisers'. At its foot, CF42's *«Sai di qualcosa che qui
+  non c'è? Scrivici.»*, and to someone signed in *«segnalalo tu»*.
+- **No door of its own in the menu.** CF25 keeps events out of *Esplora* and
+  *Il progetto*, and this PR adds no other: the list is reached from an
+  event's page (its way up), from *Le mie schede*, and from the wizard's
+  *«Oggi»* and *«Questa settimana»* when PR-21 builds them. Whether it wants a
+  door before that is the author's call.
+- **An event's own page is `/eventi/:id`**: narrow beside the map, which shows
+  where it is held — the venue's own pin, or the labelled point — and up to
+  *Eventi*, with its zone in the eyebrow. *Annullato* is said first, in words
+  and in a token of its own (`--color-event-cancelled`, CF28), and a past
+  event says it is past and stays (CF26). *Dove* links the venue's card and
+  offers *Come arrivarci*; *Programma e conferme* names the organiser's site
+  by its address (CF32); and one line says the archive is a secondary source
+  for events, so a confirmation from the organiser counts for more than ours.
+  The author's *«Modifica l'evento»* opens the form, which now lands back on
+  this page.
+- **The poster zooms.** On the page it is a button, *«Ingrandisci la
+  locandina»*; a tap opens it on the whole screen, over everything, with the
+  rest of the app inert; Escape — spent there, not on the panel underneath —
+  and *«Chiudi»* close it, and focus goes back to the button. *«Dimensione
+  reale»*, or a tap on the poster, shows it at its own size in a scrolling
+  area a keyboard can reach. Tab stays inside.
+- **A feast's card says its date** under *Quando*: the editions ahead, each
+  with its weekday and note, and *«Di solito: …»* beside; with none, its
+  `recurrence` and *«data non ancora confermata»* — and that sentence alone
+  when it has no recurrence either. Never a date worked out from the
+  recurrence (K2).
+- `seed_e2e`'s event this week carries a poster drawn by the command, so the
+  a11y gate opens one.
+
 ## The build, in order
 
 | PR | What | Cost |

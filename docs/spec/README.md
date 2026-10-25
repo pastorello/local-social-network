@@ -65,7 +65,7 @@ not mean).
 | Steering tier & political tooling | [politics.md](./politics.md) | tier delivered (C1); its first consumer is C5's seggi overlay (2026-08-27); the tooling is future, out of current build |
 | Design & visual direction | [design.md](./design.md) | interviewed 2026-08-27, built 2026-08-31; **layout reopened 2026-09-11** (D13–D21), built 2026-09-18 |
 | Itinerari — curated tours for a visitor's stay | [itinerari.md](./itinerari.md) | decided 2026-09-11; built 2026-09-18 — backend, the guest's pages and the collaborator's editor |
-| *Che si fa a Gaeta?* — *«Cosa si può fare qui»*: what there is to do in a zone of town | [cosa-fare.md](./cosa-fare.md) | **decided 2026-10-13** (its Part −1: zones and activities, no day picker yet); availability in [ADR-0008](../adr/0008-opening-hours-as-dated-testimony.md); **built 2026-10-13** (#99–#102) — the zones are drafts waiting on the author; **events and the feasts' editions** decided 2026-10-23 (Part −1 D9), backend and form built 2026-10-25 (review PR-27a), the reader's pages in PR-27b |
+| *Che si fa a Gaeta?* — *«Cosa si può fare qui»*: what there is to do in a zone of town | [cosa-fare.md](./cosa-fare.md) | **decided 2026-10-13** (its Part −1: zones and activities, no day picker yet); availability in [ADR-0008](../adr/0008-opening-hours-as-dated-testimony.md); **built 2026-10-13** (#99–#102) — the zones are drafts waiting on the author; **events and the feasts' editions** decided 2026-10-23 (Part −1 D9), built 2026-10-25 (review PR-27a, the backend and the form; PR-27b, the reader's pages) |
 
 ## Architecture (shared across areas)
 

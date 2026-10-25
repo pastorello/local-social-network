@@ -10,8 +10,8 @@ import { useUserStore } from '@/stores/user'
 
 // Filing an event, or changing one (spec cosa-fare.md Part −1 D9). A page of
 // its own rather than a form opened in place, as a card's is: an event is not
-// a card (CF25), and a collaborator reaches it from *Le mie schede*, where
-// their events are listed, and goes back there.
+// a card (CF25). Saved, it opens the event's page; cancelled, the page it was
+// changing, or the list it would have joined.
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
@@ -39,7 +39,11 @@ onMounted(async () => {
   }
 })
 
-const done = () => router.push({ name: 'lemieschede' })
+const saved = (result: Evento) => router.push({ name: 'eventodetail', params: { id: result.id } })
+const cancel = () =>
+  router.push(
+    id.value ? { name: 'eventodetail', params: { id: id.value } } : { name: 'eventilist' },
+  )
 </script>
 
 <template>
@@ -54,6 +58,6 @@ const done = () => router.push({ name: 'lemieschede' })
       Non è stato possibile caricare l’evento. Riprova tra poco.
     </p>
     <p v-else-if="!isOwner" class="text-muted">Puoi modificare solo i tuoi eventi.</p>
-    <EventForm v-else :evento="evento" @saved="done" @cancel="done" />
+    <EventForm v-else :evento="evento" @saved="saved" @cancel="cancel" />
   </div>
 </template>
