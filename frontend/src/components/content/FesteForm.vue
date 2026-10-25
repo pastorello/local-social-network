@@ -11,6 +11,7 @@ import RichTextEditor from '@/components/content/RichTextEditor.vue'
 import MapPointsField from '@/components/forms/MapPointsField.vue'
 import FormTabs, { type FormTab } from '@/components/forms/FormTabs.vue'
 import CardImagesField from '@/components/forms/CardImagesField.vue'
+import EditionsField, { type EditionEntry } from '@/components/forms/EditionsField.vue'
 import FormField from '@/components/forms/FormField.vue'
 import { extractFieldErrors, extractFormErrors } from '@/lib/apiErrors'
 import { appendImages, toEntries, type CardImageEntry } from '@/lib/cardImages'
@@ -33,6 +34,16 @@ const recurrence = ref(props.feste?.recurrence ?? '')
 const programme = ref(props.feste?.programme ?? '')
 const isPublished = ref(props.feste?.is_published ?? false)
 const route = ref<RoutePoint[]>(props.feste?.route ?? [])
+// This year's date and any after it (cosa-fare.md D9, K2): an empty end is a
+// one-day feast.
+const editions = ref<EditionEntry[]>(
+  (props.feste?.editions ?? []).map((edition) => ({
+    id: edition.id,
+    start_date: edition.start_date,
+    end_date: edition.end_date === edition.start_date ? '' : edition.end_date,
+    note: edition.note,
+  })),
+)
 const imageEntries = ref<CardImageEntry[]>(toEntries(props.feste?.images))
 const removedImageIds = ref<(string | number)[]>([])
 
@@ -82,6 +93,19 @@ const submitForm = async () => {
   formData.append('programme', programme.value)
   formData.append('is_published', String(isPublished.value))
   if (!isTranslation.value) {
+    formData.append(
+      'editions',
+      JSON.stringify(
+        editions.value
+          .filter((edition) => edition.start_date)
+          .map((edition) => ({
+            id: edition.id ?? null,
+            start_date: edition.start_date,
+            end_date: edition.end_date || null,
+            note: edition.note,
+          })),
+      ),
+    )
     formData.append('route', JSON.stringify(route.value))
     appendImages(formData, imageEntries.value, removedImageIds.value)
   }
@@ -173,6 +197,13 @@ const submitForm = async () => {
             />
           </template>
         </FormField>
+
+        <EditionsField
+          v-model="editions"
+          id-prefix="feste-editions"
+          :readonly="isTranslation"
+          :errors="fieldErrors.editions"
+        />
 
         <FormField field-id="feste-programme" label="Programma" :errors="fieldErrors.programme">
           <template #default="{ describedBy, invalid }">

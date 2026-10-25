@@ -28,6 +28,12 @@ STOP_TYPES = ('feste', 'chiese', 'ricette', 'personaggi', 'luoghi')
 # one goes to. A zone's count is of these, not of every card it holds.
 ZONE_PLACE_TYPES = ('chiese', 'luoghi')
 
+# The cards an event may be held at (cosa-fare.md Part −1 D9, CF41 as amended
+# by ADR-0010): a place with a door, one pin each. Events themselves are on
+# none of these lists — not a layer and not a stop (CF25) — and a feast is not
+# a venue: its date is an edition of its own card (K2).
+VENUE_TYPES = ('chiese', 'luoghi', 'attivita')
+
 
 def _card_type(card):
     for type_key in CARD_TYPES:

@@ -138,8 +138,10 @@ GAETA = ZoneInfo('Europe/Rome')
 
 
 def today_in_gaeta():
-    """The date in Gaeta. `TIME_ZONE` is UTC, so `localdate()` is yesterday in
-    Gaeta between midnight and two in the summer (cosa-fare.md Part I §4)."""
+    """The date in Gaeta, by name: until `TIME_ZONE` became Europe/Rome (CF1,
+    review PR-27) `localdate()` was yesterday in Gaeta between midnight and two
+    in the summer (cosa-fare.md Part I §4), and the calendar day of a place's
+    hours does not depend on that setting staying put."""
     return timezone.now().astimezone(GAETA).date()
 
 

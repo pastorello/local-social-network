@@ -90,3 +90,16 @@ def test_remove_takes_only_what_it_made(settings, citizen):
     call_command('seed_demo', '--remove')
 
     assert list(Card.objects.all()) == [real]
+
+
+def test_it_files_dated_events_and_an_edition_and_removes_them(settings, api_client):
+    settings.DEBUG = True
+
+    call_command('seed_demo')
+
+    week = api_client.get('/api/eventi/?finestra=settimana').json()['results']
+    assert {row['title'] for row in week} == {
+        '[DEMO] Musica di prova al bar', '[DEMO] Luminarie di prova', '[DEMO] Festa di prova',
+    }
+    call_command('seed_demo', '--remove')
+    assert api_client.get('/api/eventi/').json()['results'] == []

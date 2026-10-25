@@ -27,6 +27,17 @@ const onOneRow = (selector: string) =>
 // against a database it already wrote to.
 const uniqueTitle = () => `Chiesa E2E creata ${Date.now()}`
 
+// A day in Gaeta's calendar, `days` from today, as a date input takes it —
+// computed, never written down, so the spec has no shelf life (cosa-fare.md
+// CF7).
+const dayInGaeta = (days: number) => {
+  const [year, month, day] = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' })
+    .format(new Date())
+    .split('-')
+    .map(Number)
+  return new Date(Date.UTC(year!, month! - 1, day! + days)).toISOString().slice(0, 10)
+}
+
 describe('the collaborator', () => {
   beforeEach(() => {
     // A desk (design.md D2): the editor's panel is reading-wide from 1280px.
@@ -160,5 +171,59 @@ describe('the collaborator', () => {
     // mode, at its own id — not a form on top of the original.
     cy.location('search').should('equal', '?edit=1')
     cy.get('#type-form-title').should('have.value', '')
+  })
+
+  // Cosa-fare.md Part −1 D9: a collaborator meets a poster in a bar,
+  // photographs it and files the event on the spot — on a phone, from *Le mie
+  // schede*, the date said back in words before it is saved; then calls it
+  // off in the same form, and it stays on their list struck through (CF28).
+  it('files an event from a phone, with its poster, and calls it off', () => {
+    const title = `Evento E2E creato ${Date.now()}`
+    cy.viewport(390, 844)
+    cy.intercept('POST', '**/api/eventi/').as('file')
+
+    cy.contains('a', 'Nuovo evento').click()
+    cy.location('pathname').should('equal', '/eventi/nuovo')
+    cy.get('#evento-poster').selectFile('cypress/fixtures/foto.jpg')
+    cy.get('img[alt="La locandina scelta"]').should('be.visible')
+    cy.get('#evento-title').type(title)
+    cy.get('#evento-start-date').type(dayInGaeta(2))
+    cy.get('#evento-start-time').type('21:30')
+    cy.contains('p', 'Controlla:').should(($line) => {
+      // A weekday, the day in words, the year and the hour (CF34) — not a
+      // literal date, which would give the spec a shelf life (CF7).
+      expect($line.text()).to.match(
+        /Controlla: (lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica) \d+ \S+ \d{4}, ore 21:30/,
+      )
+    })
+    cy.get('#evento-venue').select('Luogo E2E pubblicato')
+    cy.contains('button', 'Salva l’evento').click()
+
+    cy.wait('@file').then(({ request, response }) => {
+      expect(response?.statusCode).to.equal(201)
+      expect(response?.body.poster).to.match(/\.jpg$/)
+      // On the list of what is on this week, read from the API it was sent to.
+      const api = new URL(request.url).origin
+      cy.request(`${api}/api/eventi/?finestra=settimana&page_size=100`)
+        .its('body.results')
+        .should((results: { title: string }[]) => {
+          expect(results.map((row) => row.title)).to.include(title)
+        })
+    })
+
+    cy.location('pathname').should('equal', '/le-mie-schede')
+    cy.contains('section[aria-labelledby="miei-eventi"] li', title).within(() => {
+      cy.contains('a', 'Modifica').click()
+    })
+    cy.location('pathname').should('match', /^\/eventi\/[0-9a-f-]+\/modifica$/)
+    cy.get('#evento-title').should('have.value', title)
+    cy.contains('label', 'Annullato').click()
+    cy.contains('button', 'Salva le modifiche').click()
+
+    cy.location('pathname').should('equal', '/le-mie-schede')
+    cy.contains('section[aria-labelledby="miei-eventi"] li', title).within(() => {
+      cy.get('.line-through').should('have.text', title)
+      cy.contains('Annullato')
+    })
   })
 })

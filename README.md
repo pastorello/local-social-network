@@ -105,13 +105,13 @@ Two applications talking over plain HTTP + CORS.
 | Database | PostgreSQL 17; SQLite fallback for bare-metal development |
 | Tests | pytest (API) · Vitest + Vue Test Utils (SPA) · Cypress (e2e) |
 
-The backend is thirteen Django apps: `account` (custom user, UUID pk, e-mail
+The backend is fifteen Django apps: `account` (custom user, UUID pk, e-mail
 login, the invite flow), `content` (the shared card core — sanitized rich text,
 images, map features, translations), one thin app per card type (`feste`,
-`chiese`, `ricette`, `personaggi`, `dialetto`, `libri`, `luoghi`,
-`itinerari`), `maps` (layers and overlays), and v1's `reports` and `polls`;
-`common` holds the shared upload hardening and media serving, and is not an
-app. Endpoints live in `api.py` per app and follow a single error convention,
+`chiese`, `ricette`, `personaggi`, `dialetto`, `libri`, `luoghi`, `attivita`,
+`itinerari`), `eventi` (dated events, which are not cards), `maps` (layers and
+overlays), and v1's `reports` and `polls`; `common` holds the shared upload
+hardening, media serving and Gaeta's clock, and is not an app. Endpoints live in `api.py` per app and follow a single error convention,
 `{detail, fields}`.
 
 Deeper notes, gotchas and conventions live in [CLAUDE.md](./CLAUDE.md), which is

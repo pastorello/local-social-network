@@ -45,6 +45,11 @@ export const parentOf = (route: Where): Parent | null => {
   // A report is a point on the collaborator's map (reports-and-polls.md R1),
   // where the reports are: up is named after them (review PR-23).
   if (route.name === 'reportdetail') return { to: '/', label: 'Segnalazioni' }
+  // An event is not a card (cosa-fare.md CF25) and has no type's list above
+  // it: its form is under *Le mie schede*, where a collaborator's events are.
+  if (route.name === 'eventocreate' || route.name === 'eventoedit') {
+    return { to: '/le-mie-schede', label: 'Le mie schede' }
+  }
 
   const list = LISTS.find((candidate) => candidate.children.includes(String(route.name)))
   return list ? { to: list.path, label: list.label } : null

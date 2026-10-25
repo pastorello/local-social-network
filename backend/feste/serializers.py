@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from common.when import tourist_day
+
 from account.serializers import UserSerializer
 from common.coordinates import CoordinateField
 from content.models import MapFeature
@@ -8,7 +10,7 @@ from content.fields import PlainTextField
 from content.sanitize import sanitize_html
 from maps.serializers import named_zones_of
 
-from .models import Feste
+from .models import Edizione, Feste
 
 
 def _map_point(feature):
@@ -22,6 +24,33 @@ class RoutePointSerializer(serializers.Serializer):
     lat = CoordinateField('lat')
     lng = CoordinateField('lng')
     label = serializers.CharField(max_length=200, required=False, allow_blank=True, default='')
+
+
+class EdizioneSerializer(serializers.ModelSerializer):
+    """One year's date of a feast (D9, K2), as its card and its form read it."""
+
+    class Meta:
+        model = Edizione
+        fields = ('id', 'start_date', 'end_date', 'note')
+
+
+class EdizioneWriteSerializer(serializers.Serializer):
+    """One entry of the `editions` JSON array the festa's form sends beside the
+    multipart form, like its route (feste/api.py::_replace_editions)."""
+
+    # The stored edition this entry is, as the read side gave it; absent for
+    # one added in this edit. Only a hint, as a pin's id is (TD-50).
+    id = serializers.JSONField(required=False, default=None)
+    start_date = serializers.DateField()
+    end_date = serializers.DateField(required=False, allow_null=True, default=None)
+    note = PlainTextField(max_length=200, required=False, allow_blank=True, default='')
+
+
+def upcoming_editions(feste):
+    """The editions not over yet, first ahead first: the past ones are kept
+    (CF26) but a card and its form deal in what is coming. From the prefetch."""
+    today = tourist_day()
+    return [edition for edition in feste.editions.all() if edition.end_date >= today]
 
 
 class FesteReadSerializer(serializers.ModelSerializer):
@@ -40,9 +69,18 @@ class FesteReadSerializer(serializers.ModelSerializer):
     translations = serializers.SerializerMethodField()
     original_title = serializers.SerializerMethodField()
     zones = serializers.SerializerMethodField()
+    editions = serializers.SerializerMethodField()
 
     def get_images(self, obj):
         return CardImageSerializer(media_source(obj.card).images.all(), many=True).data
+
+    def get_editions(self, obj):
+        # This year's date, if somebody has typed it (D9, K2) — the original's,
+        # in every language, as its route is (T5). Empty means the card prints
+        # its `recurrence` and «data non ancora confermata».
+        original = media_source(obj.card)
+        feste = obj if original.pk == obj.pk else original.feste
+        return EdizioneSerializer(upcoming_editions(feste), many=True).data
 
     def get_route(self, obj):
         points = media_source(obj.card).map_features.filter(kind=MapFeature.ROUTE).order_by('position')
@@ -77,7 +115,7 @@ class FesteReadSerializer(serializers.ModelSerializer):
             'id', 'title', 'body_html', 'author', 'is_published',
             'recurrence', 'programme', 'images', 'route', 'pins',
             'language', 'translation_of', 'original_title', 'translations', 'zones',
-            'created_at', 'updated_at',
+            'editions', 'created_at', 'updated_at',
         )
 
 

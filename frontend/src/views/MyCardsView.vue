@@ -4,6 +4,7 @@ import { computed, onMounted, ref } from 'vue'
 
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import NavDisclosure from '@/components/buttons/NavDisclosure.vue'
+import MyEvents from '@/components/eventi/MyEvents.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
 import type { MyCard } from '@/definitions/interfaces/Content'
 import {
@@ -202,5 +203,9 @@ const menuLink =
     </section>
 
     <ActionButton v-if="nextPage" size="small" @click="loadMore">Carica altre</ActionButton>
+
+    <!-- Events are not cards (cosa-fare.md D9, CF25), so they are not in the
+    lists above nor in «Nuova scheda»: a part of their own, filed from here. -->
+    <MyEvents class="mt-10" />
   </div>
 </template>
