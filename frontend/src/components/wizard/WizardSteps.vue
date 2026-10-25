@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
 
 import IntentTile from '@/components/content/IntentTile.vue'
 import WhereAreYouField from '@/components/forms/WhereAreYouField.vue'
@@ -10,7 +11,6 @@ import MainTitle from '@/components/typography/MainTitle.vue'
 import AnswerCard from '@/components/wizard/AnswerCard.vue'
 import WizardChoices from '@/components/wizard/WizardChoices.vue'
 import { usePageTitle } from '@/composables/usePageTitle'
-import { useWizardArchive } from '@/composables/useWizardArchive'
 import { PRESENTATION } from '@/definitions/copy'
 import { zonesWithPlaces } from '@/lib/doors'
 import {
@@ -24,6 +24,7 @@ import {
   windowAnswers,
   zoneAnswers,
 } from '@/lib/wizard'
+import { useWizardStore } from '@/stores/wizard'
 
 // The wizard «Cosa fare adesso», its first two steps (review of 2026-10-22,
 // study 10; PR-21): «Che cosa ti va di fare?», then «Dove?», one question a
@@ -32,19 +33,28 @@ import {
 // so Back is the step before and a shared link opens the same step; the third
 // step is «Cosa si può fare qui» opened on the answers (/cosa-fare?intento=
 // &zona=). The rules — what answers, what is skipped — are lib/wizard.ts.
+//
+// `home` is the same first step over the home's map (review PR-21b, decided
+// on 2026-10-22: one front door). There the page around it says what the site
+// is, the map's title stays the page's h1 and the question is under it, and
+// the way out, «Vai alla mappa», puts the question away rather than leading
+// anywhere. Its answers lead where /benvenuto's do: «Dove?» is /benvenuto's.
+
+const props = defineProps<{ home?: boolean }>()
 
 const route = useRoute()
 const router = useRouter()
-const { archive, zones, aliases, windows, known, load } = useWizardArchive()
+const wizard = useWizardStore()
+const { archive, zones, aliases, windows, known } = storeToRefs(wizard)
 
-onMounted(load)
+onMounted(() => wizard.load())
 
-// The answer is read from this page's own address only: other pages speak
-// `?intento=` too (a list of tours), and the page being left must not answer
-// for the next one.
-const ownRoute = route.name
+// The answer is read from /benvenuto's own address only: other pages speak
+// `?intento=` too (a list of tours), and the home's step is always the first.
 const asked = computed(() =>
-  route.name === ownRoute && typeof route.query.intento === 'string' ? route.query.intento : '',
+  !props.home && route.name === 'benvenuto' && typeof route.query.intento === 'string'
+    ? route.query.intento
+    : '',
 )
 const intents = computed(() => intentAnswers(archive.value))
 const chosen = computed(() => intents.value.find((intent) => intent.slug === asked.value) ?? null)
@@ -103,24 +113,34 @@ const chooseZone = (zone: string) => {
   if (chosen.value) router.push(resultOf(chosen.value.slug, zone))
 }
 
+// On the home the answers are one column: the floating column and the sheet
+// are a phone's width at most.
+const grid = computed(() => (props.home ? 'grid gap-3' : 'grid gap-3 sm:grid-cols-2'))
 const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:size-8'
 </script>
 
 <template>
   <div>
     <template v-if="step === 1">
-      <p class="text-xs font-semibold tracking-[0.12em] text-terracotta uppercase">
-        Benvenuti a Gaeta
-      </p>
-      <MainTitle ref="title" tabindex="-1" data-panel-focus class="focus:outline-none">
+      <!-- On the home the map's title is the page's h1 and the presentation
+      is the page's own, above: the question follows them. -->
+      <h2 v-if="home" tabindex="-1" class="font-display text-title text-ink focus:outline-none">
         Che cosa ti va di fare?
-      </MainTitle>
-      <p class="mt-2 max-w-[55ch] text-reading text-ink">{{ PRESENTATION }}</p>
+      </h2>
+      <template v-else>
+        <p class="text-xs font-semibold tracking-[0.12em] text-terracotta uppercase">
+          Benvenuti a Gaeta
+        </p>
+        <MainTitle ref="title" tabindex="-1" data-panel-focus class="focus:outline-none">
+          Che cosa ti va di fare?
+        </MainTitle>
+        <p class="mt-2 max-w-[55ch] text-reading text-ink">{{ PRESENTATION }}</p>
+      </template>
 
       <!-- The answers land together once every count is in, under what is
       already on screen: none of them arrives above another. -->
       <template v-if="known">
-        <ul v-if="intents.length" class="mt-6 grid gap-3 sm:grid-cols-2">
+        <ul v-if="intents.length" :class="[grid, home ? 'mt-4' : 'mt-6']">
           <li v-for="intent in intents" :key="intent.slug">
             <AnswerCard
               :to="afterIntent(archive, intent.slug, zones)"
@@ -141,10 +161,13 @@ const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:si
         <!-- «Oggi» and «Questa settimana» (cosa-fare.md Part −1, D9): kept
         apart from the everyday, and each only when something falls in it. -->
         <template v-if="windowsOn.length">
-          <h2 class="mt-8 text-xs font-semibold tracking-[0.12em] text-muted uppercase">
+          <h3 v-if="home" class="mt-8 text-xs font-semibold tracking-[0.12em] text-muted uppercase">
+            In calendario
+          </h3>
+          <h2 v-else class="mt-8 text-xs font-semibold tracking-[0.12em] text-muted uppercase">
             In calendario
           </h2>
-          <ul class="mt-3 grid gap-3 sm:grid-cols-2">
+          <ul :class="[grid, 'mt-3']">
             <li v-for="window in windowsOn" :key="window.key">
               <AnswerCard
                 :to="{ name: 'eventilist', query: { finestra: window.key } }"
@@ -160,7 +183,7 @@ const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:si
           </ul>
         </template>
 
-        <ul class="mt-6 grid gap-3 sm:grid-cols-2">
+        <ul :class="[grid, 'mt-6']">
           <li v-if="withPlaces.length">
             <AnswerCard
               :to="{ name: 'cosafare' }"
@@ -173,7 +196,29 @@ const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:si
             </AnswerCard>
           </li>
           <li>
-            <AnswerCard to="/" title="Non lo so: fammi vedere la mappa">
+            <!-- The way out. On the home it puts the question away and leaves
+            the map with its layers and its list (review PR-21b): «Vai alla
+            mappa», never «esplora» — the menu's «Esplora» is on the same
+            screen (PR-23). From /benvenuto it leads to that map, with the
+            question already put away. -->
+            <AnswerCard
+              v-if="home"
+              title="Vai alla mappa"
+              line="I livelli e l’elenco dei luoghi"
+              @click="wizard.closeQuestion()"
+            >
+              <template #tile>
+                <span :class="[tile, 'bg-sea/10 text-sea']" aria-hidden="true"
+                  ><ItinerarioIcon
+                /></span>
+              </template>
+            </AnswerCard>
+            <AnswerCard
+              v-else
+              to="/"
+              title="Non lo so: fammi vedere la mappa"
+              @click="wizard.closeQuestion()"
+            >
               <template #tile>
                 <span :class="[tile, 'bg-sea/10 text-sea']" aria-hidden="true"
                   ><ItinerarioIcon
@@ -196,7 +241,7 @@ const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:si
       step says so when that zone has nothing of what was chosen. -->
       <WhereAreYouField :aliases="aliases" :zones="zones" :current="null" @choose="chooseZone" />
 
-      <ul v-if="known && chosen" class="mt-6 grid gap-3 sm:grid-cols-2">
+      <ul v-if="known && chosen" :class="[grid, 'mt-6']">
         <li v-for="zone in where" :key="zone.slug">
           <AnswerCard :to="resultOf(chosen.slug, zone.slug)" :title="zone.name" :line="zone.line">
             <template #tile>

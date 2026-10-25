@@ -74,18 +74,24 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
     cy.viewport(1280, 800)
     cy.visit('/')
     cy.contains('h1', 'La mappa di Gaeta')
-    // The two doors under the presentation (review of 2026-10-22, P-02) come
-    // from the API: measured once they are there, not before.
-    cy.contains('a', 'Che cosa ti va di fare?')
+    // The wizard's first question under the presentation (review PR-21b) and
+    // its answers come from the API: measured once they are there, not before.
+    cy.contains('h2', 'Che cosa ti va di fare?')
+    cy.contains('a', 'Scoprire la città')
 
     check('/ (desktop)')
+
+    // And with the question put away: today's home, the layers and the list.
+    cy.contains('button', 'Vai alla mappa').click()
+    cy.contains('button', 'Che cosa ti va di fare?')
+    check('/ (desktop), the question put away')
   })
 
   it('the map home, on a phone — the layout the primary reader gets', () => {
     cy.viewport(375, 812)
     cy.visit('/')
     cy.get('.leaflet-container').should('exist')
-    cy.contains('a', 'Che cosa ti va di fare?')
+    cy.contains('a', 'Scoprire la città')
 
     check('/ (mobile)')
   })

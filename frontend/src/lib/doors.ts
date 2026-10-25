@@ -1,15 +1,11 @@
-import type { Intent } from '@/definitions/interfaces/Itinerario'
 import type { Zone } from '@/definitions/interfaces/MapData'
 
-// The two ways into the archive that are not the map: «Che cosa ti va di
-// fare?» (/benvenuto, spec itinerari.md I6) and «Cosa si può fare qui»
-// (/cosa-fare). Each is offered only when something is behind it — an intent
-// with no tour is not a choice, and the zones wait for a published place
-// (cosa-fare.md Part −1, D8): no door onto an empty room. /benvenuto and the
-// home both read these two rules, so they cannot disagree about it.
-
-export const intentsWithTours = (intents: Intent[]): Intent[] =>
-  intents.filter((intent) => intent.count > 0)
+// The ways into the archive that are not the map are the wizard «Cosa fare
+// adesso» (review PR-21: /benvenuto and the home, lib/wizard.ts) and «Cosa si
+// può fare qui» (/cosa-fare). Each answer is offered only when something is
+// behind it, and the zones wait for a published place (cosa-fare.md Part −1,
+// D8): no door onto an empty room. The intents' own rule is lib/wizard.ts's
+// since the wizard; the zones' is here.
 
 export const zonesWithPlaces = (zones: Zone[]): Zone[] => zones.filter((zone) => zone.count > 0)
 

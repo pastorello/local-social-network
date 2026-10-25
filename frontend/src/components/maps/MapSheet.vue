@@ -92,6 +92,21 @@ const collapse = () => {
   snap.value = 0
 }
 
+// The home moves it too: down to the lowest stop when the reader asks for
+// the map, back up when they ask the question again (review PR-21b).
+const open = () => {
+  snap.value = 1
+}
+defineExpose({ collapse, open })
+
+// At the lowest stop the sheet shows its first line (D3's note of
+// 2026-10-23), whatever the reader had scrolled to above it: «Vai alla mappa»
+// is pressed half-way down the sheet (review PR-21b).
+const content = ref<HTMLElement | null>(null)
+watch(snap, (index) => {
+  if (index === 0 && content.value) content.value.scrollTop = 0
+})
+
 // Something else has taken the screen — the layer panel, on a phone. Get out
 // of its way rather than letting the two overlap and clip each other.
 watch(
@@ -182,7 +197,7 @@ const onPointerCancel = () => {
       Trascina per vedere più mappa
     </p>
 
-    <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-6">
+    <div ref="content" class="min-h-0 flex-1 overflow-y-auto px-4 pb-6">
       <slot></slot>
     </div>
   </section>

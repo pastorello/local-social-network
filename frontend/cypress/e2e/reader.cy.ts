@@ -18,12 +18,12 @@ const CANCELLED_EVENT = 'Evento E2E annullato'
 const FESTA = 'Festa E2E pubblicata'
 const WEEKDAY = /(lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica) \d+ /
 
-// The home's first words and its two other ways in (review of 2026-10-22,
-// P-02/M-02). seed_e2e publishes a tour under «Scoprire la città» and places
-// in Gaeta Medievale, Serapo and Porto Salvo, so both doors are open here.
+// The home's first words and, since review PR-21b, the wizard's first
+// question under them (one front door, decided on 2026-10-22). seed_e2e
+// publishes a tour under «Scoprire la città» and places in Gaeta Medievale,
+// Serapo and Porto Salvo, so its answers are there.
 const PRESENTATION = 'Gaeta raccontata da chi ci vive'
-const TOURS_DOOR = 'Che cosa ti va di fare?'
-const ZONES_DOOR = 'Cosa c’è in una zona'
+const QUESTION = 'Che cosa ti va di fare?'
 
 // Read without scrolling: inside the window, and `be.visible` already says
 // that no scrolling box (the column, the sheet) has clipped it.
@@ -104,23 +104,36 @@ describe('the reader, on a wide screen', () => {
     cy.get('#layer-chiese').should('not.be.checked')
   })
 
-  it('is told what the site is and offered its two other ways in', () => {
+  it('is told what the site is and asked the wizard’s first question, over the layers', () => {
     cy.visit('/')
 
     cy.contains('p', PRESENTATION).should('be.visible').and(onScreen)
-    cy.contains('a', TOURS_DOOR)
-      .should('be.visible')
-      .and(onScreen)
-      .and('have.attr', 'href', '/benvenuto')
-      .and('contain', 'Scoprire la città')
-    cy.contains('a', ZONES_DOOR)
-      .should('be.visible')
-      .and(onScreen)
-      .and('have.attr', 'href', '/cosa-fare')
-      .and('contain', 'Gaeta Medievale')
+    cy.contains('h2', QUESTION).should('be.visible').and(onScreen)
+    cy.contains('a', 'Andare al mare').should('be.visible').and(onScreen)
+    cy.contains('a', 'Scoprire la città').should('have.attr', 'href', '/benvenuto?intento=citta')
+    // Above the layers (review PR-21b).
+    cy.contains('h2', QUESTION).then(($question) => {
+      cy.get('#layer-chiese').should(($layer) => {
+        expect($layer[0]!.getBoundingClientRect().top).to.be.greaterThan(
+          $question[0]!.getBoundingClientRect().bottom,
+        )
+      })
+    })
 
-    cy.contains('a', TOURS_DOOR).click()
-    cy.contains('h1', TOURS_DOOR)
+    // Its answer is the wizard's: «Dove?» on /benvenuto, then back.
+    cy.contains('a', 'Scoprire la città').click()
+    cy.contains('h1', 'Dove?')
+    cy.go('back')
+    cy.contains('h2', QUESTION)
+
+    // «Vai alla mappa» leaves today's home, and the question can be asked again.
+    cy.contains('button', 'Vai alla mappa').click()
+    cy.contains('h2', QUESTION).should('not.exist')
+    cy.focused().should('contain.text', QUESTION).and('match', 'button')
+    cy.get('ul[aria-label="Luoghi sulla mappa"]').scrollIntoView()
+    cy.get('ul[aria-label="Luoghi sulla mappa"]').should('be.visible')
+    cy.contains('button', QUESTION).click()
+    cy.contains('h2', QUESTION)
   })
 
   // ADR-0005 closed its map-widget deferral on the claim that the map's data
@@ -504,19 +517,25 @@ describe('the reader, on a wide screen', () => {
 describe('the reader, on a phone', () => {
   beforeEach(() => cy.viewport(375, 812))
 
-  // M-02: the sheet opens on what the site is and its two doors — at its
-  // first stop, before anyone drags it — with the places after them.
-  it('opens the sheet on what the site is and its two other ways in', () => {
+  // M-02, and since review PR-21b: the sheet opens on what the site is and
+  // the wizard's question — at its first stop, before anyone drags it — with
+  // the places after them (D20). «Vai alla mappa» steps it down to the map.
+  it('opens the sheet on what the site is and the question, and steps down to the map', () => {
     cy.visit('/')
 
     cy.get('section[aria-label="La mappa di Gaeta"]').within(() => {
       cy.contains('p', PRESENTATION).should('be.visible').and(onScreen)
-      cy.contains('a', TOURS_DOOR).should('be.visible').and(onScreen)
-      cy.contains('a', ZONES_DOOR)
-        .should('be.visible')
-        .and(onScreen)
-        .and('have.attr', 'href', '/cosa-fare')
+      cy.contains('h2', QUESTION).should('be.visible').and(onScreen)
+      cy.contains('a', 'Andare al mare').should('be.visible').and(onScreen)
       cy.contains('h2', 'Luoghi sulla mappa')
+      cy.contains('button', 'Vai alla mappa').click()
+      cy.contains('h2', QUESTION).should('not.exist')
+      cy.get('button[aria-label="Trascina per vedere più mappa"]').should(
+        'have.attr',
+        'aria-expanded',
+        'false',
+      )
+      cy.contains('p', PRESENTATION).should('be.visible').and(onScreen)
     })
   })
 
@@ -598,7 +617,7 @@ describe('the reader, on a phone', () => {
 
     // Not again in this session.
     cy.reload()
-    cy.contains('a', TOURS_DOOR)
+    cy.contains('a', 'Scoprire la città')
     cy.get('section[aria-label="La mappa di Gaeta"]').contains('p', HINT).should('not.exist')
   })
 

@@ -140,4 +140,21 @@ describe('the wizard «Cosa fare adesso» (review PR-21)', () => {
           })
       })
   })
+
+  // One front door (review PR-21b): the home asks the same first question
+  // over the map, and «Non lo so: fammi vedere la mappa» on /benvenuto lands
+  // on the map with it put away.
+  it('asks the same first question on the home, and leaves it put away from /benvenuto', () => {
+    cy.visit('/')
+    cy.contains('h2', 'Che cosa ti va di fare?')
+    cy.contains('a', 'Mangiare').should('have.attr', 'href', '/cosa-fare?intento=mangiare')
+    cy.contains('a', 'Questa settimana').should('have.attr', 'href', '/eventi?finestra=settimana')
+
+    cy.visit('/benvenuto')
+    cy.contains('a', 'Non lo so: fammi vedere la mappa').click()
+    cy.location('pathname').should('eq', '/')
+    cy.contains('h1', 'La mappa di Gaeta')
+    cy.contains('h2', 'Che cosa ti va di fare?').should('not.exist')
+    cy.contains('button', 'Che cosa ti va di fare?')
+  })
 })

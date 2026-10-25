@@ -1,16 +1,7 @@
 import { describe, it, expect } from 'vitest'
 
-import type { Intent } from '@/definitions/interfaces/Itinerario'
 import type { Zone } from '@/definitions/interfaces/MapData'
-import { intentsWithTours, previewNames, zonesWithPlaces } from '../doors'
-
-const intent = (slug: string, count: number): Intent => ({
-  slug,
-  name: slug,
-  name_plural: slug,
-  description: '',
-  count,
-})
+import { previewNames, zonesWithPlaces } from '../doors'
 
 const zone = (slug: string, count: number): Zone => ({
   slug,
@@ -19,20 +10,9 @@ const zone = (slug: string, count: number): Zone => ({
   count,
 })
 
-// No door onto an empty room (spec itinerari.md I5/I6, cosa-fare.md Part −1
-// D8): /benvenuto and the home both decide what to offer from these.
+// No door onto an empty room (cosa-fare.md Part −1 D8): the wizard's zone
+// answer on /benvenuto and the home (review PR-21) is decided from these.
 describe('doors', () => {
-  it('offers an intent only once it has a published tour', () => {
-    expect(
-      intentsWithTours([intent('mare', 1), intent('mangiare', 0), intent('citta', 2)]),
-    ).toEqual([intent('mare', 1), intent('citta', 2)])
-  })
-
-  it('offers nothing when no tour is published', () => {
-    expect(intentsWithTours([intent('mare', 0), intent('citta', 0)])).toEqual([])
-    expect(intentsWithTours([])).toEqual([])
-  })
-
   it('offers the zones only once one has a published place', () => {
     expect(zonesWithPlaces([zone('serapo', 0), zone('porto-salvo', 0)])).toEqual([])
     expect(zonesWithPlaces([zone('serapo', 0), zone('porto-salvo', 3)])).toEqual([

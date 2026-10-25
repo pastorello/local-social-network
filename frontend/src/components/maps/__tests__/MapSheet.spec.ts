@@ -143,3 +143,29 @@ describe('MapSheet’s handle says that it drags (review PR-15)', () => {
     expect(store.sheetHeight).toBe(0.85 * window.innerHeight)
   })
 })
+
+// Review PR-21b: the home moves the sheet — down to the map on «Vai alla
+// mappa», up for the question — and at the lowest stop it shows its first
+// line, whatever had been scrolled to (design.md D3's note of 2026-10-23).
+describe('MapSheet moved by the home (review PR-21b)', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  it('steps down and up when told, and shows its first line at the lowest stop', async () => {
+    const store = useMapStore()
+    const wrapper = mount(MapSheet, {
+      props: { title: 'La mappa di Gaeta' },
+      slots: { default: '<p>Prima riga</p>' },
+    })
+    const content = wrapper.get('section > div').element as HTMLElement
+    content.scrollTop = 300
+
+    ;(wrapper.vm as unknown as { collapse: () => void }).collapse()
+    await wrapper.vm.$nextTick()
+    expect(store.sheetHeight).toBe(102)
+    expect(content.scrollTop).toBe(0)
+
+    ;(wrapper.vm as unknown as { open: () => void }).open()
+    await wrapper.vm.$nextTick()
+    expect(store.sheetHeight).toBe(0.45 * window.innerHeight)
+  })
+})
