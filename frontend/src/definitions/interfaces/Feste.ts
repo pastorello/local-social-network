@@ -40,6 +40,8 @@ export default interface Feste {
   language: string
   translation_of: string | null
   translations: TranslationRef[]
+  // A published English version exists (review PR-19b), as on CardBase.
+  has_en?: boolean
   // The editorial zones its procession stops in, named (spec cosa-fare.md
   // Part −1, D2) — the original's, for a translation (T5).
   zones: ZoneRef[]

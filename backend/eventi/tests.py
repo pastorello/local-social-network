@@ -421,6 +421,7 @@ def test_a_feasts_edition_is_in_the_window_only_with_its_card_published(api_clie
 
     assert listed == [{
         'kind': 'edizione', 'id': listed[0]['id'], 'title': 'Porto Salvo', 'festa': str(published.pk),
+        'has_en': False,
         'start_date': day(2).isoformat(), 'end_date': day(2).isoformat(), 'note': 'Processione',
     }]
 

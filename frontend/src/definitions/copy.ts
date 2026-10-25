@@ -22,9 +22,12 @@ const it = {
   // docs/spec/README.md for what the archive is and who it is for,
   // accounts.md for the collaborators chosen one by one, content.md for
   // writing from published sources, design.md's "Not a wayfinding app" for
-  // why — and nothing in it is a name, a number or an endorsement (D11).
+  // why — and nothing in it is a number or an endorsement (D11). One name,
+  // since 2026-10-25, the author's decision (review PR-19b): who chose the
+  // collaborators, said rather than «l’autore»; and the businesses of
+  // ADR-0010 among what the archive holds.
   projectStory: [
-    'Vivere Gaeta è un archivio della città, scritto da chi la vive. Le feste e le loro processioni, le chiese, i luoghi, le ricette e dove trovarle, i personaggi storici, le parole del dialetto, i libri che ne parlano, gli itinerari per percorrerla: ogni scheda porta il nome di chi l’ha scritta, uno dei collaboratori che l’autore ha scelto uno per uno. Quando una scheda nasce da ciò che altri hanno già pubblicato, è scritta con parole proprie e dice le sue fonti.',
+    'Vivere Gaeta è un archivio della città, scritto da chi la vive. Le feste e le loro processioni, le chiese, i luoghi, le ricette e dove trovarle, i locali e le botteghe che vale la pena conoscere, i personaggi storici, le parole del dialetto, i libri che ne parlano, gli itinerari per percorrerla: ogni scheda porta il nome di chi l’ha scritta, uno dei collaboratori che Luca Pastorello ha scelto uno per uno. Quando una scheda nasce da ciò che altri hanno già pubblicato, è scritta con parole proprie e dice le sue fonti.',
     'Non è un navigatore: per la strada ci sono già le mappe del telefono, a cui le schede rimandano. È fatto per conoscere il posto in cui ci si trova — davanti a una chiesa chiusa, al bar la sera, o lontano da Gaeta, quando viene voglia di rileggere una storia di casa. È scritto per chi viene qui per qualche giorno e vuole viverla davvero, e per chi ci è nato e la porta con sé. Si legge da chiunque, senza account.',
   ],
 }

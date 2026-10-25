@@ -3,6 +3,7 @@ import axios from 'axios'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter, type RouteLocationRaw } from 'vue-router'
 
+import EnglishMark from '@/components/content/EnglishMark.vue'
 import WhereAreYouField from '@/components/forms/WhereAreYouField.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
 import WizardChoices from '@/components/wizard/WizardChoices.vue'
@@ -46,11 +47,14 @@ import { useMapStore } from '@/stores/map'
 // no zone, the intent's section alone, anywhere in Gaeta. Its words are the
 // reader's language, and so are the names of zones, intents and genres where
 // the author wrote them; the cards' own titles are Italian, and marked so
-// (review PR-19a).
+// (review PR-19a), and for a reader in English the ones that can be read in
+// English say «EN» (review PR-19b).
 
 interface Row {
   id: string
   title: string
+  // A published English version (review PR-19b).
+  has_en?: boolean
 }
 interface TourRow extends Row {
   zones: string[]
@@ -213,7 +217,12 @@ interface Line {
   title: string
   to: RouteLocationRaw
   detail?: string
+  // The detail's language, when it is the card's own text — a feast's
+  // recurrence — rather than the interface's.
+  detailLang?: string
   draft?: boolean
+  // It can be read in English: «EN», for a reader in English (review PR-19b).
+  en?: boolean
 }
 interface Block {
   key: string
@@ -240,6 +249,7 @@ const placeLine = (place: MapCardFeature): Line => {
     to: layerRoute(place.type, place.id),
     detail: access ? `${kindOf(place)} · ${access}` : kindOf(place),
     draft: !place.is_published,
+    en: place.has_en,
   }
 }
 
@@ -254,6 +264,7 @@ const tourLine = (tour: TourRow): Line => ({
   id: tour.id,
   title: tour.title,
   to: { name: 'itinerariodetail', params: { id: tour.id } },
+  en: tour.has_en,
 })
 const dishesBlock = (): Block['dishes'] =>
   ricette.value.length
@@ -263,6 +274,7 @@ const dishesBlock = (): Block['dishes'] =>
           id: ricetta.id,
           title: ricetta.title,
           to: layerRoute('ricette', ricetta.id),
+          en: ricetta.has_en,
         })),
       }
     : undefined
@@ -310,6 +322,8 @@ const zoneBlocks = computed<Block[]>(() => {
         title: festa.title,
         to: layerRoute('feste', festa.id),
         detail: festa.recurrence,
+        detailLang: 'it',
+        en: festa.has_en,
       })),
       drawn: true,
     })
@@ -728,8 +742,15 @@ const chooseZone = async (slug: string) => {
                 :class="{ 'font-semibold': block.places }"
                 lang="it"
                 >{{ row.title }}</RouterLink
-              ><span v-if="row.draft" class="text-xs text-muted"> · {{ cosaFare().draft }}</span>
-              <p v-if="row.detail" class="text-sm text-muted">{{ row.detail }}</p>
+              ><EnglishMark v-if="row.en" class="ml-1.5" /><span
+                v-if="row.draft"
+                class="text-xs text-muted"
+              >
+                · {{ cosaFare().draft }}</span
+              >
+              <p v-if="row.detail" class="text-sm text-muted" :lang="row.detailLang">
+                {{ row.detail }}
+              </p>
             </li>
           </ul>
           <template v-if="block.dishes">
@@ -740,7 +761,8 @@ const chooseZone = async (slug: string) => {
               <li v-for="row in block.dishes.rows" :key="row.id" class="py-3">
                 <RouterLink :to="row.to" class="text-ink underline" lang="it">{{
                   row.title
-                }}</RouterLink>
+                }}</RouterLink
+                ><EnglishMark v-if="row.en" class="ml-1.5" />
               </li>
             </ul>
           </template>

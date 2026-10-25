@@ -59,6 +59,9 @@ export interface EdizioneItem extends Edizione {
   // The feast's card: its title, and its id for the link to it.
   title: string
   festa: string
+  // The feast's card has a published English version (review PR-19b). An
+  // event has no translation, and no such field.
+  has_en?: boolean
 }
 
 export type EventItem = Evento | EdizioneItem

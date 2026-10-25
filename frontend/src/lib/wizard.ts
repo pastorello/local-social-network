@@ -3,7 +3,7 @@ import type { RouteLocationRaw } from 'vue-router'
 import type { Intent } from '@/definitions/interfaces/Itinerario'
 import type { MapCardFeature, Zone } from '@/definitions/interfaces/MapData'
 import { previewNames } from '@/lib/doors'
-import { localName } from '@/lib/i18n'
+import { locale, localName } from '@/lib/i18n'
 import wizard from '@/lib/i18n/messages/wizard'
 import { BUSINESS_TYPES, PLACE_TYPES, byTitle, intentOf } from '@/lib/intents'
 
@@ -73,7 +73,15 @@ export const contentLine = (rows: number, tours: number, dishes = 0): string => 
 
 export interface IntentAnswer extends Intent {
   line: string
+  // Its line in the reader's language where the author wrote one (review
+  // PR-19b), and the language it is in: the Italian stands in, marked so.
+  descriptionLang?: string
 }
+
+const localDescription = (intent: Intent): Pick<IntentAnswer, 'description' | 'descriptionLang'> =>
+  locale.value === 'en' && intent.description_en
+    ? { description: intent.description_en, descriptionLang: undefined }
+    : { description: intent.description, descriptionLang: locale.value === 'en' ? 'it' : undefined }
 
 // Step 1: the intents with something behind them — a published tour, a place
 // or a business filed under them, and for «Mangiare» a dish. «Bere» answers
@@ -83,7 +91,14 @@ export const intentAnswers = (archive: WizardArchive): IntentAnswer[] =>
     const rows = intentRows(archive.features, intent.slug).length
     const dishes = intent.slug === MANGIARE ? archive.dishes : 0
     if (!rows && !intent.count && !dishes) return []
-    return [{ ...intent, name: localName(intent), line: contentLine(rows, intent.count, dishes) }]
+    return [
+      {
+        ...intent,
+        ...localDescription(intent),
+        name: localName(intent),
+        line: contentLine(rows, intent.count, dishes),
+      },
+    ]
   })
 
 export interface ZoneAnswer {

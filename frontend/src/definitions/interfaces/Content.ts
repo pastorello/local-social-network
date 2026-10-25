@@ -82,6 +82,9 @@ export interface CardBase {
   language: string
   translation_of: string | null
   translations: TranslationRef[]
+  // Whether the card has a published English version (review PR-19b): the
+  // «EN» an English reader's lists mark it with. A draft never counts.
+  has_en?: boolean
   created_at: string
   updated_at: string
 }

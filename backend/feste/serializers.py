@@ -5,7 +5,9 @@ from common.when import tourist_day
 from account.serializers import UserSerializer
 from common.coordinates import CoordinateField
 from content.models import MapFeature
-from content.serializers import CardImageSerializer, TranslationSerializer, media_source, visible_translations
+from content.serializers import (
+    CardImageSerializer, TranslationSerializer, has_english, media_source, visible_translations,
+)
 from content.fields import PlainTextField
 from content.sanitize import sanitize_html
 from maps.serializers import named_zones_of
@@ -67,6 +69,7 @@ class FesteReadSerializer(serializers.ModelSerializer):
     route = serializers.SerializerMethodField()
     pins = serializers.SerializerMethodField()
     translations = serializers.SerializerMethodField()
+    has_en = serializers.SerializerMethodField()
     original_title = serializers.SerializerMethodField()
     zones = serializers.SerializerMethodField()
     editions = serializers.SerializerMethodField()
@@ -105,6 +108,9 @@ class FesteReadSerializer(serializers.ModelSerializer):
         # title, so callers need no special case.
         return media_source(obj.card).title
 
+    def get_has_en(self, obj):
+        return has_english(obj.card)
+
     def get_translations(self, obj):
         request = self.context.get('request')
         return TranslationSerializer(visible_translations(obj.card, request), many=True).data
@@ -114,7 +120,7 @@ class FesteReadSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'body_html', 'author', 'is_published',
             'recurrence', 'programme', 'images', 'route', 'pins',
-            'language', 'translation_of', 'original_title', 'translations', 'zones',
+            'language', 'translation_of', 'original_title', 'translations', 'has_en', 'zones',
             'editions', 'created_at', 'updated_at',
         )
 

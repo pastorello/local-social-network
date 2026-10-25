@@ -13,6 +13,7 @@ import { useMapFocus } from '@/composables/useMapFocus'
 import { usePageTitle } from '@/composables/usePageTitle'
 import { cardPanelShape, usePanelShape } from '@/composables/usePanelShape'
 import { usePanelTrail } from '@/composables/usePanelTrail'
+import { useReaderCard } from '@/composables/useReaderCard'
 import { useMapStore } from '@/stores/map'
 import TypeForm from '@/components/content/TypeForm.vue'
 import TranslateControl from '@/components/content/TranslateControl.vue'
@@ -46,7 +47,19 @@ const brought = () => {
   const card = route.meta.card as ContentItem | undefined
   return card && card.id === route.params.id ? card : null
 }
-const item = ref<ContentItem | null>(brought())
+const broughtEnglish = () => {
+  const english = route.meta.translation as ContentItem | null | undefined
+  return english && english.translation_of === route.params.id ? english : null
+}
+// The card the address names, and — for a reader in English — the one shown:
+// its published English version where there is one, at the same address
+// (review PR-19b, lib/readerCard.ts).
+const fetched = ref<ContentItem | null>(brought())
+const {
+  card: item,
+  untranslated,
+  replace,
+} = useReaderCard(fetched, () => props.config.endpoint, broughtEnglish())
 // A freshly-started translation (see TranslateControl) is an empty draft —
 // its detail page opens straight into edit mode via ?edit=1 rather than
 // showing a blank read view first.
@@ -91,7 +104,7 @@ const fieldLang = (field: FieldConfig) => (field.displayKey ? undefined : item.v
 
 // The card the URL names — not the one before it, which a card opened from
 // another card's page shows until the new one has loaded.
-const shown = computed(() => (item.value && item.value.id === route.params.id ? item.value : null))
+const shown = computed(() => (fetched.value?.id === route.params.id ? item.value : null))
 
 // Where it is, over its title (review PR-23): the type's list is the panel's
 // own way up; each zone the card is in leads to what else is there.
@@ -155,7 +168,7 @@ const getItem = async () => {
   await axios
     .get(`${props.config.endpoint}${route.params.id}/`)
     .then((response) => {
-      item.value = response.data
+      fetched.value = response.data
     })
     .catch(() => {
       toastStore.showToast(5000, card().notFound)
@@ -166,7 +179,7 @@ const getItem = async () => {
 const onEdited = (updated: ContentItem) => {
   // A card just published — or unpublished, or moved — changes the map.
   mapStore.fetchFeatures()
-  item.value = updated
+  replace(updated)
   editing.value = false
 }
 
@@ -187,7 +200,7 @@ const deleteItem = async () => {
 }
 
 onMounted(() => {
-  if (!item.value) getItem()
+  if (!fetched.value) getItem()
 })
 
 // Navigating from one card's detail page straight to another's (e.g. a
@@ -201,8 +214,11 @@ watch(
   async () => {
     editing.value = false
     const card = brought()
-    if (card) item.value = card
-    else await getItem()
+    if (card) {
+      fetched.value = card
+      const english = broughtEnglish()
+      if (english) replace(english)
+    } else await getItem()
     editing.value = route.query.edit === '1'
   },
 )
@@ -222,6 +238,8 @@ watch(
           :is-published="item.is_published"
           :images="item.images"
           :translations="item.translations"
+          :original-id="item.translation_of ?? item.id"
+          :untranslated="untranslated"
           :detail-route-name="config.routeNames.detail"
           :back-to="{
             name: config.routeNames.list,

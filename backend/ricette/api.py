@@ -25,7 +25,7 @@ from .serializers import RicettaReadSerializer, RicettaWriteSerializer
 
 def _base_queryset():
     return Ricetta.objects.select_related('card', 'card__author', 'card__translation_of').prefetch_related(
-        'card__images', 'card__map_features',
+        'card__translations', 'card__images', 'card__map_features',
         # A translation shows the original's photographs and geometry
         # (content/serializers.py::media_source), so the original's are part of
         # this query rather than one extra query per row of a list.

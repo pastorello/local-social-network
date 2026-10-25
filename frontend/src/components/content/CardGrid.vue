@@ -2,6 +2,7 @@
 import type { RouteLocationRaw } from 'vue-router'
 
 import CoverPlaceholder from './CoverPlaceholder.vue'
+import EnglishMark from './EnglishMark.vue'
 import lists from '@/lib/i18n/messages/lists'
 
 // The reading list (spec/design.md D6): a grid of covers, not a column of
@@ -17,6 +18,9 @@ export interface CardGridEntry {
   // The summary's language, when it is the card's own text (review PR-19a):
   // the title always is, Italian, since a list holds originals (T6).
   summaryLang?: string
+  // It has a published English version: «EN» beside its title, for a reader
+  // in English (review PR-19b).
+  en?: boolean
   cover: string | null
   isPublished: boolean
   to: RouteLocationRaw
@@ -71,7 +75,7 @@ defineProps<{ entries: CardGridEntry[]; type: string }>()
             class="line-clamp-2 font-display text-lg leading-snug font-bold text-pretty text-ink sm:min-h-[2lh]"
           >
             <span lang="it">{{ entry.title }}</span
-            >{{ ' ' }}
+            ><EnglishMark v-if="entry.en" class="ml-1.5" />{{ ' ' }}
             <span v-if="!entry.isPublished" class="text-xs font-normal text-muted"
               >· {{ lists().draft }}</span
             >

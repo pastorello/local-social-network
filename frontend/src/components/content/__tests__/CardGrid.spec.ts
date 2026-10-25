@@ -4,6 +4,8 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 
 import CardGrid from '../CardGrid.vue'
 import CoverPlaceholder from '../CoverPlaceholder.vue'
+import EnglishMark from '../EnglishMark.vue'
+import { setLocale } from '@/lib/i18n'
 
 const stub = { template: '<div />' }
 
@@ -97,5 +99,24 @@ describe('CardGrid (spec/design.md D5/D6)', () => {
     const wrapper = mountGrid()
 
     expect(wrapper.text()).toContain('bozza')
+  })
+})
+
+// Review PR-19b: a card that can be read in English says «EN» beside its
+// title, inside its link, to a reader in English.
+describe('CardGrid — «EN»', () => {
+  it('marks the cards with a published English version, and only those', async () => {
+    await setLocale('en')
+    try {
+      const wrapper = mount(CardGrid, {
+        props: { entries: [{ ...ENTRIES[0]!, en: true }, ENTRIES[1]!], type: 'chiese' },
+        global: { plugins: [makeRouter()] },
+      })
+      const [translated, other] = wrapper.findAll('li')
+      expect(translated!.get('a').findComponent(EnglishMark).text()).toContain('EN')
+      expect(other!.findComponent(EnglishMark).exists()).toBe(false)
+    } finally {
+      await setLocale('it')
+    }
   })
 })

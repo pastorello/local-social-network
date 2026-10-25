@@ -5,6 +5,8 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import axios from 'axios'
 
 import EventListView from '../EventListView.vue'
+import EnglishMark from '@/components/content/EnglishMark.vue'
+import { setLocale } from '@/lib/i18n'
 import type { EventItem, Evento } from '@/definitions/interfaces/Evento'
 
 vi.mock('axios', () => ({ default: { get: vi.fn() } }))
@@ -116,5 +118,31 @@ describe('EventListView', () => {
     const wrapper = await mountAt('/eventi', [])
 
     expect(wrapper.get('a[href="/collabora"]').text()).toBe('Scrivici')
+  })
+
+  // Review PR-19b: a feast's edition is its card, which may be read in
+  // English; an event is not a card, and has no other language.
+  it('marks a feast whose card can be read in English, for a reader in English', async () => {
+    await setLocale('en')
+    try {
+      const wrapper = await mountAt('/eventi', [
+        evento({}),
+        {
+          kind: 'edizione',
+          id: 7,
+          title: 'Festa di Porto Salvo',
+          festa: 'f1',
+          has_en: true,
+          start_date: '2026-10-31',
+          end_date: '2026-10-31',
+          note: '',
+        } as EventItem,
+      ])
+      const [event, edition] = wrapper.findAll('li')
+      expect(event!.findComponent(EnglishMark).exists()).toBe(false)
+      expect(edition!.findComponent(EnglishMark).exists()).toBe(true)
+    } finally {
+      await setLocale('it')
+    }
   })
 })

@@ -233,4 +233,31 @@ describe('the wizard in English', () => {
       'Medieval Gaeta',
     ])
   })
+
+  // Review PR-19b: an intent's line in the author's English, and the Italian
+  // where they have written none — marked Italian, so it is read as such.
+  it('says an intent’s line in English where the author wrote one, and marks the Italian otherwise', async () => {
+    const lines = archive({
+      intents: [
+        {
+          ...intent('mare', 1),
+          description: 'Le spiagge, e gli itinerari lungo il mare',
+          description_en: 'The beaches, and tours along the coast',
+        },
+        { ...intent('citta', 1), description: 'Chiese e musei, e gli itinerari' },
+      ],
+    })
+    const read = () =>
+      intentAnswers(lines).map((answer) => [answer.description, answer.descriptionLang])
+
+    expect(read()).toEqual([
+      ['Le spiagge, e gli itinerari lungo il mare', undefined],
+      ['Chiese e musei, e gli itinerari', undefined],
+    ])
+    await setLocale('en')
+    expect(read()).toEqual([
+      ['The beaches, and tours along the coast', undefined],
+      ['Chiese e musei, e gli itinerari', 'it'],
+    ])
+  })
 })

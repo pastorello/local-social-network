@@ -3,6 +3,8 @@ import { mount, RouterLinkStub } from '@vue/test-utils'
 
 import PlacesList from '../PlacesList.vue'
 import CoverPlaceholder from '@/components/content/CoverPlaceholder.vue'
+import EnglishMark from '@/components/content/EnglishMark.vue'
+import { setLocale } from '@/lib/i18n'
 import type { MapCardFeature } from '@/definitions/interfaces/MapData'
 
 const feature = (over: Partial<MapCardFeature>): MapCardFeature => ({
@@ -50,5 +52,29 @@ describe('PlacesList — the keyboard path to what the map draws', () => {
     expect(bare!.html()).toContain('color-mix')
     expect(covered!.findComponent(CoverPlaceholder).exists()).toBe(false)
     expect(covered!.get('img').attributes('src')).toBe('https://example.test/serapo.jpg')
+  })
+
+  // Review PR-19b: the home's sheet and column mark what can be read in
+  // English, for a reader in English — beside a title that may be cut short.
+  it('says «EN» beside a card with a published English version, to a reader in English', async () => {
+    await setLocale('en')
+    try {
+      const wrapper = mount(PlacesList, {
+        props: {
+          features: [
+            feature({ id: 'a', title: 'Duomo', type: 'chiese', has_en: true }),
+            feature({ id: 'b', title: 'Serapo' }),
+          ],
+        },
+        global: { stubs: { RouterLink: RouterLinkStub } },
+      })
+      const [translated, other] = wrapper.findAll('li')
+      const mark = translated!.getComponent(EnglishMark)
+      expect(mark.classes()).toContain('flex-none')
+      expect(translated!.get('.truncate').text()).toBe('Duomo')
+      expect(other!.findComponent(EnglishMark).exists()).toBe(false)
+    } finally {
+      await setLocale('it')
+    }
   })
 })

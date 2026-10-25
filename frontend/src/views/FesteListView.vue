@@ -56,6 +56,7 @@ const entries = computed(() =>
     title: item.title,
     summary: item.recurrence,
     summaryLang: 'it',
+    en: item.has_en,
     cover: item.images[0]?.imageURL ?? null,
     isPublished: item.is_published,
     to: { name: 'festedetail', params: { id: item.id } },

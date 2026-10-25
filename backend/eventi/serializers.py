@@ -6,6 +6,7 @@ from account.models import User
 from account.serializers import UserSerializer
 from common.coordinates import CoordinateField
 from content.fields import PlainTextField
+from content.serializers import has_english
 from feste.models import Edizione
 from maps.serializers import named_zones_of
 
@@ -84,13 +85,19 @@ class EdizioneItemSerializer(serializers.ModelSerializer):
     kind = serializers.SerializerMethodField()
     title = serializers.CharField(source='festa.card.title')
     festa = serializers.UUIDField(source='festa_id')
+    # The feast's card in English, for an English reader's «EN» (review
+    # PR-19b). An event has no translation, and so no such field.
+    has_en = serializers.SerializerMethodField()
 
     def get_kind(self, obj):
         return 'edizione'
 
+    def get_has_en(self, obj):
+        return has_english(obj.festa.card)
+
     class Meta:
         model = Edizione
-        fields = ('kind', 'id', 'title', 'festa', 'start_date', 'end_date', 'note')
+        fields = ('kind', 'id', 'title', 'festa', 'has_en', 'start_date', 'end_date', 'note')
 
 
 class PlaceSerializer(serializers.Serializer):

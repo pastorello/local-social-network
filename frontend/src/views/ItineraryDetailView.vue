@@ -14,6 +14,7 @@ import { useMapFocus } from '@/composables/useMapFocus'
 import { usePageTitle } from '@/composables/usePageTitle'
 import { usePanelShape } from '@/composables/usePanelShape'
 import { usePanelTrail } from '@/composables/usePanelTrail'
+import { useReaderCard } from '@/composables/useReaderCard'
 import { itinerarioConfig } from '@/definitions/typeConfigs'
 import type Itinerario from '@/definitions/interfaces/Itinerario'
 import type { Intent } from '@/definitions/interfaces/Itinerario'
@@ -39,7 +40,11 @@ const userStore = useUserStore()
 const toastStore = useToastStore()
 const { isDesktop } = useIsDesktop()
 
-const tour = ref<Itinerario | null>(null)
+// The tour the address names, and the one shown: for a reader in English its
+// published English version, at the same address — the stops, the path and
+// the intents are the original's either way (T5, review PR-19b).
+const fetched = ref<Itinerario | null>(null)
+const { card: tour, untranslated, replace } = useReaderCard(fetched, () => '/api/itinerari/')
 const editing = ref(route.query.edit === '1')
 
 const canEdit = computed(
@@ -71,7 +76,7 @@ const previous = computed(() =>
 // «Itinerari», and each of its intents leads to the tours that share it; a
 // stop is under its own tour — up is named after it — and says which stop it
 // is. The tour the URL names, not the previous one while the next loads.
-const shown = computed(() => (tour.value && tour.value.id === route.params.id ? tour.value : null))
+const shown = computed(() => (fetched.value?.id === route.params.id ? tour.value : null))
 const tourTitle = computed(() =>
   shown.value ? shown.value.original_title || shown.value.title : '',
 )
@@ -204,7 +209,7 @@ watch(
 
 const getTour = async () => {
   try {
-    tour.value = (await axios.get<Itinerario>(`/api/itinerari/${route.params.id}/`)).data
+    fetched.value = (await axios.get<Itinerario>(`/api/itinerari/${route.params.id}/`)).data
   } catch {
     toastStore.showToast(5000, tours().notFound)
     router.push({ name: itinerarioConfig.routeNames.list })
@@ -212,7 +217,7 @@ const getTour = async () => {
 }
 
 const onEdited = (updated: Itinerario) => {
-  tour.value = updated
+  replace(updated)
   editing.value = false
 }
 
@@ -399,6 +404,8 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
       :is-published="tour.is_published"
       :images="tour.images"
       :translations="tour.translations"
+      :original-id="tour.translation_of ?? tour.id"
+      :untranslated="untranslated"
       :detail-route-name="itinerarioConfig.routeNames.detail"
       :back-to="{
         name: itinerarioConfig.routeNames.list,

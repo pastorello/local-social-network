@@ -61,7 +61,9 @@ def _items(window):
     a comparison made on each request, never a job (CF26)."""
     today = tourist_day()
     events = _base_queryset().filter(is_published=True, end_date__gte=today)
-    editions = Edizione.objects.select_related('festa__card').filter(
+    editions = Edizione.objects.select_related('festa__card').prefetch_related(
+        'festa__card__translations',
+    ).filter(
         festa__card__is_published=True, festa__card__translation_of__isnull=True,
         end_date__gte=today,
     )
