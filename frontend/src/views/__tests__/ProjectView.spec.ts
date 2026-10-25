@@ -9,6 +9,9 @@ import copy from '@/definitions/copy'
 import { useUserStore } from '@/stores/user'
 
 vi.mock('axios')
+// Asked for once the page has painted (stores/map.ts, stores/wizard.ts,
+// useArchiveLine): at once, here.
+vi.mock('@/lib/firstPaint', () => ({ afterFirstPaint: () => Promise.resolve() }))
 
 const answerStats = (data: unknown) =>
   vi

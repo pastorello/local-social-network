@@ -5,6 +5,7 @@ import type Category from '@/definitions/interfaces/Category'
 import type { MapPoint } from '@/definitions/interfaces/Content'
 import type { MapCardFeature, Overlay } from '@/definitions/interfaces/MapData'
 import type { ReportPin } from '@/definitions/interfaces/Report'
+import { afterFirstPaint } from '@/lib/firstPaint'
 import { CARD_LAYERS, REPORTS_LAYER_KEY } from '@/lib/mapLayers'
 import { useUserStore } from '@/stores/user'
 
@@ -205,9 +206,19 @@ export const useMapStore = defineStore('map', {
 
     // Once per session: the map is not re-fetched because a page opened over
     // it. A card saved or a report filed refetches what it changed.
+    //
+    // Asked for once the page's words are on screen, as the map itself is
+    // drawn after them (TD-52). Asked for at mount, the two fastest answers —
+    // the features and the overlays — came back before the first paint on
+    // half the runs, and Lighthouse then counts them on the way to the page's
+    // largest text: /cosa-fare measured 2.29–2.30 s on every run of main's CI
+    // instead of 1.85, and the English pages over 2.5 s (review PR-19a). What
+    // waits for them — the wizard's answers, a zone's rows, the places' list —
+    // already waits for `featuresLoaded`.
     async load() {
       if (this.loaded) return
       this.loaded = true
+      await afterFirstPaint()
       await Promise.all([this.loadReports(), this.fetchFeatures(), this.fetchOverlays()])
     },
 

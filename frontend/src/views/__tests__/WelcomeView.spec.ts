@@ -14,6 +14,9 @@ import { useWizardStore } from '@/stores/wizard'
 const PRESENTATION = copy.it.presentation
 
 vi.mock('axios')
+// Asked for once the page has painted (stores/map.ts, stores/wizard.ts,
+// useArchiveLine): at once, here.
+vi.mock('@/lib/firstPaint', () => ({ afterFirstPaint: () => Promise.resolve() }))
 
 const feature = (over: Partial<MapCardFeature>): MapCardFeature => ({
   id: 'x',

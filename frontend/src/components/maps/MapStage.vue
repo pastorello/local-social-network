@@ -216,7 +216,8 @@ watch(
 )
 
 onMounted(async () => {
-  // The map's data does not wait for the map.
+  // The map's data does not wait for the map — only for the page's first
+  // paint, as the map does (stores/map.ts::load).
   const data = mapStore.load()
   // The words first: the page's own component, then a paint, then the map.
   await router.isReady()

@@ -85,17 +85,26 @@ describe('MapStage loads the map after the page (TD-52)', () => {
     vi.mocked(axios.get).mockResolvedValue({ data: [] })
   })
 
-  it('does not draw the map before the page has painted, and fetches its data at once', async () => {
-    let painted = () => {}
-    paint.done = () => new Promise<void>((resolve) => (painted = resolve))
-    const { wrapper } = await mountAt('/chiese/nuova')
+  // Neither the map nor its data before the page has painted: asked for at
+  // mount, the data came back before the paint on half of CI's runs, and
+  // Lighthouse put it on the way to the page's largest text (review PR-19a).
+  it('draws the map, and asks for its data, only once the page has painted', async () => {
+    // Everything that waits for the paint — the map, the store's data.
+    const waiting: (() => void)[] = []
+    paint.done = () => new Promise<void>((resolve) => waiting.push(resolve))
+    const painted = () => waiting.forEach((resolve) => resolve())
+    try {
+      const { wrapper } = await mountAt('/chiese/nuova')
 
-    expect(wrapper.findComponent(GaetaMapStub).exists()).toBe(false)
-    expect(vi.mocked(axios.get)).toHaveBeenCalledWith('/api/map/features/')
+      expect(wrapper.findComponent(GaetaMapStub).exists()).toBe(false)
+      expect(vi.mocked(axios.get)).not.toHaveBeenCalledWith('/api/map/features/')
 
-    painted()
-    await vi.waitUntil(() => wrapper.findComponent(GaetaMapStub).exists())
-    paint.done = () => Promise.resolve()
+      painted()
+      await vi.waitUntil(() => wrapper.findComponent(GaetaMapStub).exists())
+      expect(vi.mocked(axios.get)).toHaveBeenCalledWith('/api/map/features/')
+    } finally {
+      paint.done = () => Promise.resolve()
+    }
   })
 
   it('waits for the map’s data too while a page covers the map', async () => {

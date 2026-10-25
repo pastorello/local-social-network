@@ -89,6 +89,14 @@ let editorLayer: LayerGroup | null = null
 // rests on. After, it stays where it is when a page closes (review PR-22):
 // closing is not a step back, for the map either.
 let moved = false
+// Leaflet drops a view asked for while it is animating a zoom
+// (Map._tryAnimatedZoom returns at once): a frame that changes twice in a row —
+// the map's data arriving after the map, then the panel's free space — stayed
+// on the first. A frame asked for meanwhile is drawn when the zoom ends, from
+// the props as they are then (review PR-19a, which moved the data after the
+// first paint and so after the map).
+let zooming = false
+let frameWaiting = false
 let draftMarker: CircleMarker | null = null
 let resizeObserver: ResizeObserver | null = null
 const overlayLayers = new Map<string, Layer>()
@@ -260,6 +268,10 @@ const fit = (points: Coords[], options: { animate?: boolean } = {}) => {
 // phone's sheet moving to another stop (review PR-5, M-01).
 const frameView = (options: { animate?: boolean } = {}) => {
   if (!map) return
+  if (zooming) {
+    frameWaiting = true
+    return
+  }
   const points = framedPoints()
   if (points.length) {
     fit(points, options)
@@ -455,6 +467,15 @@ const onReady = (leafletMap: LeafletMap) => {
     emit('view', { lat: center.lat, lng: center.lng, zoom: map.getZoom() })
   }
   map.on('moveend', reportView)
+  map.on('zoomanim', () => {
+    zooming = true
+  })
+  map.on('zoomend', () => {
+    zooming = false
+    if (!frameWaiting) return
+    frameWaiting = false
+    frameView()
+  })
 
   map.on('click', (event: LeafletMouseEvent) => {
     if (!map) return

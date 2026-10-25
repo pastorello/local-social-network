@@ -14,11 +14,19 @@ ci:
     # where «Dove sei?» and a chip both lead — on the zone `seed_e2e` fills
     # most (a church, a feast's route, a tour): its rows arrive after the page,
     # and the zone-less page never measured them (TD-53, CLS 0.204).
+    #
+    # The reader's language is on purpose (review PR-19a, translations.md T9):
+    # those four in Italian — Chrome is told so below — and the home and «Cosa
+    # si può fare qui» in English, by the address, as a shared link opens them.
+    # English waits for a chunk of its own, which index.html asks for beside
+    # the entry (vite.config.ts, preloadEnglish).
     url:
       - http://127.0.0.1:4173/benvenuto
       - http://127.0.0.1:4173/
       - http://127.0.0.1:4173/cosa-fare
       - http://127.0.0.1:4173/cosa-fare?zona=porto-salvo
+      - http://127.0.0.1:4173/?lang=en
+      - http://127.0.0.1:4173/cosa-fare?lang=en
     # Three runs per page; every assertion below reads the median.
     numberOfRuns: 3
     settings:
@@ -30,8 +38,13 @@ ci:
       # text; what a tile adds on top is in TD-52, in the debt archive.
       blockedUrlPatterns: ['*tile.openstreetmap.org*']
       # Chrome will not start as root inside a container (act) without it; on
-      # GitHub's own runner it changes nothing.
-      chromeFlags: --no-sandbox
+      # GitHub's own runner it changes nothing. And Italian: the app takes a
+      # first visit's language from navigator.language, which on the Linux
+      # runner is en-US — #147's first run measured every page in English.
+      # Headless Chrome on Linux ignores --lang for navigator.language and
+      # obeys --accept-lang (checked in a Linux container, 2026-10-25), and
+      # Lighthouse sets no language of its own.
+      chromeFlags: --no-sandbox --accept-lang=it-IT
   assert:
     assertions:
       # CLS at web.dev's "good" threshold. It does not depend on the machine:

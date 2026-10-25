@@ -14,6 +14,9 @@ import { useUserStore } from '@/stores/user'
 const PRESENTATION = copy.it.presentation
 
 vi.mock('axios')
+// The map's data is asked for once the page has painted (stores/map.ts): at
+// once, here.
+vi.mock('@/lib/firstPaint', () => ({ afterFirstPaint: () => Promise.resolve() }))
 
 // The map itself is the shell's since the layout of 2026-09-18 (design.md
 // D13): HomeView is the chrome over it, and it changes what the map draws

@@ -220,7 +220,23 @@ same place did. So the areas of the first paint keep their English apart, in
 `<area>.en.ts` files gathered by `english.ts` into a chunk only an English
 reader loads (before the first paint, or before the switch turns English on),
 and what only a later page says travels with that page: the entry grew by
-2.5 kB and the gate's medians are the base's (1.84–1.85 s). The compiler
+2.5 kB and the gate's medians are the base's (1.84–1.85 s). `index.html`
+asks for that chunk beside the entry when the address, the reader's last
+choice or the browser says English (`vite.config.ts::preloadEnglish`), so
+English does not wait for the entry to decide first.
+
+**The performance gate measures each language on purpose** (2026-10-25):
+its four pages in Italian — the Linux runner's Chrome asks for `en-US`, so
+`lighthouserc.yml` tells it Italian — and `/?lang=en` and `/cosa-fare?lang=en`
+in English. #147's first run had measured everything in English by accident,
+over the budget on `/cosa-fare` (2.60 s). Two things were found on the way:
+the English chunk was fetched only once the entry had run (now preloaded),
+and the map's data, asked for at mount, came back before the first paint on
+half the runs and was counted on the way to the page's largest text — on
+main too, where `/cosa-fare` measured 2.29–2.30 s on every CI run. The map's
+data, the archive's line and the wizard's answers are asked for after the
+first paint now, as the map itself was already drawn: 1.84 s in Italian and
+1.98–1.99 s in English, on every one of 18 runs on a Mac. The compiler
 checks that both languages have every key and take the same arguments, and
 `lib/i18n/__tests__/messages.spec.ts` checks it again on every message file.
 Review PR-19b shows a card's translation on its own page in English and marks
