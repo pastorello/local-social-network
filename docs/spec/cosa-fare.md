@@ -158,6 +158,12 @@ polygon is never dropped — it is listed under *«Altrove a Gaeta»*.
 - **Out:** personaggi, dialetto and libri. A historical figure is not a thing
   to do; the monument that may be worth it is a luogo already.
 
+*(2026-10-25, review PR-26: a zone's rows include its businesses now that they
+are cards of their own, on the editors' merit — [ADR-0010](../adr/0010-businesses-in-the-archive.md),
+the decision the Patronage question above was waiting for. A ricetta's pins
+are still not read (CF36). How they are listed is D9's note, "The type
+exists".)*
+
 ## D4 — The sections are activities, with a fourth: *Camminare*
 
 The same words as `/benvenuto`'s *«Che cosa ti va di fare?»*: **Andare al
@@ -168,6 +174,12 @@ mapping is a frontend constant (`lib/intents.ts`); a genre added in Django
 admin and not yet mapped renders under *«Altro da vedere»*, never nowhere.
 *Camminare* is one seed row in `itinerari`; `/benvenuto` shows it only once a
 published tour carries it, so adding it changes nothing a guest sees today.
+
+*(2026-10-25, ADR-0010: a fifth, **Bere**, is one more seed row
+(`itinerari/migrations/0007_seed_bere.py`), hidden on `/benvenuto` the same
+way, and what files under it is a business *dove si beve*. *Mangiare* opens
+with the zone's businesses *dove si mangia* and *dove si compra*, and D3's
+dishes follow them. The mapping is `lib/intents.ts::KIND_INTENT`.)*
 
 ## D5 — Defaults the author did not object to
 
@@ -376,6 +388,34 @@ days is.
 - **CF41 is amended** by ADR-0010: the venue may be an `attivita` card.
 
 The build is the review's PR-27. The wizard reads it in PR-21.
+
+### The type exists — 2026-10-25 (review PR-26)
+
+`attivita` is built ([content.md](./content.md), *The ninth type*), so K5 is
+answered in code as well as in the ADR, and an event's venue can be one the
+day PR-27 builds events (CF41 as amended). On this page, what the build
+decided:
+
+- **A zone's businesses are its rows**, alphabetical and with the order printed
+  beside the heading, like every block: under **Bere**, which takes its place
+  among the intents in the admin's order, and under **Mangiare**, which stays
+  last (review PR-4) and is now one heading over two lists — the zone's tables
+  and botteghe first, then the dishes for all of Gaeta under their note. A dish
+  and a door are different answers, so neither replaces the other.
+- **Each row says what it is** — «Dove si beve», «Dove si mangia», «Dove si
+  compra» — from `lib/intents.ts::KIND_NAME`, a frontend constant beside
+  `GENRE_INTENT`, since the kinds are code on both sides; no extra request on
+  a page whose paint the Lighthouse gate times (TD-53).
+- **Never counted.** A zone's chip, and `/api/map/zone/`'s count, stay its
+  places, chiese and luoghi; so does the rule that opens `/benvenuto`'s and the
+  home's door to this page. A zone is not bigger for holding more bars, and a
+  bar alone does not invite a guest here. A zone that holds only businesses is
+  not told it is empty: its rows show.
+- **The map draws and frames them** with the zone's places and feste.
+- **Nothing says open**: a row carries its kind and nothing about the hours,
+  which are read on the business's card with their date (ADR-0008).
+- *Altrove a Gaeta* stays a chip of places: a business outside every zone, with
+  no place outside beside it, is reached from `/attivita` and the map.
 
 ## The build, in order
 
@@ -1680,7 +1720,7 @@ that content.md uses to justify `luoghi`'s existence at all.
 businesses are a type of their own, `attivita`, with a closed `kind` in code
 (*beve*, *mangia*, *compra*), on the editors' merit. A beach club enters like
 any business, through its bar or its kitchen, and the beach stays public land
-on its own card.)*
+on its own card. Built 2026-10-25, review PR-26.)*
 
 ### Also reopened — decide while building, but decide
 
@@ -1692,6 +1732,10 @@ on its own card.)*
   definition of stop-eligibility** (`itinerari/serializers.py` imports it). The
   one-line edit that puts events on the map also makes a Saturday concert a legal
   stop on a timeless walking tour. Split the tuple, or keep events off it.
+  *(Split 2026-10-25, for the businesses — review PR-26, ADR-0010: `maps.CARD_TYPES`
+  is the map's layers and `maps.STOP_TYPES` what a stop may be; `attivita` is in
+  the first only, and a test holds the two apart. Events, when they come, choose
+  their list.)*
 - **I10, only curated itineraries.** It refused a *reader-built* planner. A module
   that assembles a day out of the archive reaches the same outcome from an angle
   I10 never considered — the server doing the picking instead of the guest.

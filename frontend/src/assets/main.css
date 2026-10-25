@@ -125,15 +125,20 @@
   /* luoghi (2026-09-18): magenta, the one hue family no other layer uses —
      5.65 on page, 6.04 on white, so a pin clears 1.4.11's 3:1 with room. */
   --color-layer-luoghi: #be185d;
+  /* attivita (2026-10-25, ADR-0010): teal, between the ricette's green and the
+     chiese' blue — the one gap left on the wheel that no layer and no report
+     status holds. 5.12 on page, 5.47 on white. */
+  --color-layer-attivita: #0f766e;
   --color-layer-unknown: #6b7280;
 
   /* The intents of «Che cosa ti va di fare?» (review PR-14, M-09): the cards a
      guest from a B&B's card chooses among on /benvenuto, each in a tint of its
      own colour with its icon — a tint, never the colour as a ground (D7 keeps
      the saturated register for the map). Two are Gaeta's: the sea, the roofs
-     of the old town. The other two wear the layer of what they lead to on «Cosa
+     of the old town. The others wear the layer of what they lead to on «Cosa
      si può fare qui»: the table its ricette, the walk its luoghi — viewpoints,
-     paths, parks. References, not hexes, so a town that re-themes the palette
+     paths, parks — and the glass its attività (2026-10-25, ADR-0010).
+     References, not hexes, so a town that re-themes the palette
      re-themes these with it. An intent the admin adds after these wears the
      unknown grey until it is given one here. Each clears 4.5:1 on the surface
      and 3:1 on its own tint, measured in lib/__tests__/intents.spec.ts (D9). */
@@ -141,6 +146,7 @@
   --color-intent-citta: var(--color-terracotta); /* 4.67 on its tint, 6.53 on surface */
   --color-intent-mangiare: var(--color-layer-ricette); /* 3.70 on its tint, 5.02 on surface */
   --color-intent-camminare: var(--color-layer-luoghi); /* 4.36 on its tint, 6.04 on surface */
+  --color-intent-bere: var(--color-layer-attivita); /* 3.99 on its tint, 5.47 on surface */
 
   @keyframes fadeInUp {
     0% {

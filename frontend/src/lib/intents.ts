@@ -17,11 +17,29 @@ export const GENRE_INTENT: Record<string, string> = {
   parco: 'camminare',
 }
 
+// A business is filed by its kind (ADR-0010): «Bere» for where one drinks, and
+// «Mangiare» for a table and for a bottega alike — beside the dishes, never in
+// their place (a dish and a door are different answers). Closed in code, like
+// the kinds themselves.
+export const KIND_INTENT: Record<string, string> = {
+  beve: 'bere',
+  mangia: 'mangiare',
+  compra: 'mangiare',
+}
+
+// How a row says what a business is, under its activity: the kinds' own words
+// (attivita.models.KIND_CHOICES), so «Mangiare» tells a table from a bakery.
+export const KIND_NAME: Record<string, string> = {
+  beve: 'Dove si beve',
+  mangia: 'Dove si mangia',
+  compra: 'Dove si compra',
+}
+
 // The intents that have a colour of their own (assets/main.css, review PR-14):
 // each card on /benvenuto wears a tint of it. The token, never its hex (D8).
 // An intent added in the admin and not given one wears the unknown grey, as a
 // card type the SPA does not know yet does on the map.
-export const TINTED_INTENTS = ['mare', 'citta', 'mangiare', 'camminare']
+export const TINTED_INTENTS = ['mare', 'citta', 'mangiare', 'camminare', 'bere']
 
 export const intentVar = (slug: string): string =>
   `var(${TINTED_INTENTS.includes(slug) ? `--color-intent-${slug}` : '--color-layer-unknown'})`
@@ -30,14 +48,22 @@ export const intentVar = (slug: string): string =>
 export const OTHER_INTENT = 'altro'
 export const OTHER_INTENT_NAME = 'Altro da vedere'
 
-// The activity a place belongs under. Churches are part of the town.
-export const intentOf = (feature: Pick<MapCardFeature, 'type' | 'genre'>): string => {
+// The activity a place belongs under. Churches are part of the town; a
+// business goes where its kind leads.
+export const intentOf = (feature: Pick<MapCardFeature, 'type' | 'genre' | 'kind'>): string => {
   if (feature.type === 'chiese') return 'citta'
+  if (feature.type === 'attivita')
+    return (feature.kind && KIND_INTENT[feature.kind]) || OTHER_INTENT
   return (feature.genre && GENRE_INTENT[feature.genre]) || OTHER_INTENT
 }
 
-// The rows of the page (D3): the places one goes to.
+// The rows of the page (D3): the places one goes to. A zone's count is of
+// these, as the API's is (`maps.ZONE_PLACE_TYPES`).
 export const PLACE_TYPES = ['chiese', 'luoghi']
+
+// The businesses (ADR-0010): rows of a zone too, under «Bere» and «Mangiare»,
+// but never counted — a zone is not bigger for holding more bars.
+export const BUSINESS_TYPES = ['attivita']
 
 // The pseudo-zone for places outside every drawn zone (D2): never dropped.
 export const ELSEWHERE = 'altrove'

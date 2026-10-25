@@ -54,7 +54,21 @@ export const CARD_LAYERS: MapLayer[] = [
     fallback: '#be185d',
     route: '/luoghi',
   },
+  {
+    key: 'attivita',
+    label: 'Attività',
+    token: '--color-layer-attivita',
+    fallback: '#0f766e',
+    route: '/attivita',
+  },
 ]
+
+// The layers whose cards can be a tour's stop (spec itinerari.md I3): every
+// one but the businesses — a tour that chose one bar among many would be the
+// ranking cosa-fare.md CF40 forbids (ADR-0010). A second list on purpose, as
+// the backend's `maps.STOP_TYPES` is: when the layers were the stop types too,
+// putting a type on the map made it a stop.
+export const STOP_TYPES = ['chiese', 'feste', 'ricette', 'personaggi', 'luoghi']
 
 export const REPORTS_LAYER_KEY = 'segnalazioni'
 

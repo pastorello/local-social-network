@@ -10,6 +10,7 @@ import {
   personaggioConfig,
   ricettaConfig,
   luogoConfig,
+  attivitaConfig,
   itinerarioConfig,
 } from '../definitions/typeConfigs'
 // The reader's ways in — the map, the address on the B&B cards, and where it
@@ -243,6 +244,28 @@ const router = createRouter({
       props: { config: luogoConfig },
       beforeEnter: fetchCardFirst(luogoConfig.endpoint),
       meta: { requiresAuth: false, panel: 'narrow', title: [luogoConfig.label] },
+    },
+    {
+      path: '/attivita',
+      name: attivitaConfig.routeNames.list,
+      component: () => import('../views/TypeListView.vue'),
+      props: { config: attivitaConfig },
+      meta: { requiresAuth: false, title: [attivitaConfig.label] },
+    },
+    {
+      path: '/attivita/nuova',
+      name: attivitaConfig.routeNames.create,
+      component: () => import('../views/TypeCreateView.vue'),
+      props: { config: attivitaConfig },
+      meta: { requiresAuth: true, panel: 'editor', title: ['Nuova scheda', attivitaConfig.label] },
+    },
+    {
+      path: '/attivita/:id',
+      name: attivitaConfig.routeNames.detail,
+      component: () => import('../views/TypeDetailView.vue'),
+      props: { config: attivitaConfig },
+      beforeEnter: fetchCardFirst(attivitaConfig.endpoint),
+      meta: { requiresAuth: false, panel: 'narrow', title: [attivitaConfig.label] },
     },
     {
       // The one address printed on every B&B's card (spec itinerari.md I6):

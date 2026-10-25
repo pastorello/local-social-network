@@ -17,7 +17,7 @@ from common.coordinates import CoordinateField
 from common.images import ImageRejected, validate_image
 
 from .fields import PlainTextField
-from .models import Availability, Card, CardImage, MapFeature
+from .models import Availability, Card, CardImage, MapFeature, hours_only_problem
 
 MAX_POINTS = 50
 
@@ -299,14 +299,20 @@ AVAILABILITY_BELONGS_TO_ORIGINAL = 'Gli orari e il custode appartengono alla sch
 
 def save_availability(card, data):
     """Write what a card's form sent about getting in (ADR-0008). Refused on a
-    translation, which shows its original's (T5), and on a church marked as
-    having no door. Absent `data` leaves the row alone."""
+    translation, which shows its original's (T5), on a church marked as
+    having no door, and on a business given more than its hours (ADR-0010).
+    Absent `data` leaves the row alone."""
     if data is None:
         return
     if card.translation_of_id is not None:
         raise ValidationError({'availability': [AVAILABILITY_BELONGS_TO_ORIGINAL]})
     if data['state'] == Availability.NO_DOOR and hasattr(card, 'chiese'):
         raise ValidationError({'availability': ['Una chiesa ha sempre una porta.']})
+    problem = hours_only_problem(
+        card, data['state'], data.get('keeper', ''), data.get('keeper_phone', '')
+    )
+    if problem:
+        raise ValidationError({'availability': [problem]})
     row = Availability.objects.filter(card=card).first() or Availability(card=card)
     for field, value in data.items():
         setattr(row, field, value)

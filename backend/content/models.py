@@ -117,7 +117,22 @@ class MapFeature(models.Model):
 # Availability row. Type knowledge in the core, by name, in the same
 # `hasattr(card, type)` idiom `maps.CARD_TYPES` uses — the core must not import
 # its types (ADR-0004).
-ACCESS_TYPES = ('chiese', 'luoghi')
+ACCESS_TYPES = ('chiese', 'luoghi', 'attivita')
+
+# Of those, the ones whose door is a business's (ADR-0010): what is known is
+# its opening hours and nothing else. «Si entra solo durante le funzioni» and
+# «chi ha le chiavi» are a church's and a monument's, not a bar's.
+HOURS_ONLY_TYPES = ('attivita',)
+HOURS_ONLY = "Di un'attività si scrivono solo gli orari."
+
+
+def hours_only_problem(card, state, keeper, keeper_phone):
+    """The message when a business is given more than its hours, or None."""
+    if not any(hasattr(card, type_key) for type_key in HOURS_ONLY_TYPES):
+        return None
+    if state != Availability.UNKNOWN or keeper or keeper_phone:
+        return HOURS_ONLY
+    return None
 
 GAETA = ZoneInfo('Europe/Rome')
 
@@ -176,11 +191,14 @@ class Availability(models.Model):
     def clean(self):
         card = self.card
         if not any(hasattr(card, type_key) for type_key in ACCESS_TYPES):
-            raise ValidationError('Solo chiese e luoghi hanno orari e custode.')
+            raise ValidationError('Solo chiese, luoghi e attività hanno orari.')
         if card.translation_of_id is not None:
             raise ValidationError('Gli orari e il custode appartengono alla scheda originale.')
         if self.state == self.NO_DOOR and hasattr(card, 'chiese'):
             raise ValidationError({'state': 'Una chiesa ha sempre una porta.'})
+        problem = hours_only_problem(card, self.state, self.keeper, self.keeper_phone)
+        if problem:
+            raise ValidationError(problem)
 
     def save(self, *args, **kwargs):
         previous = (

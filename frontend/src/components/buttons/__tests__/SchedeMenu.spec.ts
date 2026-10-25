@@ -10,6 +10,7 @@ vi.mock('axios')
 
 const COUNTS = {
   luoghi: 9,
+  attivita: 4,
   chiese: 5,
   feste: 1,
   ricette: 2,
@@ -62,6 +63,7 @@ describe('the Esplora menu (review PR-9)', () => {
 
     expect(entries(wrapper).map((entry) => entry.attributes('href'))).toEqual([
       '/luoghi',
+      '/attivita',
       '/feste',
       '/ricette',
       '/personaggi',
@@ -81,6 +83,7 @@ describe('the Esplora menu (review PR-9)', () => {
     const names = entries(wrapper).map((entry) => entry.text())
     expect(names).toEqual([
       'Luoghi, 9 schede',
+      'Attività, 4 schede',
       'Feste, 1 scheda',
       'Ricette, 2 schede',
       'Personaggi storici, 0 schede',
@@ -104,7 +107,7 @@ describe('the Esplora menu (review PR-9)', () => {
 
     const wrapper = await openMenu()
 
-    expect(entries(wrapper)).toHaveLength(6)
+    expect(entries(wrapper)).toHaveLength(7)
     expect(wrapper.get('a[href="/dialetto"]').text()).toBe('Dialetto')
     expect(wrapper.findAll('.text-muted')).toHaveLength(0)
   })

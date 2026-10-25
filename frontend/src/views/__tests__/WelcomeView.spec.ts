@@ -64,7 +64,8 @@ describe('WelcomeView — the address on a B&B’s card (spec itinerari.md I6)',
   })
 
   // Review PR-14 (M-09): each intent wears a tint of its own colour, a token
-  // (D8), with its icon — the sea, the town, the walk, the table.
+  // (D8), with its icon — the sea, the town, the walk, the table, and since
+  // 2026-10-25 the glass (ADR-0010).
   it('gives each intent its tint and its icon, and an intent nobody drew the tours’ map', async () => {
     answer([
       { slug: 'mare', name: 'Andare al mare', count: 1 },
@@ -72,6 +73,7 @@ describe('WelcomeView — the address on a B&B’s card (spec itinerari.md I6)',
       { slug: 'camminare', name: 'Camminare', count: 1 },
       { slug: 'mangiare', name: 'Mangiare', count: 1 },
       { slug: 'bere', name: 'Bere', count: 1 },
+      { slug: 'sport', name: 'Fare sport', count: 1 },
     ])
     const wrapper = await mountWelcome()
 
@@ -81,6 +83,7 @@ describe('WelcomeView — the address on a B&B’s card (spec itinerari.md I6)',
       expect.stringContaining('var(--color-intent-citta)'),
       expect.stringContaining('var(--color-intent-camminare)'),
       expect.stringContaining('var(--color-intent-mangiare)'),
+      expect.stringContaining('var(--color-intent-bere)'),
       expect.stringContaining('var(--color-layer-unknown)'),
     ])
     // A tint, never the colour as a ground (D7), and an icon in every tile.
@@ -89,7 +92,7 @@ describe('WelcomeView — the address on a B&B’s card (spec itinerari.md I6)',
       expect(tile.find('svg').exists()).toBe(true)
     })
     const paths = tiles.map((tile) => tile.get('svg path').attributes('d'))
-    expect(new Set(paths).size).toBe(5)
+    expect(new Set(paths).size).toBe(6)
   })
 
   // M-09: «la seconda ha un bordo scuro di focus residuo». The ring is the

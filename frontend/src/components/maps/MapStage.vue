@@ -5,7 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useIsDesktop, useIsWide } from '@/composables/useBreakpoint'
 import { useOpenPanelShape } from '@/composables/usePanelShape'
 import { afterFirstPaint } from '@/lib/firstPaint'
-import { layerRoute } from '@/lib/mapLayers'
+import { STOP_TYPES, layerRoute } from '@/lib/mapLayers'
 import { useMapStore } from '@/stores/map'
 import { useUserStore } from '@/stores/user'
 
@@ -173,6 +173,10 @@ const tourOpen = computed(() => !mapStore.editor && !!mapStore.focus?.numbered)
 const restricted = computed(() => !mapStore.editor && mapStore.restrictTo !== null)
 const shownFeatures = computed(() => {
   if (tourOpen.value) return []
+  // While a tour picks its stops, only what can be one is there to click: a
+  // business is never a stop (ADR-0010), so its pin steps aside.
+  if (mapStore.editor?.kind === 'stops')
+    return mapStore.visibleFeatures.filter((feature) => STOP_TYPES.includes(feature.type))
   if (!restricted.value) return mapStore.visibleFeatures
   const ids = new Set(mapStore.restrictTo)
   return mapStore.visibleFeatures.filter((feature) => ids.has(feature.id))

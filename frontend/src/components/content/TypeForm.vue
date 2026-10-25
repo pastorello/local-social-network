@@ -54,6 +54,9 @@ const visit = reactive<Availability>({
 const stateOptions = computed(() =>
   STATE_OPTIONS.filter((option) => option.value !== 'no_door' || props.config.visit?.noDoor),
 )
+// A business's door is its hours and nothing else (ADR-0010): no way in to
+// choose, no keeper — the API refuses them.
+const hoursOnly = computed(() => !!props.config.visit?.hoursOnly)
 const fromOutside = ref((props.item?.from_outside as string | undefined) ?? '')
 
 const extraValues = reactive<Record<string, string>>(
@@ -101,7 +104,7 @@ const tabs = computed<FormTab[]>(() => {
     { key: 'contenuto', label: 'Contenuto' },
     { key: 'immagini', label: 'Immagini' },
     ...(props.config.mapMode === 'pins' ? [{ key: 'mappa', label: 'Mappa' }] : []),
-    ...(props.config.visit ? [{ key: 'visita', label: 'Visita' }] : []),
+    ...(props.config.visit ? [{ key: 'visita', label: hoursOnly.value ? 'Orari' : 'Visita' }] : []),
     { key: 'pubblicazione', label: 'Pubblicazione' },
   ]
   return all.map((entry) => ({ ...entry, hasError: withErrors.has(entry.key) }))
@@ -331,12 +334,13 @@ const submitForm = async () => {
       aria-labelledby="type-form-tab-visita"
     >
       <fieldset class="space-y-5">
-        <legend class="sr-only">Visita</legend>
+        <legend class="sr-only">{{ hoursOnly ? 'Orari' : 'Visita' }}</legend>
         <!-- ADR-0008: what is written here is shown with the day it was
         written, never as a promise — so the form asks for what the writer
         knows, and empty is a correct answer. -->
         <p v-if="isTranslation" class="text-body text-muted">
-          Orari e custode sono quelli della scheda originale, per ogni lingua. Si modificano da lì.
+          {{ hoursOnly ? 'Gli orari sono' : 'Orari e custode sono' }} quelli della scheda originale,
+          per ogni lingua. Si modificano da lì.
         </p>
         <template v-else>
           <p class="text-body text-muted">
@@ -344,6 +348,7 @@ const submitForm = async () => {
             la scheda funziona lo stesso.
           </p>
           <FormField
+            v-if="!hoursOnly"
             field-id="type-form-visit-state"
             label="Come si entra"
             :errors="fieldErrors.availability"
@@ -367,19 +372,26 @@ const submitForm = async () => {
             field-id="type-form-visit-hours"
             label="Orari"
             hint="Come li diresti a voce. Accanto comparirà la data di oggi: chi legge saprà quando sono stati segnalati."
+            :errors="hoursOnly ? fieldErrors.availability : undefined"
           >
-            <template #default="{ describedBy }">
+            <template #default="{ describedBy, invalid }">
               <textarea
                 id="type-form-visit-hours"
                 v-model="visit.hours"
                 rows="3"
                 :aria-describedby="describedBy"
-                class="w-full rounded-lg border border-field bg-surface px-4 py-3 text-ink placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
-                placeholder="Es. Lun-Sab 10:30-12:30 e 16:00-17:00; domenica solo per la messa delle 11"
+                :aria-invalid="invalid || undefined"
+                class="w-full rounded-lg border bg-surface px-4 py-3 text-ink placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+                :class="invalid ? 'border-status-open' : 'border-field'"
+                :placeholder="
+                  hoursOnly
+                    ? 'Es. Tutti i giorni 7-24; d’inverno chiuso il lunedì'
+                    : 'Es. Lun-Sab 10:30-12:30 e 16:00-17:00; domenica solo per la messa delle 11'
+                "
               ></textarea>
             </template>
           </FormField>
-          <FormField field-id="type-form-visit-keeper" label="Chi ha le chiavi">
+          <FormField v-if="!hoursOnly" field-id="type-form-visit-keeper" label="Chi ha le chiavi">
             <template #default="{ describedBy }">
               <FormInput
                 id="type-form-visit-keeper"
@@ -390,7 +402,7 @@ const submitForm = async () => {
               />
             </template>
           </FormField>
-          <FormField field-id="type-form-visit-phone" label="Telefono">
+          <FormField v-if="!hoursOnly" field-id="type-form-visit-phone" label="Telefono">
             <template #default="{ describedBy }">
               <FormInput
                 id="type-form-visit-phone"

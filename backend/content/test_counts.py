@@ -4,6 +4,7 @@ the way the public lists count — published originals only."""
 
 import pytest
 
+from attivita.models import Attivita
 from chiese.models import Chiesa
 from content.models import Availability, Card
 from dialetto.models import Termine
@@ -23,6 +24,7 @@ TYPES = {
     'dialetto': lambda card: Termine.objects.create(card=card, meaning='Significato'),
     'libri': lambda card: Libro.objects.create(card=card, book_author='Autore'),
     'luoghi': lambda card: Luogo.objects.create(card=card, genre=Genre.objects.first()),
+    'attivita': lambda card: Attivita.objects.create(card=card, kind=Attivita.BEVE),
     'feste': lambda card: Feste.objects.create(card=card),
     'itinerari': lambda card: Itinerario.objects.create(card=card),
 }

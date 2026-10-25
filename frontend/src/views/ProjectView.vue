@@ -33,6 +33,7 @@ const schede = [
   { to: '/feste', label: 'Feste' },
   { to: '/luoghi', label: 'Luoghi' },
   { to: '/chiese', label: 'Chiese' },
+  { to: '/attivita', label: 'Attività' },
   { to: '/ricette', label: 'Ricette' },
   { to: '/personaggi', label: 'Personaggi storici' },
   { to: '/dialetto', label: 'Dialetto' },

@@ -7,6 +7,7 @@ import NavDisclosure from '@/components/buttons/NavDisclosure.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
 import type { MyCard } from '@/definitions/interfaces/Content'
 import {
+  attivitaConfig,
   chiesaConfig,
   dialettoConfig,
   itinerarioConfig,
@@ -32,12 +33,14 @@ interface PaginatedCards {
 const capitalised = (word: string) => word.charAt(0).toUpperCase() + word.slice(1)
 
 // Every type a collaborator writes, in the order the menu offers them to a
-// reader (review PR-9) — the churches beside the places, the tours last. The
-// key is the type's route segment and its `type` in /api/content/mine/. Feste
-// keeps views of its own, so it has no config to read.
+// reader (review PR-9) — the churches and the businesses beside the places,
+// the tours last. The key is the type's route segment and its `type` in
+// /api/content/mine/. Feste keeps views of its own, so it has no config to
+// read.
 const TYPES = [
   luogoConfig,
   chiesaConfig,
+  attivitaConfig,
   { key: 'feste', label: 'Feste', singularLabel: 'festa', routeNames: { create: 'festecreate' } },
   ricettaConfig,
   personaggioConfig,

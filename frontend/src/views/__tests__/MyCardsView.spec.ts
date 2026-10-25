@@ -14,6 +14,7 @@ const stub = { template: '<div />' }
 const CREATE = [
   'luoghicreate',
   'chiesecreate',
+  'attivitacreate',
   'festecreate',
   'ricettecreate',
   'personaggicreate',
@@ -78,12 +79,14 @@ describe('MyCardsView — Le mie schede', () => {
     const wrapper = await mountWith([
       card({ id: 'i1', type: 'itinerari', title: 'Il giro del borgo' }),
       card({ id: 'c1', type: 'chiese' }),
+      card({ id: 'a1', type: 'attivita', title: 'Forno di Gaeta' }),
       card({ id: 'l1', type: 'luoghi', title: 'Serapo' }),
     ])
 
     expect(wrapper.findAll('h3').map((heading) => heading.text())).toEqual([
       'Luoghi',
       'Chiese',
+      'Attività',
       'Itinerari',
     ])
   })
@@ -140,6 +143,7 @@ describe('MyCardsView — Le mie schede', () => {
     expect(links.map((link) => link.text())).toEqual([
       'Luogo',
       'Chiesa',
+      'Attività',
       'Festa',
       'Ricetta',
       'Personaggio',

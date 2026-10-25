@@ -154,6 +154,11 @@ onMounted(() => {
                 : (config.countNouns?.[1] ?? 'schede')
             }}
           </p>
+          <!-- How the list is made, where it owes the reader that: the
+          businesses' order is printed, and why they are there (CF40, D10). -->
+          <p v-if="config.listNote" class="mt-1 max-w-[60ch] text-sm text-muted">
+            {{ config.listNote }}
+          </p>
         </div>
 
         <div v-if="userStore.user.isAuthenticated" class="flex items-center gap-4">

@@ -16,7 +16,7 @@ from content.serializers import (
     media_source,
     visible_translations,
 )
-from maps.api import CARD_TYPES
+from maps.api import STOP_TYPES
 from maps.models import Zona
 from maps.zones import named_zones_containing_any, zones_containing_any
 
@@ -25,8 +25,8 @@ from .models import Intent, Itinerario
 
 def card_type(card):
     """The key the SPA routes a card by — the same lookup as the map's, over
-    the types that have a place, since only those can be stops (I3)."""
-    for type_key in CARD_TYPES:
+    the types that can be stops (I3): those with a place, but a business."""
+    for type_key in STOP_TYPES:
         if hasattr(card, type_key):
             return type_key
     return None

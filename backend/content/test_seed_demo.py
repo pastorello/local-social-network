@@ -24,7 +24,7 @@ def test_it_fills_every_zone_with_marked_published_cards_and_no_images(settings,
     call_command('seed_demo')
 
     cards = Card.objects.all()
-    assert cards.count() == 17
+    assert cards.count() == 20
     assert all(card.title.startswith('[DEMO] ') and card.is_published for card in cards)
     assert not CardImage.objects.exists()
     counts = {zone['slug']: zone['count'] for zone in api_client.get('/api/map/zone/').json()}
@@ -47,6 +47,9 @@ EXPECTED_ZONES = {
     'Santuario di prova': ['montagna-spaccata'],
     'Chiesa di prova del borgo': ['porto-salvo'],
     'Festa di prova': ['serapo', 'porto-salvo'],
+    'Bar di prova sul lungomare': ['serapo'],
+    'Trattoria di prova': ['gaeta-medievale'],
+    'Forno di prova': ['porto-salvo'],
 }
 
 
@@ -76,7 +79,7 @@ def test_running_it_again_replaces_rather_than_doubles(settings):
     call_command('seed_demo')
     call_command('seed_demo')
 
-    assert Card.objects.count() == 17
+    assert Card.objects.count() == 20
 
 
 def test_remove_takes_only_what_it_made(settings, citizen):

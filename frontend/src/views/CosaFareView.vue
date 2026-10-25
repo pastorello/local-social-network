@@ -13,8 +13,10 @@ import type { Intent } from '@/definitions/interfaces/Itinerario'
 import type { MapCardFeature, Zone, ZoneAlias } from '@/definitions/interfaces/MapData'
 import { STATE_SENTENCE } from '@/lib/availability'
 import {
+  BUSINESS_TYPES,
   ELSEWHERE,
   ELSEWHERE_NAME,
+  KIND_NAME,
   OTHER_INTENT,
   OTHER_INTENT_NAME,
   PLACE_TYPES,
@@ -31,7 +33,10 @@ import { useMapStore } from '@/stores/map'
 // payload with six short lists; it never ranks, and it never says a place is
 // open (ADR-0008). The zone's own blocks come first and the dishes last
 // (2026-10-23, review PR-4). Above the chips, «Dove sei?» picks the zone from
-// the name of where the guest stands (2026-10-24, review PR-20).
+// the name of where the guest stands (2026-10-24, review PR-20). A zone's
+// businesses are its rows too, under «Bere» and, beside the dishes, under
+// «Mangiare» — listed, alphabetically like everything here, and never counted
+// (2026-10-25, ADR-0010).
 
 interface Row {
   id: string
@@ -90,6 +95,9 @@ onMounted(async () => {
 const places = computed(() =>
   mapStore.features.filter((feature) => PLACE_TYPES.includes(feature.type)),
 )
+const businesses = computed(() =>
+  mapStore.features.filter((feature) => BUSINESS_TYPES.includes(feature.type)),
+)
 const inZone = (zoneSlugs: string[], slug: string): boolean =>
   slug === ELSEWHERE ? zoneSlugs.length === 0 : zoneSlugs.includes(slug)
 
@@ -141,6 +149,11 @@ const noteShown = computed(() => ready.value || !zoneChosen.value)
 const placesHere = computed(() =>
   selected.value ? places.value.filter((p) => inZone(p.zones, selected.value!.slug)) : [],
 )
+const businessesHere = computed(() =>
+  selected.value ? businesses.value.filter((b) => inZone(b.zones, selected.value!.slug)) : [],
+)
+// Every row the zone's activities are made of: its places and its businesses.
+const rowsHere = computed(() => [...placesHere.value, ...businessesHere.value])
 const festeHere = computed<(MapCardFeature & { recurrence: string })[]>(() => {
   if (!selected.value) return []
   const recurrence = new Map(feste.value.map((festa) => [festa.id, festa.recurrence]))
@@ -156,8 +169,11 @@ const toursHere = computed(() =>
 )
 
 const genreName = computed(() => new Map(genres.value.map((g) => [g.slug, g.name])))
-const kindOf = (place: MapCardFeature): string =>
-  place.type === 'chiese' ? 'Chiesa' : (genreName.value.get(place.genre ?? '') ?? 'Luogo')
+const kindOf = (place: MapCardFeature): string => {
+  if (place.type === 'chiese') return 'Chiesa'
+  if (place.type === 'attivita') return KIND_NAME[place.kind ?? ''] ?? 'Attività'
+  return genreName.value.get(place.genre ?? '') ?? 'Luogo'
+}
 
 // One row of the page, whatever it lists: a place, a tour, a festa, a dish.
 interface Line {
@@ -173,7 +189,9 @@ interface Block {
   rows: Line[]
   // Places are what the page is for (D3): their names carry the weight.
   places?: boolean
-  note?: string
+  // The dishes, under the same heading as the zone's tables and botteghe and
+  // after them (ADR-0010): for all of Gaeta, so with a note that says so.
+  dishes?: { note: string; rows: Line[] }
 }
 
 const placeLine = (place: MapCardFeature): Line => {
@@ -190,20 +208,21 @@ const placeLine = (place: MapCardFeature): Line => {
 // The blocks, top to bottom (review PR-4, 2026-10-23). First what is in this
 // zone: its places by activity, in the author's order of intents (D4), with a
 // genre nobody has mapped yet under «Altro da vedere» rather than nowhere; then
-// its tours and its feste. *Mangiare* comes last, because it is not this
-// zone's: the dishes are for all of Gaeta (D3), and ahead of the zone's own
-// places they answered a question nobody had asked.
+// its tours and its feste. *Mangiare* comes last, because the dishes are not
+// this zone's: they are for all of Gaeta (D3), and ahead of the zone's own
+// places they answered a question nobody had asked. The zone's own tables and
+// botteghe open it, and the dishes follow under their note (ADR-0010).
 const blocks = computed<Block[]>(() => {
   if (!selected.value) return []
   const list: Block[] = []
   for (const intent of intents.value) {
     if (intent.slug === 'mangiare') continue
-    const rows = placesHere.value.filter((p) => intentOf(p) === intent.slug).sort(byTitle)
+    const rows = rowsHere.value.filter((p) => intentOf(p) === intent.slug).sort(byTitle)
     if (rows.length)
       list.push({ key: intent.slug, name: intent.name, rows: rows.map(placeLine), places: true })
   }
   const known = new Set(intents.value.map((intent) => intent.slug))
-  const other = placesHere.value.filter((p) => {
+  const other = rowsHere.value.filter((p) => {
     const intent = intentOf(p)
     return intent === OTHER_INTENT || !known.has(intent)
   })
@@ -236,16 +255,23 @@ const blocks = computed<Block[]>(() => {
       })),
     })
   const mangiare = intents.value.find((intent) => intent.slug === 'mangiare')
-  if (mangiare && ricette.value.length)
+  const tables = businessesHere.value.filter((b) => intentOf(b) === 'mangiare').sort(byTitle)
+  if (mangiare && (tables.length || ricette.value.length))
     list.push({
       key: 'mangiare',
       name: mangiare.name,
-      note: 'Le ricette non stanno in una zona sola: queste valgono per tutta Gaeta.',
-      rows: ricette.value.map((ricetta) => ({
-        id: ricetta.id,
-        title: ricetta.title,
-        to: layerRoute('ricette', ricetta.id),
-      })),
+      rows: tables.map(placeLine),
+      places: true,
+      dishes: ricette.value.length
+        ? {
+            note: 'Le ricette non stanno in una zona sola: queste valgono per tutta Gaeta.',
+            rows: ricette.value.map((ricetta) => ({
+              id: ricetta.id,
+              title: ricetta.title,
+              to: layerRoute('ricette', ricetta.id),
+            })),
+          }
+        : undefined,
     })
   return list
 })
@@ -253,15 +279,16 @@ const blocks = computed<Block[]>(() => {
 const emptyHere = computed(
   () =>
     !!selected.value &&
-    !placesHere.value.length &&
+    !rowsHere.value.length &&
     !festeHere.value.length &&
     !toursHere.value.length,
 )
 const zonesWithSomething = computed(() => chips.value.filter((chip) => chip.count > 0))
 
-// The map draws exactly this page's set (D5): the zone's places and feste.
+// The map draws exactly this page's set (D5): the zone's places, businesses
+// and feste.
 watch(
-  () => (selected.value ? [...placesHere.value, ...festeHere.value].map((f) => f.id) : null),
+  () => (selected.value ? [...rowsHere.value, ...festeHere.value].map((f) => f.id) : null),
   (ids) => mapStore.setRestriction(ids),
   { immediate: true },
 )
@@ -290,7 +317,7 @@ const corners = (points: { lat: number; lng: number }[]) => {
 const frame = computed(() => {
   if (!selected.value) return corners(zones.value.flatMap((zone) => outline(zone.geometry)))
   const slug = selected.value.slug
-  const set = [...placesHere.value, ...festeHere.value].flatMap((f) => [...f.points, ...f.route])
+  const set = [...rowsHere.value, ...festeHere.value].flatMap((f) => [...f.points, ...f.route])
   return corners(set) ?? corners(outline(zones.value.find((zone) => zone.slug === slug)?.geometry))
 })
 watch(frame, (points) => mapStore.setFrame(points), { immediate: true })
@@ -455,8 +482,7 @@ const chooseZone = async (slug: string) => {
           <h2 class="font-display text-title text-ink">{{ block.name }}</h2>
           <p class="text-sm text-muted"><span aria-hidden="true">·</span> in ordine alfabetico</p>
         </div>
-        <p v-if="block.note" class="mb-3 text-sm text-muted">{{ block.note }}</p>
-        <ul class="divide-y divide-hairline border-y border-hairline">
+        <ul v-if="block.rows.length" class="divide-y divide-hairline border-y border-hairline">
           <li v-for="row in block.rows" :key="row.id" class="py-3">
             <RouterLink
               :to="row.to"
@@ -467,6 +493,16 @@ const chooseZone = async (slug: string) => {
             <p v-if="row.detail" class="text-sm text-muted">{{ row.detail }}</p>
           </li>
         </ul>
+        <template v-if="block.dishes">
+          <p class="mb-3 text-sm text-muted" :class="{ 'mt-4': block.rows.length }">
+            {{ block.dishes.note }}
+          </p>
+          <ul class="divide-y divide-hairline border-y border-hairline">
+            <li v-for="row in block.dishes.rows" :key="row.id" class="py-3">
+              <RouterLink :to="row.to" class="text-ink underline">{{ row.title }}</RouterLink>
+            </li>
+          </ul>
+        </template>
       </section>
     </template>
     <p v-else-if="!zoneChosen" class="mt-8 text-muted">Scegli una zona per vedere cosa c'è.</p>

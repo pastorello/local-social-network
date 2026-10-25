@@ -93,4 +93,34 @@ describe('StopsField — stops picked on the map (spec itinerari.md I8)', () => 
     await wrapper.get('button[aria-label="Rimuovi la tappa 1"]').trigger('click')
     expect(stops.value.map((stop) => stop.card)).toEqual(['lu1'])
   })
+
+  // A business has a place, and is still never a stop: a tour that chose one
+  // bar among many would rank them (cosa-fare.md CF40, ADR-0010). The API
+  // refuses it; the form does not offer it, on the map or in the list.
+  it('never offers a business as a stop, by click or from the list', async () => {
+    const store = useMapStore()
+    store.features = [
+      ...features,
+      {
+        id: 'at1',
+        type: 'attivita',
+        title: 'Bar del porto',
+        is_published: true,
+        cover: null,
+        points: [{ lat: 41.215, lng: 13.57, label: '' }],
+        route: [],
+        zones: [],
+        kind: 'beve',
+      },
+    ]
+    const { wrapper, stops } = mountField()
+
+    store.editorPick({ type: 'attivita', id: 'at1' })
+    expect(stops.value).toEqual([])
+    const options = wrapper.findAll('#stop-pick option').map((option) => option.text())
+    expect(options).not.toContain('Bar del porto')
+    expect(
+      wrapper.findAll('#stop-pick optgroup').map((group) => group.attributes('label')),
+    ).toEqual(['Chiese', 'Luoghi'])
+  })
 })

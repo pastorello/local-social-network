@@ -7,7 +7,8 @@ Accepted. Supersedes the refusal of beach clubs in
 [itinerari.md](../spec/itinerari.md) (*Considered and not taken*), answers K5
 of [cosa-fare.md](../spec/cosa-fare.md), and amends its CF41. It leaves
 design.md's D10 and D12 and cosa-fare.md's CF40 standing: they are the rules
-this decision is built on.
+this decision is built on. **Built 2026-10-25** (the review's PR-26): see
+content.md, *The ninth type: attività*.
 
 ## Date
 
@@ -121,6 +122,12 @@ for.
 - It is specified, not built. The build is the review's PR-26, queued with
   the other prompts. The type follows ADR-0004 ("days, not weeks") and
   ADR-0008, and adds a layer token checked against D9 like every other.
+  *(Built 2026-10-25, in one sitting: an `attivita` app in luoghi's shape, a
+  teal layer, «Bere» seeded as an intent, and `maps.CARD_TYPES` split from
+  `maps.STOP_TYPES` so a business is on the map and never a tour's stop. What
+  "left to the build" became — the printed order, hours and nothing else, a
+  zone's count that leaves businesses out — is in content.md's section on
+  the type and cosa-fare.md's note of that date.)*
 - The risk that does not go away is editorial. Merit without a published test
   can look like preference to a business that was left out. The defence is the
   one CF40 already names: the archive states what is worth knowing and never

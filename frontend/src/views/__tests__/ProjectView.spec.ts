@@ -56,6 +56,7 @@ describe('Il progetto', () => {
       '/feste',
       '/luoghi',
       '/chiese',
+      '/attivita',
       '/ricette',
       '/personaggi',
       '/dialetto',

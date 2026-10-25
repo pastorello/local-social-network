@@ -10,10 +10,19 @@ from .models import Overlay, Zona, ZonaAlias
 from .serializers import OverlaySerializer
 from .zones import zones_containing_any, zones_of_feature
 
-# Reverse OneToOne accessor -> the key the SPA uses for the layer and for the
-# card's own route (`/chiese/<id>`). dialetto and libri are absent on purpose:
-# the spec's footprint table gives them none, so they never reach this endpoint.
-CARD_TYPES = ('feste', 'chiese', 'ricette', 'personaggi', 'luoghi')
+# The map's layers. Reverse OneToOne accessor -> the key the SPA uses for the
+# layer and for the card's own route (`/chiese/<id>`). dialetto and libri are
+# absent on purpose: the spec's footprint table gives them none, so they never
+# reach this endpoint.
+CARD_TYPES = ('feste', 'chiese', 'ricette', 'personaggi', 'luoghi', 'attivita')
+
+# The types a tour's stop may be (spec itinerari.md I3) — a second list, not
+# CARD_TYPES again: until 2026-10-25 the map's layers *were* the definition of
+# a stop, the trap cosa-fare.md I3 named, where the one line that puts a type
+# on the map makes it a legal stop. Every layer but the businesses: a tour
+# that picked one bar among many would be the ranking CF40 forbids, and the
+# archive shows them all instead (ADR-0010).
+STOP_TYPES = ('feste', 'chiese', 'ricette', 'personaggi', 'luoghi')
 
 # The rows of «Cosa si può fare qui» (spec cosa-fare.md Part −1, D3): the places
 # one goes to. A zone's count is of these, not of every card it holds.
@@ -84,6 +93,7 @@ def map_features(request):
             # memory, and .first() would hit the database once per card.
             cover = next(iter(card.images.all()), None)
             luogo = getattr(card, 'luoghi', None)
+            attivita = getattr(card, 'attivita', None)
             availability = getattr(card, 'availability', None)
             entry = cards[card.id] = {
                 'id': str(card.id), 'type': type_key, 'title': card.title,
@@ -91,6 +101,9 @@ def map_features(request):
                 'cover': cover.get_image_url() if cover else None,
                 'points': [], 'route': [],
                 'genre': luogo.genre.slug if luogo else None,
+                # A business's kind files it under «Bere» or «Mangiare» on «Cosa
+                # si può fare qui» (ADR-0010), as a luogo's genre files it.
+                'kind': attivita.kind if attivita else None,
                 # The state only, and only when known: the hours are read on
                 # the card itself, always with their date (ADR-0008).
                 'access': availability.state

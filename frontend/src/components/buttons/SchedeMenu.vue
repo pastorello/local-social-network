@@ -9,6 +9,7 @@ import PersonaggioIcon from '../icons/PersonaggioIcon.vue'
 import DialettoIcon from '../icons/DialettoIcon.vue'
 import LibroIcon from '../icons/LibroIcon.vue'
 import LuogoIcon from '../icons/LuogoIcon.vue'
+import AttivitaIcon from '../icons/AttivitaIcon.vue'
 import type { CardCounts } from '@/definitions/interfaces/Content'
 import { sectionOf } from '@/lib/navigation'
 
@@ -19,9 +20,11 @@ import { sectionOf } from '@/lib/navigation'
 // (ADR-0005). In the order a reader looks for them (review PR-9), and with no
 // *Chiese*: churches are a heading under *Luoghi* (content.md, 2026-09-11),
 // reached from its chip on /luoghi — one place, not two. The key is the type's
-// route segment and its key in /api/content/counts/.
+// route segment and its key in /api/content/counts/. *Attività* sits under
+// *Luoghi* (2026-10-25, ADR-0010): the other type a guest goes to.
 const items = [
   { key: 'luoghi', label: 'Luoghi', icon: LuogoIcon },
+  { key: 'attivita', label: 'Attività', icon: AttivitaIcon },
   { key: 'feste', label: 'Feste', icon: FesteIcon },
   { key: 'ricette', label: 'Ricette', icon: RicettaIcon },
   { key: 'personaggi', label: 'Personaggi storici', icon: PersonaggioIcon },

@@ -42,6 +42,7 @@ Each type is a **thin app** adding only its fields on top of the core.
 | **Libri consigliati** | book author, year, publisher | none |
 | **Luoghi** | genre (admin-managed), how to get there | one fixed pin |
 | **Itinerari** *(specified 2026-09-11, built 2026-09-18)* | form, indicative duration, intents; ordered stops, each a card | a drawn path and numbered stops — see [itinerari.md](./itinerari.md) |
+| **Attività** *(decided 2026-10-23 in [ADR-0010](../adr/0010-businesses-in-the-archive.md), built 2026-10-25)* | kind (*beve*, *mangia*, *compra*, closed in code), how to get there | one fixed pin |
 
 The bar: **a sixth type costs days, not a module.** The fifth was invented
 mid-interview; more will come — and the sixth arrived on 2026-09-09, which is
@@ -403,6 +404,83 @@ into. Luoghi has the material before it has the code — seven beaches, a
 castle, a mausoleum, a park and its paths — and its genre is a **closed list
 an admin controls**, so nothing lands in it by default: a card that fits no
 genre is a sign it belongs to another type.
+
+## The ninth type: attività — decided 2026-10-23, **built 2026-10-25**
+
+The businesses a visitor goes to: where one drinks, where one eats, where one
+buys a typical product to take away. The decision, its reasons and what it
+turned down are [ADR-0010](../adr/0010-businesses-in-the-archive.md); this
+section is what the type is. It exists for the evening the wizard had no
+answer to (the review's study 10), on the rule design.md D10 wrote for a
+bakery: presence is earned, not bought.
+
+### Fields and footprint
+
+| Field | Kind | Why |
+|---|---|---|
+| `kind` | one of three, **closed in code** | *Dove si beve*, *dove si mangia*, *dove si compra* — `beve`, `mangia`, `compra`. Choices on the model, not an admin table: a fourth (a chain, a beach club "as such") is a PR and an edit of this file, never one Django admin form, which is the trap cosa-fare.md K5 named. |
+| `how_to_get_there` | plain text, optional | As on a luogo. |
+
+Beside them, what every place has: **one fixed pin**, the rich-text body —
+where the editorial reason for its presence is written — and its opening
+hours as dated testimony (ADR-0008). A business gets **a map layer of its own,
+with the list C5 requires**, an entry in *Esplora* and on *Il progetto* (the
+two lists by hand), and translations like every card.
+
+### What the build decided — 2026-10-25
+
+Details the ADR left "to the build", recorded so they are not re-argued:
+
+- **The order is alphabetical, everywhere, and printed.** `GET /api/attivita/`
+  orders by title with capitals aside, then by title and id so that two pages
+  never disagree; no query parameter changes it, and a test sends four that
+  try. `mine/` is alphabetical too. `/attivita` says so under its title, with
+  why the businesses are there: «In ordine alfabetico. Ci sono perché la
+  redazione le ritiene degne di nota: nessuna paga per esserci.» — CF40's
+  printed order and D10's "from how the page is built" in one line, the
+  `listNote` of its `typeConfigs.ts` entry.
+- **The kinds come from the model.** `GET /api/attivita/kinds/` lists the
+  three, in code's order, each with its published count, in the shape of
+  luoghi's genres (`{slug, name, name_plural, count}`), so the form's select
+  and the list's chips needed nothing new; the list filters with `?kind=beve`
+  (the API's parameter and the reader's address alike), and an unknown kind
+  is an empty list, not an error.
+- **A business is never a stop of a tour.** A tour that picked one bar among
+  many would be the ranking CF40 forbids. `maps.CARD_TYPES` was both the map's
+  layers and the definition of a stop — cosa-fare.md I3's trap — so it is now
+  two lists: `CARD_TYPES`, the layers, with `attivita`, and `STOP_TYPES`, what
+  a stop may be, without it. `itinerari/rules.py` refuses a business by what it
+  is («… è un'attività: un itinerario non sceglie fra le attività…»), in the
+  API and in Django admin alike; the SPA keeps the same split in
+  `lib/mapLayers.ts::STOP_TYPES`, so the stops editor neither lists a business
+  nor draws its pin while it picks.
+- **Its hours, and nothing else.** `attivita` is in `content.models.ACCESS_TYPES`
+  and in `HOURS_ONLY_TYPES`: «si entra solo durante le funzioni», «si visita su
+  richiesta», the open-air state and «chi ha le chiavi» belong to a church or
+  a monument. The API and the admin refuse them on a business; the form's tab
+  is *Orari* and asks for the hours alone, and the card heads them *Orari*,
+  their date beside them as always. A business's `access` on the map is
+  therefore always null.
+- **The layer is teal**, `--color-layer-attivita: #0f766e`, the one gap left on
+  the wheel that no layer and no report status holds: 5.12:1 on the page,
+  5.47:1 on white, 3.99:1 on its own tint. Its icon is a shopfront.
+- **In the menu it comes second, under *Luoghi***: the other type a guest goes
+  to. On *Il progetto* it follows *Chiese*, and so on *Le mie schede*, whose
+  `MyCardsView.vue` turned out to be a third list of the types by hand —
+  without it a collaborator's draft business would have been on no page.
+- **A translation shows its original's kind**, pin and hours, as a luogo shows
+  its genre (translations.md T5).
+- **Counted like every type, by no zone.** The menu's counts and the archive's
+  line find it as they find every type, and a draft moves neither — nor the
+  kinds' counts — not even for its author (map.md M5). A zone's count stays
+  its places, chiese and luoghi: a zone is not bigger for holding more bars.
+  How «Cosa si può fare qui» lists them is in cosa-fare.md's note of the same
+  day.
+- **Demo and fixtures.** `seed_demo` adds three `[DEMO]` businesses, one of
+  each kind, in Serapo, Gaeta Medievale and Porto Salvo; `seed_e2e` a
+  published bar on Serapo's beach, with its hours.
+- **Left open, as the ADR leaves it:** whether a ricetta's "sold here" pin
+  becomes a link to an `attivita` card. CF36 still forbids reading those pins.
 
 ## The archive's line — 2026-10-24 (review PR-18)
 
