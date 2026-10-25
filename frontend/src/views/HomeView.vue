@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 
-import HomeShortcuts from '@/components/maps/HomeShortcuts.vue'
 import LayerToggles from '@/components/maps/LayerToggles.vue'
 import MapChrome from '@/components/maps/MapChrome.vue'
 import MapSheet from '@/components/maps/MapSheet.vue'
@@ -13,12 +13,13 @@ import PanelBox from '@/components/boxes/PanelBox.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import SearchBar from '@/components/forms/SearchBar.vue'
+import WizardSteps from '@/components/wizard/WizardSteps.vue'
 import { useUserStore } from '@/stores/user'
 import { useMapStore } from '@/stores/map'
+import { useWizardStore } from '@/stores/wizard'
 import type { ReportStatus } from '@/definitions/interfaces/Report'
 import { useArchiveLine } from '@/composables/useArchiveLine'
 import { useIsDesktop } from '@/composables/useBreakpoint'
-import { useDoors } from '@/composables/useDoors'
 import { PRESENTATION } from '@/definitions/copy'
 import { REPORTS_LAYER_KEY } from '@/lib/mapLayers'
 import { STATUS_META, statusColor } from '@/lib/reportStatus'
@@ -71,20 +72,54 @@ const placesCount = computed(() =>
   visibleFeatures.value.length === 1 ? '1 luogo' : `${visibleFeatures.value.length} luoghi`,
 )
 
-// The home says what the site is and opens its two other ways in (review of
-// 2026-10-22, P-02/M-02; design.md D3's note of 2026-10-23): a reader from a
-// search engine never sees /benvenuto. The presentation is static and paints
-// with the page. The doors, the layers and the lists come from the API, so
-// they appear together once the doors are known: the doors sit above the
-// rest, and arriving after it would push down what the reader had started on.
-const { withTours, zonesWithPlaces, loaded: doorsKnown, load: loadDoors } = useDoors()
+// The home says what the site is (review of 2026-10-22, P-02/M-02; design.md
+// D3's note of 2026-10-23) and, under it, asks the wizard's first question
+// over the map (review PR-21b, decided on 2026-10-22: one front door — the
+// reader from a search engine meets what the guest from a B&B's card meets on
+// /benvenuto). The presentation is static and paints with the page. The
+// question, its answers, the layers and the lists come from the API, so they
+// appear together once every answer is known: arriving one after the other,
+// each would push down what the reader had started on.
+const route = useRoute()
+const wizard = useWizardStore()
+const { questionOpen } = storeToRefs(wizard)
 
-// Between the presentation and the doors, the archive's own line — how many
-// cards and the day the latest changed (review PR-18, content.md). It comes
-// from the API too, so it waits for the doors and they for it: whichever came
-// second would push the other down.
+// Between the presentation and the question, the archive's own line — how
+// many cards and the day the latest changed (review PR-18, content.md). It
+// comes from the API too, so it waits for the answers and they for it:
+// whichever came second would push the other down.
 const { line: archive, loaded: archiveKnown, load: loadArchive } = useArchiveLine()
-const known = computed(() => doorsKnown.value && archiveKnown.value)
+const known = computed(() => wizard.known && archiveKnown.value)
+
+// The chrome is mounted on every page, for focus to come back to it (App.vue);
+// the wizard's counts are asked for when the home is first shown, not on a
+// page that only keeps the home behind it.
+watch(
+  () => route.path === '/',
+  (home) => {
+    if (home) wizard.load()
+  },
+  { immediate: true },
+)
+
+// «Vai alla mappa» puts the question away and leaves the map with its layers
+// and its list (review PR-21b) — on a phone the sheet steps down to its
+// lowest stop, so the map is what the reader sees. The question can be asked
+// again from where it was, and focus goes to the control that does it, as a
+// control that disappears hands it on; asked again, it has the focus itself.
+const sheet = ref<InstanceType<typeof MapSheet> | null>(null)
+const askAgain = ref<HTMLButtonElement | null>(null)
+const question = ref<HTMLElement | null>(null)
+watch(questionOpen, async (open) => {
+  if (!isDesktop.value) {
+    if (open) sheet.value?.open()
+    else sheet.value?.collapse()
+  }
+  if (route.path !== '/') return
+  await nextTick()
+  if (open) question.value?.querySelector<HTMLElement>('h2')?.focus({ preventScroll: true })
+  else askAgain.value?.focus({ preventScroll: true })
+})
 
 // The reports are for people with an account (decided 2026-10-22, spec
 // reports-and-polls.md R1). A reader's home is the places and nothing else —
@@ -103,6 +138,11 @@ watch(
   },
   { flush: 'post' },
 )
+
+// The question put away is asked again from where it was: a link's look, a
+// thumb's height.
+const askAgainClass =
+  'inline-flex min-h-11 cursor-pointer items-center rounded-sm font-semibold text-sea underline decoration-1 underline-offset-4 hover:decoration-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea'
 
 const cancelReporting = () => {
   mapStore.stopPlacing()
@@ -128,7 +168,6 @@ const onReportSaved = () => {
 // (and is a no-op once loaded).
 onMounted(() => {
   mapStore.load()
-  loadDoors()
   loadArchive()
 })
 </script>
@@ -153,12 +192,30 @@ onMounted(() => {
       />
     </MapChrome>
 
-    <MapSheet class="pointer-events-auto" title="La mappa di Gaeta" :force-peek="chromeOpen">
+    <MapSheet
+      ref="sheet"
+      class="pointer-events-auto"
+      title="La mappa di Gaeta"
+      :force-peek="chromeOpen"
+    >
       <p class="text-reading text-ink">{{ PRESENTATION }}</p>
 
       <template v-if="known">
         <p v-if="archive" class="mt-2 text-sm text-muted">{{ archive }}</p>
-        <HomeShortcuts :with-tours="withTours" :zones="zonesWithPlaces" class="mt-3" />
+        <!-- The sheet opens on the question (review PR-21b, design.md D3's
+        note of 2026-10-25); the places follow it, one scroll away (D20). -->
+        <div v-if="questionOpen" ref="question" class="mt-5">
+          <WizardSteps home />
+        </div>
+        <button
+          v-else
+          ref="askAgain"
+          type="button"
+          :class="[askAgainClass, 'mt-2']"
+          @click="wizard.openQuestion()"
+        >
+          Che cosa ti va di fare?
+        </button>
 
         <div class="mt-5 flex items-baseline justify-between">
           <h2 class="font-display text-title">Luoghi sulla mappa</h2>
@@ -226,7 +283,19 @@ onMounted(() => {
 
         <template v-if="known">
           <p v-if="archive" class="mt-2 text-sm text-muted">{{ archive }}</p>
-          <HomeShortcuts :with-tours="withTours" :zones="zonesWithPlaces" class="mt-4" />
+          <!-- The question over the layers (review PR-21b). -->
+          <div v-if="questionOpen" ref="question" class="mt-6">
+            <WizardSteps home />
+          </div>
+          <button
+            v-else
+            ref="askAgain"
+            type="button"
+            :class="[askAgainClass, 'mt-2']"
+            @click="wizard.openQuestion()"
+          >
+            Che cosa ti va di fare?
+          </button>
 
           <LayerToggles
             v-model:active-layers="activeLayers"

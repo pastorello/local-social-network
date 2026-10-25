@@ -8,6 +8,7 @@ import WelcomeView from '../WelcomeView.vue'
 import { PRESENTATION } from '@/definitions/copy'
 import type { MapCardFeature } from '@/definitions/interfaces/MapData'
 import { useMapStore } from '@/stores/map'
+import { useWizardStore } from '@/stores/wizard'
 
 vi.mock('axios')
 
@@ -211,11 +212,21 @@ describe('WelcomeView — the wizard’s first step, on the address of a B&B’s
   // Study 10: «Non lo so: fammi vedere la mappa» is an answer like the others;
   // it says «la mappa», never «esplora» — the menu's «Esplora» is on the same
   // screen (review PR-23).
-  it('lets the guest who does not know go to the map', async () => {
-    const { wrapper } = await mountAt('/benvenuto')
+  // Review PR-21b: the home asks the same question over the map, so this
+  // answer lands on the map with the question already put away.
+  it('lets the guest who does not know go to the map, the question put away there', async () => {
+    const { wrapper, router } = await mountAt('/benvenuto')
 
-    expect(wrapper.get('a[href="/"]').text()).toBe('Non lo so: fammi vedere la mappa')
+    const out = wrapper.get('a[href="/"]')
+    expect(out.text()).toBe('Non lo so: fammi vedere la mappa')
     expect(wrapper.text().toLowerCase()).not.toContain('esplora')
+    expect(useWizardStore().questionOpen).toBe(true)
+
+    await out.trigger('click')
+    await flushPromises()
+
+    expect(useWizardStore().questionOpen).toBe(false)
+    expect(router.currentRoute.value.path).toBe('/')
   })
 
   // With one answer, the first step still asks: it is the first impression.

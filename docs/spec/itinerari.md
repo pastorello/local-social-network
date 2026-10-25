@@ -427,7 +427,9 @@ cards does not move** (I6):
   words of the review's PR-21, point 1 — in place of PR-14's closing link
   «Oppure vai alla mappa». The verb is still the map's, never «esplora»
   (PR-23). The home's «Vai alla mappa», the same answer on the map itself,
-  is review PR-21b's.
+  is review PR-21b's: built the same day, it asks this first question over
+  the map too, and this answer leads there with the question put away
+  ([design.md](./design.md), D3's note of 2026-10-25).
 - **The line «Itinerari scritti da chi Gaeta la conosce…» is gone**: the
   page no longer offers tours only, and PR-14 kept it until the wizard
   rewrote the page.

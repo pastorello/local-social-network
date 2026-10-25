@@ -135,6 +135,19 @@ geolocation is a later phase (see Non-goals) rather than the centre of this one.
   archive line's word, a few lines above it ([content.md](./content.md), the
   archive's line).
 
+  *Amended 2026-10-25 — the sheet opens on the question* (review PR-21b,
+  decided on 2026-10-22: one front door). The two links of PR-2 were a
+  bridge, and the wizard «Cosa fare adesso» absorbs them: on both homes,
+  under the presentation and the archive's line, the wizard's first
+  question, «Che cosa ti va di fare?», with the same answers as `/benvenuto`
+  — the sheet opens on it, and on a wide screen the floating column shows it
+  above the layers. The places follow it in the sheet, one scroll away, and
+  their box under the column (D20). The last answer, **«Vai alla mappa»**,
+  puts the question away and leaves the home of before: the layers and the
+  list, the sheet stepped down to its lowest stop so the reader sees the
+  map. See "The wizard «Cosa fare adesso» — 2026-10-25" at the end of "The
+  map under every page".
+
 - **D4 — The map chrome lands here.** C5 deliberately did not build M1's
   "minimal top menu" as a chrome redesign — layer toggles live in a side panel
   and the nav kept C3's `SchedeMenu`. The full-bleed map with floating controls
@@ -1602,9 +1615,9 @@ The review of 2026-10-22 (study 10, PR-21) turned `/benvenuto` and
 confirmed it on 2026-10-23. The flow and its rules are in
 [itinerari.md](./itinerari.md) ("The welcome page is the wizard's first
 step") and [cosa-fare.md](./cosa-fare.md) (D6's note on `?intento=`); what it
-looks like, and what the build decided about it, is here. **The home as the
-same front door** (D3: the sheet opening on the question) is the review's
-PR-21b, after this.
+looks like, and what the build decided about it, is here — and, since
+PR-21b the same day, **the home as the same front door** (D3's note of
+2026-10-25).
 
 - **An answer is a card and a link**, the intent card of "The welcome page,
   and the whole screen on a phone" generalised (`components/wizard/AnswerCard.vue`):
@@ -1637,3 +1650,38 @@ PR-21b, after this.
   48.15 KB against main's 45.72) — and no Leaflet. The question and the
   presentation paint in the first frame; the answers arrive together under
   them.
+
+**The home as the same front door — PR-21b, the same day.** The review's
+point 6, built from main once the wizard had merged:
+
+- **One component on both addresses**: `components/wizard/WizardSteps.vue`
+  with `home`, its first step only, under the home's own presentation and
+  archive line; its answers lead where `/benvenuto`'s do — «Dove?» is
+  `/benvenuto?intento=`, a page over the map, and Back comes home to the
+  answer that was chosen (D15). The counts are asked once for both, in a
+  store (`stores/wizard.ts`), and by the home only when it is shown: the
+  home's chrome is mounted on every page (D13), and a card opened from a
+  shared link does not pay for a question it never sees.
+- **The map's title stays the home's one h1**, «La mappa di Gaeta» (D3's
+  note of 2026-10-23); the question is its h2, under the presentation. On
+  `/benvenuto`, a page of its own, the question is the h1 and takes the
+  focus; on the home, which is not a panel, nothing takes the focus on
+  arrival (as before) — only the question asked again takes it.
+- **«Vai alla mappa»** is the last answer, a button: it puts the question
+  away, the sheet steps down to its lowest stop, and the focus goes to
+  **«Che cosa ti va di fare?»**, a link-looking button where the question
+  was, which asks it again — the home of before kept that door (PR-2's first
+  link), and without it a reader who put the question away could not have it
+  back without a reload. `/benvenuto`'s «Non lo so: fammi vedere la mappa»
+  leads to the home with the question already put away. Put away, it stays
+  so for the life of the page; a reload asks again — a first impression.
+- **Nothing lands above what is on screen**: the question, its answers, the
+  layers and the lists are drawn together once every count is in, under the
+  presentation, which paints in the first frame (the Lighthouse gate's `/`:
+  1.84 s, CLS 0, locally, as before).
+- **At its lowest stop the sheet shows its first line**, whatever had been
+  scrolled to: «Vai alla mappa» is pressed half-way down the sheet, and the
+  stop it steps down to showed the middle of the answers until the sheet
+  went back to its top there (D3's note of 2026-10-23 said the line; a drag
+  to the lowest stop now keeps that promise too).
+
