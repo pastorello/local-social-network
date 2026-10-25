@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import shell from '@/lib/i18n/messages/shell'
+</script>
+
 <template>
   <!-- Not an <h1>: this is persistent chrome on every route (AppHeader), not
   page content — each view's own MainTitle is the page's single h1 (ADR-0005;
@@ -22,7 +26,7 @@
   <div>
     <RouterLink
       to="/"
-      aria-label="Vivere Gaeta — torna alla mappa"
+      :aria-label="shell().home"
       :aria-current="undefined"
       class="animate-fade-in-up block text-lg font-bold tracking-wide text-ink lg:text-xl lg:tracking-wider transition-colors duration-300 hover:text-sea"
     >

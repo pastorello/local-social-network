@@ -269,7 +269,7 @@ def test_an_event_held_at_a_card_has_its_own_title_and_line_and_the_card_is_its_
         'card': {'id': str(luogo.pk), 'type': 'luoghi', 'title': 'Spiaggia di Serapo'},
         'label': 'Spiaggia di Serapo', 'lat': SERAPO_LAT, 'lng': SERAPO_LNG,
     }
-    assert data['zones'] == [{'slug': 'serapo', 'name': 'Serapo'}]
+    assert data['zones'] == [{'slug': 'serapo', 'name': 'Serapo', 'name_en': ''}]
     assert Card.objects.get(pk=luogo.pk).title == 'Spiaggia di Serapo'
 
 

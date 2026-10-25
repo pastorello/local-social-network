@@ -5,6 +5,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import RoutePanel from '../RoutePanel.vue'
 import { usePanelTrail, type Trail } from '@/composables/usePanelTrail'
+import { setLocale } from '@/lib/i18n'
 import type { PanelShape } from '@/stores/map'
 
 const stub = { template: '<div />' }
@@ -25,6 +26,7 @@ const mountPanel = async (
       { path: '/cosa-fare', name: 'cosafare', component: stub },
       { path: '/itinerari', name: 'itinerarilist', component: stub },
       { path: '/itinerari/:id', name: 'itinerariodetail', component: stub },
+      { path: '/le-mie-schede', name: 'lemieschede', component: stub, meta: { italian: true } },
     ],
   })
   router.push(path)
@@ -335,5 +337,31 @@ describe('RoutePanel’s eyebrow (review PR-23)', () => {
 
     expect(eyebrow(wrapper).text()).toContain('Cosa fare')
     expect(eyebrow(wrapper).text()).not.toContain('Serapo')
+  })
+})
+
+// Review PR-19a: the panel's chrome speaks the reader's language; a
+// collaborator's page inside it stays Italian, and says so (WCAG 3.1.2).
+describe('RoutePanel in the reader’s language', () => {
+  afterEach(() => {
+    setLocale('it')
+    document.body.innerHTML = ''
+  })
+
+  it('closes in English, and marks a collaborator’s page Italian', async () => {
+    await setLocale('en')
+    const { wrapper } = await mountPanel('wide', '/le-mie-schede', '<h1>Le mie schede</h1>')
+
+    expect(wrapper.get('button[aria-keyshortcuts="Escape"]').attributes('aria-label')).toBe(
+      'Close and return to the map',
+    )
+    expect(wrapper.get('h1').element.closest('[lang]')?.getAttribute('lang')).toBe('it')
+  })
+
+  it('marks nothing on a reader’s page, whose language is the document’s', async () => {
+    const { wrapper } = await mountPanel('wide', '/chiese')
+
+    // The nearest language is the document's own.
+    expect(wrapper.get('h1').element.closest('[lang]')).toBe(document.documentElement)
   })
 })

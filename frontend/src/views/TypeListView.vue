@@ -11,6 +11,9 @@ import { useUserStore } from '@/stores/user'
 import type { TypeConfig } from '@/definitions/typeConfigs'
 import type { ContentItem, ZoneRef } from '@/definitions/interfaces/Content'
 import type { Genre } from '@/definitions/interfaces/Luogo'
+import { locale, localName, localPlural } from '@/lib/i18n'
+import lists from '@/lib/i18n/messages/lists'
+import { wordsOf } from '@/lib/i18n/messages/types'
 
 const props = defineProps<{ config: TypeConfig }>()
 
@@ -90,18 +93,30 @@ const loadMore = async () => {
 }
 
 // The first extra field is the card's one-line summary in the grid — read
-// through its display key, so a luogo shows "Spiaggia" rather than a slug.
+// through its display key, so a luogo shows "Spiaggia" rather than a slug,
+// and "Beach" in English where the API has it (review PR-19a). Without a
+// display key the summary is the card's own text, in Italian.
 const summaryField = computed(() => {
   const first = props.config.extraFields[0]
   return first ? (first.displayKey ?? first.key) : ''
 })
+const summaryIsText = computed(
+  () => !props.config.summaryOf && !!summaryField.value && !props.config.extraFields[0]?.displayKey,
+)
+const summaryOfField = (item: ContentItem): string => {
+  const key = summaryField.value
+  if (!key) return ''
+  const english =
+    locale.value === 'en' && !summaryIsText.value ? (item[`${key}_en`] as string | undefined) : ''
+  return english || (item[key] as string)
+}
 
 // «Zona · Genere» under the title (review PR-6): the zone leads wherever the
 // card carries it by name — chiese and luoghi, since review PR-3. A tour's
 // zones are slugs, and its own summary says more.
 const zoneOf = (item: ContentItem): string => {
   const first = Array.isArray(item.zones) ? (item.zones[0] as Partial<ZoneRef>) : undefined
-  return typeof first?.name === 'string' ? first.name : ''
+  return typeof first?.name === 'string' ? localName(first as ZoneRef) : ''
 }
 
 // The grid takes one normalised shape and knows nothing about card types.
@@ -111,18 +126,25 @@ const entries = computed(() =>
     title: item.title,
     summary: [
       zoneOf(item),
-      props.config.summaryOf
-        ? props.config.summaryOf(item)
-        : summaryField.value
-          ? (item[summaryField.value] as string)
-          : '',
+      props.config.summaryOf ? props.config.summaryOf(item, lists()) : summaryOfField(item),
     ]
       .filter(Boolean)
       .join(' · '),
+    summaryLang: summaryIsText.value ? 'it' : undefined,
     cover: item.images[0]?.imageURL ?? null,
     isPublished: item.is_published,
     to: { name: props.config.routeNames.detail, params: { id: item.id } },
   })),
+)
+
+// The list's own words, in the reader's language (review PR-19a).
+const heading = computed(() =>
+  activeOption.value
+    ? localPlural(activeOption.value)
+    : (wordsOf(props.config.key)?.label ?? props.config.label),
+)
+const counted = computed(() =>
+  props.config.countOf ? props.config.countOf(total.value, lists()) : lists().entries(total.value),
 )
 
 watch(mineOnly, getItems)
@@ -145,23 +167,19 @@ onMounted(() => {
     <div class="mx-auto w-full max-w-6xl">
       <header class="mb-4 flex flex-wrap items-end justify-between gap-4 sm:mb-8">
         <div>
-          <MainTitle>{{ activeOption?.name_plural ?? config.label }}</MainTitle>
+          <MainTitle>{{ heading }}</MainTitle>
           <p v-if="!loading" class="text-muted">
-            {{ total }}
-            {{
-              total === 1
-                ? (config.countNouns?.[0] ?? 'scheda')
-                : (config.countNouns?.[1] ?? 'schede')
-            }}
+            {{ counted }}
           </p>
           <!-- How the list is made, where it owes the reader that: the
           businesses' order is printed, and why they are there (CF40, D10). -->
           <p v-if="config.listNote" class="mt-1 max-w-[60ch] text-sm text-muted">
-            {{ config.listNote }}
+            {{ config.listNote(lists()) }}
           </p>
         </div>
 
-        <div v-if="userStore.user.isAuthenticated" class="flex items-center gap-4">
+        <!-- A collaborator's controls: Italian, and marked so (review PR-19a). -->
+        <div v-if="userStore.user.isAuthenticated" class="flex items-center gap-4" lang="it">
           <label class="flex items-center gap-2 text-sm text-ink" :for="`mine-${config.key}`">
             <input :id="`mine-${config.key}`" v-model="mineOnly" type="checkbox" class="h-4 w-4" />
             Le mie
@@ -176,7 +194,7 @@ onMounted(() => {
       PR-9), so it stays even while no genre has anything to show. -->
       <nav
         v-if="config.listFilter && (visibleOptions.length || config.listFilter.related?.length)"
-        :aria-label="config.listFilter.label"
+        :aria-label="config.listFilter.label(lists())"
         class="mb-4 sm:mb-8"
       >
         <!-- On a phone the chips are one row that scrolls, run to the panel's
@@ -196,7 +214,7 @@ onMounted(() => {
               "
               :aria-current="activeFilter ? undefined : 'page'"
             >
-              Tutti
+              {{ lists().all }}
             </RouterLink>
           </li>
           <li v-for="option in visibleOptions" :key="option.slug" class="flex-none snap-start">
@@ -210,7 +228,7 @@ onMounted(() => {
               "
               :aria-current="option.slug === activeFilter ? 'page' : undefined"
             >
-              {{ option.name_plural }}
+              {{ localPlural(option) }}
             </RouterLink>
           </li>
           <li
@@ -222,20 +240,24 @@ onMounted(() => {
               :to="related.to"
               class="inline-flex items-center rounded-full border border-hairline bg-surface px-4 py-2 text-sm font-semibold whitespace-nowrap text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
             >
-              {{ related.label }}
+              {{ related.label(lists()) }}
             </RouterLink>
           </li>
         </ul>
       </nav>
 
-      <p v-if="!loading && entries.length === 0" class="text-muted">
-        {{ mineOnly ? 'Non hai ancora creato nessuna scheda.' : 'Ancora nessuna scheda.' }}
+      <p
+        v-if="!loading && entries.length === 0"
+        class="text-muted"
+        :lang="mineOnly ? 'it' : undefined"
+      >
+        {{ mineOnly ? 'Non hai ancora creato nessuna scheda.' : lists().empty }}
       </p>
 
       <CardGrid :entries="entries" :type="config.key" />
 
       <ActionButton v-if="nextPage" size="small" class="mt-8" @click="loadMore">
-        Carica altre
+        {{ lists().loadMore }}
       </ActionButton>
     </div>
   </ViewContainer>

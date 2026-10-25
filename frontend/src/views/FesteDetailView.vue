@@ -20,6 +20,9 @@ import TranslateControl from '@/components/content/TranslateControl.vue'
 import { useUserStore } from '@/stores/user'
 import { useToastStore } from '@/stores/toast'
 import type Feste from '@/definitions/interfaces/Feste'
+import { localName } from '@/lib/i18n'
+import card from '@/lib/i18n/messages/card'
+import { wordsOf } from '@/lib/i18n/messages/types'
 
 const route = useRoute()
 const router = useRouter()
@@ -54,7 +57,7 @@ const getFeste = async () => {
       feste.value = response.data
     })
     .catch(() => {
-      toastStore.showToast(5000, 'Festa non trovata')
+      toastStore.showToast(5000, card().festaNotFound)
       router.push('/feste')
     })
 }
@@ -70,14 +73,16 @@ usePanelTrail(() =>
   shown.value
     ? {
         steps: (shown.value.zones ?? []).map((zone) => ({
-          label: zone.name,
+          label: localName(zone),
           to: { name: 'cosafare', query: { zona: zone.slug } },
         })),
       }
     : null,
 )
 usePageTitle(() =>
-  shown.value ? [shown.value.original_title || shown.value.title, 'Feste'] : null,
+  shown.value
+    ? [shown.value.original_title || shown.value.title, wordsOf('feste')?.label ?? 'Feste']
+    : null,
 )
 
 // Where the procession sets off — what "Portami alla partenza" leads to (review
@@ -158,7 +163,7 @@ watch(
           :images="feste.images"
           :translations="feste.translations"
           detail-route-name="festedetail"
-          :back-to="{ name: 'festelist', label: 'le feste' }"
+          :back-to="{ name: 'festelist', label: card().back.feste }"
         >
           <template #fields>
             <dl class="mb-10 divide-y divide-hairline border-y border-hairline">
@@ -166,50 +171,58 @@ watch(
                 <dt
                   class="text-xs font-semibold tracking-[0.1em] text-muted uppercase sm:w-40 sm:flex-none sm:pt-1"
                 >
-                  Quando
+                  {{ card().festa.when }}
                 </dt>
                 <dd class="text-ink">
-                  <FestaDates :editions="feste.editions ?? []" :recurrence="feste.recurrence" />
+                  <FestaDates
+                    :editions="feste.editions ?? []"
+                    :recurrence="feste.recurrence"
+                    :recurrence-lang="feste.language"
+                  />
                 </dd>
               </div>
               <div v-if="feste.programme" class="py-3 sm:flex sm:gap-6">
                 <dt
                   class="text-xs font-semibold tracking-[0.1em] text-muted uppercase sm:w-40 sm:flex-none sm:pt-1"
                 >
-                  Programma
+                  {{ card().festa.programme }}
                 </dt>
-                <dd class="whitespace-pre-line text-ink">{{ feste.programme }}</dd>
+                <dd class="whitespace-pre-line text-ink" :lang="feste.language">
+                  {{ feste.programme }}
+                </dd>
               </div>
             </dl>
           </template>
 
           <template #map>
             <section v-if="feste.route.length > 0" class="mb-10">
-              <h2 class="mb-3 font-display text-title text-ink">Il percorso</h2>
+              <h2 class="mb-3 font-display text-title text-ink">{{ card().festa.route }}</h2>
               <!-- The route is drawn on the map — beside the panel on a wide
               screen, in the strip above it on a phone (D16/D18) — so the panel
               keeps only the stops, in words: the text path the map does not
               offer. -->
               <p class="mb-3 text-muted">
-                È evidenziato sulla mappa, {{ isDesktop ? 'qui accanto' : 'qui sopra' }}.
+                {{ card().highlighted(isDesktop) }}
               </p>
               <DirectionsLink
                 v-if="start"
                 :place="start"
-                label="Portami alla partenza"
+                :label="card().festa.toStart"
                 class="mb-4"
               />
               <ol class="space-y-2">
                 <li v-for="(point, index) in feste.route" :key="index" class="flex gap-2">
                   <span class="font-semibold">{{ index + 1 }}.</span>
-                  <span>{{ point.label || 'Tappa senza nome' }}</span>
+                  <span v-if="point.label" lang="it">{{ point.label }}</span>
+                  <span v-else>{{ card().festa.unnamedStop }}</span>
                 </li>
               </ol>
             </section>
           </template>
 
+          <!-- A collaborator's controls: Italian, and marked so (review PR-19a). -->
           <template #actions>
-            <div v-if="canEdit" class="flex flex-wrap items-center gap-2">
+            <div v-if="canEdit" class="flex flex-wrap items-center gap-2" lang="it">
               <ActionButton size="small" @click="editing = true">Modifica</ActionButton>
               <ActionButton size="small" button-type="danger" @click="deleteFeste">
                 Elimina
@@ -225,7 +238,7 @@ watch(
         </CardArticle>
       </template>
 
-      <PanelBox v-else-if="feste" class="mx-auto w-full max-w-3xl">
+      <PanelBox v-else-if="feste" class="mx-auto w-full max-w-3xl" lang="it">
         <FesteForm :feste="feste" @saved="onEdited" @cancel="editing = false" />
       </PanelBox>
     </div>

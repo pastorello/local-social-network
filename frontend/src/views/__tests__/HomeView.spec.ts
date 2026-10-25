@@ -5,10 +5,13 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 import axios from 'axios'
 
 import HomeView from '../HomeView.vue'
-import { PRESENTATION } from '@/definitions/copy'
+import copy from '@/definitions/copy'
 import { CARD_LAYERS } from '@/lib/mapLayers'
 import { useMapStore } from '@/stores/map'
 import { useUserStore } from '@/stores/user'
+
+// The interface's default language (review PR-19a).
+const PRESENTATION = copy.it.presentation
 
 vi.mock('axios')
 

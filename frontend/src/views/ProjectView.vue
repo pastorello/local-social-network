@@ -3,7 +3,9 @@ import { onMounted } from 'vue'
 
 import MainTitle from '@/components/typography/MainTitle.vue'
 import { useArchiveLine } from '@/composables/useArchiveLine'
-import { PROJECT_STORY } from '@/definitions/copy'
+import copy from '@/definitions/copy'
+import project from '@/lib/i18n/messages/project'
+import { wordsOf } from '@/lib/i18n/messages/types'
 import { ODBL_URL, OSM_COPYRIGHT_URL } from '@/lib/osm'
 import { useUserStore } from '@/stores/user'
 
@@ -29,15 +31,17 @@ onMounted(loadArchive)
 
 // Every card type is listed here and in the menu's Esplora — two lists by
 // hand, and ProjectView.spec.ts fails when a type is missing from this one.
+// Each is named in the reader's language (review PR-19a), by its route
+// segment, which is its key.
 const schede = [
-  { to: '/feste', label: 'Feste' },
-  { to: '/luoghi', label: 'Luoghi' },
-  { to: '/chiese', label: 'Chiese' },
-  { to: '/attivita', label: 'Attività' },
-  { to: '/ricette', label: 'Ricette' },
-  { to: '/personaggi', label: 'Personaggi storici' },
-  { to: '/dialetto', label: 'Dialetto' },
-  { to: '/libri', label: 'Libri consigliati' },
+  'feste',
+  'luoghi',
+  'chiese',
+  'attivita',
+  'ricette',
+  'personaggi',
+  'dialetto',
+  'libri',
 ]
 
 const section = 'mt-10'
@@ -52,27 +56,26 @@ const heading = 'mb-3 text-xs font-semibold tracking-[0.12em] text-muted upperca
 
 <template>
   <article class="mx-auto w-full max-w-3xl pt-2">
-    <MainTitle>Il progetto</MainTitle>
+    <MainTitle>{{ project().title }}</MainTitle>
     <div class="max-w-[60ch] space-y-4 text-reading text-ink">
-      <p v-for="paragraph in PROJECT_STORY" :key="paragraph">{{ paragraph }}</p>
+      <p v-for="paragraph in copy().projectStory" :key="paragraph">{{ paragraph }}</p>
     </div>
     <p v-if="archive || !archiveKnown" class="mt-4 min-h-5 text-sm text-muted">{{ archive }}</p>
 
     <section aria-labelledby="progetto-uso" :class="section">
-      <h2 id="progetto-uso" :class="title">Come si usa</h2>
+      <h2 id="progetto-uso" :class="title">{{ project().use.heading }}</h2>
       <ul :class="rows">
         <li>
-          <RouterLink to="/itinerari" :class="inline">Itinerari</RouterLink>: giri della città
-          scritti dai collaboratori, da seguire una tappa alla volta, con le indicazioni per
-          arrivare a ciascuna.
+          <RouterLink to="/itinerari" :class="inline">{{ project().use.tours }}</RouterLink
+          >{{ project().use.toursLine }}
         </li>
         <li>
-          <RouterLink to="/cosa-fare" :class="inline">Cosa si può fare qui</RouterLink>: scegli una
-          zona della città e trovi i luoghi, le chiese, gli itinerari e le feste che ci sono.
+          <RouterLink to="/cosa-fare" :class="inline">{{ project().use.whatToDo }}</RouterLink
+          >{{ project().use.whatToDoLine }}
         </li>
         <li>
-          <RouterLink to="/" :class="inline">La mappa</RouterLink>: ogni scheda che ha un posto è
-          sulla mappa; scegli i livelli da vedere, e gli stessi posti sono anche in un elenco.
+          <RouterLink to="/" :class="inline">{{ project().use.map }}</RouterLink
+          >{{ project().use.mapLine }}
         </li>
       </ul>
     </section>
@@ -83,30 +86,30 @@ const heading = 'mb-3 text-xs font-semibold tracking-[0.12em] text-muted upperca
     register — never as a banner above the content. Until then the place
     stays empty (D11): no logo, no "in attesa di", nothing claimed. -->
     <section aria-labelledby="progetto-regola" :class="section">
-      <h2 id="progetto-regola" :class="title">La regola</h2>
+      <h2 id="progetto-regola" :class="title">{{ project().rule.heading }}</h2>
       <p class="mt-4 max-w-[60ch] text-ink">
-        Le schede di questo archivio sono scelte per merito editoriale: nessuna presenza è
-        acquistata.
+        {{ project().rule.text }}
       </p>
     </section>
 
     <!-- «Scrivici» goes to the collaboration request, whose message is free
     text: the form has no field for why someone writes, and none is added for
     this (design.md D21's note of 2026-10-24) — the line says what to put in
-    the message instead. -->
+    the message instead. The form itself is Italian, as the collaborator's
+    surfaces stay (review PR-19a). -->
     <section aria-labelledby="progetto-partecipa" :class="section">
-      <h2 id="progetto-partecipa" :class="title">Partecipa</h2>
+      <h2 id="progetto-partecipa" :class="title">{{ project().join.heading }}</h2>
       <ul :class="rows">
         <li>
-          <RouterLink to="/collabora" :class="inline">Collabora con noi</RouterLink>: se Gaeta la
-          conosci e vuoi scriverne, chiedi di entrare nel gruppo che scrive l’archivio.
+          <RouterLink to="/collabora" :class="inline">{{ project().join.collaborate }}</RouterLink
+          >{{ project().join.collaborateLine }}
         </li>
         <li>
-          Hai trovato un errore o una cosa che manca?
-          <RouterLink to="/collabora" :class="inline">Scrivici</RouterLink>, e nel messaggio indica
-          la scheda e che cosa non torna.
+          {{ project().join.mistake }}
+          <RouterLink to="/collabora" :class="inline">{{ project().join.writeUs }}</RouterLink
+          >{{ project().join.writeUsLine }}
         </li>
-        <li v-if="user.isAuthenticated">
+        <li v-if="user.isAuthenticated" lang="it">
           <RouterLink to="/polls" :class="inline">Sondaggi</RouterLink>: le domande aperte a chi
           collabora all’archivio.
         </li>
@@ -119,26 +122,30 @@ const heading = 'mb-3 text-xs font-semibold tracking-[0.12em] text-muted upperca
       <!-- «Esplora» is the menu's, over the card types, since 2026-10-23
       (review PR-23); this column is the map and the tours, so it is named
       for what it is, and one screen never has two «Esplora». -->
-      <nav aria-label="Per cominciare">
-        <h2 :class="heading">Per cominciare</h2>
+      <nav :aria-label="project().index.start">
+        <h2 :class="heading">{{ project().index.start }}</h2>
         <ul class="space-y-2 text-sm">
-          <li><RouterLink to="/" :class="link">Mappa</RouterLink></li>
-          <li><RouterLink to="/itinerari" :class="link">Itinerari</RouterLink></li>
+          <li>
+            <RouterLink to="/" :class="link">{{ project().index.map }}</RouterLink>
+          </li>
+          <li>
+            <RouterLink to="/itinerari" :class="link">{{ project().index.tours }}</RouterLink>
+          </li>
         </ul>
       </nav>
 
-      <nav aria-label="Cosa trovi su Vivere Gaeta">
-        <h2 :class="heading">Cosa trovi su Vivere Gaeta</h2>
+      <nav :aria-label="project().index.found">
+        <h2 :class="heading">{{ project().index.found }}</h2>
         <ul class="space-y-2 text-sm">
-          <li v-for="scheda in schede" :key="scheda.to">
-            <RouterLink :to="scheda.to" :class="link">{{ scheda.label }}</RouterLink>
+          <li v-for="key in schede" :key="key">
+            <RouterLink :to="`/${key}`" :class="link">{{ wordsOf(key)?.label }}</RouterLink>
           </li>
         </ul>
       </nav>
     </div>
 
     <section
-      aria-label="Crediti"
+      :aria-label="project().credits.label"
       class="mt-10 flex flex-col gap-3 border-t border-hairline pt-6 text-sm text-muted sm:flex-row sm:items-baseline sm:justify-between"
     >
       <!-- The OpenStreetMap credit, where a reader looks for credits: the
@@ -146,15 +153,15 @@ const heading = 'mb-3 text-xs font-semibold tracking-[0.12em] text-muted upperca
       and the zones of «Cosa si può fare qui» are derived from OSM data too
       (maps/migrations/0006) and have no corner of their own. -->
       <p class="max-w-[60ch]">
-        Mappa e zone: © contributori di
+        {{ project().credits.before }}
         <a
           :href="OSM_COPYRIGHT_URL"
           class="text-sea underline underline-offset-4 hover:text-sea-deep"
           >OpenStreetMap</a
-        >, dati disponibili con licenza
+        >{{ project().credits.afterOsm }}
         <a :href="ODBL_URL" class="text-sea underline underline-offset-4 hover:text-sea-deep"
           >ODbL</a
-        >.
+        >{{ project().credits.end }}
       </p>
       <p>© {{ year }} Vivere Gaeta</p>
     </section>

@@ -19,6 +19,10 @@ import type Itinerario from '@/definitions/interfaces/Itinerario'
 import type { Intent } from '@/definitions/interfaces/Itinerario'
 import type { MapPoint } from '@/definitions/interfaces/Content'
 import { directionsUrl } from '@/lib/directions'
+import { locale } from '@/lib/i18n'
+import card from '@/lib/i18n/messages/card'
+import tours from '@/lib/i18n/messages/tours'
+import { wordsOf } from '@/lib/i18n/messages/types'
 import { layerRoute } from '@/lib/mapLayers'
 import { afterTour, type AfterTourLink } from '@/lib/tours'
 import { readToken } from '@/lib/tokens'
@@ -71,25 +75,35 @@ const shown = computed(() => (tour.value && tour.value.id === route.params.id ? 
 const tourTitle = computed(() =>
   shown.value ? shown.value.original_title || shown.value.title : '',
 )
+// Its intents by name, in English where the author wrote one (review PR-19a).
+const intentLabels = computed(() => {
+  const open = shown.value
+  if (!open) return []
+  return open.intent_labels.map(
+    (name, index) => (locale.value === 'en' && open.intent_labels_en?.[index]) || name,
+  )
+})
 usePanelTrail(() => {
   const open = shown.value
   if (!open) return null
   if (current.value) {
     return {
       up: tourTitle.value,
-      steps: [{ label: `Tappa ${step.value} di ${placed.value.length}` }],
+      steps: [{ label: tours().stopOf(step.value ?? 1, placed.value.length) }],
     }
   }
   return {
     steps: open.intents.map((slug, index) => ({
-      label: open.intent_labels[index] ?? slug,
+      label: intentLabels.value[index] ?? slug,
       to: { name: itinerarioConfig.routeNames.list, query: { intento: slug } },
     })),
   }
 })
 usePageTitle(() => {
   if (!shown.value) return null
-  return current.value ? [current.value.title, tourTitle.value] : [tourTitle.value, 'Itinerari']
+  return current.value
+    ? [current.value.title, tourTitle.value]
+    : [tourTitle.value, wordsOf('itinerari')?.label ?? 'Itinerari']
 })
 
 const directions = computed(() =>
@@ -139,18 +153,12 @@ const stepHeading = ref<HTMLElement | null>(null)
 const startButton = ref<{ $el: HTMLElement } | null>(null)
 const finishHeadingId = useId()
 // What a stop is, under its title (the itinerari canvas: "Chiesa",
-// "Monumento"). Singular, where the map's layers are plural.
-const TYPE_LABELS: Record<string, string> = {
-  chiese: 'Chiesa',
-  feste: 'Festa',
-  ricette: 'Ricetta',
-  personaggi: 'Personaggio storico',
-  luoghi: 'Luogo',
-}
-const typeLabel = (type: string) => TYPE_LABELS[type] ?? ''
-// The screen-reader half of "Portami": a leading space, set here because the
-// template's whitespace between the two halves is condensed away.
-const portamiLabel = (where: string) => ` a ${where} (apre Google Maps)`
+// "Monumento"). Singular, where the map's layers are plural; in the reader's
+// language (review PR-19a).
+const typeLabel = (type: string) => wordsOf(type)?.one ?? ''
+// The screen-reader half of "Portami": a leading space, set in the message
+// because the template's whitespace between the two halves is condensed away.
+const portamiLabel = (where: string) => tours().takeMeTo(where)
 
 const goToStep = async (n: number | null) => {
   await router.push({ query: n ? { tappa: String(n) } : {} })
@@ -198,7 +206,7 @@ const getTour = async () => {
   try {
     tour.value = (await axios.get<Itinerario>(`/api/itinerari/${route.params.id}/`)).data
   } catch {
-    toastStore.showToast(5000, 'Itinerario non trovato')
+    toastStore.showToast(5000, tours().notFound)
     router.push({ name: itinerarioConfig.routeNames.list })
   }
 }
@@ -251,8 +259,10 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
       >
         {{ current.title }}
       </h1>
-      <p v-if="current.point?.label" class="mt-1 text-muted">{{ current.point.label }}</p>
-      <p v-if="current.note" class="mt-4 text-reading whitespace-pre-line text-ink">
+      <p v-if="current.point?.label" class="mt-1 text-muted" lang="it">
+        {{ current.point.label }}
+      </p>
+      <p v-if="current.note" class="mt-4 text-reading whitespace-pre-line text-ink" lang="it">
         {{ current.note }}
       </p>
 
@@ -264,18 +274,18 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
           rel="noopener"
           class="inline-flex h-11 items-center rounded-full bg-sea px-5 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
         >
-          Come arrivarci<span class="sr-only"> (apre Google Maps)</span>
+          {{ card().directions }}<span class="sr-only">{{ tours().opensMapsHeard }}</span>
         </a>
         <RouterLink
           :to="stopLink(current.type, current.card)"
           class="inline-flex h-11 items-center rounded-full border border-field bg-surface px-5 text-sm font-semibold text-sea focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
         >
-          Leggi la scheda
+          {{ tours().readCard }}
         </RouterLink>
         <!-- The stop itself, `?tappa=N` (review PR-16): the link opens on this
         stop, as a reload does (I7), with the tour one level up. -->
         <ShareButton v-if="tour.is_published" :query="{ tappa: String(step) }">
-          Condividi<span class="sr-only"> la tappa</span>
+          {{ card().share }}<span class="sr-only">{{ card().shareStop }}</span>
         </ShareButton>
       </div>
 
@@ -288,12 +298,21 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
         v-if="current.cover"
         :src="current.cover.imageURL"
         :alt="current.cover.caption || current.title"
+        lang="it"
         class="mt-6 aspect-[3/2] w-full rounded-lg object-cover"
       />
-      <p v-if="current.excerpt" class="mt-6 max-w-[65ch] text-reading whitespace-pre-line text-ink">
+      <p
+        v-if="current.excerpt"
+        class="mt-6 max-w-[65ch] text-reading whitespace-pre-line text-ink"
+        lang="it"
+      >
         {{ current.excerpt }}
       </p>
-      <p v-if="current.how_to_get_there" class="mt-4 text-sm whitespace-pre-line text-muted">
+      <p
+        v-if="current.how_to_get_there"
+        class="mt-4 text-sm whitespace-pre-line text-muted"
+        lang="it"
+      >
         {{ current.how_to_get_there }}
       </p>
       <VisitInfo :availability="current.availability" class="mt-8" />
@@ -302,7 +321,9 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
         <!-- The last stop has no "next": what comes after the tour does
         (decided 2026-10-22), each way only if something is behind it. -->
         <section v-if="isLast" :aria-labelledby="finishHeadingId">
-          <h2 :id="finishHeadingId" class="font-display text-title text-ink">Hai finito il giro</h2>
+          <h2 :id="finishHeadingId" class="font-display text-title text-ink">
+            {{ tours().finished }}
+          </h2>
           <ul v-if="after.length" class="mt-4 space-y-2">
             <li v-for="link in after" :key="link.label">
               <RouterLink
@@ -331,7 +352,7 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
           </ul>
         </section>
 
-        <nav aria-label="Tappe del tour" :class="{ 'mt-6': isLast }">
+        <nav :aria-label="tours().stopsNav" :class="{ 'mt-6': isLast }">
           <!-- One way forward, full width and primary; the two ways back are
           links under it, and the first stop has no "previous" at all. -->
           <button
@@ -340,7 +361,7 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
             class="flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-sea px-5 text-base font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
             @click="goToStep((step ?? 0) + 1)"
           >
-            Tappa successiva <span aria-hidden="true">→</span>
+            {{ tours().next }} <span aria-hidden="true">→</span>
           </button>
           <div
             class="flex flex-wrap items-center justify-center gap-x-6"
@@ -352,14 +373,14 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
               class="h-11 cursor-pointer text-sm font-semibold whitespace-nowrap text-sea underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
               @click="goToStep((step ?? 2) - 1)"
             >
-              <span aria-hidden="true">←</span> Precedente
+              <span aria-hidden="true">←</span> {{ tours().previous }}
             </button>
             <button
               type="button"
               class="h-11 cursor-pointer text-sm font-semibold whitespace-nowrap text-sea underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
               @click="goToStep(null)"
             >
-              Torna all’itinerario
+              {{ tours().backToTour }}
             </button>
           </div>
         </nav>
@@ -379,7 +400,10 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
       :images="tour.images"
       :translations="tour.translations"
       :detail-route-name="itinerarioConfig.routeNames.detail"
-      :back-to="{ name: itinerarioConfig.routeNames.list, label: 'itinerari' }"
+      :back-to="{
+        name: itinerarioConfig.routeNames.list,
+        label: card().back.itinerari,
+      }"
     >
       <template #fields>
         <dl
@@ -391,38 +415,33 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
             <dt
               class="text-xs font-semibold tracking-[0.1em] text-muted uppercase sm:w-40 sm:flex-none sm:pt-1"
             >
-              Durata indicativa
+              {{ tours().duration }}
             </dt>
-            <dd class="text-ink">{{ tour.duration }}</dd>
+            <dd class="text-ink" :lang="tour.language">{{ tour.duration }}</dd>
           </div>
           <div v-if="tour.intent_labels.length" class="py-3 sm:flex sm:gap-6">
             <dt
               class="text-xs font-semibold tracking-[0.1em] text-muted uppercase sm:w-40 sm:flex-none sm:pt-1"
             >
-              Per chi vuole
+              {{ tours().forWho }}
             </dt>
-            <dd class="text-ink">{{ tour.intent_labels.join(', ') }}</dd>
+            <dd class="text-ink">{{ intentLabels.join(', ') }}</dd>
           </div>
         </dl>
         <!-- Where a guest who came from the QR looks for it: before the stops,
         not after a list they have to scroll (review PR-7); repeated under it. -->
         <ActionButton v-if="canGuide" ref="startButton" class="mb-10" @click="goToStep(1)">
-          Inizia il tour
+          {{ tours().start }}
         </ActionButton>
       </template>
 
       <template #map>
         <section v-if="tour.stops.length" class="mb-10">
           <h2 class="mb-3 font-display text-title text-ink">
-            {{ isPercorso ? 'Le tappe' : 'I luoghi' }}
+            {{ isPercorso ? tours().stops : tours().places }}
           </h2>
           <p class="mb-4 text-muted">
-            {{
-              isPercorso
-                ? 'Nell’ordine del giro, numerate sulla mappa'
-                : 'In ordine di consiglio, numerati sulla mappa'
-            }}
-            {{ isDesktop ? 'qui accanto' : 'qui sopra' }}.
+            {{ isPercorso ? tours().order.percorso(isDesktop) : tours().order.raccolta(isDesktop) }}
           </p>
           <component :is="isPercorso ? 'ol' : 'ul'" class="space-y-4">
             <li
@@ -439,18 +458,25 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
                 <RouterLink
                   :to="stopLink(stop.type, stop.card)"
                   class="font-semibold text-ink underline-offset-4 hover:underline"
+                  lang="it"
                 >
                   {{ stop.title }}
                 </RouterLink>
-                <span v-if="isPercorso && stop.point?.label" class="text-sm text-muted">
+                <span v-if="isPercorso && stop.point?.label" class="text-sm text-muted" lang="it">
                   · {{ stop.point.label }}</span
                 >
                 <p v-if="stop.type" class="text-sm text-muted">{{ typeLabel(stop.type) }}</p>
                 <!-- I4: only the author and admins ever receive such a stop. -->
-                <p v-if="!stop.is_published" class="text-sm font-semibold text-status-open">
+                <p
+                  v-if="!stop.is_published"
+                  class="text-sm font-semibold text-status-open"
+                  lang="it"
+                >
                   Scheda in bozza: i lettori non vedono questa tappa.
                 </p>
-                <p v-if="stop.note" class="mt-1 whitespace-pre-line text-ink">{{ stop.note }}</p>
+                <p v-if="stop.note" class="mt-1 whitespace-pre-line text-ink" lang="it">
+                  {{ stop.note }}
+                </p>
                 <!-- A raccolta is not walked in order, so each place carries its
                 own way there (the itinerari canvas, decided 2026-09-19): a dish
                 lists every bakery it is sold at, a beach says how to reach it. -->
@@ -458,6 +484,7 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
                   <p
                     v-if="stop.how_to_get_there"
                     class="mt-1 text-sm whitespace-pre-line text-muted"
+                    lang="it"
                   >
                     {{ stop.how_to_get_there }}
                   </p>
@@ -467,16 +494,15 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
                       :key="placeIndex"
                       class="flex flex-wrap items-center gap-x-3 gap-y-1"
                     >
-                      <span v-if="place.label" class="text-ink">{{ place.label }}</span>
+                      <span v-if="place.label" class="text-ink" lang="it">{{ place.label }}</span>
                       <a
                         :href="directionsUrl(place, { mode: null })"
                         target="_blank"
                         rel="noopener"
                         class="text-sm font-semibold text-sea underline underline-offset-4"
                       >
-                        Portami<span class="sr-only">{{
-                          portamiLabel(place.label || stop.title)
-                        }}</span>
+                        {{ tours().takeMe
+                        }}<span class="sr-only">{{ portamiLabel(place.label || stop.title) }}</span>
                       </a>
                     </li>
                   </ul>
@@ -486,13 +512,14 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
           </component>
 
           <ActionButton v-if="canGuide" class="mt-6" @click="goToStep(1)">
-            Inizia il tour
+            {{ tours().start }}
           </ActionButton>
         </section>
       </template>
 
+      <!-- A collaborator's controls: Italian, and marked so (review PR-19a). -->
       <template #actions>
-        <div v-if="canEdit" class="flex flex-wrap items-center gap-2">
+        <div v-if="canEdit" class="flex flex-wrap items-center gap-2" lang="it">
           <ActionButton size="small" @click="editing = true">Modifica</ActionButton>
           <ActionButton size="small" button-type="danger" @click="deleteTour">Elimina</ActionButton>
           <TranslateControl
@@ -505,6 +532,12 @@ const stopLink = (type: string | null, card: string) => layerRoute(type ?? '', c
       </template>
     </CardArticle>
 
-    <ItineraryForm v-else-if="tour" :tour="tour" @saved="onEdited" @cancel="editing = false" />
+    <ItineraryForm
+      v-else-if="tour"
+      :tour="tour"
+      lang="it"
+      @saved="onEdited"
+      @cancel="editing = false"
+    />
   </div>
 </template>

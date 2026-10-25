@@ -30,6 +30,7 @@ class AttivitaReadSerializer(serializers.ModelSerializer):
     translation_of = serializers.PrimaryKeyRelatedField(source='card.translation_of', read_only=True)
     kind = serializers.SerializerMethodField()
     kind_label = serializers.SerializerMethodField()
+    kind_label_en = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField()
     pins = serializers.SerializerMethodField()
     translations = serializers.SerializerMethodField()
@@ -51,6 +52,9 @@ class AttivitaReadSerializer(serializers.ModelSerializer):
 
     def get_kind_label(self, obj):
         return self._kind(obj).get_kind_display()
+
+    def get_kind_label_en(self, obj):
+        return Attivita.KIND_NAMES_EN[self._kind(obj).kind]
 
     def get_images(self, obj):
         return CardImageSerializer(media_source(obj.card).images.all(), many=True).data
@@ -77,7 +81,7 @@ class AttivitaReadSerializer(serializers.ModelSerializer):
         model = Attivita
         fields = (
             'id', 'title', 'body_html', 'author', 'is_published',
-            'kind', 'kind_label', 'how_to_get_there', 'availability',
+            'kind', 'kind_label', 'kind_label_en', 'how_to_get_there', 'availability',
             'images', 'pins', 'zones', 'language', 'translation_of', 'original_title', 'translations',
             'created_at', 'updated_at',
         )

@@ -47,9 +47,13 @@ def zones_containing_any(zones, points):
 
 
 def named_zones_containing_any(zones, points):
-    """The same zones with their names, `{slug, name}` — what a place's card
-    says under «Dove si trova» (review PR-3), where a slug means nothing."""
-    return [{'slug': zone.slug, 'name': zone.name} for zone in zones if _holds_any(zone, points)]
+    """The same zones with their names, `{slug, name, name_en}` — what a
+    place's card says under «Dove si trova» (review PR-3), where a slug means
+    nothing. `name_en` is blank for a proper name (review PR-19a)."""
+    return [
+        {'slug': zone.slug, 'name': zone.name, 'name_en': zone.name_en}
+        for zone in zones if _holds_any(zone, points)
+    ]
 
 
 def zones_of_feature(zones, type_key, points, route):

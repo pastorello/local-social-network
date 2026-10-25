@@ -1,13 +1,16 @@
 import 'vue-router'
 
+import type { RouteTitle } from '@/lib/pageTitle'
+
 // What the shell reads from a route (spec/design.md D13–D17).
 declare module 'vue-router' {
   interface RouteMeta {
     requiresAuth?: boolean
     // Why a page behind the login sent a reader to sign in, said in a toast
     // over the login form — for a page a reader can reach by a link, like the
-    // polls (review PR-17). Without one the guard just redirects.
-    signInToast?: string
+    // polls (review PR-17). Without one the guard just redirects. A function
+    // says it in the reader's language (review PR-19a).
+    signInToast?: string | (() => string)
     // The home: the map itself is the page, with its chrome floating over it.
     fullBleed?: boolean
     // Every other page opens as a panel over the map (D15). 'narrow' is the
@@ -25,7 +28,13 @@ declare module 'vue-router' {
     // The window's title, most specific part first and without the site's
     // name, which lib/pageTitle.ts adds — «Itinerari» becomes «Itinerari ·
     // Vivere Gaeta». None on the home, whose title is its own. A page named by
-    // its data puts that in front (composables/usePageTitle.ts).
-    title?: string[]
+    // its data puts that in front (composables/usePageTitle.ts). A reader's
+    // page gives it as a function, read in the reader's language (review
+    // PR-19a); lib/pageTitle.ts::titleParts reads either.
+    title?: RouteTitle
+    // A collaborator's surface: Italian whatever the reader's language (review
+    // PR-19a), and marked `lang="it"` by RoutePanel so a screen reader reads
+    // it as Italian (WCAG 3.1.2).
+    italian?: boolean
   }
 }

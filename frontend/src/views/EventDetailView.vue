@@ -10,6 +10,9 @@ import { usePageTitle } from '@/composables/usePageTitle'
 import { usePanelShape } from '@/composables/usePanelShape'
 import { usePanelTrail } from '@/composables/usePanelTrail'
 import type { Evento } from '@/definitions/interfaces/Evento'
+import { localName } from '@/lib/i18n'
+import events from '@/lib/i18n/messages/events'
+import shell from '@/lib/i18n/messages/shell'
 import { formatEventWhen } from '@/lib/when'
 import { useToastStore } from '@/stores/toast'
 import { useUserStore } from '@/stores/user'
@@ -30,7 +33,7 @@ const load = async () => {
   try {
     evento.value = (await axios.get<Evento>(`/api/eventi/${route.params.id}/`)).data
   } catch {
-    toastStore.showToast(5000, 'Evento non trovato')
+    toastStore.showToast(5000, events().notFound)
     router.push({ name: 'eventilist' })
   }
 }
@@ -68,13 +71,13 @@ usePanelTrail(() =>
   shown.value
     ? {
         steps: shown.value.zones.map((zone) => ({
-          label: zone.name,
+          label: localName(zone),
           to: { name: 'cosafare', query: { zona: zone.slug } },
         })),
       }
     : null,
 )
-usePageTitle(() => (shown.value ? [shown.value.title, 'Eventi'] : null))
+usePageTitle(() => (shown.value ? [shown.value.title, shell().title.event] : null))
 
 // CF32: the organiser's page, named by its address so a reader knows where
 // it leads before following it.
@@ -105,49 +108,54 @@ const label =
       v-if="shown.state === 'annullato'"
       class="mb-4 rounded-lg border-2 border-event-cancelled bg-surface px-4 py-3 font-semibold text-event-cancelled"
     >
-      Annullato: questo evento non si tiene.
+      {{ events().cancelledBanner }}
     </p>
     <p
       v-else-if="shown.state === 'rinviato'"
       class="mb-4 rounded-lg border border-hairline bg-surface px-4 py-3 font-semibold text-ink"
     >
-      Rinviato: non si tiene in questa data, e la nuova non la conosciamo ancora.
+      {{ events().postponedBanner }}
     </p>
     <p
       v-if="!shown.is_published"
       class="mb-3 text-xs font-semibold tracking-[0.12em] text-muted uppercase"
     >
-      Bozza
+      {{ events().draft }}
     </p>
 
-    <h1 class="mb-2 font-display text-display text-balance text-ink">{{ shown.title }}</h1>
+    <!-- The title, the place and the line are the collaborator's Italian;
+    the dates and the words around them are the reader's (review PR-19a). -->
+    <h1 class="mb-2 font-display text-display text-balance text-ink" lang="it">
+      {{ shown.title }}
+    </h1>
     <p class="mb-2 text-lg text-ink">{{ formatEventWhen(shown) }}</p>
-    <p v-if="shown.is_over" class="mb-6 text-muted">È già passato: resta qui, nell’archivio.</p>
+    <p v-if="shown.is_over" class="mb-6 text-muted">{{ events().past }}</p>
     <div v-else class="mb-6"></div>
 
     <PosterViewer v-if="shown.poster" :src="shown.poster" :title="shown.title" />
 
     <dl class="mb-8 divide-y divide-hairline border-y border-hairline">
       <div v-if="shown.place" class="py-3 sm:flex sm:gap-6">
-        <dt :class="label">Dove</dt>
+        <dt :class="label">{{ events().where }}</dt>
         <dd class="space-y-3 text-ink">
           <RouterLink
             v-if="venuePath"
             :to="venuePath"
             class="font-semibold text-sea underline underline-offset-4 hover:text-sea-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
+            lang="it"
           >
             {{ shown.place.label }}
           </RouterLink>
-          <span v-else class="font-semibold">{{ shown.place.label }}</span>
+          <span v-else class="font-semibold" lang="it">{{ shown.place.label }}</span>
           <div><DirectionsLink :place="shown.place" /></div>
         </dd>
       </div>
       <div v-if="shown.description" class="py-3 sm:flex sm:gap-6">
-        <dt :class="label">In breve</dt>
-        <dd class="whitespace-pre-line text-ink">{{ shown.description }}</dd>
+        <dt :class="label">{{ events().inBrief }}</dt>
+        <dd class="whitespace-pre-line text-ink" lang="it">{{ shown.description }}</dd>
       </div>
       <div v-if="shown.link" class="py-3 sm:flex sm:gap-6">
-        <dt :class="label">Programma e conferme</dt>
+        <dt :class="label">{{ events().programme }}</dt>
         <dd class="text-ink">
           <a
             :href="shown.link"
@@ -156,19 +164,19 @@ const label =
             class="font-semibold text-sea underline underline-offset-4 hover:text-sea-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
             >{{ sourceHost }}</a
           >
-          <span class="text-muted"> (apre un altro sito)</span>
+          <span class="text-muted">{{ events().otherSite }}</span>
         </dd>
       </div>
     </dl>
 
     <!-- CF32: the archive is a secondary source for events, and says so. -->
     <p class="mb-8 text-sm text-muted">
-      Gli eventi li riportiamo come li abbiamo saputi, da una locandina o da chi li organizza: prima
-      di andare, una conferma da loro vale più della nostra.
+      {{ events().secondHand }}
     </p>
 
     <RouterLink
       v-if="canEdit"
+      lang="it"
       :to="{ name: 'eventoedit', params: { id: shown.id } }"
       class="inline-flex min-h-11 items-center rounded-lg bg-sea px-4 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
     >

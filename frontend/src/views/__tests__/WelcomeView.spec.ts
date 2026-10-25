@@ -5,10 +5,13 @@ import { createPinia, setActivePinia } from 'pinia'
 import { createMemoryHistory, createRouter, type Router } from 'vue-router'
 
 import WelcomeView from '../WelcomeView.vue'
-import { PRESENTATION } from '@/definitions/copy'
+import copy from '@/definitions/copy'
 import type { MapCardFeature } from '@/definitions/interfaces/MapData'
 import { useMapStore } from '@/stores/map'
 import { useWizardStore } from '@/stores/wizard'
+
+// The interface's default language (review PR-19a).
+const PRESENTATION = copy.it.presentation
 
 vi.mock('axios')
 

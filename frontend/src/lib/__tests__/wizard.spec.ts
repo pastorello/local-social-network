@@ -1,7 +1,8 @@
-import { describe, it, expect } from 'vitest'
+import { afterEach, describe, it, expect } from 'vitest'
 
 import type { Intent } from '@/definitions/interfaces/Itinerario'
 import type { MapCardFeature } from '@/definitions/interfaces/MapData'
+import { setLocale } from '@/lib/i18n'
 import {
   afterIntent,
   asksWhere,
@@ -194,5 +195,42 @@ describe('the wizard’s second step: «Dove?»', () => {
     const dishes = archive({ dishes: 2 })
     expect(afterIntent(dishes, 'mangiare', ZONES)).toEqual(resultOf('mangiare'))
     expect(resultOf('mangiare')).toEqual({ name: 'cosafare', query: { intento: 'mangiare' } })
+  })
+})
+
+// In the reader's language (review PR-19a): the lines under the answers, and
+// the intents' and zones' names where the author wrote English ones.
+describe('the wizard in English', () => {
+  afterEach(() => setLocale('it'))
+
+  it('counts in English', async () => {
+    await setLocale('en')
+
+    expect(contentLine(2, 1, 1)).toBe('2 places · 1 tour · 1 recipe')
+    expect(
+      windowAnswers({ oggi: 1, settimana: 3 }).map((window) => [window.name, window.line]),
+    ).toEqual([
+      ['Today', '1 event'],
+      ['This week', '3 events'],
+    ])
+  })
+
+  it('names an intent and a zone in English where they have an English name, in Italian otherwise', async () => {
+    const tours = [tour({ intents: ['mare'], zones: ['serapo'] })]
+    const zones = [
+      { slug: 'serapo', name: 'Serapo' },
+      { slug: 'gaeta-medievale', name: 'Gaeta Medievale', name_en: 'Medieval Gaeta' },
+    ]
+    const withNames = archive({
+      intents: [{ ...intent('mare', 1), name: 'Andare al mare', name_en: 'Going to the beach' }],
+      tours: [...tours, tour({ id: 'u', intents: ['mare'], zones: ['gaeta-medievale'] })],
+    })
+    await setLocale('en')
+
+    expect(intentAnswers(withNames).map((answer) => answer.name)).toEqual(['Going to the beach'])
+    expect(zoneAnswers(withNames, 'mare', zones).map((zone) => zone.name)).toEqual([
+      'Serapo',
+      'Medieval Gaeta',
+    ])
   })
 })

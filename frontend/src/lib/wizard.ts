@@ -3,6 +3,8 @@ import type { RouteLocationRaw } from 'vue-router'
 import type { Intent } from '@/definitions/interfaces/Itinerario'
 import type { MapCardFeature, Zone } from '@/definitions/interfaces/MapData'
 import { previewNames } from '@/lib/doors'
+import { localName } from '@/lib/i18n'
+import wizard from '@/lib/i18n/messages/wizard'
 import { BUSINESS_TYPES, PLACE_TYPES, byTitle, intentOf } from '@/lib/intents'
 
 // «Cosa fare adesso» (review of 2026-10-22, study 10; the flow confirmed by
@@ -18,6 +20,9 @@ import { BUSINESS_TYPES, PLACE_TYPES, byTitle, intentOf } from '@/lib/intents'
 // - nothing here says a place is open (ADR-0008), and nothing asks how much
 //   time there is: a tour's duration is its author's words (cosa-fare.md
 //   Part −1, D1).
+// Its words are the reader's language (review PR-19a,
+// lib/i18n/messages/wizard.ts); the names of intents and zones are the API's,
+// read through `localName`.
 
 // A tour as /api/itinerari/ lists it, as far as the wizard reads it.
 export interface WizardTour {
@@ -54,18 +59,17 @@ export const intentRows = (features: MapCardFeature[], slug: string): MapCardFea
 export const intentTours = (tours: WizardTour[], slug: string): WizardTour[] =>
   tours.filter((tour) => tour.intents.includes(slug))
 
-const counted = (count: number, one: string, many: string): string =>
-  count === 1 ? `1 ${one}` : `${count} ${many}`
-
 // What is behind an answer, in a line: «2 luoghi · 1 itinerario».
-export const contentLine = (rows: number, tours: number, dishes = 0): string =>
-  [
-    rows ? counted(rows, 'luogo', 'luoghi') : '',
-    tours ? counted(tours, 'itinerario', 'itinerari') : '',
-    dishes ? counted(dishes, 'ricetta', 'ricette') : '',
+export const contentLine = (rows: number, tours: number, dishes = 0): string => {
+  const count = wizard().count
+  return [
+    rows ? count.places(rows) : '',
+    tours ? count.tours(tours) : '',
+    dishes ? count.dishes(dishes) : '',
   ]
     .filter(Boolean)
     .join(' · ')
+}
 
 export interface IntentAnswer extends Intent {
   line: string
@@ -79,7 +83,7 @@ export const intentAnswers = (archive: WizardArchive): IntentAnswer[] =>
     const rows = intentRows(archive.features, intent.slug).length
     const dishes = intent.slug === MANGIARE ? archive.dishes : 0
     if (!rows && !intent.count && !dishes) return []
-    return [{ ...intent, line: contentLine(rows, intent.count, dishes) }]
+    return [{ ...intent, name: localName(intent), line: contentLine(rows, intent.count, dishes) }]
   })
 
 export interface ZoneAnswer {
@@ -95,7 +99,7 @@ export interface ZoneAnswer {
 export const zoneAnswers = (
   archive: WizardArchive,
   slug: string,
-  zones: Pick<Zone, 'slug' | 'name'>[],
+  zones: Pick<Zone, 'slug' | 'name' | 'name_en'>[],
 ): ZoneAnswer[] => {
   const rows = intentRows(archive.features, slug).sort(byTitle)
   const tours = intentTours(archive.tours, slug).sort(byTitle)
@@ -103,7 +107,9 @@ export const zoneAnswers = (
     const names = [...rows, ...tours]
       .filter((item) => item.zones.includes(zone.slug))
       .map((item) => item.title)
-    return names.length ? [{ slug: zone.slug, name: zone.name, line: previewNames(names) }] : []
+    return names.length
+      ? [{ slug: zone.slug, name: localName(zone), line: previewNames(names) }]
+      : []
   })
 }
 
@@ -133,7 +139,7 @@ export const zoneStepOf = (intent: string): RouteLocationRaw => ({
 export const asksWhere = (
   archive: WizardArchive,
   slug: string,
-  zones: Pick<Zone, 'slug' | 'name'>[],
+  zones: Pick<Zone, 'slug' | 'name' | 'name_en'>[],
 ): boolean => {
   const answers = zoneAnswers(archive, slug, zones)
   return answers.length > 1 || (answers.length === 1 && outsideEveryZone(archive, slug))
@@ -144,7 +150,7 @@ export const asksWhere = (
 export const afterIntent = (
   archive: WizardArchive,
   slug: string,
-  zones: Pick<Zone, 'slug' | 'name'>[],
+  zones: Pick<Zone, 'slug' | 'name' | 'name_en'>[],
 ): RouteLocationRaw => {
   if (asksWhere(archive, slug, zones)) return zoneStepOf(slug)
   return resultOf(slug, zoneAnswers(archive, slug, zones)[0]?.slug)
@@ -163,18 +169,11 @@ export interface WindowAnswer {
   line: string
 }
 
-const WINDOWS: { key: EventWindow; name: string; description: string }[] = [
-  { key: 'oggi', name: 'Oggi', description: 'Eventi e feste di oggi' },
-  {
-    key: 'settimana',
-    name: 'Questa settimana',
-    description: 'Eventi e feste da oggi ai prossimi sei giorni',
-  },
-]
+const WINDOWS: EventWindow[] = ['oggi', 'settimana']
 
 export const windowAnswers = (counts: Record<EventWindow, number>): WindowAnswer[] =>
-  WINDOWS.flatMap((window) =>
-    counts[window.key] > 0
-      ? [{ ...window, line: counted(counts[window.key], 'evento', 'eventi') }]
+  WINDOWS.flatMap((key) =>
+    counts[key] > 0
+      ? [{ key, ...wizard().windows[key], line: wizard().count.events(counts[key]) }]
       : [],
   )

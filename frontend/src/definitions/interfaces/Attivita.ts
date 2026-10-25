@@ -10,6 +10,9 @@ export interface Kind {
   slug: AttivitaKind
   name: string
   name_plural: string
+  // Closed in code beside the Italian (review PR-19a).
+  name_en?: string
+  name_plural_en?: string
   count: number
 }
 
@@ -19,6 +22,7 @@ export default interface Attivita extends CardBase {
   // A translation shows its original's, as it shows its original's pin.
   kind: AttivitaKind
   kind_label: string
+  kind_label_en?: string
   how_to_get_there: string
   pins: MapPoint[]
   zones: ZoneRef[]

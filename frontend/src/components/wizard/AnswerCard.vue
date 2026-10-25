@@ -10,7 +10,15 @@ import { RouterLink, type RouteLocationRaw } from 'vue-router'
 // go, the name, a line under it. Its ring is the keyboard's alone
 // (focus-visible), and the pointer is told by the name's underline, never by
 // a darker border that reads as a ring left behind (M-09).
-defineProps<{ to?: RouteLocationRaw; title: string; description?: string; line?: string }>()
+// `descriptionLang` marks a line of data in another language than the
+// interface's — an intent's description, the admin's Italian (review PR-19a).
+defineProps<{
+  to?: RouteLocationRaw
+  title: string
+  description?: string
+  descriptionLang?: string
+  line?: string
+}>()
 </script>
 
 <template>
@@ -26,7 +34,7 @@ defineProps<{ to?: RouteLocationRaw; title: string; description?: string; line?:
         class="font-display text-title text-ink decoration-2 underline-offset-4 group-hover:underline"
         >{{ title }}</span
       >
-      <span v-if="description" class="text-ink">{{ description }}</span>
+      <span v-if="description" class="text-ink" :lang="descriptionLang">{{ description }}</span>
       <span v-if="line" class="text-sm text-muted">{{ line }}</span>
     </span>
   </component>

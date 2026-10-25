@@ -8,6 +8,8 @@ import CardGrid from '@/components/content/CardGrid.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
 import { useUserStore } from '@/stores/user'
 import type Feste from '@/definitions/interfaces/Feste'
+import lists from '@/lib/i18n/messages/lists'
+import { wordsOf } from '@/lib/i18n/messages/types'
 
 interface PaginatedFeste {
   count: number
@@ -53,6 +55,7 @@ const entries = computed(() =>
     id: item.id,
     title: item.title,
     summary: item.recurrence,
+    summaryLang: 'it',
     cover: item.images[0]?.imageURL ?? null,
     isPublished: item.is_published,
     to: { name: 'festedetail', params: { id: item.id } },
@@ -68,13 +71,14 @@ onMounted(getFeste)
     <div class="mx-auto w-full max-w-6xl">
       <header class="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <MainTitle>Feste</MainTitle>
+          <MainTitle>{{ wordsOf('feste')?.label }}</MainTitle>
           <p v-if="!loading" class="text-muted">
-            {{ total }} {{ total === 1 ? 'scheda' : 'schede' }}
+            {{ lists().entries(total) }}
           </p>
         </div>
 
-        <div v-if="userStore.user.isAuthenticated" class="flex items-center gap-4">
+        <!-- A collaborator's controls: Italian, and marked so (review PR-19a). -->
+        <div v-if="userStore.user.isAuthenticated" class="flex items-center gap-4" lang="it">
           <label class="flex items-center gap-2 text-sm text-ink" for="mine-feste">
             <input id="mine-feste" v-model="mineOnly" type="checkbox" class="h-4 w-4" />
             Le mie
@@ -83,14 +87,18 @@ onMounted(getFeste)
         </div>
       </header>
 
-      <p v-if="!loading && entries.length === 0" class="text-muted">
-        {{ mineOnly ? 'Non hai ancora creato nessuna festa.' : 'Ancora nessuna festa.' }}
+      <p
+        v-if="!loading && entries.length === 0"
+        class="text-muted"
+        :lang="mineOnly ? 'it' : undefined"
+      >
+        {{ mineOnly ? 'Non hai ancora creato nessuna festa.' : lists().emptyFeste }}
       </p>
 
       <CardGrid :entries="entries" type="feste" />
 
       <ActionButton v-if="nextPage" size="small" class="mt-8" @click="loadMore">
-        Carica altre
+        {{ lists().loadMore }}
       </ActionButton>
     </div>
   </ViewContainer>

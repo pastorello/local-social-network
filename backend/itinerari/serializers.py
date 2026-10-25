@@ -123,10 +123,11 @@ class IntentSerializer(serializers.ModelSerializer):
     # the generic list's filter can read intents the way it reads genres.
     count = serializers.IntegerField(read_only=True)
     name_plural = serializers.CharField(source='name', read_only=True)
+    name_plural_en = serializers.CharField(source='name_en', read_only=True)
 
     class Meta:
         model = Intent
-        fields = ('slug', 'name', 'name_plural', 'description', 'count')
+        fields = ('slug', 'name', 'name_plural', 'name_en', 'name_plural_en', 'description', 'count')
 
 
 class ItinerarioReadSerializer(serializers.ModelSerializer):
@@ -142,6 +143,7 @@ class ItinerarioReadSerializer(serializers.ModelSerializer):
     form = serializers.SerializerMethodField()
     intents = serializers.SerializerMethodField()
     intent_labels = serializers.SerializerMethodField()
+    intent_labels_en = serializers.SerializerMethodField()
     stops = serializers.SerializerMethodField()
     route = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField()
@@ -164,6 +166,11 @@ class ItinerarioReadSerializer(serializers.ModelSerializer):
 
     def get_intent_labels(self, obj):
         return [intent.name for intent in self._original(obj).intents.all()]
+
+    # In the same order, each blank where the author has not written one: the
+    # SPA reads the Italian beside it then (review PR-19a).
+    def get_intent_labels_en(self, obj):
+        return [intent.name_en for intent in self._original(obj).intents.all()]
 
     def get_stops(self, obj):
         """I4: a reader never meets a stop they cannot open — a stop whose card
@@ -249,7 +256,7 @@ class ItinerarioReadSerializer(serializers.ModelSerializer):
         model = Itinerario
         fields = (
             'id', 'title', 'body_html', 'author', 'is_published',
-            'form', 'duration', 'intents', 'intent_labels', 'stops', 'route',
+            'form', 'duration', 'intents', 'intent_labels', 'intent_labels_en', 'stops', 'route',
             'images', 'language', 'translation_of', 'original_title', 'translations', 'zones',
             'created_at', 'updated_at',
         )

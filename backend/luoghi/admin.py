@@ -5,7 +5,7 @@ from .models import Genre, Luogo
 
 @admin.register(Genre)
 class GenreAdmin(admin.ModelAdmin):
-    list_display = ('name', 'name_plural', 'slug', 'position')
+    list_display = ('name', 'name_plural', 'name_en', 'slug', 'position')
     list_editable = ('position',)
     prepopulated_fields = {'slug': ('name',)}
 

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { RouteLocationRaw } from 'vue-router'
 
+import wizard from '@/lib/i18n/messages/wizard'
+
 // «Hai scelto: Mangiare · Serapo» (review PR-21, point 4): at the head of the
 // wizard's second and third steps, what the reader has chosen so far, each
 // answer a link back to the step that asked it. The answers are the address,
@@ -23,14 +25,16 @@ const link =
 <template>
   <p class="min-h-5 text-sm text-muted">
     <template v-if="intent">
-      Hai scelto:
+      {{ wizard().chosen }}
       <RouterLink :to="intentTo" :class="link"
-        ><span class="sr-only">Cambia la scelta: </span>{{ intent }}</RouterLink
+        ><span class="sr-only">{{ wizard().change }}</span
+        >{{ intent }}</RouterLink
       >
       <template v-if="where">
         <span aria-hidden="true"> · </span>
         <RouterLink v-if="whereTo" :to="whereTo" :class="link"
-          ><span class="sr-only">Cambia la scelta: </span>{{ where }}</RouterLink
+          ><span class="sr-only">{{ wizard().change }}</span
+          >{{ where }}</RouterLink
         ><span v-else class="font-semibold text-ink">{{ where }}</span>
       </template>
     </template>

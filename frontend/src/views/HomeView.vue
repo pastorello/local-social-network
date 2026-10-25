@@ -20,7 +20,8 @@ import { useWizardStore } from '@/stores/wizard'
 import type { ReportStatus } from '@/definitions/interfaces/Report'
 import { useArchiveLine } from '@/composables/useArchiveLine'
 import { useIsDesktop } from '@/composables/useBreakpoint'
-import { PRESENTATION } from '@/definitions/copy'
+import copy from '@/definitions/copy'
+import home from '@/lib/i18n/messages/home'
 import { REPORTS_LAYER_KEY } from '@/lib/mapLayers'
 import { STATUS_META, statusColor } from '@/lib/reportStatus'
 
@@ -68,9 +69,7 @@ const featureCount = (key: string) => mapStore.featureCount(key)
 // The sheet counts places, the word its heading uses; «schede» is the archive
 // line's word, a few lines above (decided by the author on 2026-10-24, review
 // PR-25).
-const placesCount = computed(() =>
-  visibleFeatures.value.length === 1 ? '1 luogo' : `${visibleFeatures.value.length} luoghi`,
-)
+const placesCount = computed(() => home().places(visibleFeatures.value.length))
 
 // The home says what the site is (review of 2026-10-22, P-02/M-02; design.md
 // D3's note of 2026-10-23) and, under it, asks the wizard's first question
@@ -179,7 +178,7 @@ onMounted(() => {
     has no room to show one: here the map *is* the title. Visually hidden is
     the honest answer — someone on a screen reader gets the page identity that
     a sighted reader gets from the map filling the screen. -->
-    <h1 class="sr-only">La mappa di Gaeta</h1>
+    <h1 class="sr-only">{{ home().title }}</h1>
 
     <MapChrome v-model:open="chromeOpen">
       <LayerToggles
@@ -195,10 +194,10 @@ onMounted(() => {
     <MapSheet
       ref="sheet"
       class="pointer-events-auto"
-      title="La mappa di Gaeta"
+      :title="home().title"
       :force-peek="chromeOpen"
     >
-      <p class="text-reading text-ink">{{ PRESENTATION }}</p>
+      <p class="text-reading text-ink">{{ copy().presentation }}</p>
 
       <template v-if="known">
         <p v-if="archive" class="mt-2 text-sm text-muted">{{ archive }}</p>
@@ -214,21 +213,23 @@ onMounted(() => {
           :class="[askAgainClass, 'mt-2']"
           @click="wizard.openQuestion()"
         >
-          Che cosa ti va di fare?
+          {{ home().askAgain }}
         </button>
 
         <div class="mt-5 flex items-baseline justify-between">
-          <h2 class="font-display text-title">Luoghi sulla mappa</h2>
+          <h2 class="font-display text-title">{{ home().placesHeading }}</h2>
           <span class="text-xs text-muted">{{ placesCount }}</span>
         </div>
         <PlacesList v-if="visibleFeatures.length" :features="visibleFeatures" />
         <p v-else class="py-6 text-sm text-muted">
-          Nessun livello attivo: apri «Livelli» per scegliere cosa vedere.
+          {{ home().noLayers }}
         </p>
       </template>
 
+      <!-- The reports are a collaborator's, and stay Italian (review PR-19a). -->
       <div
         v-if="known && isAuthenticated && activeLayers[REPORTS_LAYER_KEY]"
+        lang="it"
         class="mt-6 border-t border-hairline pt-4"
       >
         <h2
@@ -278,8 +279,8 @@ onMounted(() => {
   >
     <div>
       <PanelBox>
-        <MainTitle>La mappa di Gaeta</MainTitle>
-        <p class="text-reading text-ink">{{ PRESENTATION }}</p>
+        <MainTitle>{{ home().title }}</MainTitle>
+        <p class="text-reading text-ink">{{ copy().presentation }}</p>
 
         <template v-if="known">
           <p v-if="archive" class="mt-2 text-sm text-muted">{{ archive }}</p>
@@ -294,7 +295,7 @@ onMounted(() => {
             :class="[askAgainClass, 'mt-2']"
             @click="wizard.openQuestion()"
           >
-            Che cosa ti va di fare?
+            {{ home().askAgain }}
           </button>
 
           <LayerToggles
@@ -312,13 +313,13 @@ onMounted(() => {
 
     <div v-if="known && visibleFeatures.length">
       <PanelBox>
-        <h2 class="mb-1 font-display text-title">Luoghi sulla mappa</h2>
-        <p class="mb-3 text-xs text-muted">Gli stessi luoghi disegnati sulla mappa.</p>
+        <h2 class="mb-1 font-display text-title">{{ home().placesHeading }}</h2>
+        <p class="mb-3 text-xs text-muted">{{ home().samePlaces }}</p>
         <PlacesList :features="visibleFeatures" />
       </PanelBox>
     </div>
 
-    <div v-if="known && isAuthenticated && activeLayers[REPORTS_LAYER_KEY]">
+    <div v-if="known && isAuthenticated && activeLayers[REPORTS_LAYER_KEY]" lang="it">
       <PanelBox>
         <h2
           ref="reportsHeading"

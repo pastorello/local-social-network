@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, useId, watch } from 'vue'
 
+import home from '@/lib/i18n/messages/home'
 import { useMapStore } from '@/stores/map'
 
 // The mobile home's sheet (spec/design.md D3): the map fills the screen and
@@ -14,10 +15,12 @@ import { useMapStore } from '@/stores/map'
 // The lowest stop is the handle's 44px and two whole lines of what the sheet
 // opens on — on the home, the presentation (D3's note of 2026-10-23): two
 // lines of `text-reading` are 2 × 1.65 × 17px = 56.1px, so 102px, not 100.
+// What pressing the handle does at each stop is said in the reader's language
+// (review PR-19a, lib/i18n/messages/home.ts).
 const SNAPS = [
-  { key: 'peek', label: 'Mostra i luoghi', height: '6.375rem' },
-  { key: 'half', label: 'Espandi l’elenco', height: '45vh' },
-  { key: 'full', label: 'Riduci l’elenco', height: '85vh' },
+  { key: 'peek', height: '6.375rem' },
+  { key: 'half', height: '45vh' },
+  { key: 'full', height: '85vh' },
 ] as const
 
 // `title` names the sheet for assistive technology. It is not drawn: the
@@ -174,7 +177,7 @@ const onPointerCancel = () => {
     <button
       type="button"
       class="flex h-11 w-full flex-none touch-none items-center justify-center rounded-t-2xl focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-sea"
-      aria-label="Trascina per vedere più mappa"
+      :aria-label="home().sheet.handle"
       :aria-describedby="actionId"
       :aria-expanded="isOpen"
       @click="cycle"
@@ -184,7 +187,7 @@ const onPointerCancel = () => {
       @pointercancel="onPointerCancel"
     >
       <span class="h-1 w-9 rounded-full bg-field/50" aria-hidden="true"></span>
-      <span :id="actionId" class="sr-only">{{ SNAPS[snap]!.label }}</span>
+      <span :id="actionId" class="sr-only">{{ home().sheet[SNAPS[snap]!.key] }}</span>
     </button>
     <!-- Not at the lowest stop, where the sheet shows its first line and
     nothing else (D3's note of 2026-10-23), and hidden from assistive
@@ -194,7 +197,7 @@ const onPointerCancel = () => {
       class="flex-none pb-2 text-center text-xs text-muted"
       aria-hidden="true"
     >
-      Trascina per vedere più mappa
+      {{ home().sheet.handle }}
     </p>
 
     <div ref="content" class="min-h-0 flex-1 overflow-y-auto px-4 pb-6">

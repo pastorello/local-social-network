@@ -35,6 +35,9 @@ export interface Intent {
   slug: string
   name: string
   name_plural: string
+  // The English name, blank until the author writes it (review PR-19a).
+  name_en?: string
+  name_plural_en?: string
   description: string
   count: number
 }
@@ -44,6 +47,8 @@ export default interface Itinerario extends CardBase {
   duration: string
   intents: string[]
   intent_labels: string[]
+  // In the same order; each blank where the author has not written one.
+  intent_labels_en?: string[]
   stops: ItineraryStop[]
   // The walked path between the stops (I8); empty for a raccolta.
   route: MapPoint[]

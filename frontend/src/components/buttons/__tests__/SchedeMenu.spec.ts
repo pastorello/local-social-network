@@ -4,6 +4,7 @@ import axios from 'axios'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import SchedeMenu from '../SchedeMenu.vue'
+import lists from '@/lib/i18n/messages/lists'
 import { chiesaConfig, luogoConfig } from '@/definitions/typeConfigs'
 
 vi.mock('axios')
@@ -135,7 +136,8 @@ describe('the Esplora menu and the churches (content.md, luoghi — review PR-9)
 
     const labels = entries(wrapper).map((entry) => entry.text())
     expect(labels.some((label) => label.startsWith('Chiese'))).toBe(false)
-    expect(luogoConfig.listFilter?.related).toEqual([{ label: 'Chiese', to: '/chiese' }])
+    const related = luogoConfig.listFilter?.related ?? []
+    expect(related.map((chip) => [chip.label(lists.it), chip.to])).toEqual([['Chiese', '/chiese']])
   })
 
   it('still lights up on a church, which is one of its cards', async () => {

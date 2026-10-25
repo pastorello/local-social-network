@@ -155,8 +155,8 @@ def zone_list(request):
             counts[slug] += 1
     return Response([
         {
-            'slug': zone.slug, 'name': zone.name, 'geometry': zone.geometry,
-            'count': counts[zone.slug],
+            'slug': zone.slug, 'name': zone.name, 'name_en': zone.name_en,
+            'geometry': zone.geometry, 'count': counts[zone.slug],
         }
         for zone in zones
     ])

@@ -43,16 +43,20 @@ describe('CardArticle', () => {
     expect(wrapper.text()).toContain('Sanctuary of the Split Mountain')
   })
 
-  it('marks the heading Italian and the article English, so a screen reader switches voice', () => {
+  it('marks the heading Italian and the prose English, so a screen reader switches voice', () => {
     const wrapper = mountArticle({
       subtitle: 'Sanctuary of the Split Mountain',
       language: 'en',
     })
 
-    // WCAG 3.1.2 (Language of Parts): the document is lang="it", so an
-    // English card has to say so, and its Italian heading has to say so back.
-    expect(wrapper.find('article').attributes('lang')).toBe('en')
+    // WCAG 3.1.2 (Language of Parts): an English card's words say so, and its
+    // Italian heading says so back. On the parts, not on the article (review
+    // PR-19a): the article holds the interface's words too — «Immagini», the
+    // way back — in the reader's language, which <html lang> says.
+    expect(wrapper.find('article').attributes('lang')).toBeUndefined()
     expect(wrapper.find('h1').attributes('lang')).toBe('it')
+    expect(wrapper.find('h1 + p').attributes('lang')).toBe('en')
+    expect(wrapper.find('.prose').attributes('lang')).toBe('en')
   })
 
   // Reported 2026-10-23: the byline passed `inline-block` to UserAvatar, which

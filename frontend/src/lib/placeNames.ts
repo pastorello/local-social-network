@@ -1,10 +1,15 @@
 import type { Zone, ZoneAlias } from '@/definitions/interfaces/MapData'
+import { localName } from '@/lib/i18n'
+import cosaFare from '@/lib/i18n/messages/cosaFare'
 
 // «Dove sei?» on «Cosa si può fare qui» (review of 2026-10-22, decision 3;
 // spec cosa-fare.md Part −1, D6): a guest types the name of where they stand
 // and the page picks the zone. It all runs here, in the browser, on the
 // author's list of names: nothing typed is sent anywhere, and no position is
-// ever asked for — geolocation is a phase of its own (roadmap 5).
+// ever asked for — geolocation is a phase of its own (roadmap 5). The names
+// are Gaeta's own, in either language of the interface (review PR-19a): an
+// English reader types «castello» as the signs spell it, and what they put
+// before it — «I'm at the» — is left out like «sono al».
 
 // One thing the field offers: a name from the author's list, or a zone by its
 // own name, so «Porto Salvo» is found though nobody listed it. A name that is
@@ -25,7 +30,8 @@ const LEADING = new Set(
     'il lo la l i gli le a ad di da in su al allo alla all ai agli alle ' +
     'del dello della dell dei degli delle dal dallo dalla dall dai dagli dalle ' +
     'nel nello nella nell nei negli nelle sul sullo sulla sull sui sugli sulle ' +
-    'vicino davanti accanto dietro sopra sotto presso verso dentro sono sto siamo stiamo qui qua'
+    'vicino davanti accanto dietro sopra sotto presso verso dentro sono sto siamo stiamo qui qua ' +
+    'the at near by on m im am we are next to'
   ).split(' '),
 )
 
@@ -47,21 +53,24 @@ export const normalizePlace = (text: string): string => {
 
 // The author's names first, in their order, then the zones; a name already
 // offered is not offered twice, and a name whose zone is unknown — the zones
-// did not load, or it was removed — is not offered at all.
+// did not load, or it was removed — is not offered at all. A zone is shown by
+// its name in the reader's language (lib/i18n::localName), and found by its
+// Italian one, which is the one on the signs.
 export const placeOptions = (
   aliases: ZoneAlias[],
-  zones: Pick<Zone, 'slug' | 'name'>[],
+  zones: Pick<Zone, 'slug' | 'name' | 'name_en'>[],
 ): PlaceOption[] => {
-  const zoneName = new Map(zones.map((zone) => [zone.slug, zone.name]))
+  const zoneOf = new Map(zones.map((zone) => [zone.slug, zone]))
   const seen = new Set<string>()
   const options: PlaceOption[] = []
   const add = (name: string, zone: string) => {
     const key = normalizePlace(name)
-    const ofZone = zoneName.get(zone)
+    const ofZone = zoneOf.get(zone)
     if (!key || !ofZone || seen.has(key)) return
     seen.add(key)
-    const isZone = key === normalizePlace(ofZone)
-    options.push({ name: isZone ? ofZone : name, zone, zoneName: ofZone, isZone, key })
+    const shown = localName(ofZone)
+    const isZone = [ofZone.name, ofZone.name_en ?? ''].some((own) => key === normalizePlace(own))
+    options.push({ name: isZone ? shown : name, zone, zoneName: shown, isZone, key })
   }
   for (const alias of aliases) add(alias.name, alias.zone)
   for (const zone of zones) add(zone.name, zone.slug)
@@ -115,11 +124,13 @@ export const atPlace = (name: string): string => {
 
 // The line under the field once a name is chosen: «Sei al castello: ti
 // mostriamo Gaeta Medievale.» A zone chosen by its own name is not told where
-// it is.
-export const placeSentence = (option: PlaceOption): string =>
-  option.isZone
-    ? `Ti mostriamo ${option.zoneName}.`
-    : `Sei ${atPlace(option.name)}: ti mostriamo ${option.zoneName}.`
+// it is. In the reader's language (lib/i18n/messages/cosaFare.ts).
+export const placeSentence = (option: PlaceOption): string => {
+  const words = cosaFare().where
+  return option.isZone
+    ? words.chosenZone(option.zoneName)
+    : words.chosenPlace(displayName(option.name), atPlace(option.name), option.zoneName)
+}
 
 // A name as the list shows it, and as the field holds it once chosen.
 export const displayName = (name: string): string => name.charAt(0).toUpperCase() + name.slice(1)

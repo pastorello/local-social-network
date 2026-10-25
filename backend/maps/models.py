@@ -208,6 +208,11 @@ class Zona(models.Model):
 
     slug = models.SlugField(max_length=60, unique=True)
     name = models.CharField('nome', max_length=80)
+    # For the reader's English (review PR-19a, translations.md T9). A zone is
+    # named the way Gaeta names it, and a proper name is not translated: blank
+    # is the rule, and the Italian is what an English reader sees too. It is
+    # here for the name that is a description rather than a name.
+    name_en = models.CharField('nome in inglese', max_length=80, blank=True, default='')
     position = models.PositiveIntegerField('posizione', default=0)
     # A bare GeoJSON geometry, [longitude, latitude]. A Feature or a
     # FeatureCollection is refused: one zone, one outline.

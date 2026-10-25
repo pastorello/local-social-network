@@ -5,11 +5,13 @@ import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useMapStore } from '@/stores/map'
 import { useIsDesktop } from '@/composables/useBreakpoint'
+import LanguageToggle from './buttons/LanguageToggle.vue'
 import NavDisclosure from './buttons/NavDisclosure.vue'
 import SchedeMenu from './buttons/SchedeMenu.vue'
 import SiteTitle from './typography/SiteTitle.vue'
 import UserAvatar from './cards/UserAvatar.vue'
 import { initials } from '@/lib/initials'
+import shell from '@/lib/i18n/messages/shell'
 import { sectionOf, type Section } from '@/lib/navigation'
 
 // The menu (spec/design.md D14): one pill at the top centre of every page,
@@ -21,7 +23,9 @@ import { sectionOf, type Section } from '@/lib/navigation'
 // never offered them. There is no search in this phase. Itinerari (spec
 // itinerari.md) is its own item rather than an Esplora entry: a tour is how a
 // guest starts, not a card type. *Esplora* was *Schede* until 2026-10-23
-// (review PR-23, N-05).
+// (review PR-23, N-05). The reader's items speak the reader's language, and
+// «IT · EN» sits before Accedi (review PR-19a); the account's menu is a
+// collaborator's surface and stays Italian, marked so for a screen reader.
 const userStore = useUserStore()
 const user = userStore.user
 const router = useRouter()
@@ -100,7 +104,7 @@ const menuActive = 'font-semibold text-sea underline decoration-2 underline-offs
 <template>
   <nav
     ref="nav"
-    aria-label="Principale"
+    :aria-label="shell().nav.label"
     class="fixed top-3 left-1/2 z-1100 flex max-w-[calc(100%-1.5rem)] -translate-x-1/2 items-center gap-0.5 rounded-full border border-hairline bg-surface py-1.5 pr-1.5 pl-3 shadow-md lg:gap-2 lg:pl-5"
   >
     <!-- Never wrapped, never shrunk: in a pill 390px wide the wordmark was the
@@ -113,31 +117,33 @@ const menuActive = 'font-semibold text-sea underline decoration-2 underline-offs
         to="/"
         :class="[item, isCurrent('mappa') && active]"
         :aria-current="currentAttr('mappa')"
-        >Mappa</RouterLink
+        >{{ shell().nav.map }}</RouterLink
       >
       <SchedeMenu />
       <RouterLink
         to="/itinerari"
         :class="[item, isCurrent('itinerari') && active]"
         :aria-current="currentAttr('itinerari')"
-        >Itinerari</RouterLink
+        >{{ shell().nav.tours }}</RouterLink
       >
       <RouterLink
         to="/cosa-fare"
         :class="[item, isCurrent('cosa-fare') && active]"
         :aria-current="currentAttr('cosa-fare')"
-        >Cosa fare</RouterLink
+        >{{ shell().nav.whatToDo }}</RouterLink
       >
       <RouterLink
         to="/il-progetto"
         :class="[item, isCurrent('progetto') && active]"
         :aria-current="currentAttr('progetto')"
-        >Il progetto</RouterLink
+        >{{ shell().nav.project }}</RouterLink
       >
       <span class="h-6 w-px bg-hairline" aria-hidden="true"></span>
+      <LanguageToggle />
 
       <NavDisclosure
         v-if="user.isAuthenticated && user.id"
+        lang="it"
         :label="accountLabel()"
         trigger-class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
       >
@@ -177,7 +183,9 @@ const menuActive = 'font-semibold text-sea underline decoration-2 underline-offs
           </button>
         </template>
       </NavDisclosure>
-      <RouterLink v-else to="/login" :class="item" :active-class="active">Accedi</RouterLink>
+      <RouterLink v-else to="/login" :class="item" :active-class="active">{{
+        shell().nav.signIn
+      }}</RouterLink>
     </template>
 
     <!-- On a phone the pill holds what a reader reaches for first — the
@@ -193,10 +201,10 @@ const menuActive = 'font-semibold text-sea underline decoration-2 underline-offs
         :class="[item, 'max-[359px]:hidden', isCurrent('itinerari') && active]"
         :aria-current="currentAttr('itinerari')"
         data-pill-itinerari
-        >Itinerari</RouterLink
+        >{{ shell().nav.tours }}</RouterLink
       >
       <NavDisclosure
-        label="Menu"
+        :label="shell().nav.menu"
         trigger-class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-ink hover:bg-page focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
       >
         <template #trigger>
@@ -217,27 +225,30 @@ const menuActive = 'font-semibold text-sea underline decoration-2 underline-offs
             to="/"
             :class="[menuLink, isCurrent('mappa') && menuActive]"
             :aria-current="currentAttr('mappa')"
-            >Mappa</RouterLink
+            >{{ shell().nav.map }}</RouterLink
           >
           <RouterLink
             to="/itinerari"
             :class="[menuLink, 'min-[360px]:hidden', isCurrent('itinerari') && menuActive]"
             :aria-current="currentAttr('itinerari')"
-            >Itinerari</RouterLink
+            >{{ shell().nav.tours }}</RouterLink
           >
           <RouterLink
             to="/cosa-fare"
             :class="[menuLink, isCurrent('cosa-fare') && menuActive]"
             :aria-current="currentAttr('cosa-fare')"
-            >Cosa fare</RouterLink
+            >{{ shell().nav.whatToDo }}</RouterLink
           >
           <RouterLink
             to="/il-progetto"
             :class="[menuLink, isCurrent('progetto') && menuActive]"
             :aria-current="currentAttr('progetto')"
-            >Il progetto</RouterLink
+            >{{ shell().nav.project }}</RouterLink
           >
-          <template v-if="user.isAuthenticated && user.id">
+          <!-- The language, on a phone: in Menu, where there is room for it
+          (review PR-19a). -->
+          <LanguageToggle variant="menu" class="border-y border-hairline" />
+          <div v-if="user.isAuthenticated && user.id" lang="it">
             <RouterLink to="/le-mie-schede" :class="menuLink">Le mie schede</RouterLink>
             <RouterLink to="/polls" :class="menuLink">Sondaggi</RouterLink>
             <RouterLink :to="{ name: 'profile', params: { id: user.id } }" :class="menuLink">
@@ -258,8 +269,8 @@ const menuActive = 'font-semibold text-sea underline decoration-2 underline-offs
             >
               Esci
             </button>
-          </template>
-          <RouterLink v-else to="/login" :class="menuLink">Accedi</RouterLink>
+          </div>
+          <RouterLink v-else to="/login" :class="menuLink">{{ shell().nav.signIn }}</RouterLink>
         </template>
       </NavDisclosure>
     </template>

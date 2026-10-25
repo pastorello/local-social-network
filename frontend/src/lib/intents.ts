@@ -27,13 +27,10 @@ export const KIND_INTENT: Record<string, string> = {
   compra: 'mangiare',
 }
 
-// How a row says what a business is, under its activity: the kinds' own words
-// (attivita.models.KIND_CHOICES), so «Mangiare» tells a table from a bakery.
-export const KIND_NAME: Record<string, string> = {
-  beve: 'Dove si beve',
-  mangia: 'Dove si mangia',
-  compra: 'Dove si compra',
-}
+// How a row says what a business is, under its activity, is the kinds' own
+// words (attivita.models.KIND_CHOICES), so «Mangiare» tells a table from a
+// bakery — in the reader's language since review PR-19a, so they live with
+// the other words, in lib/i18n/messages/types.ts (`kinds`).
 
 // The intents that have a colour of their own (assets/main.css, review PR-14):
 // each card on /benvenuto wears a tint of it. The token, never its hex (D8).
@@ -46,9 +43,9 @@ export const TINTED_INTENTS = ['mare', 'citta', 'mangiare', 'camminare', 'bere',
 export const intentVar = (slug: string): string =>
   `var(${TINTED_INTENTS.includes(slug) ? `--color-intent-${slug}` : '--color-layer-unknown'})`
 
-// Where a genre added in the admin, and not mapped yet, goes: shown, never lost.
+// Where a genre added in the admin, and not mapped yet, goes: shown, never
+// lost — under «Altro da vedere» (lib/i18n/messages/types.ts, `otherIntent`).
 export const OTHER_INTENT = 'altro'
-export const OTHER_INTENT_NAME = 'Altro da vedere'
 
 // The activity a place belongs under. Churches are part of the town; a
 // business goes where its kind leads.
@@ -67,9 +64,9 @@ export const PLACE_TYPES = ['chiese', 'luoghi']
 // but never counted — a zone is not bigger for holding more bars.
 export const BUSINESS_TYPES = ['attivita']
 
-// The pseudo-zone for places outside every drawn zone (D2): never dropped.
+// The pseudo-zone for places outside every drawn zone (D2): never dropped —
+// «Altrove a Gaeta» (lib/i18n/messages/types.ts, `elsewhere`).
 export const ELSEWHERE = 'altrove'
-export const ELSEWHERE_NAME = 'Altrove a Gaeta'
 
 // Alphabetical, in Italian, and printed as such (D5): the one order nobody can
 // buy or move.

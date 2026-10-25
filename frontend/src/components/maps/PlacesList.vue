@@ -1,19 +1,22 @@
 <script setup lang="ts">
 import CoverPlaceholder from '@/components/content/CoverPlaceholder.vue'
 import type { MapCardFeature } from '@/definitions/interfaces/MapData'
-import { CARD_LAYERS, layerColor, layerRoute } from '@/lib/mapLayers'
+import home from '@/lib/i18n/messages/home'
+import types, { wordsOf } from '@/lib/i18n/messages/types'
+import { layerColor, layerRoute } from '@/lib/mapLayers'
 
 // Every place currently drawn on the map, as links. On mobile this is the
 // content of the sheet (spec/design.md D3); on desktop it is the panel under
 // the map. Either way it is the keyboard path a clickable pin does not have
-// — ADR-0005 defers full map-widget operability, it does not excuse it.
+// — ADR-0005 defers full map-widget operability, it does not excuse it. In the
+// reader's language around the cards' own Italian titles (review PR-19a).
 defineProps<{ features: MapCardFeature[] }>()
 
-const typeLabel = (key: string) => CARD_LAYERS.find((layer) => layer.key === key)?.label ?? 'Scheda'
+const typeLabel = (key: string) => wordsOf(key)?.layer ?? types().entry
 </script>
 
 <template>
-  <ul aria-label="Luoghi sulla mappa" class="divide-y divide-hairline">
+  <ul :aria-label="home().placesHeading" class="divide-y divide-hairline">
     <li v-for="feature in features" :key="feature.id">
       <RouterLink
         :to="layerRoute(feature.type, feature.id)"
@@ -33,9 +36,9 @@ const typeLabel = (key: string) => CARD_LAYERS.find((layer) => layer.key === key
 
         <span class="min-w-0">
           <span class="block truncate font-semibold text-ink"
-            >{{ feature.title
-            }}<span v-if="!feature.is_published" class="text-xs font-normal text-muted">
-              · bozza</span
+            ><span lang="it">{{ feature.title }}</span
+            ><span v-if="!feature.is_published" class="text-xs font-normal text-muted">
+              · {{ home().draft }}</span
             ></span
           >
           <span class="flex items-center gap-2 text-xs text-muted">

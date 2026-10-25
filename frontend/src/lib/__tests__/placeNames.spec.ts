@@ -1,4 +1,6 @@
-import { describe, it, expect } from 'vitest'
+import { afterEach, describe, it, expect } from 'vitest'
+
+import { setLocale } from '@/lib/i18n'
 
 import {
   atPlace,
@@ -130,5 +132,40 @@ describe('the line under the field', () => {
   it('shows a name with a capital, as the start of an entry', () => {
     expect(displayName('il castello')).toBe('Il castello')
     expect(displayName('Serapo')).toBe('Serapo')
+  })
+})
+
+// In the reader's language (review PR-19a): the names are Gaeta's, as the
+// signs spell them, and an English reader's «I'm at the» is left out like
+// «sono al». A zone with an English name is offered by it too.
+describe('«Dove sei?» in English', () => {
+  afterEach(() => setLocale('it'))
+
+  it('says where the guest is in English, the name as Gaeta writes it', async () => {
+    await setLocale('en')
+    const [castello, , , montagna] = placeOptions(ALIASES, ZONES)
+
+    expect(placeSentence(castello!)).toBe(
+      'Il castello is in Gaeta Medievale: here is what there is.',
+    )
+    expect(placeSentence(montagna!)).toBe('Here is what there is in Montagna Spaccata.')
+  })
+
+  it('leaves out what an English reader puts before a name', () => {
+    expect(normalizePlace("I'm at the castello")).toBe('castello')
+    expect(names('near Serapo')).toEqual(['Serapo'])
+  })
+
+  it('shows a zone by its English name in English, and finds it by its Italian one', async () => {
+    const zones = [{ slug: 'gaeta-medievale', name: 'Gaeta Medievale', name_en: 'Medieval Gaeta' }]
+    await setLocale('en')
+
+    const options = placeOptions([{ name: 'il castello', zone: 'gaeta-medievale' }], zones)
+
+    expect(options.map((option) => option.name)).toEqual(['il castello', 'Medieval Gaeta'])
+    expect(options[0]!.zoneName).toBe('Medieval Gaeta')
+    expect(matchPlaces('gaeta medievale', options).map((option) => option.zone)).toEqual([
+      'gaeta-medievale',
+    ])
   })
 })

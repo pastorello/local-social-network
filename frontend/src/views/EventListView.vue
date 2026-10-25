@@ -5,6 +5,7 @@ import { useRoute } from 'vue-router'
 
 import MainTitle from '@/components/typography/MainTitle.vue'
 import type { EventItem } from '@/definitions/interfaces/Evento'
+import events from '@/lib/i18n/messages/events'
 import { formatEventWhen } from '@/lib/when'
 import { useUserStore } from '@/stores/user'
 
@@ -24,10 +25,11 @@ interface Page {
   results: EventItem[]
 }
 
+// Named in the reader's language (review PR-19a, lib/i18n/messages/events.ts).
 const WINDOWS = [
-  { key: null, label: 'Tutti' },
-  { key: 'oggi', label: 'Oggi' },
-  { key: 'settimana', label: 'Questa settimana' },
+  { key: null, word: 'all' },
+  { key: 'oggi', word: 'oggi' },
+  { key: 'settimana', word: 'settimana' },
 ] as const
 
 const route = useRoute()
@@ -66,13 +68,7 @@ watch(
 )
 
 // CF33: zero is a legitimate state, and it is one true sentence.
-const emptySentence = computed(() =>
-  finestra.value === 'oggi'
-    ? 'Per oggi non ne conosciamo.'
-    : finestra.value === 'settimana'
-      ? 'Per questa settimana non ne conosciamo.'
-      : 'Per ora non ne conosciamo.',
-)
+const emptySentence = computed(() => events().empty[finestra.value ?? 'all'])
 
 const linkOf = (item: EventItem) =>
   item.kind === 'evento' ? `/eventi/${item.id}` : `/feste/${item.festa}`
@@ -84,16 +80,15 @@ const chip =
 
 <template>
   <div class="mx-auto w-full max-w-3xl pt-2">
-    <MainTitle>Gli eventi che conosciamo</MainTitle>
+    <MainTitle>{{ events().title }}</MainTitle>
     <p class="-mt-4 mb-6 text-muted">
-      In ordine di data e ora. Ci sono quelli che qualcuno ci ha segnalato, non tutto quello che
-      succede a Gaeta.
+      {{ events().lead }}
     </p>
 
-    <nav aria-label="Quando" class="mb-6 flex flex-wrap gap-2">
+    <nav :aria-label="events().windows.label" class="mb-6 flex flex-wrap gap-2">
       <RouterLink
         v-for="window in WINDOWS"
-        :key="window.label"
+        :key="window.word"
         :to="window.key ? { query: { finestra: window.key } } : { query: {} }"
         :aria-current="finestra === window.key ? 'page' : undefined"
         :class="[
@@ -103,20 +98,20 @@ const chip =
             : 'border-field bg-surface text-ink hover:border-sea',
         ]"
       >
-        {{ window.label }}
+        {{ events().windows[window.word] }}
       </RouterLink>
     </nav>
     <p v-if="finestra" class="mb-4 text-sm text-muted">
-      Qui non compaiono gli eventi annullati: in «Tutti» restano, barrati, fino al loro giorno.
+      {{ events().windowNote }}
     </p>
 
     <p v-if="failed" class="text-muted">
-      Non è stato possibile caricare gli eventi. Riprova tra poco.
+      {{ events().failed }}
     </p>
     <template v-else-if="loaded && items.length === 0">
       <p class="font-semibold text-ink">{{ emptySentence }}</p>
       <p class="mt-1 text-muted">
-        Il calendario completo è quello del Comune di Gaeta e delle associazioni che organizzano.
+        {{ events().fullCalendar }}
       </p>
     </template>
     <ul v-else-if="items.length" class="divide-y divide-hairline border-y border-hairline">
@@ -130,26 +125,29 @@ const chip =
                 ? 'text-event-cancelled line-through'
                 : 'text-ink'
             "
+            lang="it"
           >
             {{ item.title }}
           </RouterLink>
           <span
             v-if="item.kind === 'evento' && item.state === 'annullato'"
             :class="[tag, 'text-event-cancelled']"
-            >Annullato</span
+            >{{ events().cancelled }}</span
           >
           <span
             v-else-if="item.kind === 'evento' && item.state === 'rinviato'"
             :class="[tag, 'text-muted']"
-            >Rinviato</span
+            >{{ events().postponed }}</span
           >
-          <span v-if="item.kind === 'edizione'" :class="[tag, 'text-muted']">Festa</span>
+          <span v-if="item.kind === 'edizione'" :class="[tag, 'text-muted']">{{
+            events().feast
+          }}</span>
         </div>
         <p class="text-sm text-ink">{{ formatEventWhen(item) }}</p>
-        <p v-if="item.kind === 'evento' && item.place" class="text-sm text-muted">
+        <p v-if="item.kind === 'evento' && item.place" class="text-sm text-muted" lang="it">
           {{ item.place.label }}
         </p>
-        <p v-else-if="item.kind === 'edizione' && item.note" class="text-sm text-muted">
+        <p v-else-if="item.kind === 'edizione' && item.note" class="text-sm text-muted" lang="it">
           {{ item.note }}
         </p>
       </li>
@@ -161,25 +159,26 @@ const chip =
       class="mt-6 min-h-11 cursor-pointer rounded-lg border border-sea px-4 text-sm font-semibold text-sea focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
       @click="load(nextPage, true)"
     >
-      Carica altri
+      {{ events().loadMore }}
     </button>
 
-    <!-- CF42: the first reason a Gaetano would ever open the request form. -->
+    <!-- CF42: the first reason a Gaetano would ever open the request form. A
+    collaborator's own way to file one stays Italian (review PR-19a). -->
     <p class="mt-10 text-muted">
-      Sai di qualcosa che qui non c’è?
+      {{ events().tellUs }}
       <RouterLink
         to="/collabora"
         class="font-semibold text-sea underline underline-offset-4 hover:text-sea-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
-        >Scrivici</RouterLink
+        >{{ events().writeUs }}</RouterLink
       >.
-      <template v-if="userStore.user.isAuthenticated">
+      <span v-if="userStore.user.isAuthenticated" lang="it">
         O
         <RouterLink
           :to="{ name: 'eventocreate' }"
           class="font-semibold text-sea underline underline-offset-4 hover:text-sea-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
           >segnalalo tu</RouterLink
         >.
-      </template>
+      </span>
     </p>
   </div>
 </template>
