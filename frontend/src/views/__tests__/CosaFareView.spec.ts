@@ -496,15 +496,15 @@ describe('CosaFareView on a phone (review PR-4, M-07)', () => {
   })
 })
 
+const NOTE = "Questo è quello che c'è in archivio"
+
 // TD-53: the rows come from the page's own lists and from the map's features,
-// and land together — with the closing note, which they would otherwise push.
+// and land together.
 describe('CosaFareView — the rows land in one piece (TD-53)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(axios.get).mockImplementation(async (url: string) => ({ data: ANSWERS[url] }))
   })
-
-  const NOTE = "Questo è quello che c'è in archivio"
 
   it('draws nothing under the zones until the map’s features are in too, then all of it', async () => {
     const { wrapper, store } = await mountAt({ zona: 'serapo' }, undefined, false, false)
@@ -513,32 +513,79 @@ describe('CosaFareView — the rows land in one piece (TD-53)', () => {
     // would put the places above them a moment later, or call the zone empty.
     expect(wrapper.findAll('h2')).toHaveLength(0)
     expect(wrapper.text()).not.toContain('non ha ancora niente')
-    expect(wrapper.text()).not.toContain(NOTE)
 
     store.features = FEATURES
     store.featuresLoaded = true
     await flushPromises()
 
     expect(wrapper.findAll('h2').map((h) => h.text())[0]).toBe('Andare al mare')
-    expect(wrapper.text()).toContain(NOTE)
   })
 
   it('waits for the page’s own lists too', async () => {
     vi.mocked(axios.get).mockImplementation(() => new Promise(() => {}))
     const { wrapper } = await mountAt({ zona: 'serapo' })
 
-    expect(wrapper.text()).not.toContain(NOTE)
+    expect(wrapper.findAll('h2')).toHaveLength(0)
     expect(wrapper.text()).not.toContain("Scegli una zona per vedere cosa c'è.")
   })
 
-  // Nothing under the zones depends on an answer then, and the note is the
-  // largest text on a phone's first screen: drawn late, it is the page's LCP.
   it('says everything at once when no zone is chosen, waiting for nothing', async () => {
     vi.mocked(axios.get).mockImplementation(() => new Promise(() => {}))
     const { wrapper } = await mountAt({}, undefined, false, false)
 
     expect(wrapper.text()).toContain("Scegli una zona per vedere cosa c'è.")
     expect(wrapper.text()).toContain(NOTE)
+  })
+})
+
+// TD-54: the note is the largest text on a phone's first screen, so it is
+// the paint Lighthouse times the page by. Held back with a zone's answer, a
+// short zone's page painted its words at 3.26–3.28 s; drawn at once, above
+// where the answer lands, it is in the first frame and nothing moves it.
+describe('CosaFareView — the note waits for nothing, and nothing moves it (TD-54)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(axios.get).mockImplementation(async (url: string) => ({ data: ANSWERS[url] }))
+  })
+
+  // Whether `node` comes after `note` in the document.
+  const after = (note: Element, node: Element) =>
+    !!(note.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING)
+  const noteOf = (wrapper: Awaited<ReturnType<typeof mountAt>>['wrapper']) =>
+    wrapper.findAll('p').find((p) => p.text().startsWith(NOTE))!.element
+
+  it('draws the note on a zone’s address before any answer has come', async () => {
+    // Neither the page's lists nor the map's features ever come.
+    vi.mocked(axios.get).mockImplementation(() => new Promise(() => {}))
+    const { wrapper } = await mountAt({ zona: 'monte-orlando' }, undefined, false, false)
+
+    expect(wrapper.text()).toContain(NOTE)
+  })
+
+  it('draws it on the wizard’s third step before any answer has come', async () => {
+    vi.mocked(axios.get).mockImplementation(() => new Promise(() => {}))
+    const { wrapper } = await mountAt({ intento: 'mare', zona: 'serapo' }, undefined, false, false)
+
+    expect(wrapper.text()).toContain(NOTE)
+  })
+
+  it('lands an empty zone’s answer under the note, not above it', async () => {
+    const { wrapper } = await mountAt({ zona: 'monte-orlando' })
+
+    const note = noteOf(wrapper)
+    const empty = wrapper.findAll('p').find((p) => p.text().includes('non ha ancora niente'))!
+    expect(after(note, empty.element)).toBe(true)
+    for (const section of wrapper.findAll('section'))
+      expect(after(note, section.element)).toBe(true)
+  })
+
+  it('lands a zone’s rows under the note, not above it', async () => {
+    const { wrapper } = await mountAt({ zona: 'serapo' })
+
+    const note = noteOf(wrapper)
+    expect(wrapper.findAll('section').length).toBeGreaterThan(0)
+    for (const section of wrapper.findAll('section'))
+      expect(after(note, section.element)).toBe(true)
   })
 })
 

@@ -1,7 +1,7 @@
 # Technical debt register
 
 > **What is open, and nothing else.** Fifty-four items have been recorded
-> since the first audit on 2026-08-19; fifty-one are paid and live, with their
+> since the first audit on 2026-08-19; fifty-two are paid and live, with their
 > evidence, in [tech-debt-archive.md](./tech-debt-archive.md). Read that file
 > for how a defect got in and what proved the fix. Read **this** one before
 > proposing work.
@@ -28,7 +28,7 @@
 | Format | `npx prettier --check .` | clean |
 | Build | `npm run build` | green, ~2s |
 | E2E | `npm run test:e2e` | **8 spec files, 49 tests** — green in CI |
-| Performance | `npx @lhci/cli@0.15.1 autorun` | 4 pages × 3 runs, every budget met — LCP 1.82–1.94 s under `act`, under "good" since TD-52; the fourth page, a chosen zone, since TD-53 (2026-10-24, CLS 0.000, LCP 1.85 s on a Mac) |
+| Performance | `npx @lhci/cli@0.15.1 autorun` | 7 pages × 3 runs, every budget met — LCP 1.82–1.94 s under `act`, under "good" since TD-52; a chosen zone since TD-53 (2026-10-24, CLS 0.000, LCP 1.85 s on a Mac), the home and «Cosa si può fare qui» in English since review PR-19a, and an empty zone since TD-54 (2026-10-25, CLS 0.000, LCP 1.85 s on a Mac) |
 
 Every row above was run again on 2026-10-15, after `seed_drafts` (18 tests),
 the OpenStreetMap credit (#106, 3), drafts on the map (map.md M5, 5 + 3), the
@@ -48,40 +48,6 @@ day one, and TD-47 — a whole status nothing exercised under a green suite,
 paid 2026-10-12 — is why it is still here.
 
 ---
-
-## TD-54 · A short zone's page shows its answer after 2.5 s on a phone — open
-
-Measured 2026-10-24 while paying TD-53, with `lighthouserc.yml`'s settings on
-an isolated stack (`seed_e2e`, medians of three on a Mac): **LCP 3.28 s on
-`/cosa-fare?zona=serapo` and on `/cosa-fare?zona=monte-orlando`**, an empty
-zone, against the 2.5 s the gate holds every page it measures to. CLS 0.000 on
-both.
-
-**Why.** On a zone whose rows are short — Serapo in `seed_e2e`, an empty zone,
-and every zone in production on 2026-10-24, where none holds a published place
-(`/api/map/zone/`, read that evening) — the largest text on a phone's first
-screen is the zone's own answer: «In questa zona l'archivio non ha ancora
-niente…», the note under *Mangiare*, the closing note. They come with the
-API's answers, about 1.4 s after the first paint in Lighthouse's simulation,
-and LCP is timed by them. Before TD-53 the closing note was painted in the
-first frame and held LCP at 1.85–1.92 s — then jumped when the rows came
-(CLS 0.112 and 0.106). TD-53 traded a jump for an honest number: the answer
-reaches the reader when it did before, and nothing moves when it does.
-
-**Why the gate does not measure it.** It would be red from the day it was
-added. The zone the gate measures, Porto Salvo, has rows enough to keep the
-note below the first screen, so its LCP is the title's (1.85 s).
-
-**How a reader meets it.** Only by opening a zone's address cold — a link
-shared or saved. Reached in the app (a chip, «Dove sei?», a tour's «Cosa c'è
-qui intorno»), the answers are already in and the zone draws at once.
-
-**What paying it means — half measured.** Bringing the answers forward. It is
-not the second origin the lab runs the API on: served under the SPA's own
-origin, as production serves it (deploy.md), the same pages measured 3.16 and
-3.18 s, so the connection is about 0.1 s of it. What is left is the page's
-seven lists and the map's features, all asked once the entry chunk has run;
-where those 1.4 s go in Lantern's graph has not been read yet.
 
 ## TD-08 · `IssueReport.status` has no index — open, deliberately
 

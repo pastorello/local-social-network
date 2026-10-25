@@ -1605,6 +1605,86 @@ one met at 7.0 is an outage.
 >   500 from the ORM. Now a 400 on that field; ids as numbers or digit
 >   strings, as the SPA sends them.
 
+### TD-54 · A short zone's page showed its words after 2.5 s on a phone — **FIXED 2026-10-25** ✔
+
+> Opened 2026-10-24 as the measured cost of TD-53's fix (below): on a zone
+> whose rows are short — `seed_e2e`'s empty Monte Orlando, Gaeta Medievale
+> with its one castle, and every zone in production that evening, where none
+> held a published place — LCP on Lighthouse's phone was **3.26–3.28 s**,
+> against the 2.5 s the gate holds every page it measures to. CLS 0.000. The
+> gate did not measure such a zone: it would have been red from the day it
+> was added.
+>
+> **What the reports named, measured again on `main` @ `34ca936`** (isolated
+> stack: its own SQLite, `seed_e2e`, the API on :8154, `vite preview` on
+> :4354, `lighthouserc.yml`'s settings): the late paint was not the page's
+> closing note but the zone's answer itself — «In questa zona l'archivio non
+> ha ancora niente. Prova…» on Monte Orlando, the dishes' note under
+> *Mangiare* on Gaeta Medievale — about 16,000 and 14,000 px² on a 412 px
+> phone, twice the title's 8,000, the largest text the first frame had. Every
+> page whose answer is longer (Porto Salvo, Serapo) kept its LCP on the title,
+> at 1.85 s, because the answer's big paragraphs fell below the screen.
+>
+> **Three ways tried, each measured:**
+>
+> - **Bringing the answer forward** — the map's features asked with the
+>   page's own lists, at mount, instead of after the first paint: 3.14 s. In
+>   the unthrottled run Lighthouse simulates from, the map's chunk and its
+>   start-up land before the answer does, so they are on its path whatever
+>   the page asks first.
+> - **The note at the foot of the first screen**, in a space reserved down to
+>   it: LCP 1.85 s, but the rows of nearly every zone pushed it — CLS 0.025 on
+>   Monte Orlando, 0.033 on Gaeta Medievale, 0.085 on Porto Salvo. TD-53's
+>   shift, smaller.
+> - **The note above the sections**, drawn at once: LCP 1.85 s, CLS 0.000.
+>   It is in the first frame, the largest text there (27,600 px²), and the
+>   answer lands under it without moving it.
+>
+> **The third was taken, by the author's decision** (`views/CosaFareView.vue`;
+> cosa-fare.md D5's note of 2026-10-25). Its cost is on a phone: the first
+> result starts 88 px lower — at 375×812, 417 px from the panel's top for a
+> zone opened by its address and 465 px after «Dove sei?» (329 and 377
+> before), past review PR-4's 420 (M-07). No arrangement above the results
+> could keep both: to outweigh a 16,000 px² answer the first frame needs a
+> text at least ~42 px tall across the panel, and after «Dove sei?» there
+> were 43 px left before 420. The author moved the limit in `reader.cy.ts`
+> to 470 px, and chose the note before the list on its own merit as well:
+> it is CF33's order, a list written by hand saying what it is not before it
+> lists.
+>
+> **Proved** on the gate's own terms, medians of three runs on a Mac with the
+> tiles blocked, the same build of `main` before and this commit after:
+>
+> | Page | CLS before | CLS after | LCP before | LCP after |
+> |---|---|---|---|---|
+> | `/benvenuto` | 0.000 | 0.000 | 1.85 s | 1.86 s |
+> | `/` | 0.000 | 0.000 | 1.85 s | 1.84 s |
+> | `/cosa-fare` | 0.002 | 0.004 | 1.85 s | 1.85 s |
+> | `/cosa-fare?zona=porto-salvo` | 0.000 | 0.000 | 1.85 s | 1.87 s |
+> | `?zona=monte-orlando` (empty), in the gate from now on | 0.000 | 0.000 | **3.26 s** | 1.88 s |
+> | `?zona=gaeta-medievale` (one row), not in the gate | 0.000 | 0.000 | **3.28 s** | 1.86 s |
+> | `?zona=serapo`, not in the gate | 0.000 | 0.000 | 1.85 s | 1.85 s |
+> | `/?lang=en` | 0.000 | 0.000 | 1.99 s | 2.00 s |
+> | `/cosa-fare?lang=en` | 0.002 | 0.002 | 2.00 s | 2.00 s |
+> | `?zona=porto-salvo&lang=en`, not in the gate | 0.000 | 0.000 | 2.00 s | 1.99 s |
+> | `?zona=monte-orlando&lang=en`, not in the gate | 0.000 | 0.000 | **3.38 s** | 2.00 s |
+> | `?zona=gaeta-medievale&lang=en`, not in the gate | 0.000 | 0.000 | **3.35 s** | 2.00 s |
+>
+> TBT medians 8–35 ms before and 4–21 ms after, `benchmarkIndex` 2,900–3,100
+> throughout. The note is now the LCP element of every page of «Cosa si può
+> fare qui», a zone's included (Porto Salvo's was the title). `/cosa-fare`'s
+> 0.004 is the web font's swap: the note reflows by a line and «Scegli una
+> zona…», under it now, rises 20 px — gone with the font blocked, read off a
+> `PerformanceObserver` on a throttled load. Measuring an empty zone adds
+> three runs to the `lighthouse` job, about 45 s.
+>
+> **The gate measures it now**: `lighthouserc.yml` has a fifth Italian URL,
+> `/cosa-fare?zona=monte-orlando`, a zone `seed_e2e` leaves empty on purpose
+> (its source says so). Unit tests fail on `main`'s view: the note is drawn
+> on a zone's address and on the wizard's third step with no answer in, and
+> an empty zone's sentence and every section land after it
+> (`CosaFareView.spec.ts`).
+
 ### TD-53 · `/cosa-fare?zona=` shifted its layout on a phone, CLS 0.204 — **FIXED 2026-10-24** ✔
 
 > Found 2026-10-24 while building «Dove sei?» (review PR-20, #138), and
@@ -1688,6 +1768,8 @@ one met at 7.0 is an outage.
 > it no longer moves when it does. Served under the SPA's own origin, as
 > production serves the API, the same two pages measured 3.16 and 3.18 s: the
 > second origin of CI and of this stack is about 0.1 s of it.
+> *(Paid 2026-10-25 as TD-54, above: the note went above the sections, drawn
+> at once, and the answer lands under it.)*
 >
 > **Not taken:** on a phone narrower than Lighthouse's 412 px, a long zone
 > name wraps the panel's eyebrow when it comes — 0.037 at 360 px for «Piana di

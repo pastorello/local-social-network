@@ -168,16 +168,13 @@ const zoneChosen = computed(() => (loaded.value ? !!selected.value : !!route.que
 // A zone's rows come from two answers, this page's lists and the map's
 // features, and are drawn once both are in. Drawn as each came, the tours and
 // the dishes landed first and the zone's places pushed them down, or a zone
-// said for a moment that it held nothing; and the closing note under them was
-// pushed off a phone's screen — a layout shift of 0.204 (TD-53). So the note
-// waits with them. Without a zone it depends on no answer and is drawn at
-// once, as «Scegli una zona…» is: it is the largest text on a phone's first
-// screen, the paint Lighthouse times the page by (LCP).
+// said for a moment that it held nothing (TD-53). The page's note is not
+// among them: it depends on no answer, so it is drawn at once, above where
+// the rows land, and nothing they bring moves it (TD-54).
 const ready = computed(() => loaded.value && mapStore.featuresLoaded)
 // The wizard's third step is an answer too, with or without a zone: it waits
 // the same way.
 const answering = computed(() => zoneChosen.value || intentMode.value)
-const noteShown = computed(() => ready.value || !answering.value)
 
 const placesHere = computed(() =>
   selected.value ? places.value.filter((p) => inZone(p.zones, selected.value!.slug)) : [],
@@ -635,6 +632,18 @@ const chooseZone = async (slug: string) => {
       <p class="mt-3 text-sm text-muted">{{ cosaFare().indicative }}</p>
     </nav>
 
+    <!-- What the page lists, said before the list (TD-54, decided by the
+    author on 2026-10-25): the archive's, not everything that happens in
+    Gaeta — a list written by hand cannot be complete, so it says so first
+    (CF33). It depends on no answer: drawn in the first frame, it is the
+    largest text on a phone's first screen, the paint Lighthouse times the
+    page by (LCP), and the zone's answer lands under it without moving it. At
+    the foot it waited for the rows, which would have pushed it (TD-53), and a
+    short zone's page painted its words 1.4 s after its title. -->
+    <p class="mt-2 text-sm text-muted">
+      {{ cosaFare().note }}
+    </p>
+
     <p v-if="failed" class="mt-6 text-ink" role="status">
       {{ cosaFare().failed }}
     </p>
@@ -739,9 +748,5 @@ const chooseZone = async (slug: string) => {
       </section>
     </template>
     <p v-else-if="!answering" class="mt-8 text-muted">{{ cosaFare().chooseZone }}</p>
-
-    <p v-if="noteShown" class="mt-10 border-t border-hairline pt-4 text-sm text-muted">
-      {{ cosaFare().note }}
-    </p>
   </article>
 </template>

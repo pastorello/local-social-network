@@ -13,10 +13,14 @@ ci:
     # measure the shell as well. The fourth is /cosa-fare with a zone chosen —
     # where «Dove sei?» and a chip both lead — on the zone `seed_e2e` fills
     # most (a church, a feast's route, a tour): its rows arrive after the page,
-    # and the zone-less page never measured them (TD-53, CLS 0.204).
+    # and the zone-less page never measured them (TD-53, CLS 0.204). The fifth
+    # is a zone with nothing in it, Monte Orlando, as every zone in production
+    # was on 2026-10-24: its few words come with the answers and were the
+    # largest on the screen, LCP 3.26 s, until the page's note went above them
+    # in the first frame (TD-54).
     #
     # The reader's language is on purpose (review PR-19a, translations.md T9):
-    # those four in Italian — Chrome is told so below — and the home and «Cosa
+    # those five in Italian — Chrome is told so below — and the home and «Cosa
     # si può fare qui» in English, by the address, as a shared link opens them.
     # English waits for a chunk of its own, which index.html asks for beside
     # the entry (vite.config.ts, preloadEnglish).
@@ -25,6 +29,7 @@ ci:
       - http://127.0.0.1:4173/
       - http://127.0.0.1:4173/cosa-fare
       - http://127.0.0.1:4173/cosa-fare?zona=porto-salvo
+      - http://127.0.0.1:4173/cosa-fare?zona=monte-orlando
       - http://127.0.0.1:4173/?lang=en
       - http://127.0.0.1:4173/cosa-fare?lang=en
     # Three runs per page; every assertion below reads the median.

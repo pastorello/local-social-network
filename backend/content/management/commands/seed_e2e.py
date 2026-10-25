@@ -46,6 +46,9 @@ SERAPO_LNG = 13.5640
 # The Castello Angioino-Aragonese, in Gaeta Medievale (maps/test_zone_aliases.py).
 CASTELLO_LAT = 41.2075170
 CASTELLO_LNG = 13.5845538
+# Nothing is placed in Monte Orlando, on purpose: the Lighthouse gate
+# (frontend/lighthouserc.yml) measures it as a zone with nothing in it, as
+# every zone in production was on 2026-10-24 (TD-54).
 
 # Titles the specs assert on. They are deliberately unmistakable: a failure
 # should say which fixture is missing, not "expected to find 3 items".
