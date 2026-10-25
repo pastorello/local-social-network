@@ -35,7 +35,7 @@ def _base_queryset():
         # What is known about getting in is the original's (ADR-0008, T5).
         'card__availability', 'card__translation_of__availability',
     ).prefetch_related(
-        'card__images', 'card__map_features',
+        'card__translations', 'card__images', 'card__map_features',
         # A translation shows the original's photographs and geometry
         # (content/serializers.py::media_source), so the original's are part of
         # this query rather than one extra query per row of a list.

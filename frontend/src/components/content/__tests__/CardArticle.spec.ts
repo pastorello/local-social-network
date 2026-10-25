@@ -3,6 +3,7 @@ import { mount } from '@vue/test-utils'
 import { RouterLinkStub } from '@vue/test-utils'
 
 import CardArticle from '../CardArticle.vue'
+import { setLocale } from '@/lib/i18n'
 
 const author = { id: 'u1', name: 'Autore', avatarURL: null }
 
@@ -16,6 +17,7 @@ const mountArticle = (props: Record<string, unknown>) =>
       isPublished: true,
       images: [],
       translations: [],
+      originalId: 'c1',
       detailRouteName: 'chiesedetail',
       backTo: { name: 'chieselist', label: 'chiese' },
       ...props,
@@ -71,6 +73,7 @@ describe('CardArticle', () => {
         isPublished: true,
         images: [],
         translations: [],
+        originalId: 'c1',
         detailRouteName: 'chiesedetail',
         backTo: { name: 'chieselist', label: 'chiese' },
       },
@@ -96,6 +99,28 @@ describe('CardArticle', () => {
     expect(
       mountArticle({ isPublished: false }).findComponent({ name: 'ShareButton' }).exists(),
     ).toBe(false)
+  })
+
+  // Review PR-19b (translations.md T10): a reader in English on a card nobody
+  // has translated yet is told, before the text, that the Italian follows;
+  // the text itself is marked Italian.
+  it('says the Italian follows, before it, when the card is not translated yet', async () => {
+    await setLocale('en')
+    try {
+      const wrapper = mountArticle({ language: 'it', untranslated: true })
+
+      const note = wrapper.get('header p.text-muted:last-child')
+      expect(note.text()).toBe('Not yet translated into English — the Italian text follows')
+      expect(note.attributes('lang')).toBeUndefined()
+      expect(wrapper.find('.prose').attributes('lang')).toBe('it')
+      expect(wrapper.find('h1').text()).toBe('Santuario della Montagna Spaccata')
+    } finally {
+      await setLocale('it')
+    }
+  })
+
+  it('says nothing of the kind on a card that is read in its language', () => {
+    expect(mountArticle({ language: 'it' }).text()).not.toContain('tradotta')
   })
 
   it('has no subtitle on an original', () => {

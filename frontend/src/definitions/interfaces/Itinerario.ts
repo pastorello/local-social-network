@@ -39,6 +39,8 @@ export interface Intent {
   name_en?: string
   name_plural_en?: string
   description: string
+  // The line in English (review PR-19b); blank, the Italian stands in.
+  description_en?: string
   count: number
 }
 

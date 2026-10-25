@@ -5,7 +5,8 @@ from content.fields import PlainTextField
 from content.models import MapFeature
 from content.sanitize import sanitize_html
 from content.serializers import (
-    CardImageSerializer, TranslationSerializer, availability_of, media_source, visible_translations,
+    CardImageSerializer, TranslationSerializer, availability_of, has_english, media_source,
+    visible_translations,
 )
 from maps.serializers import named_zones_of
 
@@ -34,6 +35,7 @@ class AttivitaReadSerializer(serializers.ModelSerializer):
     images = serializers.SerializerMethodField()
     pins = serializers.SerializerMethodField()
     translations = serializers.SerializerMethodField()
+    has_en = serializers.SerializerMethodField()
     original_title = serializers.SerializerMethodField()
     availability = serializers.SerializerMethodField()
     zones = serializers.SerializerMethodField()
@@ -73,6 +75,9 @@ class AttivitaReadSerializer(serializers.ModelSerializer):
     def get_original_title(self, obj):
         return media_source(obj.card).title
 
+    def get_has_en(self, obj):
+        return has_english(obj.card)
+
     def get_translations(self, obj):
         request = self.context.get('request')
         return TranslationSerializer(visible_translations(obj.card, request), many=True).data
@@ -83,6 +88,7 @@ class AttivitaReadSerializer(serializers.ModelSerializer):
             'id', 'title', 'body_html', 'author', 'is_published',
             'kind', 'kind_label', 'kind_label_en', 'how_to_get_there', 'availability',
             'images', 'pins', 'zones', 'language', 'translation_of', 'original_title', 'translations',
+            'has_en',
             'created_at', 'updated_at',
         )
 

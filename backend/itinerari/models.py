@@ -20,6 +20,11 @@ class Intent(models.Model):
     # Sant'Agostino"), as the itinerari canvas drew it. Optional: an intent
     # without one shows only its name and its count.
     description = models.CharField('descrizione', max_length=200, blank=True, default='')
+    # The same line in the reader's English (review PR-19b); blank, the
+    # Italian stands in, marked as Italian.
+    description_en = models.CharField(
+        'descrizione in inglese', max_length=200, blank=True, default='',
+    )
     position = models.PositiveIntegerField('posizione', default=0)
 
     class Meta:

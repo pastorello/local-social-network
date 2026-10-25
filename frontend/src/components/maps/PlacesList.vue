@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import CoverPlaceholder from '@/components/content/CoverPlaceholder.vue'
+import EnglishMark from '@/components/content/EnglishMark.vue'
 import type { MapCardFeature } from '@/definitions/interfaces/MapData'
 import home from '@/lib/i18n/messages/home'
 import types, { wordsOf } from '@/lib/i18n/messages/types'
@@ -35,9 +36,15 @@ const typeLabel = (key: string) => wordsOf(key)?.layer ?? types().entry
         <CoverPlaceholder v-else :type="feature.type" class="h-12 w-12 flex-none rounded" />
 
         <span class="min-w-0">
-          <span class="block truncate font-semibold text-ink"
-            ><span lang="it">{{ feature.title }}</span
-            ><span v-if="!feature.is_published" class="text-xs font-normal text-muted">
+          <!-- The title is what gives way to a narrow sheet, never what is
+          said after it: «EN» for a reader in English (review PR-19b), and
+          *bozza*. -->
+          <span class="flex min-w-0 items-baseline font-semibold text-ink"
+            ><span class="truncate" lang="it">{{ feature.title }}</span
+            ><EnglishMark v-if="feature.has_en" class="ml-1.5 flex-none" /><span
+              v-if="!feature.is_published"
+              class="flex-none text-xs font-normal whitespace-pre text-muted"
+            >
               · {{ home().draft }}</span
             ></span
           >

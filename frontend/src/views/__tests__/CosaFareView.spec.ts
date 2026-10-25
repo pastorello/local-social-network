@@ -6,6 +6,8 @@ import { shallowRef } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import CosaFareView from '../CosaFareView.vue'
+import EnglishMark from '@/components/content/EnglishMark.vue'
+import { setLocale } from '@/lib/i18n'
 import { PANEL_TRAIL, type Trail } from '@/composables/usePanelTrail'
 import { useMapStore } from '@/stores/map'
 import type { MapCardFeature } from '@/definitions/interfaces/MapData'
@@ -777,5 +779,78 @@ describe('CosaFareView — the wizard’s third step (review PR-21)', () => {
     const walked = walk.findAll('p').find((p) => p.text().startsWith('Hai scelto:'))!
     expect(walked.findAll('a').map((a) => a.attributes('href'))).toEqual(['/benvenuto'])
     expect(walked.text()).toContain('Serapo')
+  })
+})
+
+// Review PR-19b: for a reader in English, every row that can be read in
+// English says «EN» — a place, a tour, a feast, a dish — on the zone's page
+// and on the wizard's third step alike; a feast's recurrence is its card's
+// own Italian, marked so.
+describe('CosaFareView — «EN» on what can be read in English (review PR-19b)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(axios.get).mockImplementation(async (url: string) => {
+      const answer = ANSWERS[url] as { results?: { id: string }[] } | undefined
+      if (url === '/api/itinerari/' || url === '/api/ricette/')
+        return {
+          data: {
+            results: answer!.results!.map((row) => ({
+              ...row,
+              has_en: row.id === 't1' || row.id === 'r1',
+            })),
+          },
+        }
+      return { data: answer }
+    })
+  })
+  afterEach(() => setLocale('it'))
+
+  const translated = new Set(['l1', 'f1'])
+  const marked = async (query: Record<string, string>) => {
+    const { wrapper, store } = await mountAt(query)
+    store.features = FEATURES.map((f) => ({ ...f, has_en: translated.has(f.id) }))
+    await flushPromises()
+    // Drawn, not only mounted: in Italian the mark renders nothing.
+    return wrapper
+      .findAll('li')
+      .filter((li) => {
+        const mark = li.findComponent(EnglishMark)
+        return mark.exists() && mark.find('[aria-hidden="true"]').exists()
+      })
+      .map((li) => li.get('a').text())
+  }
+
+  it('marks the zone’s places, tours, feasts and dishes that can be read in English', async () => {
+    await setLocale('en')
+
+    expect(await marked({ zona: 'serapo' })).toEqual([
+      'Spiaggia di Serapo',
+      'Giro di Serapo',
+      'Porto Salvo',
+      'Tiella',
+    ])
+  })
+
+  it('marks them on the wizard’s third step too, in the sections put away as well', async () => {
+    await setLocale('en')
+
+    expect(await marked({ intento: 'mare', zona: 'serapo' })).toEqual([
+      'Giro di Serapo',
+      'Spiaggia di Serapo',
+      'Porto Salvo',
+      'Tiella',
+    ])
+  })
+
+  it('marks nothing for a reader in Italian', async () => {
+    expect(await marked({ zona: 'serapo' })).toEqual([])
+  })
+
+  it('marks a feast’s recurrence as its card’s Italian', async () => {
+    await setLocale('en')
+    const { wrapper } = await mountAt({ zona: 'serapo' })
+
+    const festa = wrapper.findAll('li').find((li) => li.text().includes('Porto Salvo'))!
+    expect(festa.get('p').attributes('lang')).toBe('it')
   })
 })

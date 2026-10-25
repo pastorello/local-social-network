@@ -131,6 +131,7 @@ const entries = computed(() =>
       .filter(Boolean)
       .join(' · '),
     summaryLang: summaryIsText.value ? 'it' : undefined,
+    en: item.has_en,
     cover: item.images[0]?.imageURL ?? null,
     isPublished: item.is_published,
     to: { name: props.config.routeNames.detail, params: { id: item.id } },

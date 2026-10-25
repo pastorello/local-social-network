@@ -516,7 +516,9 @@ def test_a_stop_whose_pin_was_removed_does_not_lock_the_tour(auth_client, places
 def test_the_intents_carry_their_line_for_the_landing_page(api_client):
     intents = {i['slug']: i for i in api_client.get('/api/itinerari/intenti/').json()}
 
-    assert intents['mare']['description'] == 'Le spiagge, da Serapo a Sant’Agostino'
+    # Rewritten on 2026-10-25 (review PR-19b): the places and the tours.
+    assert intents['mare']['description'] == 'Le spiagge, da Serapo a Sant’Agostino, e gli itinerari'
+    assert intents['mare']['description_en'] == 'The beaches, from Serapo to Sant’Agostino, and tours'
 
 
 def test_a_stop_with_no_place_chosen_stands_for_every_place_its_card_has(auth_client, places):

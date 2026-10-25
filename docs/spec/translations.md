@@ -195,7 +195,8 @@ interface and cards alike (T3).
   blank is the rule there. The seeded genres and intents got English names in
   a migration, only where none was written; the kinds of business are closed
   in code, so theirs are too (`Attivita.KIND_NAMES_EN`). The intents'
-  *descriptions* are still Italian, marked so: they are review PR-19b's.
+  *descriptions* were still Italian, marked so: they are review PR-19b's
+  (`description_en` since, T10).
 - **Dates** are `Intl`'s in the reader's locale (`en-GB`: «Saturday 26
   September», the 24-hour clock). An event's or a feast's date keeps its
   weekday in both (CF34, `lib/when.ts`); the archive's line and the day hours
@@ -240,5 +241,69 @@ first paint now, as the map itself was already drawn: 1.84 s in Italian and
 checks that both languages have every key and take the same arguments, and
 `lib/i18n/__tests__/messages.spec.ts` checks it again on every message file.
 Review PR-19b shows a card's translation on its own page in English and marks
-the translated cards in the lists; PR-19c closes the non-goal and runs the
-accessibility gate in both languages.
+the translated cards in the lists (T10, built the same day); PR-19c closes the
+non-goal and runs the accessibility gate in both languages.
+
+## T10 — A card in the reader's language, at its own address — decided 2026-10-22, built 2026-10-25 (review PR-19b)
+
+T9 put the interface in the reader's language and left the cards where C4 had
+them: a translation was a page of its own, reached from the original's
+language switch. The author's decision of 2026-10-22 ([review](../review-2026-10-22.md),
+decision 5) asks for the card to follow the reader too, without a second
+address.
+
+- **The original's address is the card's, in both languages.** It stays the
+  canonical one, as Italian's addresses do (T9). A reader in English reads the
+  original's **published** English version there: found in the original's
+  `translations`, the cards whose `translation_of` it is
+  (`lib/readerCard.ts::englishOf`), and fetched with the original before the
+  page mounts for the types that have a place (`lib/cardFirst.ts`, so the
+  panel is born in English, review PR-10's reason), or by the page for the
+  others, which then waits for it rather than painting the Italian and
+  swapping it (`composables/useReaderCard.ts`). A reader who switches
+  language on a card already open keeps it on screen until the other version
+  has come. All of it — the card's own text, its translated name, its fields,
+  «Se la trovi chiusa» — is the translation's; its photographs, its place,
+  its hours and a tour's stops are the original's, as T5 says.
+- **No published English version** — none, or only a draft — and the page
+  shows the Italian, saying first, under the byline: «Not yet translated into
+  English — the Italian text follows». The body and the card's own fields are
+  marked `lang="it"`, as T9 already marked them. A version that could not be
+  fetched shows the Italian too, without the line: it is not true.
+- **The heading is the Italian name, always** (T7, unchanged): the English
+  version's name is the subtitle under it.
+- **The card's language switch (T1) is the reader's language now.** It names
+  the other language on the original's address (`?lang=en`, `?lang=it`), which
+  the router turns into that language, interface and card alike (T9: «a link
+  that names a language switches to it») — instead of leading to the
+  translation's own address, which the canonical address makes a second copy.
+  It lists only a version a reader can open, published; an author's draft is
+  reached from the card's controls, «Vai alla traduzione», as before. A
+  translation's own address still opens it as it is — *Le mie schede* and
+  «Traduci» lead there, and its form is there.
+- **«EN» marks a card a reader in English can read in English**, beside its
+  title, in the lists of every type (the businesses' included), the home's
+  sheet and column, «Cosa si può fare qui» and the wizard's third step (its
+  places, tours, feasts and dishes), and the feasts' editions among the
+  events — an event is not a card and has no other language
+  (`components/content/EnglishMark.vue`). For a reader in Italian it says
+  nothing: every card is in Italian already. Two letters for the eye, «Available
+  in English» to a screen reader and on hover, marked `lang="en"` beside a
+  title marked Italian. **It counts only a published translation**, never a
+  draft, whoever asks — the mark is a promise to every reader: `has_en` on
+  every type's read serializer (so on each type's list and page), on
+  `/api/map/features/` and on an edition in `/api/eventi/`, all from
+  `content/serializers.py::has_english` (the map with one query of its own),
+  and `content/test_has_en.py` checks it with a draft, for its author too.
+- **The intents' lines speak English too**: `Intent.description_en`, blank by
+  default and the Italian then, marked so — as `name_en` (T9). The seeded
+  lines were rewritten in both languages by the author's decision of
+  2026-10-25 (`itinerari/migrations/0011`, the review's «Decisioni del 25
+  ottobre 2026»): an intent leads to places, businesses *and* tours, and the
+  seeds said one of them. A line the author corrected in the admin keeps his
+  words, and gets no English written against words he did not write.
+- **Not done here**: a translation's own address is not sent on to the
+  original's — it is where a collaborator writes it. And no language but
+  English: a version in a language the interface does not speak is not
+  offered by the switch.
+

@@ -2,9 +2,8 @@ import { defineEntryMessages, type Widen } from '..'
 
 // The wizard «Cosa fare adesso» (review PR-21) in the reader's language
 // (review PR-19a): /benvenuto's two steps, the home's first, and the lines
-// under each answer (lib/wizard.ts). The intents' own names come from the API
-// (`name_en`, the author's); their descriptions are data, and stay Italian
-// until review PR-19b.
+// under each answer (lib/wizard.ts). The intents' own names and lines come
+// from the API (`name_en`, `description_en`, the author's — review PR-19b).
 const it = {
   welcome: 'Benvenuti a Gaeta',
   question: 'Che cosa ti va di fare?',

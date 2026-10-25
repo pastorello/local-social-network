@@ -13,6 +13,7 @@ from content.serializers import (
     CardImageSerializer,
     TranslationSerializer,
     availability_of,
+    has_english,
     media_source,
     visible_translations,
 )
@@ -127,7 +128,10 @@ class IntentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Intent
-        fields = ('slug', 'name', 'name_plural', 'name_en', 'name_plural_en', 'description', 'count')
+        fields = (
+            'slug', 'name', 'name_plural', 'name_en', 'name_plural_en', 'description',
+            'description_en', 'count',
+        )
 
 
 class ItinerarioReadSerializer(serializers.ModelSerializer):
@@ -148,6 +152,7 @@ class ItinerarioReadSerializer(serializers.ModelSerializer):
     route = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField()
     translations = serializers.SerializerMethodField()
+    has_en = serializers.SerializerMethodField()
     original_title = serializers.SerializerMethodField()
     zones = serializers.SerializerMethodField()
 
@@ -248,6 +253,9 @@ class ItinerarioReadSerializer(serializers.ModelSerializer):
     def get_original_title(self, obj):
         return media_source(obj.card).title
 
+    def get_has_en(self, obj):
+        return has_english(obj.card)
+
     def get_translations(self, obj):
         request = self.context.get('request')
         return TranslationSerializer(visible_translations(obj.card, request), many=True).data
@@ -257,7 +265,8 @@ class ItinerarioReadSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'body_html', 'author', 'is_published',
             'form', 'duration', 'intents', 'intent_labels', 'intent_labels_en', 'stops', 'route',
-            'images', 'language', 'translation_of', 'original_title', 'translations', 'zones',
+            'images', 'language', 'translation_of', 'original_title', 'translations', 'has_en',
+            'zones',
             'created_at', 'updated_at',
         )
 

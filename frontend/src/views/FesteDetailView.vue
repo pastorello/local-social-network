@@ -15,6 +15,7 @@ import { useMapFocus } from '@/composables/useMapFocus'
 import { usePageTitle } from '@/composables/usePageTitle'
 import { cardPanelShape, usePanelShape } from '@/composables/usePanelShape'
 import { usePanelTrail } from '@/composables/usePanelTrail'
+import { useReaderCard } from '@/composables/useReaderCard'
 import { useMapStore } from '@/stores/map'
 import TranslateControl from '@/components/content/TranslateControl.vue'
 import { useUserStore } from '@/stores/user'
@@ -38,7 +39,18 @@ const brought = () => {
   const card = route.meta.card as Feste | undefined
   return card && card.id === route.params.id ? card : null
 }
-const feste = ref<Feste | null>(brought())
+const broughtEnglish = () => {
+  const english = route.meta.translation as Feste | null | undefined
+  return english && english.translation_of === route.params.id ? english : null
+}
+// The festa the address names, and the one shown: for a reader in English its
+// published English version, at the same address (review PR-19b).
+const fetched = ref<Feste | null>(brought())
+const {
+  card: feste,
+  untranslated,
+  replace,
+} = useReaderCard(fetched, () => '/api/feste/', broughtEnglish())
 // A freshly-started translation (see TranslateControl) is an empty draft —
 // its detail page opens straight into edit mode via ?edit=1 rather than
 // showing a blank read view first.
@@ -54,7 +66,7 @@ const getFeste = async () => {
   await axios
     .get(`/api/feste/${route.params.id}/`)
     .then((response) => {
-      feste.value = response.data
+      fetched.value = response.data
     })
     .catch(() => {
       toastStore.showToast(5000, card().festaNotFound)
@@ -63,9 +75,7 @@ const getFeste = async () => {
 }
 
 // The festa the URL names, not the previous one while the next loads.
-const shown = computed(() =>
-  feste.value && feste.value.id === route.params.id ? feste.value : null,
-)
+const shown = computed(() => (fetched.value?.id === route.params.id ? feste.value : null))
 
 // Over its title (review PR-23): «Feste» is the panel's way up; each zone the
 // procession stops in leads to what else is there.
@@ -105,7 +115,7 @@ useMapFocus(() =>
 const onEdited = (updated: Feste) => {
   // A feast just published — or unpublished, or re-routed — changes the map.
   mapStore.fetchFeatures()
-  feste.value = updated
+  replace(updated)
   editing.value = false
 }
 
@@ -126,7 +136,7 @@ const deleteFeste = async () => {
 }
 
 onMounted(() => {
-  if (!feste.value) getFeste()
+  if (!fetched.value) getFeste()
 })
 
 // Navigating from one card's detail page straight to another's (e.g. a
@@ -141,8 +151,11 @@ watch(
   async () => {
     editing.value = false
     const card = brought()
-    if (card) feste.value = card
-    else await getFeste()
+    if (card) {
+      fetched.value = card
+      const english = broughtEnglish()
+      if (english) replace(english)
+    } else await getFeste()
     editing.value = route.query.edit === '1'
   },
 )
@@ -162,6 +175,8 @@ watch(
           :is-published="feste.is_published"
           :images="feste.images"
           :translations="feste.translations"
+          :original-id="feste.translation_of ?? feste.id"
+          :untranslated="untranslated"
           detail-route-name="festedetail"
           :back-to="{ name: 'festelist', label: card().back.feste }"
         >

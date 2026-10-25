@@ -145,13 +145,14 @@ const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:si
       <template v-if="known">
         <ul v-if="intents.length" :class="[grid, home ? 'mt-4' : 'mt-6']">
           <li v-for="intent in intents" :key="intent.slug">
-            <!-- The description is the admin's, in Italian until review
-            PR-19b: marked so, where the interface around it is English. -->
+            <!-- The description is the admin's, in the reader's language
+            where they wrote one (review PR-19b) — the Italian stands in
+            otherwise, and is marked so. -->
             <AnswerCard
               :to="afterIntent(archive, intent.slug, zones)"
               :title="intent.name"
               :description="intent.description"
-              description-lang="it"
+              :description-lang="intent.descriptionLang"
               :line="intent.line"
             >
               <template #tile>

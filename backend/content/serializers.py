@@ -73,6 +73,20 @@ def visible_translations(card, request):
     return siblings
 
 
+def has_english(card):
+    """Whether a reader in English finds `card` in English (review PR-19b,
+    translations.md T10): its group has a **published** English version — the
+    «EN» a list marks it with, and what its page shows at the original's
+    address. A draft does not count, whoever is asking: the mark is a promise
+    to every reader, and an author's own drafts are in `translations`, never
+    here. Reads `translations.all()`, so a list that prefetches
+    `card__translations` pays no query per row."""
+    return any(
+        version.language == 'en' and version.is_published
+        for version in media_source(card).translations.all()
+    )
+
+
 def availability_of(card):
     """What a reader sees about getting in (ADR-0008): the original's row, in
     every language (T5). A card with no row reads exactly like a row nobody

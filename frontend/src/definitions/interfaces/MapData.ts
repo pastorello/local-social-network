@@ -11,6 +11,9 @@ export interface MapCardFeature {
   // may already read — their own, or every one for an admin — and nobody
   // else ever receives one. Drawn hollow, listed as *bozza*.
   is_published: boolean
+  // It has a published English version (review PR-19b): an English reader's
+  // lists mark it «EN». A draft translation never counts.
+  has_en?: boolean
   // The card's first image (spec/design.md D5) — `null` when it has none, in
   // which case the SPA draws a type-coloured placeholder rather than nothing.
   cover: string | null

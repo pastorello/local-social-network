@@ -17,7 +17,10 @@ export default {
     dialetto: { label: 'Dialect', one: 'Word', layer: 'Dialect' },
     libri: { label: 'Recommended books', one: 'Book', layer: 'Books' },
     luoghi: { label: 'Places', one: 'Place', layer: 'Places' },
-    attivita: { label: 'Businesses', one: 'Business', layer: 'Businesses' },
+    // «Eat, drink & shop», the author's name for them in English (decided
+    // on 2026-10-25, review PR-19b) — the menu, the panel's eyebrow, the
+    // window's title, *About* and the map's layer; one of them is a business.
+    attivita: { label: 'Eat, drink & shop', one: 'Business', layer: 'Eat, drink & shop' },
     itinerari: { label: 'Tours', one: 'Tour', layer: 'Tours' },
   },
   kinds: { beve: 'Where to drink', mangia: 'Where to eat', compra: 'Where to buy' },

@@ -8,6 +8,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import TypeDetailView from '../TypeDetailView.vue'
 import { PANEL_TRAIL, type Trail } from '@/composables/usePanelTrail'
 import { fetchCardFirst } from '@/lib/cardFirst'
+import { setLocale } from '@/lib/i18n'
 import { useMapStore } from '@/stores/map'
 import {
   chiesaConfig,
@@ -375,5 +376,91 @@ describe('TypeDetailView — the panel’s shape (review PR-10)', () => {
     await mountWith(ricettaConfig, card({ pins: [] }))
 
     expect(useMapStore().panelShape).toBe('wide')
+  })
+})
+
+// Review PR-19b (translations.md T10): a reader in English reads a card at
+// its original's address — its published English version where there is one,
+// the Italian, said so, where there is not — under the Italian name (T7).
+describe('TypeDetailView — a card in English', () => {
+  beforeEach(() => vi.clearAllMocks())
+  afterEach(() => setLocale('it'))
+
+  const english = card({
+    id: 'e1',
+    title: 'Church of the Annunciation',
+    body_html: '<p>Text.</p>',
+    language: 'en',
+    translation_of: 'c1',
+    translations: [
+      { id: 'c1', language: 'it', title: 'Santissima Annunziata', is_published: true },
+    ],
+  })
+  const mountByUrl = async (original: Record<string, unknown>) => {
+    vi.mocked(axios.get).mockImplementation(async (url: string) => ({
+      data: url === '/api/dialetto/e1/' ? english : original,
+    }))
+    const stub = { template: '<div />' }
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/dialetto', name: dialettoConfig.routeNames.list, component: stub },
+        { path: '/dialetto/:id', name: dialettoConfig.routeNames.detail, component: stub },
+      ],
+    })
+    router.push('/dialetto/c1')
+    await router.isReady()
+    const wrapper = mount(TypeDetailView, {
+      props: { config: dialettoConfig },
+      global: {
+        plugins: [createPinia(), router],
+        stubs: { TypeForm: true },
+        provide: { [PANEL_TRAIL as symbol]: shallowRef<Trail | null>(null) },
+      },
+    })
+    await flushPromises()
+    return wrapper
+  }
+
+  it('shows the published English version at the original’s address, under the Italian name', async () => {
+    await setLocale('en')
+    const wrapper = await mountByUrl(
+      card({
+        translations: [
+          { id: 'e1', language: 'en', title: 'Church of the Annunciation', is_published: true },
+        ],
+      }),
+    )
+
+    expect(axios.get).toHaveBeenCalledWith('/api/dialetto/e1/')
+    expect(wrapper.get('h1').text()).toBe('Santissima Annunziata')
+    expect(wrapper.get('h1 + p').text()).toBe('Church of the Annunciation')
+    expect(wrapper.get('.prose').attributes('lang')).toBe('en')
+    expect(wrapper.text()).not.toContain('Not yet translated')
+    // The switch leads back to the same address, in Italian.
+    expect(wrapper.get('nav a').attributes('href')).toBe('/dialetto/c1?lang=it')
+  })
+
+  it('shows the Italian, marked so, and says it first, where the English is a draft', async () => {
+    await setLocale('en')
+    const wrapper = await mountByUrl(
+      card({
+        translations: [
+          { id: 'e1', language: 'en', title: 'Church of the Annunciation', is_published: false },
+        ],
+      }),
+    )
+
+    expect(axios.get).not.toHaveBeenCalledWith('/api/dialetto/e1/')
+    expect(wrapper.get('h1').text()).toBe('Santissima Annunziata')
+    expect(wrapper.text()).toContain('Not yet translated into English — the Italian text follows')
+    expect(wrapper.get('.prose').attributes('lang')).toBe('it')
+  })
+
+  it('says nothing of the kind to a reader in Italian', async () => {
+    const wrapper = await mountByUrl(card({}))
+
+    expect(wrapper.text()).not.toContain('Not yet translated')
+    expect(wrapper.get('.prose').attributes('lang')).toBe('it')
   })
 })

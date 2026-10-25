@@ -69,6 +69,9 @@ export default defineMessages({
     // The card's other languages, by name, in the reader's (C4's switch).
     otherLanguages: 'Cambia lingua',
     languages: { it: 'Italiano', en: 'Inglese' },
+    // Read only in English, by a reader of a card nobody has translated yet
+    // (review PR-19b); its Italian is the dictionary's shape.
+    untranslated: 'Non ancora tradotta in inglese: segue il testo italiano',
     // A feast (review PR-27).
     festa: {
       when: 'Quando',
@@ -92,7 +95,8 @@ export default defineMessages({
       dialetto: 'dialect',
       libri: 'recommended books',
       luoghi: 'places',
-      attivita: 'businesses',
+      // The section's name (decided on 2026-10-25, review PR-19b).
+      attivita: 'Eat, drink & shop',
       itinerari: 'tours',
     },
     fields: {
@@ -133,6 +137,7 @@ export default defineMessages({
     copyFailed: 'The link could not be copied: copy it from the address bar.',
     otherLanguages: 'Change language',
     languages: { it: 'Italian', en: 'English' },
+    untranslated: 'Not yet translated into English — the Italian text follows',
     festa: {
       when: 'When',
       programme: 'Programme',

@@ -25,6 +25,9 @@ declare module 'vue-router' {
     // panel is born in the card's shape (lib/cardFirst.ts). Set per
     // navigation by the route's guard; never declared on a route.
     card?: unknown
+    // Its English version, for a reader in English (review PR-19b): shown in
+    // its place, at the original's address. Null when there is none.
+    translation?: unknown
     // The window's title, most specific part first and without the site's
     // name, which lib/pageTitle.ts adds — «Itinerari» becomes «Itinerari ·
     // Vivere Gaeta». None on the home, whose title is its own. A page named by

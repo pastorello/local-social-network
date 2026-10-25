@@ -35,6 +35,12 @@ const props = defineProps<{
   isPublished: boolean
   images: CardImage[]
   translations: TranslationRef[]
+  // The original's id, whichever version is shown: its address is the
+  // card's, in both languages (review PR-19b).
+  originalId: string
+  // A reader in English on a card nobody has translated yet: its Italian
+  // follows, and the page says so first (review PR-19b).
+  untranslated?: boolean
   detailRouteName: string
   backTo: { name: string; label: string }
 }>()
@@ -83,13 +89,17 @@ const createdAtFormatted = computed(() =>
       panel's eyebrow above it (review PR-23) — the type's name as the way to
       its list, the zone as the way to «Cosa fare». A draft still says so. -->
       <div
-        v-if="!isPublished || translations.length"
+        v-if="!isPublished || translations.some((version) => version.is_published)"
         class="mb-3 flex flex-wrap items-center justify-between gap-3"
       >
         <p v-if="!isPublished" class="text-xs font-semibold tracking-[0.12em] text-muted uppercase">
           {{ card().draft }}
         </p>
-        <LanguageSwitch :translations="translations" :detail-route-name="detailRouteName" />
+        <LanguageSwitch
+          :translations="translations"
+          :original-id="originalId"
+          :detail-route-name="detailRouteName"
+        />
       </div>
 
       <h1
@@ -127,6 +137,11 @@ const createdAtFormatted = computed(() =>
         </p>
         <ShareButton v-if="isPublished" />
       </div>
+
+      <!-- Said before the text it is about (review PR-19b, translations.md
+      T10): the interface is English, the card is not yet. The text below is
+      marked as Italian, where it is. -->
+      <p v-if="untranslated" class="mt-4 text-muted">{{ card().untranslated }}</p>
     </header>
 
     <div v-if="cover && !isDesktop" class="-mx-4 mb-8">

@@ -11,7 +11,8 @@ import { RouterLink, type RouteLocationRaw } from 'vue-router'
 // (focus-visible), and the pointer is told by the name's underline, never by
 // a darker border that reads as a ring left behind (M-09).
 // `descriptionLang` marks a line of data in another language than the
-// interface's — an intent's description, the admin's Italian (review PR-19a).
+// interface's — an intent's description, the admin's Italian where they have
+// written no English (review PR-19a, PR-19b).
 defineProps<{
   to?: RouteLocationRaw
   title: string

@@ -3,6 +3,7 @@ import axios from 'axios'
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
+import EnglishMark from '@/components/content/EnglishMark.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
 import type { EventItem } from '@/definitions/interfaces/Evento'
 import events from '@/lib/i18n/messages/events'
@@ -129,6 +130,9 @@ const chip =
           >
             {{ item.title }}
           </RouterLink>
+          <!-- A feast's card may be read in English (review PR-19b); an event
+          is not a card, and has no other language. -->
+          <EnglishMark v-if="item.kind === 'edizione' && item.has_en" />
           <span
             v-if="item.kind === 'evento' && item.state === 'annullato'"
             :class="[tag, 'text-event-cancelled']"

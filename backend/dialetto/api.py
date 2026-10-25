@@ -21,7 +21,7 @@ from .serializers import TermineReadSerializer, TermineWriteSerializer
 
 
 def _base_queryset():
-    return Termine.objects.select_related('card', 'card__author', 'card__translation_of').prefetch_related('card__images', 'card__translation_of__images')
+    return Termine.objects.select_related('card', 'card__author', 'card__translation_of').prefetch_related('card__translations', 'card__images', 'card__translation_of__images')
 
 
 @api_view(['GET', 'POST'])

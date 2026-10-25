@@ -1516,7 +1516,11 @@ on 2026-10-24:
   collaborators chosen one by one, content.md's rules for writing from
   published sources, "Not a wayfinding app" for why — and they name no one,
   count nothing and claim no endorsement (D11). The build wrote them; the
-  author reviews them.
+  author reviews them. *(2026-10-25, the author's decision, review PR-19b:
+  they name one person, him — «uno dei collaboratori che Luca Pastorello ha
+  scelto uno per uno» — and the list in the first gains «i locali e le
+  botteghe che vale la pena conoscere», ADR-0010's businesses. Still no
+  number and no endorsement.)*
 - **The patrocinio's place stays, and stays empty** (D11): beside the rule,
   in its register, and nothing there until a patrocinio exists — no logo, no
   "coming soon". The test that the page says neither *patrocinio* nor

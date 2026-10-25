@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from account.models import User
-from content.models import MapFeature
+from content.models import Card, MapFeature
 
 from .models import Overlay, Zona, ZonaAlias
 from .serializers import OverlaySerializer
@@ -72,7 +72,18 @@ def map_features(request):
     author's own, and every draft for an admin — the rule a draft's own page
     follows, which 404s for anyone else. Each entry says `is_published`, and
     an anonymous reader gets what they always got.
+
+    Each says **`has_en`** (review PR-19b): whether the card has a published
+    English version, for the «EN» an English reader's lists mark it with. One
+    query for every card, never one per card, and a draft translation never
+    counts — not even for its author (`content.serializers.has_english`, the
+    rule the type lists follow).
     """
+    in_english = set(
+        Card.objects
+        .filter(language='en', is_published=True, translation_of__isnull=False)
+        .values_list('translation_of_id', flat=True)
+    )
     features = (
         MapFeature.objects
         .filter(_visible_to(request.user), card__translation_of__isnull=True)
@@ -104,6 +115,7 @@ def map_features(request):
             entry = cards[card.id] = {
                 'id': str(card.id), 'type': type_key, 'title': card.title,
                 'is_published': card.is_published,
+                'has_en': card.id in in_english,
                 'cover': cover.get_image_url() if cover else None,
                 'points': [], 'route': [],
                 'genre': luogo.genre.slug if luogo else None,
