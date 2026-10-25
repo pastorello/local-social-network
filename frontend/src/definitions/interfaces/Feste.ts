@@ -1,4 +1,5 @@
 import type { ZoneRef } from './Content'
+import type { Edizione } from './Evento'
 import type User from './User'
 
 export interface RoutePoint {
@@ -42,6 +43,10 @@ export default interface Feste {
   // The editorial zones its procession stops in, named (spec cosa-fare.md
   // Part −1, D2) — the original's, for a translation (T5).
   zones: ZoneRef[]
+  // This year's date and any after it, typed by hand (cosa-fare.md D9, K2) —
+  // the original's, for a translation. Empty: the card prints its recurrence
+  // and «data non ancora confermata», never a guess.
+  editions: Edizione[]
   created_at: string
   updated_at: string
 }

@@ -54,7 +54,8 @@ const mountWith = async (results: MyCard[], next: string | null = null) => {
   const router = makeRouter()
   await router.push('/le-mie-schede')
   const wrapper = mount(MyCardsView, {
-    global: { plugins: [createPinia(), router] },
+    // The events are a part of their own, with a spec of their own.
+    global: { plugins: [createPinia(), router], stubs: { MyEvents: true } },
     attachTo: document.body,
   })
   await flushPromises()

@@ -140,6 +140,7 @@ INSTALLED_APPS = [
     'libri',
     'luoghi',
     'attivita',
+    'eventi',
     'itinerari',
     'maps',
     'polls',
@@ -241,7 +242,15 @@ MAP_PLAUSIBLE_DEGREES = float(os.environ.get('MAP_PLAUSIBLE_DEGREES', 1.0))
 
 LANGUAGE_CODE = 'it-it'
 
-TIME_ZONE = 'UTC'
+# Gaeta's clock, named rather than inherited (spec cosa-fare.md CF1). UTC until
+# the archive stored its first calendar dates — events and the feasts' editions
+# (D9, review PR-27) — because with UTC `localdate()` answers *yesterday* for
+# the first two hours of the Italian day, exactly when the after-dinner reader
+# asks what is on. **This is the third place that knows where Gaeta is**, after
+# the map centre above and the one in the SPA; the multi-city phase moves the
+# three together. Datetimes are still stored in UTC: only the day they fall on,
+# and how they are shown, follow it.
+TIME_ZONE = 'Europe/Rome'
 
 USE_I18N = True
 

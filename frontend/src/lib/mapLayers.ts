@@ -70,6 +70,11 @@ export const CARD_LAYERS: MapLayer[] = [
 // putting a type on the map made it a stop.
 export const STOP_TYPES = ['chiese', 'feste', 'ricette', 'personaggi', 'luoghi']
 
+// The cards an event may be held at (cosa-fare.md Part −1 D9, CF41 as amended):
+// a place with a door, as the backend's `maps.VENUE_TYPES`. Events themselves
+// are no layer (CF25), and a feast is no venue — its date is an edition.
+export const VENUE_TYPES = ['luoghi', 'chiese', 'attivita']
+
 export const REPORTS_LAYER_KEY = 'segnalazioni'
 
 export const layerColor = (key: string): string => {

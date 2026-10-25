@@ -28,6 +28,10 @@ const props = defineProps<{
   // a tour's walked path has points between the tour's own stops, and calling
   // them tappe too made two different things share one word.
   routeNoun?: 'tappa' | 'punto'
+  // When the form names the place in a field of its own — an event's one
+  // labelled point (cosa-fare.md CF31), whose name is required — the optional
+  // name beside each point would be a second box for the same words.
+  unlabelled?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -189,7 +193,11 @@ const iconButton =
           {{ point.label || (noun === 'tappa' ? 'Tappa senza nome' : 'Punto senza nome') }}
         </span>
         <template v-else>
+          <span v-if="unlabelled" class="min-w-0 flex-1 text-sm text-muted">
+            Punto sulla mappa: {{ point.lat.toFixed(5) }}, {{ point.lng.toFixed(5) }}
+          </span>
           <input
+            v-else
             type="text"
             :class="[input, 'min-w-0 flex-1']"
             :placeholder="`Nome ${words.of} (facoltativo)`"
@@ -264,8 +272,11 @@ const iconButton =
           :class="[input, 'w-1/2']"
         />
       </div>
-      <label class="sr-only" :for="`${idPrefix}-manual-label`"> Nome {{ words.of }} </label>
+      <label v-if="!unlabelled" class="sr-only" :for="`${idPrefix}-manual-label`">
+        Nome {{ words.of }}
+      </label>
       <input
+        v-if="!unlabelled"
         :id="`${idPrefix}-manual-label`"
         v-model="manualLabel"
         type="text"

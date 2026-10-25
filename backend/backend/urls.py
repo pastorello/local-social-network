@@ -16,6 +16,7 @@ urlpatterns = [
     path('api/luoghi/', include('luoghi.urls')),
     path('api/attivita/', include('attivita.urls')),
     path('api/itinerari/', include('itinerari.urls')),
+    path('api/eventi/', include('eventi.urls')),
     path('api/content/', include('content.urls')),
     path('api/map/', include('maps.urls')),
     path('api/polls/', include('polls.urls')),

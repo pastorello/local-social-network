@@ -622,6 +622,22 @@ describe("the collaborator's surfaces meet WCAG 2.1 AA", { testIsolation: false 
     check('/profile/edit/password')
   })
 
+  // Cosa-fare.md Part −1 D9: the event form, on the phone it is made for,
+  // with a poster attached, a point of its own being drawn on the map, and
+  // the errors of a form sent too soon — every control it has, in one state.
+  it('the event form on a phone, with its poster, its own point and its errors', () => {
+    cy.viewport(390, 844)
+    cy.visit('/eventi/nuovo')
+    cy.get('#evento-poster').selectFile('cypress/fixtures/foto.jpg')
+    cy.get('img[alt="La locandina scelta"]').should('be.visible')
+    cy.contains('label', 'Un altro posto').click()
+    cy.contains('[role="status"]', 'Clicca sulla mappa').should('exist')
+    cy.contains('button', 'Salva l’evento').click()
+    cy.get('[aria-invalid="true"]').should('exist')
+
+    check('/eventi/nuovo (telefono)')
+  })
+
   it('an authoring form showing a real validation error', () => {
     cy.visit('/chiese/nuova')
     // A title over the API's limit: the point is the error state, which is

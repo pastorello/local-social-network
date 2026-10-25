@@ -67,9 +67,9 @@ def _archive_stats():
     last_updated = totals['last_updated']
     return {
         'published': totals['published'],
-        # The day in Gaeta, as for a place's hours (`today_in_gaeta`):
-        # `TIME_ZONE` is UTC, and a card saved at half past midnight in the
-        # summer was saved on the day before there.
+        # The day in Gaeta, as for a place's hours (`today_in_gaeta`): the
+        # instant is stored in UTC, and a card saved at half past midnight in
+        # the summer was saved on the day before there.
         'last_updated': last_updated.astimezone(GAETA).date().isoformat() if last_updated else None,
     }
 

@@ -11,6 +11,8 @@ written down in a spec file; that is fine for CI and a developer's laptop, and
 would be a back door anywhere else.
 """
 
+from datetime import time, timedelta
+
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
@@ -18,8 +20,10 @@ from django.db import transaction
 from account.models import CollaborationRequest, User
 from attivita.models import Attivita
 from chiese.models import Chiesa
+from common.when import tourist_day
 from content.models import Availability, Card, MapFeature
-from feste.models import Feste
+from eventi.models import Evento
+from feste.models import Edizione, Feste
 from itinerari.models import Intent, Itinerario, Stop
 from luoghi.models import Genre, Luogo
 from maps.models import Overlay
@@ -46,6 +50,11 @@ PUBLISHED_ATTIVITA = 'Attività E2E pubblicata'
 PUBLISHED_FESTA = 'Festa E2E pubblicata'
 PUBLISHED_RICETTA = 'Ricetta E2E pubblicata'
 PUBLISHED_TOUR = 'Itinerario E2E'
+# Events (cosa-fare.md D9): one this week at the beach, one this week called
+# off, and the feast's edition — dated from Gaeta's day on every run (CF7),
+# so «Questa settimana» has something in it whenever the suite runs.
+WEEK_EVENT = 'Evento E2E in settimana'
+CANCELLED_EVENT = 'Evento E2E annullato'
 PUBLIC_OVERLAY = 'Quartieri E2E'
 STEERING_OVERLAY = 'Seggi E2E'
 # The v1 flows (TD-04): a report somebody *else* filed, so supporting one is
@@ -157,6 +166,8 @@ class Command(BaseCommand):
                 for index in range(3)
             ])
 
+        self._events(collaborator, luogo_card, festa)
+
         # A dish with no shop on the map: the end of a tour offers «Da
         # mangiare» only once a ricetta is published (review PR-7).
         ricetta = self._card(PUBLISHED_RICETTA, collaborator, is_published=True)
@@ -229,6 +240,7 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(
             f'Seeded: {collaborator.email}, {admin.email}, 5 published cards, 1 draft, 1 tour, '
+            f'2 events and an edition this week, '
             f'2 overlays, 1 report ({report.upvotes_count} upvotes), 1 open poll; '
             f'cleared {removed} card(s) and every trace of previous v1 runs.'
         ))
@@ -256,6 +268,11 @@ class Command(BaseCommand):
         )
         count = leftovers.count()
         leftovers.delete()
+        # The events the collaborator journey files, likewise. Nothing in the
+        # app deletes an event (CF26); a test database is not the record.
+        Evento.objects.filter(author=collaborator).exclude(
+            title__in=(WEEK_EVENT, CANCELLED_EVENT)
+        ).delete()
 
         # The v1 flows leave their own traces, and two of them are not merely
         # untidy: a vote is final by design (spec F3.2) and an upvote is a
@@ -266,6 +283,27 @@ class Command(BaseCommand):
         Upvote.objects.filter(user=collaborator).delete()
 
         return count
+
+    def _events(self, collaborator, beach, festa):
+        today = tourist_day()
+        Evento.objects.update_or_create(title=WEEK_EVENT, defaults={
+            'start_date': today + timedelta(days=1), 'end_date': today + timedelta(days=1),
+            'start_time': time(21), 'description': 'Musica sulla sabbia, porta un telo.',
+            'link': 'https://example.com/programma', 'card': beach, 'lat': None, 'lng': None,
+            'place_label': '', 'state': Evento.IN_PROGRAMMA, 'author': collaborator,
+            'is_published': True,
+        })
+        Evento.objects.update_or_create(title=CANCELLED_EVENT, defaults={
+            'start_date': today + timedelta(days=2), 'end_date': today + timedelta(days=2),
+            'start_time': None, 'description': '', 'link': '', 'card': None,
+            'lat': GAETA_LAT, 'lng': GAETA_LNG, 'place_label': 'Piazza E2E',
+            'state': Evento.ANNULLATO, 'author': collaborator, 'is_published': True,
+        })
+        feste = Feste.objects.get(card=festa)
+        feste.editions.all().delete()
+        Edizione.objects.create(
+            festa=feste, start_date=today + timedelta(days=3), note='Processione alle 18.'
+        )
 
     def _clear_invite_journeys(self):
         """collabora.cy.ts files requests on every run and, since 2026-09-10,

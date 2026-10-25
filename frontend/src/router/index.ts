@@ -330,6 +330,22 @@ const router = createRouter({
       meta: { requiresAuth: false, title: [libroConfig.label] },
     },
     {
+      // An event, filed from a phone (spec cosa-fare.md Part −1 D9) — not a
+      // card (CF25), so not under a type's list: a collaborator files it from
+      // *Le mie schede*, where their events are. The editor's shape: its one
+      // labelled point is drawn on the map beside it.
+      path: '/eventi/nuovo',
+      name: 'eventocreate',
+      component: () => import('../views/EventFormView.vue'),
+      meta: { requiresAuth: true, panel: 'editor', title: ['Nuovo evento'] },
+    },
+    {
+      path: '/eventi/:id/modifica',
+      name: 'eventoedit',
+      component: () => import('../views/EventFormView.vue'),
+      meta: { requiresAuth: true, panel: 'editor', title: ['Modifica l’evento'] },
+    },
+    {
       // A collaborator's own cards, every type at once, behind the avatar
       // (review PR-13): where they land after signing in while one is a draft.
       path: '/le-mie-schede',

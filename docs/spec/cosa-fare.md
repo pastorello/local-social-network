@@ -417,6 +417,72 @@ decided:
 - *Altrove a Gaeta* stays a chip of places: a business outside every zone, with
   no place outside beside it, is reached from `/attivita` and the map.
 
+### Built: the backend and the collaborator's form — 2026-10-25 (review PR-27a)
+
+The review's PR-27 is split as its prompt allows: **27a** is the backend and
+the form, **27b** the reader's pages — the event's own page with the poster
+that zooms, *«Gli eventi che conosciamo»*, and the festa's date on its card.
+What 27a built, and what it decided where this section left things to the
+build:
+
+- **`eventi`, not a card** (CF25): a plain model — a day (`DateField`) and an
+  optional hour (`TimeField`, never an instant), a last day (the first, for a
+  one-day event), one plain line, the poster through `common/images.py`, the
+  organiser's link (`http(s)` only, CF32), the place, a state, an author
+  (`PROTECT`) and `is_published`. Not a layer, not a stop, in no menu of types.
+- **The place is a card of `maps.VENUE_TYPES` — chiese, luoghi, attività — or
+  one labelled point**, never both (CF31, CF41 as amended). *No `point_index`*,
+  though CF25 and the prompt name one: every venue type carries exactly one
+  pin (`max_points=1`), so the index would always be 0; it comes back the day a
+  venue type has more than one. A published event at a draft venue is refused
+  (I4's rule: its reader would meet a 404), and deleting the venue's card
+  leaves the event standing without a place (`SET_NULL`): the record outlives
+  the card.
+- **CF26, kept literally**: expiry is `end_date >= today` at read time, and
+  **the API has no DELETE** — unpublishing says *«I should not have written
+  this»*; Django admin can delete, and nothing else does.
+- **CF1 is discharged here, as it committed**: `TIME_ZONE` is `Europe/Rome`
+  from this PR, because this is the first one to store calendar dates (with
+  the settings' reason beside the map's centre). Datetimes are still stored in
+  UTC; the API's now carry `+01:00`/`+02:00` instead of `Z`, which every
+  reader of them parses alike.
+- **CF2 holds for every "today" of events**: Gaeta's day ends at 05:00
+  (`common/when.py::tourist_day`), so the windows, *not over yet* and the past
+  check all agree that the 22:00 concert is Saturday's until five on Sunday.
+- **The past is checked when the dates are written** (CF34): on a new event,
+  and when its dates change. An event already under way — the Luminarie filed
+  on their third night — is not *past*, and an old event's line can still be
+  corrected. The same rule and the 60-day cap (CF29) hold for an edition.
+- **CF28's transitions**: *in programma* → *rinviato* or *annullato*;
+  *rinviato* → *in programma* (with its new date) or *annullato*; **annullato
+  is final** — an event that comes back is a new announcement. A new event is
+  always *in programma*.
+- **One endpoint, two readings.** `GET /api/eventi/` holds events and feasts'
+  editions together (`kind`), in date order — the day, then what has no hour
+  (an edition, an all-day event), then the hour, then the title, so no tie is
+  decided by anything that reads as a rank — paginated like every list. With
+  no window it is everything not over, **a cancelled event included** (CF28:
+  struck through in the list until its day passes); with **`?finestra=oggi`**
+  or **`settimana`** it is what falls in the window and **never a cancelled
+  event** (a window is a proposal). A *rinviato* stays in its window with its
+  label, as the prompt's *«non annullati»* says: its date is the one people
+  know it by. PR-21 reads `count`.
+- **The editions** (`feste.Edizione`): written from the festa's own form as a
+  list beside it, a diff by id among those not over — a past edition is the
+  record, and the form neither shows nor removes it. A translation shows its
+  original's (T5) and cannot write any. The card's `editions` are the ones
+  ahead; with none, it says its `recurrence` and *«data non ancora
+  confermata»* (the line on the card is 27b's).
+- **The form is the phone's** (`/eventi/nuovo`): one column, the poster first
+  — shrunk in the browser to a long side of 2400 px, so a phone's photograph
+  fits `common/images.py`'s 5 MB and 40 Mpx — the date said back in words with
+  its weekday and year before saving, an archive card first and a named point
+  second, and the state only on an edit. **«Pubblica subito» starts checked**,
+  unlike a card's form: an event is filed to be seen tonight, and nothing in
+  the product reviews it (CF34). A collaborator finds their events under *«I
+  tuoi eventi»* on *Le mie schede*, by when they happen (`mine/`, CF34), with
+  *«Nuovo evento»* — in two taps from the avatar.
+
 ## The build, in order
 
 | PR | What | Cost |

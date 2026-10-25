@@ -12,6 +12,8 @@ nothing else.
 database would be published fiction.
 """
 
+from datetime import time, timedelta
+
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
@@ -19,8 +21,10 @@ from django.db import transaction
 from account.models import User
 from attivita.models import Attivita
 from chiese.models import Chiesa
+from common.when import tourist_day
 from content.models import Availability, Card, MapFeature
-from feste.models import Feste
+from eventi.models import Evento
+from feste.models import Edizione, Feste
 from itinerari.models import Intent, Itinerario, Stop
 from luoghi.models import Genre, Luogo
 from ricette.models import Ricetta
@@ -113,9 +117,10 @@ class Command(BaseCommand):
             self._point(card, where)
             if hours:
                 Availability.objects.create(card=card, hours=hours)
+            places[title] = card
 
         festa = self._card('Festa di prova', author)
-        Feste.objects.create(card=festa, recurrence='Ogni anno, data di esempio', programme='')
+        feste = Feste.objects.create(card=festa, recurrence='Ogni anno, data di esempio', programme='')
         for position, (lat, lng) in enumerate((PORTO_SALVO, (41.2200, 13.5690), SERAPO)):
             MapFeature.objects.create(card=festa, kind=MapFeature.ROUTE, position=position, lat=lat, lng=lng)
 
@@ -128,10 +133,15 @@ class Command(BaseCommand):
                    [places['Spiaggia di prova'], places['Caletta di prova'],
                     places['Spiaggia sotto la strada di prova'], places['Spiaggia lunga di prova']])
 
+        self._events(author, places['Bar di prova sul lungomare'], feste)
+
         count = Card.objects.filter(title__startswith=PREFIX).count()
-        self.stdout.write(f'Seeded {count} demo card(s); replaced {removed}. Remove them with --remove.')
+        self.stdout.write(f'Seeded {count} demo card(s) and 2 events; replaced {removed}. Remove them with --remove.')
 
     def _remove(self):
+        # Demo events go first: one is held at a demo card. Deleting them is
+        # this command's business, never the app's (CF26).
+        Evento.objects.filter(title__startswith=PREFIX).delete()
         cards = Card.objects.filter(title__startswith=PREFIX)
         count = cards.count()
         # Tours first: a stop protects nothing, but a tour's card is a card too.
@@ -151,6 +161,23 @@ class Command(BaseCommand):
 
     def _point(self, card, where):
         MapFeature.objects.create(card=card, kind=MapFeature.POINT, position=0, lat=where[0], lng=where[1])
+
+    def _events(self, author, bar, feste):
+        """A light event at a demo bar and a long one at a labelled point
+        (cosa-fare.md D9), and the demo feast's edition — dated from today, so
+        «Questa settimana» is never empty in a demo."""
+        today = tourist_day()
+        Evento.objects.create(
+            title=PREFIX + 'Musica di prova al bar', start_date=today + timedelta(days=2),
+            end_date=today + timedelta(days=2), start_time=time(21, 30), card=bar,
+            description='Evento dimostrativo: non succede davvero.', author=author, is_published=True,
+        )
+        Evento.objects.create(
+            title=PREFIX + 'Luminarie di prova', start_date=today, end_date=today + timedelta(days=20),
+            lat=MEDIEVALE[0], lng=MEDIEVALE[1], place_label='Piazza di prova',
+            description='Evento dimostrativo: non succede davvero.', author=author, is_published=True,
+        )
+        Edizione.objects.create(festa=feste, start_date=today + timedelta(days=5), note='Data di esempio.')
 
     def _tour(self, author, title, form, intent, stops):
         tour = Itinerario.objects.create(card=self._card(title, author), form=form, duration='Esempio')
