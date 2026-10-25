@@ -40,7 +40,9 @@ export const parentOf = (route: Where): Parent | null => {
   if (route.name === itinerarioConfig.routeNames.detail && Number.isInteger(step) && step >= 1) {
     return { to: route.path, label: 'Itinerario' }
   }
-  if (route.name === 'cosafare' && route.query.zona) {
+  // A chosen zone, or the wizard's answer shown there (review PR-21), is under
+  // «Cosa fare» itself.
+  if (route.name === 'cosafare' && (route.query.zona || route.query.intento)) {
     return { to: '/cosa-fare', label: 'Cosa fare' }
   }
   // A report is a point on the collaborator's map (reports-and-polls.md R1),

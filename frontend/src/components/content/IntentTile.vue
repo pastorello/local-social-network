@@ -4,6 +4,7 @@ import { computed, type Component } from 'vue'
 import BereIcon from '@/components/icons/BereIcon.vue'
 import CamminoIcon from '@/components/icons/CamminoIcon.vue'
 import CittaIcon from '@/components/icons/CittaIcon.vue'
+import FesteIcon from '@/components/icons/FesteIcon.vue'
 import ItinerarioIcon from '@/components/icons/ItinerarioIcon.vue'
 import MareIcon from '@/components/icons/MareIcon.vue'
 import TavolaIcon from '@/components/icons/TavolaIcon.vue'
@@ -24,6 +25,8 @@ const ICONS: Record<string, Component> = {
   camminare: CamminoIcon,
   mangiare: TavolaIcon,
   bere: BereIcon,
+  // The wizard's «Oggi» and «Questa settimana»: the calendar (review PR-21).
+  quando: FesteIcon,
 }
 
 const style = computed(() => {

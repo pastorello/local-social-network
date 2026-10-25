@@ -181,6 +181,12 @@ way, and what files under it is a business *dove si beve*. *Mangiare* opens
 with the zone's businesses *dove si mangia* and *dove si compra*, and D3's
 dishes follow them. The mapping is `lib/intents.ts::KIND_INTENT`.)*
 
+*(2026-10-25, review PR-21: `/benvenuto` became the first step of the wizard
+«Cosa fare adesso», and an intent is offered there when anything is behind
+it — a tour, or a place or a business this page would file under it, or for
+*Mangiare* a dish. So *Camminare* and *Bere* show once a viewpoint or a bar
+is published, without waiting for a tour. See D6's note of that date.)*
+
 ## D5 — Defaults the author did not object to
 
 - **Alphabetical inside each section, and printed** (*«in ordine
@@ -299,6 +305,47 @@ aria-label="Dove sei">`, review PR-23) share their word, for two different
 questions — where one is in Gaeta, and where one is in the site. *(Decided
 2026-10-24, confirmed by the author — review PR-25: the eyebrow's landmark is
 named «Percorso»; «Dove sei?» is the field's alone.)*
+
+**The wizard's third step: `?intento=` — 2026-10-25** (review of
+2026-10-22, study 10; PR-21). The wizard «Cosa fare adesso» asks «Che cosa ti
+va di fare?» and «Dove?» on `/benvenuto` ([itinerari.md](./itinerari.md), "The
+welcome page is the wizard's first step"), and its answer is this page:
+**`/cosa-fare?intento=<slug>&zona=<slug>`**, or **`?intento=` alone** for
+«Ovunque a Gaeta». No new page to maintain:
+
+- **On top, the intent's tours that pass through the zone** (D2's rule, as
+  review PR-4 lists them), then **the intent's own section** — its places and
+  businesses, and for *Mangiare* the dishes — both open; then **the rest of
+  the zone in D3's order, put away**, each heading a disclosure
+  (`aria-expanded`, the shape Part I §4 promised), the zone's other tours
+  under *Altri itinerari che passano di qui*. With «Ovunque», the intent's
+  tours and section alone, from all over Gaeta, places outside every zone
+  included.
+- **What was chosen is said once**, where the eyebrow was: «Hai scelto:
+  Scoprire la città · Porto Salvo», each answer a link back to the step that
+  asked it — the zone not linked when «Dove?» was skipped, since there is no
+  question to go back to. The panel's own eyebrow keeps only the way up,
+  *Cosa fare* (`lib/navigation.ts::parentOf` takes `?intento=` there as it
+  takes `?zona=`). The window's title is «Scoprire la città · Porto Salvo ·
+  Cosa fare».
+- **It asks nothing**: the chips and «Dove sei?» are the second step's; the
+  third shows *«Zone indicative, non confini ufficiali»* under its title
+  when a zone is chosen (D2).
+- **The map draws the open sections** and frames them (D5's note of
+  2026-10-23): opening a section put away adds its places; a set with no
+  place is framed by the zone's outline, or by all of Gaeta with no zone.
+- **A zone with nothing of the intent says so, and where it is**: «Qui
+  l'archivio non ha ancora niente per «Camminare». Prova Serapo, o ovunque a
+  Gaeta.» — D5's empty zone, for one section. The field «Dove sei?» can lead
+  here: it knows every place, and where a guest stands is not a promise of a
+  beach.
+- **Waits like a chosen zone** (TD-53): the answer's rows land with its
+  closing note, and an address with `?intento=` is the third step from its
+  first frame. `/cosa-fare` without it — the menu's *Cosa fare*, and the
+  Lighthouse gate's two addresses — is unchanged.
+- **Nothing ranks and nothing says open**: alphabetical inside every
+  section, said beside each heading (D5); hours on the cards with their date
+  (ADR-0008).
 
 ## D7 — The closed church: «Se la trovi chiusa», church by church
 
@@ -524,6 +571,16 @@ The second half, from main once 27a had merged. What it built and decided:
   recurrence (K2).
 - `seed_e2e`'s event this week carries a poster drawn by the command, so the
   a11y gate opens one.
+
+### The wizard reads it — 2026-10-25 (review PR-21)
+
+«Oggi» and «Questa settimana» are answers of the wizard's first step, under
+*In calendario*, apart from the intents: each shows only when
+`GET /api/eventi/?finestra=` counts something, says how many («2 eventi»),
+and leads to `/eventi?finestra=` — the list above, never a list of cards
+(CF42), and not through «Dove?», since the list is not by zone. «Una festa»
+is not an answer. `/eventi` keeps no door of its own in the menu: these two
+are it, as 27b expected.
 
 ## The build, in order
 

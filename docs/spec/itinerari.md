@@ -76,6 +76,12 @@ walking directions are handed to the app that already does them.
   with one or more. The landing shows only intents that have at least one
   published itinerary. A fourth intent is an admin edit, not a deploy.
 
+  *Amended 2026-10-25 (review PR-21): an intent is offered when anything is
+  behind it — a published tour, a place or a business filed under it, a dish
+  for «Mangiare» — since the landing became the wizard's first step and an
+  answer leads to «Cosa si può fare qui», not only to the tours. See "The
+  welcome page is the wizard's first step" at the end.*
+
 - **I6 — One public landing page, the same for everyone.** A stable public URL
   — "Che cosa ti va di fare?", the intents, and a way out to the map. The same
   address for every B&B: **no per-B&B codes, no greeting by name, no tracking
@@ -87,6 +93,11 @@ walking directions are handed to the app that already does them.
   *Counter-case, rejected:* a code per B&B, which gives a host a reason to hand
   the card out ("Benvenuti da Casa Rossa") and would show which hosts bring
   readers — evidence for a future patronage conversation.
+
+  *2026-10-25 (review PR-21): `/benvenuto` is the first step of the wizard
+  «Cosa fare adesso», on the same address — the obligation is the address,
+  not the page. See "The welcome page is the wizard's first step" at the
+  end.*
 
 - **I7 — Following a percorso, one stop at a time.** "Inizia il tour" opens a
   guided mode: *Tappa 3 di 5*, the stop's note, **Come arrivarci** — a Google
@@ -355,3 +366,77 @@ offers; what changed is how it reads:
 
 The reasons and the measured contrasts are in design.md, "The welcome page,
 and the whole screen on a phone — 2026-10-23".
+
+## The welcome page is the wizard's first step — 2026-10-25 (review PR-21)
+
+The review of 2026-10-22 asked, in its study 10, for a guided path that ends
+in a choice — what, then where, then here is what there is — and the author
+confirmed the flow on 2026-10-23 as written, with «Bere» and «Oggi» /
+«Questa settimana» decided the same day ([review-2026-10-22.md](../review-2026-10-22.md),
+*Decisioni del 23 ottobre 2026*). The wizard is `/benvenuto` and
+`/cosa-fare` in a row, one question a screen, and **the address on the
+cards does not move** (I6):
+
+- **Step 1 is `/benvenuto`**: «Che cosa ti va di fare?», under it the
+  presentation line, then the answers — big cards a thumb can take, one
+  column on a phone, and links: choosing is going on, so there is no
+  «Avanti». The intents that have something behind them, in the admin's
+  order (I5 as amended above); then, apart under *In calendario*, «Oggi»
+  and «Questa settimana» when something falls in them ([cosa-fare.md](./cosa-fare.md)
+  Part −1 D9); then «Oppure guarda cosa c'è in una zona» (D6 of the same
+  file, its D8 rule unchanged); last, «Non lo so: fammi vedere la mappa».
+  With one intent the question is still asked — it is the first
+  impression.
+- **Step 2 is the same address with `?intento=`**: «Hai scelto: …» with a
+  link back, «Dove?», the field «Dove sei?» of review PR-20, the zones that
+  hold something of the intent — each naming the first two things there —
+  and «Ovunque a Gaeta».
+- **Step 3 is `/cosa-fare?intento=…&zona=…`** (or `?intento=` alone for
+  «Ovunque»), described in cosa-fare.md.
+
+**The rules, held by a test** (`lib/wizard.ts`, `lib/__tests__/wizard.spec.ts`):
+
+- **An answer only with something behind it**, counted on what the public
+  reads (map.md M5): a collaborator's drafts never open one. «Bere» needs a
+  published business *dove si beve*; «Mangiare» answers with a published
+  dish too, since the dishes are for all of Gaeta (cosa-fare.md D3).
+- **A step with one possible answer is skipped**, and the links of the step
+  before already point past it: when no zone holds anything of the intent
+  (the dishes are in none) step 1 leads straight to «Ovunque a Gaeta»; when
+  one zone holds all of it, straight to that zone. A step 2 opened from a
+  link is skipped the same way, with `replace`, so Back goes to the step
+  before.
+- **The answers are the address**: Back is the step before, and a link
+  reopens the same result (`wizard.cy.ts` walks to step 3 and compares it
+  with the same address opened cold).
+- **The focus is on the question at every step**, its one h1 (ADR-0005). A
+  step reached from another page gets it from the panel, which now focuses
+  a heading marked `data-panel-focus` rather than itself; between steps 1
+  and 2, only the query changes, and the page hands it over.
+- **Never «aperto adesso»** (ADR-0008), **and no question about time**: a
+  tour's duration is its author's words (cosa-fare.md Part −1, D1).
+
+**Decided by the build**, where the review left it open:
+
+- **«Oggi» and «Questa settimana» lead to «Gli eventi che conosciamo»**
+  (`/eventi?finestra=`), not through «Dove?»: the windows are the API's
+  (`?finestra=`, counted in Gaeta's day), the list is not by zone, and
+  CF42 keeps events out of a list of cards. They wear the feste's amber
+  (`--color-intent-quando`) and the calendar.
+- **The way out is an answer**, «Non lo so: fammi vedere la mappa» — the
+  words of the review's PR-21, point 1 — in place of PR-14's closing link
+  «Oppure vai alla mappa». The verb is still the map's, never «esplora»
+  (PR-23). The home's «Vai alla mappa», the same answer on the map itself,
+  is review PR-21b's.
+- **The line «Itinerari scritti da chi Gaeta la conosce…» is gone**: the
+  page no longer offers tours only, and PR-14 kept it until the wizard
+  rewrote the page.
+- **The answers land together** once every count is in — the intents, the
+  tours with their zones, the zones and their names, the dishes, the two
+  windows, and the map's features the shell has already asked for — under
+  the question and the presentation, which paint in the first frame (TD-52).
+  Nothing arrives above what is already on screen, and the map's way out is
+  no longer a link drawn first and pushed down by the answers.
+- `seed_e2e` publishes a castle in Gaeta Medievale, so «Scoprire la città»
+  is in two zones and the e2e suite meets step 2 at all: with every intent
+  in one zone, every step 2 would be skipped.

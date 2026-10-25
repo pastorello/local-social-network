@@ -1,111 +1,206 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { mount, flushPromises } from '@vue/test-utils'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { mount, flushPromises, type VueWrapper } from '@vue/test-utils'
 import axios from 'axios'
-import { createMemoryHistory, createRouter } from 'vue-router'
+import { createPinia, setActivePinia } from 'pinia'
+import { createMemoryHistory, createRouter, type Router } from 'vue-router'
 
 import WelcomeView from '../WelcomeView.vue'
 import { PRESENTATION } from '@/definitions/copy'
+import type { MapCardFeature } from '@/definitions/interfaces/MapData'
+import { useMapStore } from '@/stores/map'
 
 vi.mock('axios')
 
-// One answer per endpoint: the intents, and the zones with their counts.
-const answer = (intents: unknown[], zones: unknown[] = []) =>
-  vi.mocked(axios.get).mockImplementation(async (url: string) => ({
-    data: url === '/api/map/zone/' ? zones : intents,
-  }))
+const feature = (over: Partial<MapCardFeature>): MapCardFeature => ({
+  id: 'x',
+  type: 'luoghi',
+  title: 'X',
+  is_published: true,
+  cover: null,
+  points: [],
+  route: [],
+  zones: [],
+  genre: null,
+  kind: null,
+  access: null,
+  ...over,
+})
 
-const mountWelcome = async () => {
+const INTENTS = [
+  { slug: 'mare', name: 'Andare al mare', description: 'Le spiagge', count: 0 },
+  { slug: 'citta', name: 'Scoprire la città', description: '', count: 1 },
+  { slug: 'camminare', name: 'Camminare', description: '', count: 0 },
+  { slug: 'mangiare', name: 'Mangiare', description: '', count: 0 },
+  { slug: 'bere', name: 'Bere', description: '', count: 0 },
+]
+
+const ZONES = [
+  { slug: 'gaeta-medievale', name: 'Gaeta Medievale', count: 1, geometry: {} },
+  { slug: 'serapo', name: 'Serapo', count: 1, geometry: {} },
+  { slug: 'porto-salvo', name: 'Porto Salvo', count: 1, geometry: {} },
+]
+
+// The archive the wizard reads: a beach in Serapo; a castle in Gaeta
+// Medievale and a church in Porto Salvo, with a tour starting there; a dish;
+// a bar in Serapo; this week, two things on.
+const FEATURES = [
+  feature({ id: 'l1', title: 'Spiaggia di Serapo', genre: 'spiaggia', zones: ['serapo'] }),
+  feature({ id: 'l2', title: 'Castello', genre: 'castello', zones: ['gaeta-medievale'] }),
+  feature({ id: 'c1', type: 'chiese', title: 'Annunziata', zones: ['porto-salvo'] }),
+  feature({ id: 'a1', type: 'attivita', title: 'Bar', kind: 'beve', zones: ['serapo'] }),
+]
+
+type Answers = Record<string, unknown>
+
+const answers = (over: Answers = {}): Answers => ({
+  '/api/itinerari/intenti/': INTENTS,
+  '/api/itinerari/': {
+    count: 1,
+    results: [{ id: 't1', title: 'Giro', intents: ['citta'], zones: ['porto-salvo'] }],
+  },
+  '/api/map/zone/': ZONES,
+  '/api/map/zone/alias/': [{ name: 'il castello', zone: 'gaeta-medievale' }],
+  '/api/content/counts/': { ricette: 1 },
+  oggi: { count: 0, results: [] },
+  settimana: { count: 2, results: [] },
+  ...over,
+})
+
+const answer = (over: Answers = {}, features = FEATURES) => {
+  const data = answers(over)
+  vi.mocked(axios.get).mockImplementation(async (url: string, config?: unknown) => {
+    const finestra = (config as { params?: { finestra?: string } } | undefined)?.params?.finestra
+    return { data: url === '/api/eventi/' ? data[finestra ?? ''] : data[url] }
+  })
+  return features
+}
+
+let wrapper: VueWrapper | null = null
+
+const mountAt = async (path: string, features = FEATURES, attached = false) => {
+  setActivePinia(createPinia())
+  const store = useMapStore()
+  store.features = features
+  store.loaded = true
+  store.featuresLoaded = true
   const stub = { template: '<div />' }
-  const router = createRouter({
+  const router: Router = createRouter({
     history: createMemoryHistory(),
     routes: [
       { path: '/', component: stub },
-      { path: '/benvenuto', component: stub },
-      { path: '/itinerari', name: 'itinerarilist', component: stub },
+      { path: '/benvenuto', name: 'benvenuto', component: WelcomeView },
       { path: '/cosa-fare', name: 'cosafare', component: stub },
+      { path: '/eventi', name: 'eventilist', component: stub },
     ],
   })
-  router.push('/benvenuto')
+  router.push(path)
   await router.isReady()
-  const wrapper = mount(WelcomeView, { global: { plugins: [router] } })
+  wrapper = mount(WelcomeView, {
+    global: { plugins: [router] },
+    ...(attached ? { attachTo: document.body } : {}),
+  })
   await flushPromises()
-  return wrapper
+  return { wrapper, router }
 }
 
-describe('WelcomeView — the address on a B&B’s card (spec itinerari.md I6)', () => {
-  beforeEach(() => vi.clearAllMocks())
+const hrefs = (w: VueWrapper) => w.findAll('li a').map((a) => a.attributes('href'))
 
-  it('asks one question and offers only the intents that lead to a tour', async () => {
-    answer([
-      { slug: 'mare', name: 'Andare al mare', description: 'Le spiagge', count: 1 },
-      { slug: 'mangiare', name: 'Mangiare bene', count: 0 },
-      { slug: 'citta', name: 'Scoprire la città', count: 2 },
+describe('WelcomeView — the wizard’s first step, on the address of a B&B’s card (I6)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    answer()
+  })
+  afterEach(() => {
+    wrapper?.unmount()
+    wrapper = null
+  })
+
+  it('asks one question, with one h1, and offers the answers that lead somewhere', async () => {
+    const { wrapper } = await mountAt('/benvenuto')
+
+    expect(wrapper.findAll('h1').map((h) => h.text())).toEqual(['Che cosa ti va di fare?'])
+    // Camminare has nothing behind it, so it is not offered. Each answer
+    // links where it leads: past «Dove?» when one zone holds all of it, to
+    // «Ovunque a Gaeta» when none does (the dish), to «Dove?» otherwise.
+    expect(hrefs(wrapper)).toEqual([
+      '/cosa-fare?intento=mare&zona=serapo',
+      '/benvenuto?intento=citta',
+      '/cosa-fare?intento=mangiare',
+      '/cosa-fare?intento=bere&zona=serapo',
+      '/eventi?finestra=settimana',
+      '/cosa-fare',
+      '/',
     ])
-    const wrapper = await mountWelcome()
-
-    expect(wrapper.get('h1').text()).toBe('Che cosa ti va di fare?')
-    const hrefs = wrapper.findAll('li a').map((a) => a.attributes('href'))
-    expect(hrefs).toEqual(['/itinerari?intento=mare', '/itinerari?intento=citta'])
-    expect(wrapper.text()).toContain('2 itinerari')
     expect(wrapper.text()).toContain('Le spiagge')
+    expect(wrapper.text()).toContain('2 luoghi · 1 itinerario')
   })
 
   // Review PR-14 (P-07): a guest from the QR code is told what the site is, in
   // the home's own words (definitions/copy.ts), under the question.
   it('says what the site is under the question, as the home does', async () => {
-    answer([])
-    const wrapper = await mountWelcome()
+    const { wrapper } = await mountAt('/benvenuto')
 
-    const lines = wrapper.findAll('p').map((p) => p.text())
-    expect(lines.indexOf(PRESENTATION)).toBeGreaterThan(-1)
     expect(wrapper.html().indexOf(PRESENTATION)).toBeGreaterThan(
       wrapper.html().indexOf('Che cosa ti va di fare?'),
     )
   })
 
-  // Review PR-14 (M-09): each intent wears a tint of its own colour, a token
-  // (D8), with its icon — the sea, the town, the walk, the table, and since
-  // 2026-10-25 the glass (ADR-0010).
-  it('gives each intent its tint and its icon, and an intent nobody drew the tours’ map', async () => {
-    answer([
-      { slug: 'mare', name: 'Andare al mare', count: 1 },
-      { slug: 'citta', name: 'Scoprire la città', count: 1 },
-      { slug: 'camminare', name: 'Camminare', count: 1 },
-      { slug: 'mangiare', name: 'Mangiare', count: 1 },
-      { slug: 'bere', name: 'Bere', count: 1 },
-      { slug: 'sport', name: 'Fare sport', count: 1 },
-    ])
-    const wrapper = await mountWelcome()
+  // Cosa-fare.md Part −1 D9: «Oggi» and «Questa settimana» take the place of
+  // «Una festa», each only when something falls in it, apart from the rest.
+  it('offers «Oggi» and «Questa settimana» only when something falls in them', async () => {
+    answer({ oggi: { count: 1, results: [] }, settimana: { count: 3, results: [] } })
+    const both = await mountAt('/benvenuto')
+    expect(both.wrapper.get('a[href="/eventi?finestra=oggi"]').text()).toContain('1 evento')
+    expect(both.wrapper.get('a[href="/eventi?finestra=settimana"]').text()).toContain('3 eventi')
+    expect(both.wrapper.get('h2').text()).toBe('In calendario')
+    both.wrapper.unmount()
 
-    const tiles = wrapper.findAll('li a > span[aria-hidden="true"]')
-    expect(tiles.map((tile) => tile.attributes('style'))).toEqual([
-      expect.stringContaining('var(--color-intent-mare)'),
-      expect.stringContaining('var(--color-intent-citta)'),
-      expect.stringContaining('var(--color-intent-camminare)'),
-      expect.stringContaining('var(--color-intent-mangiare)'),
-      expect.stringContaining('var(--color-intent-bere)'),
-      expect.stringContaining('var(--color-layer-unknown)'),
-    ])
-    // A tint, never the colour as a ground (D7), and an icon in every tile.
-    tiles.forEach((tile) => {
-      expect(tile.attributes('style')).toContain('color-mix(in oklab')
-      expect(tile.find('svg').exists()).toBe(true)
-    })
-    const paths = tiles.map((tile) => tile.get('svg path').attributes('d'))
-    expect(new Set(paths).size).toBe(6)
+    answer({ settimana: { count: 0, results: [] } })
+    const none = await mountAt('/benvenuto')
+    expect(none.wrapper.find('a[href^="/eventi"]').exists()).toBe(false)
+    expect(none.wrapper.find('h2').exists()).toBe(false)
+    expect(none.wrapper.text()).not.toContain('Una festa')
   })
 
-  // M-09: «la seconda ha un bordo scuro di focus residuo». The ring is the
-  // keyboard's alone (focus-visible), and the pointer gets no darker border.
-  it('rings a card for the keyboard only, and darkens no border under the pointer', async () => {
-    answer(
-      [{ slug: 'mare', name: 'Andare al mare', count: 1 }],
-      [{ slug: 's', name: 'S', count: 1 }],
+  // Decided on 2026-10-23: «Bere» only once a business where one drinks is
+  // published.
+  it('offers «Bere» only with a business where one drinks', async () => {
+    const { wrapper } = await mountAt(
+      '/benvenuto',
+      FEATURES.filter((f) => f.kind !== 'beve'),
     )
-    const wrapper = await mountWelcome()
+    expect(wrapper.text()).not.toContain('Bere')
+  })
 
-    const cards = [wrapper.get('li a'), wrapper.get('a[href="/cosa-fare"]')]
-    cards.forEach((card) => {
+  it('never says a place is open, and never asks how much time there is', async () => {
+    const { wrapper } = await mountAt('/benvenuto')
+    const text = wrapper.text().toLowerCase()
+    expect(text).not.toMatch(/\baperto\b|\baperta\b/)
+    expect(text).not.toMatch(/quanto tempo|ore hai|minuti/)
+  })
+
+  // Review PR-14 (M-09): each intent wears a tint of its own colour, a token
+  // (D8), with its icon — and the windows the calendar's.
+  it('gives each answer its tint and its icon, as tokens', async () => {
+    const { wrapper } = await mountAt('/benvenuto')
+
+    const tiles = wrapper.findAll('li a > span[aria-hidden="true"]')
+    expect(tiles.slice(0, 5).map((tile) => tile.attributes('style'))).toEqual([
+      expect.stringContaining('var(--color-intent-mare)'),
+      expect.stringContaining('var(--color-intent-citta)'),
+      expect.stringContaining('var(--color-intent-mangiare)'),
+      expect.stringContaining('var(--color-intent-bere)'),
+      expect.stringContaining('var(--color-intent-quando)'),
+    ])
+    tiles.forEach((tile) => expect(tile.find('svg').exists()).toBe(true))
+  })
+
+  // M-09: the ring is the keyboard's alone (focus-visible), and the pointer
+  // gets no darker border.
+  it('rings a card for the keyboard only, and darkens no border under the pointer', async () => {
+    const { wrapper } = await mountAt('/benvenuto')
+
+    wrapper.findAll('li a').forEach((card) => {
       const classes = card.classes()
       expect(classes).toContain('focus-visible:outline-2')
       expect(classes.filter((name) => name.startsWith('focus:'))).toEqual([])
@@ -113,34 +208,134 @@ describe('WelcomeView — the address on a B&B’s card (spec itinerari.md I6)',
     })
   })
 
-  // Review PR-14: the way out is a closing link, not a button, and it says
-  // «vai alla mappa» — the menu's «Esplora» is on the same screen (PR-23).
-  it('closes on a text link to the map, «Oppure vai alla mappa»', async () => {
-    answer([])
-    const wrapper = await mountWelcome()
+  // Study 10: «Non lo so: fammi vedere la mappa» is an answer like the others;
+  // it says «la mappa», never «esplora» — the menu's «Esplora» is on the same
+  // screen (review PR-23).
+  it('lets the guest who does not know go to the map', async () => {
+    const { wrapper } = await mountAt('/benvenuto')
 
-    const out = wrapper.get('a[href="/"]')
-    expect(out.text()).toBe('Oppure vai alla mappa')
-    expect(out.classes()).toContain('underline')
-    expect(out.classes()).not.toContain('rounded-full')
-    expect(wrapper.text()).not.toContain('esplora la mappa')
+    expect(wrapper.get('a[href="/"]').text()).toBe('Non lo so: fammi vedere la mappa')
+    expect(wrapper.text().toLowerCase()).not.toContain('esplora')
   })
 
-  it('says the tours are coming rather than showing an empty list', async () => {
-    answer([])
-    const wrapper = await mountWelcome()
+  // With one answer, the first step still asks: it is the first impression.
+  it('asks the question with one answer too, and says so when there is none', async () => {
+    answer({ '/api/content/counts/': { ricette: 0 }, settimana: { count: 0, results: [] } })
+    const one = await mountAt('/benvenuto', [FEATURES[0]!])
+    expect(one.wrapper.get('h1').text()).toBe('Che cosa ti va di fare?')
+    expect(one.wrapper.findAll('li a').map((a) => a.text())[0]).toContain('Andare al mare')
+    one.wrapper.unmount()
 
-    expect(wrapper.text()).toContain('Gli itinerari sono in preparazione')
+    answer({
+      '/api/itinerari/intenti/': INTENTS.map((i) => ({ ...i, count: 0 })),
+      '/api/content/counts/': { ricette: 0 },
+      settimana: { count: 0, results: [] },
+    })
+    const none = await mountAt('/benvenuto', [])
+    expect(none.wrapper.text()).toContain('Le proposte sono in preparazione')
+    expect(none.wrapper.find('a[href="/"]').exists()).toBe(true)
   })
 
-  // spec cosa-fare.md Part −1, D8: no door onto an empty room.
+  // Spec cosa-fare.md Part −1, D8: no door onto an empty room.
   it('offers «Cosa si può fare qui» only once a zone has a published place', async () => {
-    answer([], [{ slug: 'serapo', name: 'Serapo', count: 0 }])
-    const empty = await mountWelcome()
-    expect(empty.find('a[href="/cosa-fare"]').exists()).toBe(false)
+    answer({ '/api/map/zone/': ZONES.map((zone) => ({ ...zone, count: 0 })) })
+    const { wrapper } = await mountAt('/benvenuto')
+    expect(wrapper.find('a[href="/cosa-fare"]').exists()).toBe(false)
+  })
 
-    answer([], [{ slug: 'serapo', name: 'Serapo', count: 2 }])
-    const open = await mountWelcome()
-    expect(open.get('a[href="/cosa-fare"]').text()).toContain("Oppure guarda cosa c'è in una zona")
+  it('draws nothing under the question before every count is in', async () => {
+    setActivePinia(createPinia())
+    vi.mocked(axios.get).mockImplementation(() => new Promise(() => {}))
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/benvenuto', name: 'benvenuto', component: WelcomeView }],
+    })
+    router.push('/benvenuto')
+    await router.isReady()
+    wrapper = mount(WelcomeView, { global: { plugins: [router] } })
+    await flushPromises()
+
+    expect(wrapper.get('h1').text()).toBe('Che cosa ti va di fare?')
+    expect(wrapper.text()).toContain(PRESENTATION)
+    expect(wrapper.findAll('a')).toHaveLength(0)
+  })
+})
+
+describe('WelcomeView — the wizard’s second step, «Dove?»', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    answer({
+      '/api/itinerari/': {
+        count: 1,
+        results: [{ id: 't1', title: 'Giro', intents: ['citta'], zones: ['porto-salvo'] }],
+      },
+    })
+  })
+  afterEach(() => {
+    wrapper?.unmount()
+    wrapper = null
+  })
+
+  it('says what was chosen, asks where, and offers the zones that hold it and «Ovunque»', async () => {
+    const { wrapper } = await mountAt('/benvenuto?intento=citta')
+
+    expect(wrapper.findAll('h1').map((h) => h.text())).toEqual(['Dove?'])
+    const chosen = wrapper.get('p')
+    expect(chosen.text()).toContain('Hai scelto:')
+    expect(chosen.get('a').attributes('href')).toBe('/benvenuto')
+    expect(chosen.get('a').text()).toBe('Cambia la scelta: Scoprire la città')
+    expect(wrapper.find('input[role="combobox"]').exists()).toBe(true)
+    expect(hrefs(wrapper)).toEqual([
+      '/cosa-fare?intento=citta&zona=gaeta-medievale',
+      '/cosa-fare?intento=citta&zona=porto-salvo',
+      '/cosa-fare?intento=citta',
+    ])
+    expect(wrapper.text()).toContain('Annunziata · Giro')
+    expect(wrapper.text()).toContain('Ovunque a Gaeta')
+  })
+
+  it('takes a place named in «Dove sei?» to the third step, keeping the answer', async () => {
+    const { wrapper, router } = await mountAt('/benvenuto?intento=citta')
+
+    const field = wrapper.get('input[role="combobox"]')
+    await field.setValue('castello')
+    await field.trigger('keydown', { key: 'Enter' })
+    await flushPromises()
+
+    expect(router.currentRoute.value.fullPath).toBe('/cosa-fare?intento=citta&zona=gaeta-medievale')
+  })
+
+  it('skips itself when one zone holds all of it, so Back goes to the first step', async () => {
+    const { router } = await mountAt('/benvenuto')
+    // The address of a skipped step, opened as a link would open it.
+    await router.push('/benvenuto?intento=mare')
+    await flushPromises()
+
+    expect(router.currentRoute.value.fullPath).toBe('/cosa-fare?intento=mare&zona=serapo')
+    router.back()
+    await flushPromises()
+    expect(router.currentRoute.value.fullPath).toBe('/benvenuto')
+  })
+
+  it('asks the first question again on an intent with nothing behind it', async () => {
+    const { router, wrapper } = await mountAt('/benvenuto?intento=camminare')
+
+    expect(router.currentRoute.value.fullPath).toBe('/benvenuto')
+    expect(wrapper.get('h1').text()).toBe('Che cosa ti va di fare?')
+  })
+
+  // ADR-0005: at every step the focus is on the question, the step's one h1.
+  it('puts the focus on the question when the step changes, and back', async () => {
+    const { wrapper, router } = await mountAt('/benvenuto', FEATURES, true)
+
+    await router.push('/benvenuto?intento=citta')
+    await flushPromises()
+    expect(document.activeElement?.textContent?.trim()).toBe('Dove?')
+    expect(document.activeElement?.hasAttribute('data-panel-focus')).toBe(true)
+
+    router.back()
+    await flushPromises()
+    expect(wrapper.get('h1').text()).toBe('Che cosa ti va di fare?')
+    expect(document.activeElement?.textContent?.trim()).toBe('Che cosa ti va di fare?')
   })
 })

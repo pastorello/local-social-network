@@ -38,8 +38,10 @@ export const KIND_NAME: Record<string, string> = {
 // The intents that have a colour of their own (assets/main.css, review PR-14):
 // each card on /benvenuto wears a tint of it. The token, never its hex (D8).
 // An intent added in the admin and not given one wears the unknown grey, as a
-// card type the SPA does not know yet does on the map.
-export const TINTED_INTENTS = ['mare', 'citta', 'mangiare', 'camminare', 'bere']
+// card type the SPA does not know yet does on the map. `quando` is not an
+// intent: it is the tile of the wizard's «Oggi» and «Questa settimana»
+// (review PR-21), measured with the others.
+export const TINTED_INTENTS = ['mare', 'citta', 'mangiare', 'camminare', 'bere', 'quando']
 
 export const intentVar = (slug: string): string =>
   `var(${TINTED_INTENTS.includes(slug) ? `--color-intent-${slug}` : '--color-layer-unknown'})`

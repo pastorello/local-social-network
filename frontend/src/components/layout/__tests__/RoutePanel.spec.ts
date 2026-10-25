@@ -61,6 +61,18 @@ describe('RoutePanel (spec/design.md D15/D17)', () => {
     expect(document.activeElement).toBe(wrapper.get('section').element)
   })
 
+  // Review PR-21: a page that opens on a question — the wizard's steps — has
+  // the focus land on it, the step's one h1.
+  it('hands the focus to the page’s question when it marks one', async () => {
+    const { wrapper } = await mountPanel(
+      'wide',
+      '/chiese',
+      '<h1 tabindex="-1" data-panel-focus>Dove?</h1><a href="/x">Serapo</a>',
+    )
+
+    expect(document.activeElement).toBe(wrapper.get('h1').element)
+  })
+
   it('closes onto the map from a deep link — not out of the site', async () => {
     const { wrapper, router } = await mountPanel()
 
