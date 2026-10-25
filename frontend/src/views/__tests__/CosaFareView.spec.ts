@@ -114,8 +114,8 @@ const ANSWERS: Record<string, unknown> = {
   ],
   '/api/itinerari/': {
     results: [
-      { id: 't1', title: 'Giro di Serapo', zones: ['serapo'] },
-      { id: 't2', title: 'Giro del centro', zones: ['gaeta-medievale'] },
+      { id: 't1', title: 'Giro di Serapo', zones: ['serapo'], intents: ['mare'] },
+      { id: 't2', title: 'Giro del centro', zones: ['gaeta-medievale'], intents: ['citta'] },
     ],
   },
   '/api/feste/': { results: [{ id: 'f1', title: 'Porto Salvo', recurrence: 'Ogni 9 agosto' }] },
@@ -149,6 +149,7 @@ const mountAt = async (
     history: createMemoryHistory(),
     routes: [
       { path: '/cosa-fare', name: 'cosafare', component: CosaFareView },
+      { path: '/benvenuto', name: 'benvenuto', component: stub },
       { path: '/:rest(.*)*', name: 'itinerariodetail', component: stub },
     ],
   })
@@ -607,5 +608,127 @@ describe('CosaFareView — «Dove sei?» (review PR-20)', () => {
 
     expect(router.currentRoute.value.query).toEqual({ zona: 'serapo' })
     expect(wrapper.text()).toContain('Non conosciamo questo posto: scegli una zona qui sotto.')
+  })
+})
+
+// The wizard «Cosa fare adesso» (review PR-21, study 10): its third step is
+// this page opened on `?intento=` — the intent's tours and section first and
+// open, the rest of the zone put away; with no zone, the intent alone.
+describe('CosaFareView — the wizard’s third step (review PR-21)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(axios.get).mockImplementation(async (url: string) => ({ data: ANSWERS[url] }))
+  })
+
+  const headings = (wrapper: Awaited<ReturnType<typeof mountAt>>['wrapper']) =>
+    wrapper
+      .findAll('h2 button')
+      .map((button) => [button.text().replace(/\s+\d+$/, ''), button.attributes('aria-expanded')])
+
+  it('says what was chosen, each answer a way back to the step that asked it', async () => {
+    const { wrapper } = await mountAt({ intento: 'mare', zona: 'serapo' })
+
+    const chosen = wrapper.findAll('p').find((p) => p.text().startsWith('Hai scelto:'))!
+    expect(chosen.text()).toBe(
+      'Hai scelto: Cambia la scelta: Andare al mare · Cambia la scelta: Serapo',
+    )
+    expect(chosen.findAll('a').map((a) => a.attributes('href'))).toEqual([
+      '/benvenuto',
+      '/benvenuto?intento=mare',
+    ])
+    // The question it answers is the one h1, and takes the focus (ADR-0005).
+    expect(wrapper.findAll('h1')).toHaveLength(1)
+    expect(wrapper.get('h1').attributes('data-panel-focus')).toBeDefined()
+    // It asks nothing: the zone was the step before.
+    expect(wrapper.find('nav[aria-label="Zone"]').exists()).toBe(false)
+    expect(wrapper.find('input[role="combobox"]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('Zone indicative, non confini ufficiali.')
+  })
+
+  it('opens on the intent’s tours and its section, and puts the rest of the zone away', async () => {
+    const { wrapper } = await mountAt({ intento: 'mare', zona: 'serapo' })
+
+    expect(headings(wrapper)).toEqual([
+      ['Itinerari che passano di qui', 'true'],
+      ['Andare al mare', 'true'],
+      ['Scoprire la città', 'false'],
+      ['Camminare', 'false'],
+      ['Le feste di questa zona', 'false'],
+      ['Mangiare', 'false'],
+    ])
+    expect(wrapper.text()).toContain('Giro di Serapo')
+    expect(wrapper.get('#sezione-citta').isVisible()).toBe(false)
+    expect(wrapper.text().toLowerCase()).not.toMatch(/\baperto\b|\baperta\b/)
+  })
+
+  it('opens a section put away at the reader’s word, and the map draws what is open', async () => {
+    const { wrapper, store } = await mountAt({ intento: 'mare', zona: 'serapo' })
+
+    expect(store.restrictTo).toEqual(['l1'])
+    await wrapper.findAll('h2 button')[2]!.trigger('click')
+    expect(wrapper.findAll('h2 button')[2]!.attributes('aria-expanded')).toBe('true')
+    expect([...(store.restrictTo ?? [])].sort()).toEqual(['c1', 'l1'])
+    expect(store.frame).toEqual([
+      { lat: 41.21, lng: 13.56 },
+      { lat: 41.215, lng: 13.565 },
+    ])
+  })
+
+  it('shows the intent alone, from all over Gaeta, with no zone', async () => {
+    const { wrapper, store } = await mountAt({ intento: 'mare' })
+
+    expect(headings(wrapper)).toEqual([
+      ['Itinerari', 'true'],
+      ['Andare al mare', 'true'],
+    ])
+    expect(wrapper.text()).toContain('Ovunque a Gaeta')
+    expect(
+      wrapper
+        .get('#sezione-mare')
+        .findAll('li a')
+        .map((a) => a.text()),
+    ).toEqual(['Arenauta', 'Spiaggia di Serapo'])
+    expect([...(store.restrictTo ?? [])].sort()).toEqual(['l1', 'l3'])
+    expect(document.title).toBe('Andare al mare · Cosa fare · Vivere Gaeta')
+  })
+
+  it('opens «Mangiare» on the dishes for all of Gaeta', async () => {
+    const { wrapper } = await mountAt({ intento: 'mangiare', zona: 'serapo' })
+
+    expect(headings(wrapper)[0]).toEqual(['Mangiare', 'true'])
+    expect(wrapper.get('#sezione-mangiare').text()).toContain('valgono per tutta Gaeta')
+    expect(document.title).toBe('Mangiare · Serapo · Cosa fare · Vivere Gaeta')
+  })
+
+  it('says when the zone has nothing of it, and where it is instead', async () => {
+    const { wrapper } = await mountAt({ intento: 'camminare', zona: 'gaeta-medievale' })
+
+    expect(wrapper.text()).toContain("Qui l'archivio non ha ancora niente per «Camminare».")
+    const links = wrapper.findAll('p a').filter((a) => !a.text().startsWith('Cambia'))
+    expect(links.map((a) => [a.text(), a.attributes('href')])).toEqual([
+      ['Serapo', '/cosa-fare?intento=camminare&zona=serapo'],
+      ['ovunque a Gaeta', '/cosa-fare?intento=camminare'],
+    ])
+    // The rest of the zone is still there, put away.
+    expect(headings(wrapper).map(([name]) => name)).toEqual([
+      'Scoprire la città',
+      'Itinerari che passano di qui',
+      'Mangiare',
+    ])
+  })
+
+  it('says a skipped step’s answer without a link back to it', async () => {
+    const { wrapper } = await mountAt({ intento: 'citta', zona: 'gaeta-medievale' })
+
+    // Scoprire la città: the Duomo and a tour in Gaeta Medievale, the
+    // Annunziata in Serapo — two zones, so «Dove?» asks. Camminare's one
+    // place is in Serapo alone: it would not.
+    const chosen = wrapper.findAll('p').find((p) => p.text().startsWith('Hai scelto:'))!
+    expect(chosen.findAll('a')).toHaveLength(2)
+
+    const { wrapper: walk } = await mountAt({ intento: 'camminare', zona: 'serapo' })
+    const walked = walk.findAll('p').find((p) => p.text().startsWith('Hai scelto:'))!
+    expect(walked.findAll('a').map((a) => a.attributes('href'))).toEqual(['/benvenuto'])
+    expect(walked.text()).toContain('Serapo')
   })
 })

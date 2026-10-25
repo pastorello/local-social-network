@@ -93,6 +93,15 @@ describe('parentOf', () => {
     expect(parentOf(at('/cosa-fare?zona=serapo'))).toEqual({ to: '/cosa-fare', label: 'Cosa fare' })
   })
 
+  // The wizard's third step (review PR-21), with a zone or anywhere in Gaeta;
+  // its first two steps, on the welcome page, are under nothing but the map.
+  it('takes the wizard’s answer up to «Cosa fare», and its questions nowhere', () => {
+    const up = { to: '/cosa-fare', label: 'Cosa fare' }
+    expect(parentOf(at('/cosa-fare?intento=mare&zona=serapo'))).toEqual(up)
+    expect(parentOf(at('/cosa-fare?intento=mangiare'))).toEqual(up)
+    expect(parentOf(at('/benvenuto?intento=citta'))).toBeNull()
+  })
+
   it('keeps a list’s filter out of it — the list itself is under the map', () => {
     expect(parentOf(at('/luoghi?genere=spiaggia'))).toBeNull()
     expect(parentOf(at('/itinerari?intento=mare'))).toBeNull()

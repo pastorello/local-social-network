@@ -56,10 +56,13 @@ const expanded = computed(() => withStrip.value && route.query.mappa === '1')
 // A page that opens over the map takes the reader's focus with it (D15):
 // otherwise it stays on the link that opened it, which is now under the panel,
 // and the next Tab starts from somewhere the reader cannot see. On a new page
-// only — a filter changing the query string is the same page.
+// only — a filter changing the query string is the same page. A page whose
+// first words are a question to answer — the wizard's steps (review PR-21) —
+// marks its heading `data-panel-focus`, and the focus lands there instead.
 const takeFocus = async () => {
   await nextTick()
-  panel.value?.focus({ preventScroll: true })
+  const target = panel.value?.querySelector<HTMLElement>('[data-panel-focus]') ?? panel.value
+  target?.focus({ preventScroll: true })
 }
 onMounted(takeFocus)
 watch(() => route.path, takeFocus)

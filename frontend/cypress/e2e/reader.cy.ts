@@ -19,8 +19,8 @@ const FESTA = 'Festa E2E pubblicata'
 const WEEKDAY = /(lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica) \d+ /
 
 // The home's first words and its two other ways in (review of 2026-10-22,
-// P-02/M-02). seed_e2e publishes a tour under «Scoprire la città» and a church
-// in Porto Salvo, so both doors are open here.
+// P-02/M-02). seed_e2e publishes a tour under «Scoprire la città» and places
+// in Gaeta Medievale, Serapo and Porto Salvo, so both doors are open here.
 const PRESENTATION = 'Gaeta raccontata da chi ci vive'
 const TOURS_DOOR = 'Che cosa ti va di fare?'
 const ZONES_DOOR = 'Cosa c’è in una zona'
@@ -117,7 +117,7 @@ describe('the reader, on a wide screen', () => {
       .should('be.visible')
       .and(onScreen)
       .and('have.attr', 'href', '/cosa-fare')
-      .and('contain', 'Porto Salvo')
+      .and('contain', 'Gaeta Medievale')
 
     cy.contains('a', TOURS_DOOR).click()
     cy.contains('h1', TOURS_DOOR)
@@ -677,7 +677,8 @@ describe('the reader, on a phone', () => {
   })
 
   // Review PR-14 (M-09): the guest from the QR code chooses among cards that
-  // each wear their intent's tint and icon, and leaves by a link to the map.
+  // each wear their intent's tint and icon — and, since the wizard (review
+  // PR-21), the one who does not know goes to the map by an answer too.
   it('meets the welcome page’s choices as cards with a tint and an icon', () => {
     cy.visit('/benvenuto')
 
@@ -688,7 +689,7 @@ describe('the reader, on a phone', () => {
         expect($tile.find('svg')).to.have.length(1)
       })
     cy.contains('main section[tabindex="-1"] p', PRESENTATION)
-    cy.contains('a', 'Oppure vai alla mappa').should('have.attr', 'href', '/').click()
+    cy.contains('a', 'Non lo so: fammi vedere la mappa').should('have.attr', 'href', '/').click()
     cy.location('pathname').should('eq', '/')
     cy.get('main section[tabindex="-1"]').should('not.exist')
   })

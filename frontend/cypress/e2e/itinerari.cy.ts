@@ -1,8 +1,9 @@
 // The guest's journey (spec itinerari.md I6/I7): the one address on a B&B's
-// card, an intent, a tour, then the tour followed one stop at a time to its
-// end. Runs on `seed_e2e`'s "Itinerario E2E", a percorso through the published
-// church, the published feast and the published beach in Serapo, under
-// "Scoprire la città".
+// card, an intent, a zone, a tour, then the tour followed one stop at a time
+// to its end. Runs on `seed_e2e`'s "Itinerario E2E", a percorso through the
+// published church, the published feast and the published beach in Serapo,
+// under "Scoprire la città" — which has a castle in Gaeta Medievale too, so the
+// wizard asks where (review PR-21).
 const TOUR = 'Itinerario E2E'
 const CHIESA = 'Chiesa E2E pubblicata'
 const FESTA = 'Festa E2E pubblicata'
@@ -18,7 +19,13 @@ describe('a guest following a curated tour', () => {
     cy.contains('h1', 'Che cosa ti va di fare?')
     cy.contains('a', 'Scoprire la città').click()
 
-    cy.location('search').should('contain', 'intento=citta')
+    // The wizard (review PR-21): where, then what there is — the intent's
+    // tours that start in the zone, on top.
+    cy.location('search').should('eq', '?intento=citta')
+    cy.contains('h1', 'Dove?')
+    cy.contains('a', 'Porto Salvo').click()
+    cy.location('pathname').should('eq', '/cosa-fare')
+    cy.location('search').should('eq', '?intento=citta&zona=porto-salvo')
     cy.contains('a', TOUR).click()
 
     cy.contains('h1', TOUR)

@@ -253,8 +253,10 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
     cy.visit('/benvenuto')
     cy.contains('h1', 'Che cosa ti va di fare?')
     // The intents come from the API (review PR-14 gave them tints and icons):
-    // measured once they are there, not before.
+    // measured once they are there, not before — and with them the wizard's
+    // «Questa settimana» (review PR-21), the week's event in seed_e2e.
     cy.contains('a', 'Scoprire la città')
+    cy.contains('a', 'Questa settimana')
 
     check('/benvenuto')
 
@@ -262,6 +264,34 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
     cy.visit('/benvenuto')
     cy.contains('a', 'Scoprire la città')
     check('/benvenuto (largo)')
+  })
+
+  // The wizard «Cosa fare adesso» (review PR-21, study 10): each of its three
+  // steps, in both layouts — the second asks «Dove?» with «Dove sei?», the
+  // third opens on the answers with the rest of the zone behind disclosures,
+  // one of them opened so its rows are measured too.
+  it('the wizard’s second and third steps', () => {
+    for (const [width, height, layout] of [
+      [390, 844, 'telefono'],
+      [1280, 800, 'largo'],
+    ] as const) {
+      cy.viewport(width, height)
+      cy.visit('/benvenuto?intento=citta')
+      cy.contains('h1', 'Dove?')
+      cy.contains('a', 'Porto Salvo')
+      check(`/benvenuto?intento=citta (${layout})`)
+
+      cy.visit('/cosa-fare?intento=citta&zona=porto-salvo')
+      cy.contains('p', 'Hai scelto:')
+      cy.contains('a', 'Chiesa E2E pubblicata')
+      cy.contains('h2 button', 'Le feste di questa zona').click()
+      cy.contains('a', 'Festa E2E pubblicata')
+      check(`/cosa-fare?intento=citta&zona=porto-salvo (${layout})`)
+    }
+
+    cy.visit('/cosa-fare?intento=mangiare')
+    cy.contains('a', 'Ricetta E2E pubblicata')
+    check('/cosa-fare?intento=mangiare')
   })
 
   it('a tour, its first stop and its last', () => {

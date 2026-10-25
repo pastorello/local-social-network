@@ -153,6 +153,10 @@
   --color-intent-mangiare: var(--color-layer-ricette); /* 3.70 on its tint, 5.02 on surface */
   --color-intent-camminare: var(--color-layer-luoghi); /* 4.36 on its tint, 6.04 on surface */
   --color-intent-bere: var(--color-layer-attivita); /* 3.99 on its tint, 5.47 on surface */
+  /* Not an intent: the wizard's «Oggi» and «Questa settimana» (review PR-21,
+     cosa-fare.md Part −1 D9) wear the feste's amber — what falls on a day is
+     the feasts' editions and the events beside them. */
+  --color-intent-quando: var(--color-layer-feste); /* 3.70 on its tint, 5.02 on surface */
 
   @keyframes fadeInUp {
     0% {

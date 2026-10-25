@@ -43,12 +43,16 @@ GAETA_LNG = 13.5625165
 # On Serapo's beach, inside that zone's outline (maps/migrations/0006).
 SERAPO_LAT = 41.2105
 SERAPO_LNG = 13.5640
+# The Castello Angioino-Aragonese, in Gaeta Medievale (maps/test_zone_aliases.py).
+CASTELLO_LAT = 41.2075170
+CASTELLO_LNG = 13.5845538
 
 # Titles the specs assert on. They are deliberately unmistakable: a failure
 # should say which fixture is missing, not "expected to find 3 items".
 PUBLISHED_CHIESA = 'Chiesa E2E pubblicata'
 DRAFT_CHIESA = 'Chiesa E2E in bozza'
 PUBLISHED_LUOGO = 'Luogo E2E pubblicato'
+PUBLISHED_CASTELLO = 'Castello E2E pubblicato'
 PUBLISHED_ATTIVITA = 'Attività E2E pubblicata'
 PUBLISHED_FESTA = 'Festa E2E pubblicata'
 PUBLISHED_RICETTA = 'Ricetta E2E pubblicata'
@@ -151,6 +155,20 @@ class Command(BaseCommand):
             card=attivita_card, defaults={'hours': 'Tutti i giorni dalle 7 a mezzanotte.'},
         )
 
+        # A castle in Gaeta Medievale, so «Scoprire la città» is in two zones
+        # — the church's, Porto Salvo, and this — and the wizard «Cosa fare
+        # adesso» asks «Dove?» for it (review PR-21): a step with one answer
+        # is skipped, so with every intent in one zone `wizard.cy.ts` would
+        # never see the second step.
+        castello_card = self._card(PUBLISHED_CASTELLO, collaborator, is_published=True)
+        Luogo.objects.update_or_create(
+            card=castello_card, defaults={'genre': Genre.objects.get(slug='castello')},
+        )
+        self._point(
+            castello_card, 'Ingresso',
+            dlat=CASTELLO_LAT - GAETA_LAT, dlng=CASTELLO_LNG - GAETA_LNG,
+        )
+
         # A draft must stay invisible to a reader — the one fixture that cannot
         # be created through the public API without making it the flow itself.
         draft = self._card(DRAFT_CHIESA, collaborator, is_published=False)
@@ -242,7 +260,7 @@ class Command(BaseCommand):
             )
 
         self.stdout.write(self.style.SUCCESS(
-            f'Seeded: {collaborator.email}, {admin.email}, 5 published cards, 1 draft, 1 tour, '
+            f'Seeded: {collaborator.email}, {admin.email}, 6 published cards, 1 draft, 1 tour, '
             f'2 events and an edition this week, '
             f'2 overlays, 1 report ({report.upvotes_count} upvotes), 1 open poll; '
             f'cleared {removed} card(s) and every trace of previous v1 runs.'
@@ -265,8 +283,8 @@ class Command(BaseCommand):
         """
         leftovers = Card.objects.filter(author=collaborator).exclude(
             title__in=(
-                PUBLISHED_CHIESA, DRAFT_CHIESA, PUBLISHED_LUOGO, PUBLISHED_ATTIVITA,
-                PUBLISHED_FESTA, PUBLISHED_RICETTA, PUBLISHED_TOUR,
+                PUBLISHED_CHIESA, DRAFT_CHIESA, PUBLISHED_LUOGO, PUBLISHED_CASTELLO,
+                PUBLISHED_ATTIVITA, PUBLISHED_FESTA, PUBLISHED_RICETTA, PUBLISHED_TOUR,
             )
         )
         count = leftovers.count()

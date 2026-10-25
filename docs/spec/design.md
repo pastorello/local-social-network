@@ -595,6 +595,12 @@ opening-hours filter is not.
   of a card, a festa and a tour, and on a stop of a guided tour. See
   "Sharing a card — 2026-10-24" at the end of this section.
 
+  *Amended 2026-10-25 — a page that opens on a question gives the focus to
+  it* (review PR-21). The panel still takes the focus when a page opens over
+  the map, but lands on a heading the page marks `data-panel-focus` when it
+  has one: the wizard's steps, whose one h1 is the question. See "The wizard
+  «Cosa fare adesso» — 2026-10-25" at the end of this section.
+
 - **D16 — The map reacts.** Opening a card that has a place moves the map so
   the place sits in the space the panel leaves free — never under it —
   highlights its pins or its route, and dims everything else. Closing returns
@@ -1588,3 +1594,46 @@ in front of the castle scrolled the whole text to find it. Built on
   - **The same link twice on one page**, the line's and the section's
     button, carries one name to one destination, which is what WCAG 2.4.4
     asks of links that do the same thing.
+
+### The wizard «Cosa fare adesso» — 2026-10-25
+
+The review of 2026-10-22 (study 10, PR-21) turned `/benvenuto` and
+`/cosa-fare` into one guided path, one question a screen; the author
+confirmed it on 2026-10-23. The flow and its rules are in
+[itinerari.md](./itinerari.md) ("The welcome page is the wizard's first
+step") and [cosa-fare.md](./cosa-fare.md) (D6's note on `?intento=`); what it
+looks like, and what the build decided about it, is here. **The home as the
+same front door** (D3: the sheet opening on the question) is the review's
+PR-21b, after this.
+
+- **An answer is a card and a link**, the intent card of "The welcome page,
+  and the whole screen on a phone" generalised (`components/wizard/AnswerCard.vue`):
+  a tile where a cover will go, the name in `text-title`, a line under it,
+  the ring the keyboard's alone. Full width on a phone, two columns from
+  `sm`, at least a thumb's 44 px tall — `wizard.cy.ts` measures it at
+  390 px. No «Avanti»: choosing is following the link.
+- **What sits under each answer says what is behind it**: an intent «2 luoghi
+  · 1 itinerario · 3 ricette»; a zone of step 2 the first two things there,
+  as a door names them (D3's note of 2026-10-23); «Ovunque a Gaeta» the
+  whole count.
+- **«Oggi» and «Questa settimana» are apart**, under a small heading *In
+  calendario* in the eyebrow's register, after the intents: they answer
+  *when*, not *what* (cosa-fare.md D9's "kept apart from the everyday").
+  Their tile is the calendar on the feste's amber, a token of its own
+  (`--color-intent-quando` → `--color-layer-feste`): 3.70 on its tint, 5.02
+  on the surface, measured with the intents' (D9).
+- **«Hai scelto» stands where the eyebrow stands** on steps 2 and 3, in
+  `text-sm`, each answer underlined in the sea, with «Cambia la scelta:»
+  for a screen reader in front of the visible word — the name is in the
+  accessible name, as WCAG 2.5.3 asks. A line tall before it knows the
+  names, so nothing under it moves.
+- **The focus is on the question at every step** — D15's note above. A
+  focused h1 draws no ring: it is not a control.
+- **Step 3's sections are disclosures** only on the wizard's address: the
+  heading's button carries the section's name, its size and a chevron, 44 px
+  tall. `/cosa-fare` without `?intento=` keeps its plain headings.
+- **Weight** (TD-52): the steps are in the entry chunk, as `/benvenuto` and
+  `/cosa-fare` were — 9 KB more before compression, 2.4 KB gzipped (index
+  48.15 KB against main's 45.72) — and no Leaflet. The question and the
+  presentation paint in the first frame; the answers arrive together under
+  them.
