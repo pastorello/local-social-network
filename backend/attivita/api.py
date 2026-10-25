@@ -107,8 +107,13 @@ def kind_list(request):
         .annotate(count=Count('pk'))
     )
     return Response([
-        # A kind reads the same as a heading and as a choice: "Dove si beve".
-        {'slug': slug, 'name': name, 'name_plural': name, 'count': counts.get(slug, 0)}
+        # A kind reads the same as a heading and as a choice: "Dove si beve" —
+        # and in English (review PR-19a) "Where to drink", in the genres' shape.
+        {
+            'slug': slug, 'name': name, 'name_plural': name,
+            'name_en': Attivita.KIND_NAMES_EN[slug], 'name_plural_en': Attivita.KIND_NAMES_EN[slug],
+            'count': counts.get(slug, 0),
+        }
         for slug, name in Attivita.KIND_CHOICES
     ])
 

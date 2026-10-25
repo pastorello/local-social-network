@@ -41,3 +41,13 @@ import { OSM_TILE_URL } from '../../src/lib/osm'
 beforeEach(() => {
   cy.intercept(OSM_TILE_URL.replace(/\{\w+\}/g, '*'), { fixture: 'tile.png' })
 })
+
+// The reader's language (review PR-19a): English for a browser that asks for
+// it, and Electron and headless Chrome ask for en-US. The suite selects by the
+// interface's Italian words, which are the default for every other reader, so
+// every window it opens is an Italian reader's — a spec that wants English
+// asks for it with `?lang=en`, as a shared link does.
+Cypress.on('window:before:load', (win) => {
+  Object.defineProperty(win.navigator, 'language', { value: 'it-IT', configurable: true })
+  Object.defineProperty(win.navigator, 'languages', { value: ['it-IT', 'it'], configurable: true })
+})

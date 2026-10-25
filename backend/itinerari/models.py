@@ -12,6 +12,9 @@ class Intent(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField('nome', max_length=100, unique=True)
+    # The name in the reader's English (review PR-19a, translations.md T9);
+    # blank, the Italian stands in.
+    name_en = models.CharField('nome in inglese', max_length=100, blank=True, default='')
     slug = models.SlugField(max_length=100, unique=True)
     # The line under the choice on the landing page ("Le spiagge, da Serapo a
     # Sant'Agostino"), as the itinerari canvas drew it. Optional: an intent

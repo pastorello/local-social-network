@@ -24,6 +24,8 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import type { MapCardFeature, Overlay } from '@/definitions/interfaces/MapData'
 import type { MapEditor, MapFocus } from '@/stores/map'
 import type { ReportPin } from '@/definitions/interfaces/Report'
+import { locale } from '@/lib/i18n'
+import home from '@/lib/i18n/messages/home'
 import { GAETA_BOUNDS, frameInFreeSpace, type Coords } from '@/lib/mapFrame'
 import { layerColor } from '@/lib/mapLayers'
 import { mapText } from '@/lib/mapText'
@@ -87,6 +89,14 @@ let editorLayer: LayerGroup | null = null
 // rests on. After, it stays where it is when a page closes (review PR-22):
 // closing is not a step back, for the map either.
 let moved = false
+// Leaflet drops a view asked for while it is animating a zoom
+// (Map._tryAnimatedZoom returns at once): a frame that changes twice in a row —
+// the map's data arriving after the map, then the panel's free space — stayed
+// on the first. A frame asked for meanwhile is drawn when the zoom ends, from
+// the props as they are then (review PR-19a, which moved the data after the
+// first paint and so after the map).
+let zooming = false
+let frameWaiting = false
 let draftMarker: CircleMarker | null = null
 let resizeObserver: ResizeObserver | null = null
 const overlayLayers = new Map<string, Layer>()
@@ -258,6 +268,10 @@ const fit = (points: Coords[], options: { animate?: boolean } = {}) => {
 // phone's sheet moving to another stop (review PR-5, M-01).
 const frameView = (options: { animate?: boolean } = {}) => {
   if (!map) return
+  if (zooming) {
+    frameWaiting = true
+    return
+  }
   const points = framedPoints()
   if (points.length) {
     fit(points, options)
@@ -390,6 +404,26 @@ const placeControls = () => {
   map.zoomControl.setPosition(props.zoomPosition ?? 'topleft')
 }
 
+// The container stays focusable — that is what arrow-key panning needs — but
+// an unnamed focusable box announces its own text content, which here is the
+// cluster counts and the zoom buttons: "2 3 4 5 6 + −". A name instead. The
+// zoom buttons' names are Leaflet's own English unless given: in the reader's
+// language, like the rest (review PR-19a), and again when it changes.
+const nameControls = () => {
+  if (!map) return
+  const words = home().map
+  map.getContainer().setAttribute('aria-label', words.label)
+  const buttons: [string, string][] = [
+    ['.leaflet-control-zoom-in', words.zoomIn],
+    ['.leaflet-control-zoom-out', words.zoomOut],
+  ]
+  for (const [selector, name] of buttons) {
+    const button = map.getContainer().querySelector(selector)
+    button?.setAttribute('title', name)
+    button?.setAttribute('aria-label', name)
+  }
+}
+
 const onReady = (leafletMap: LeafletMap) => {
   map = leafletMap
 
@@ -399,12 +433,7 @@ const onReady = (leafletMap: LeafletMap) => {
   placeControls()
 
   keepMarkersOutOfTabOrder()
-  // The container stays focusable — that is what arrow-key panning needs — but
-  // an unnamed focusable box announces its own text content, which here is the
-  // cluster counts and the zoom buttons: "2 3 4 5 6 + −". A name instead.
-  leafletMap
-    .getContainer()
-    .setAttribute('aria-label', 'Mappa di Gaeta. Usa le frecce per spostarti, + e − per lo zoom.')
+  nameControls()
 
   leafletMap.createPane(RASTER_PANE).style.zIndex = '350'
   leafletMap.createPane(VECTOR_PANE).style.zIndex = '380'
@@ -438,6 +467,15 @@ const onReady = (leafletMap: LeafletMap) => {
     emit('view', { lat: center.lat, lng: center.lng, zoom: map.getZoom() })
   }
   map.on('moveend', reportView)
+  map.on('zoomanim', () => {
+    zooming = true
+  })
+  map.on('zoomend', () => {
+    zooming = false
+    if (!frameWaiting) return
+    frameWaiting = false
+    frameView()
+  })
 
   map.on('click', (event: LeafletMouseEvent) => {
     if (!map) return
@@ -476,6 +514,7 @@ const onReady = (leafletMap: LeafletMap) => {
 }
 
 watch(() => [props.zoomPosition, props.attributionPosition], placeControls)
+watch(locale, nameControls)
 watch(() => props.pins, renderPins, { deep: true })
 watch(() => props.features, renderFeatures, { deep: true })
 watch(

@@ -1,4 +1,6 @@
 import type { Availability, AvailabilityState } from '@/definitions/interfaces/Content'
+import { intlLocale } from '@/lib/i18n'
+import visit from '@/lib/i18n/messages/visit'
 
 // ADR-0008 in the reader's words. Nothing here ever says a place is open: the
 // states describe how one gets in, or why one can't, and the hours are a dated
@@ -13,14 +15,24 @@ export const STATE_OPTIONS: { value: AvailabilityState; label: string }[] = [
   { value: 'no_door', label: "All'aperto, senza porta" },
 ]
 
-// What the reader is told. `unknown` says nothing at all: printing an absence
-// on every card is how an archive apologises instead of informing.
+// What the reader is told, in the reader's language (review PR-19a: the
+// sentences are lib/i18n/messages/visit.ts's, read when they are asked for).
+// `unknown` says nothing at all: printing an absence on every card is how an
+// archive apologises instead of informing.
 export const STATE_SENTENCE: Record<AvailabilityState, string | null> = {
   unknown: null,
-  services: 'Si entra solo durante le funzioni.',
-  on_request: 'Si visita su richiesta: chiedi a chi ha le chiavi.',
-  works: 'Chiuso per lavori.',
-  no_door: "All'aperto: non c'è una porta da trovare chiusa.",
+  get services() {
+    return visit().states.services
+  },
+  get on_request() {
+    return visit().states.on_request
+  },
+  get works() {
+    return visit().states.works
+  },
+  get no_door() {
+    return visit().states.no_door
+  },
 }
 
 export const emptyAvailability = (): Availability => ({
@@ -39,11 +51,14 @@ export const hasVisitInfo = (availability: Availability | null | undefined): boo
     !!availability.keeper ||
     !!availability.keeper_phone)
 
-// "2026-03-12" → "12 marzo 2026". The date is a calendar day, not an instant:
-// read in UTC so no time zone can move it to the day before.
+// "2026-03-12" → "12 marzo 2026" ("12 March 2026"). The date is a calendar
+// day, not an instant: read in UTC so no time zone can move it to the day
+// before. Without its weekday, unlike an event's (CF34): content.md's
+// archive's line fixes the words, and the day a place's hours were reported
+// is printed the same way, so the two dates a reader meets read alike.
 export const formatDay = (isoDate: string): string => {
   const [year, month, day] = isoDate.split('-').map(Number)
-  return new Intl.DateTimeFormat('it-IT', {
+  return new Intl.DateTimeFormat(intlLocale(), {
     day: 'numeric',
     month: 'long',
     year: 'numeric',

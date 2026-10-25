@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useTemplateRef } from 'vue'
 
+import home from '@/lib/i18n/messages/home'
+
 // The floating controls over the mobile map (spec/design.md D4). C5 left M1's
 // "minimal top menu" deliberately unbuilt — it was a design decision, not a
 // geometry one — and this is where it lands: on a phone the map is the whole
@@ -40,7 +42,7 @@ const close = () => {
         aria-controls="map-chrome-panel"
         @click="toggle"
       >
-        Livelli
+        {{ home().layers }}
       </button>
     </div>
 

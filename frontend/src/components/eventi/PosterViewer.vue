@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, ref } from 'vue'
 
+import events from '@/lib/i18n/messages/events'
+
 // An event's poster, shown so that it can be read (spec cosa-fare.md Part −1
 // D9; CF30 as amended): a poster carries the programme, and on a phone its
 // small print is the point. A tap opens it on the whole screen; Escape and
@@ -76,7 +78,7 @@ const control =
     <button
       type="button"
       class="group block w-full cursor-zoom-in rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sea"
-      :aria-label="`Ingrandisci la locandina di ${props.title}`"
+      :aria-label="events().poster.enlargeOf(props.title)"
       @click="open"
     >
       <img
@@ -87,7 +89,7 @@ const control =
       <span
         class="mt-2 block text-center text-sm font-semibold text-sea underline-offset-4 group-hover:underline"
       >
-        Ingrandisci la locandina
+        {{ events().poster.enlarge }}
       </span>
     </button>
   </figure>
@@ -98,7 +100,7 @@ const control =
       ref="dialog"
       role="dialog"
       aria-modal="true"
-      :aria-label="`La locandina di ${props.title}`"
+      :aria-label="events().poster.of(props.title)"
       class="fixed inset-0 z-[2000] flex flex-col bg-ink"
       @keydown="onKeydown"
     >
@@ -109,17 +111,17 @@ const control =
           :aria-pressed="actualSize"
           @click="actualSize = !actualSize"
         >
-          Dimensione reale
+          {{ events().poster.actualSize }}
         </button>
         <button
           ref="closeButton"
           type="button"
           :class="control"
-          title="Chiudi (Esc)"
+          :title="events().poster.closeTitle"
           aria-keyshortcuts="Escape"
           @click="close"
         >
-          Chiudi
+          {{ events().poster.close }}
         </button>
       </div>
       <!-- Its own size is scrolled, by a finger or the arrow keys once the
@@ -128,12 +130,12 @@ const control =
         class="min-h-0 flex-1 overflow-auto"
         :class="actualSize ? '' : 'flex items-center justify-center p-3'"
         :tabindex="actualSize ? 0 : undefined"
-        :aria-label="actualSize ? 'La locandina a dimensione reale' : undefined"
+        :aria-label="actualSize ? events().poster.actualSizeRegion : undefined"
         :role="actualSize ? 'region' : undefined"
       >
         <img
           :src="props.src"
-          :alt="`La locandina di ${props.title}`"
+          :alt="events().poster.of(props.title)"
           :class="
             actualSize
               ? 'max-w-none cursor-zoom-out'

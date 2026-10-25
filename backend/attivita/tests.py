@@ -108,6 +108,10 @@ def test_the_kinds_are_code_not_a_table_an_admin_could_add_to(api_client):
     assert response.status_code == 200
     assert [kind['slug'] for kind in response.json()] == ['beve', 'mangia', 'compra']
     assert response.json()[0]['name'] == 'Dove si beve'
+    # The reader's English, closed in code beside them (review PR-19a).
+    assert [kind['name_en'] for kind in response.json()] == [
+        'Where to drink', 'Where to eat', 'Where to buy',
+    ]
 
 
 def test_create_requires_a_kind(auth_client):
@@ -547,4 +551,4 @@ def test_the_zone_it_is_in_comes_by_name(api_client, make_attivita):
 
     zones = api_client.get(f'/api/attivita/{attivita.pk}/').json()['zones']
 
-    assert zones == [{'slug': 'serapo', 'name': 'Serapo'}]
+    assert zones == [{'slug': 'serapo', 'name': 'Serapo', 'name_en': ''}]

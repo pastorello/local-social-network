@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import { LANGUAGE_LABELS } from '@/lib/languages'
+import card from '@/lib/i18n/messages/card'
 import type { TranslationRef } from '@/definitions/interfaces/Content'
+
+// A card's other languages, named in the reader's (review PR-19a); the
+// collaborator's TranslateControl keeps lib/languages.ts's Italian names.
+const languageName = (code: string) => (card().languages as Record<string, string>)[code] ?? code
 
 defineProps<{
   translations: TranslationRef[]
@@ -11,7 +15,7 @@ defineProps<{
 <template>
   <nav
     v-if="translations.length > 0"
-    aria-label="Cambia lingua"
+    :aria-label="card().otherLanguages"
     class="flex flex-wrap gap-3 text-sm mb-4"
   >
     <RouterLink
@@ -20,7 +24,7 @@ defineProps<{
       :to="{ name: detailRouteName, params: { id: translation.id } }"
       class="underline"
     >
-      {{ LANGUAGE_LABELS[translation.language] ?? translation.language }}
+      {{ languageName(translation.language) }}
     </RouterLink>
   </nav>
 </template>

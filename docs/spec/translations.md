@@ -15,7 +15,9 @@
   addition, explicitly not this phase.
 - **T4 — UI language stays Italian** this phase (v1's N4 carries over). A
   multilingual **UI** is a declared later phase — it only makes sense once
-  there are translated cards for a foreign reader to land on.
+  there are translated cards for a foreign reader to land on. *(For the
+  reader's interface, superseded by T9 on 2026-10-25: the author decided not
+  to wait for that threshold. The collaborator's surfaces stay Italian.)*
 
 ## Note
 
@@ -145,3 +147,98 @@ A published translation shows its original's title, photographs and place
 Republishing the original does **not** republish its translations: each goes
 back up as its own decision, since the original may have changed while it was
 down.
+
+## T9 — The reader's interface in two languages — decided 2026-10-22, built 2026-10-25 (review PR-19a)
+
+T4 kept the interface Italian until there were translated cards for a foreign
+reader to land on. The author decided on 2026-10-22 not to wait for that
+threshold ([review](../review-2026-10-22.md), decision 5): the **reader's**
+interface speaks Italian and English now, with a visible switch. README.md's
+non-goal «multilingual UI» is closed by its own dated note in review PR-19c;
+«machine translation» stays a non-goal — the English is written by hand,
+interface and cards alike (T3).
+
+- **What speaks the reader's language**: the pill and *Menu*, the home in both
+  layouts, `/benvenuto` and the wizard, the lists and their chips, a card's
+  page around its text («Dove si trova», «Se la trovi chiusa», «Visitare»,
+  «Come arrivarci (apre Google Maps)», «Condividi», the way back), a tour and
+  its guided mode, «Cosa si può fare qui» and «Dove sei?», the events and an
+  event's page, *Il progetto* with its story, the toasts a reader meets, the
+  empty states, the map's own name and zoom buttons, the window's title and
+  so what «Condividi» sends.
+- **What stays Italian**: the collaborator's surfaces — login, the request
+  form, invitations and passwords, profile, users, *Le mie schede*, every form
+  that writes a card or an event, reports, polls — which are marked
+  `lang="it"` where they sit inside an English page (`meta.italian` on their
+  routes, the controls on a card's page), so a screen reader reads them as
+  Italian (WCAG 3.1.2). And **every card's own text**: the interface
+  translates around the content, never the content (T1, T5).
+- **The switch is «IT · EN»**, in the pill before *Accedi* or the avatar on a
+  wide screen and in *Menu* on a phone, where the pill has no room left. Text,
+  not flags: a flag is a nation, not a language. Two buttons, the current one
+  `aria-pressed` and filled — not underlined, which is the menu's mark for the
+  page one is on — each named in itself («Italiano», «English») with its
+  `lang`.
+- **The choice lives in the address and in this browser.** While English is
+  on, every page carries `?lang=en`, so a link copied from the address bar or
+  sent with «Condividi» carries the language; Italian carries nothing, and its
+  address stays the canonical one. A link that names a language switches to
+  it. The choice is also kept in `localStorage` (`lang`, read and written
+  inside try/catch) for the next visit. With neither, a browser whose
+  `navigator.language` starts with `en` gets English and every other one
+  Italian; that guess is not stored, only a choice is. `<html lang>` follows
+  (WCAG 3.1.1).
+- **Names the API serves**: `name_en` on `Zona`, `Genre` and `Intent`
+  (`Genre` has `name_plural_en` too, since a genre is a heading in the plural),
+  blank by default, and the SPA reads the Italian when it is blank
+  (`lib/i18n::localName`). A zone is a proper name and keeps its Italian one:
+  blank is the rule there. The seeded genres and intents got English names in
+  a migration, only where none was written; the kinds of business are closed
+  in code, so theirs are too (`Attivita.KIND_NAMES_EN`). The intents'
+  *descriptions* are still Italian, marked so: they are review PR-19b's.
+- **Dates** are `Intl`'s in the reader's locale (`en-GB`: «Saturday 26
+  September», the 24-hour clock). An event's or a feast's date keeps its
+  weekday in both (CF34, `lib/when.ts`); the archive's line and the day hours
+  were reported keep the shape content.md gave them, without one
+  (`lib/availability.ts::formatDay`). A calendar day is still read in UTC,
+  which no zone can move — the same day as Gaeta's; an instant, a card's
+  byline, is read in `Europe/Rome`.
+- **T7's `lang` moves from the article to its parts.** The article now holds
+  the interface's words — its headings, the byline, the way back — in the
+  reader's language, which `<html lang>` already says; so the card's language
+  is marked on what is the card's: its body, its translated name, its own
+  fields. The Italian heading keeps `lang="it"`, as do the original's
+  photographs' alternative texts, pins, stops and reported hours.
+
+**How it is built**: a typed dictionary per area in
+`frontend/src/lib/i18n/messages/`, not vue-i18n, which added 18.8 kB (gzip) to
+the JavaScript of the first paint (11.1 kB in its runtime-only build) against
+a gate that holds that paint on a phone (TD-52). With both languages in it,
+the first paint's dictionaries added 5.5 kB, and that cost the gate's pages
+80–150 ms of LCP on Lighthouse's phone — as much as a 5.5 kB string in the
+same place did. So the areas of the first paint keep their English apart, in
+`<area>.en.ts` files gathered by `english.ts` into a chunk only an English
+reader loads (before the first paint, or before the switch turns English on),
+and what only a later page says travels with that page: the entry grew by
+2.5 kB and the gate's medians are the base's (1.84–1.85 s). `index.html`
+asks for that chunk beside the entry when the address, the reader's last
+choice or the browser says English (`vite.config.ts::preloadEnglish`), so
+English does not wait for the entry to decide first.
+
+**The performance gate measures each language on purpose** (2026-10-25):
+its four pages in Italian — the Linux runner's Chrome asks for `en-US`, so
+`lighthouserc.yml` tells it Italian — and `/?lang=en` and `/cosa-fare?lang=en`
+in English. #147's first run had measured everything in English by accident,
+over the budget on `/cosa-fare` (2.60 s). Two things were found on the way:
+the English chunk was fetched only once the entry had run (now preloaded),
+and the map's data, asked for at mount, came back before the first paint on
+half the runs and was counted on the way to the page's largest text — on
+main too, where `/cosa-fare` measured 2.29–2.30 s on every CI run. The map's
+data, the archive's line and the wizard's answers are asked for after the
+first paint now, as the map itself was already drawn: 1.84 s in Italian and
+1.98–1.99 s in English, on every one of 18 runs on a Mac. The compiler
+checks that both languages have every key and take the same arguments, and
+`lib/i18n/__tests__/messages.spec.ts` checks it again on every message file.
+Review PR-19b shows a card's translation on its own page in English and marks
+the translated cards in the lists; PR-19c closes the non-goal and runs the
+accessibility gate in both languages.

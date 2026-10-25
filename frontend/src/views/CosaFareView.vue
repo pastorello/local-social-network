@@ -13,13 +13,15 @@ import type { Genre } from '@/definitions/interfaces/Luogo'
 import type { Intent } from '@/definitions/interfaces/Itinerario'
 import type { MapCardFeature, Zone, ZoneAlias } from '@/definitions/interfaces/MapData'
 import { STATE_SENTENCE } from '@/lib/availability'
+import { localName } from '@/lib/i18n'
+import cosaFare from '@/lib/i18n/messages/cosaFare'
+import shell from '@/lib/i18n/messages/shell'
+import types from '@/lib/i18n/messages/types'
+import wizardText from '@/lib/i18n/messages/wizard'
 import {
   BUSINESS_TYPES,
   ELSEWHERE,
-  ELSEWHERE_NAME,
-  KIND_NAME,
   OTHER_INTENT,
-  OTHER_INTENT_NAME,
   PLACE_TYPES,
   byTitle,
   intentOf,
@@ -41,7 +43,10 @@ import { useMapStore } from '@/stores/map'
 // (2026-10-25, ADR-0010). And with `?intento=` it is the third step of the
 // wizard «Cosa fare adesso» (2026-10-25, review PR-21): the intent's tours
 // and its section first and open, the rest of the zone put away — or, with
-// no zone, the intent's section alone, anywhere in Gaeta.
+// no zone, the intent's section alone, anywhere in Gaeta. Its words are the
+// reader's language, and so are the names of zones, intents and genres where
+// the author wrote them; the cards' own titles are Italian, and marked so
+// (review PR-19a).
 
 interface Row {
   id: string
@@ -118,11 +123,11 @@ const draftsIn = (slug: string) =>
 const chips = computed(() => [
   ...zones.value.map((zone) => ({
     slug: zone.slug,
-    name: zone.name,
+    name: localName(zone),
     count: zone.count + draftsIn(zone.slug),
   })),
   ...(elsewhereCount.value
-    ? [{ slug: ELSEWHERE, name: ELSEWHERE_NAME, count: elsewhereCount.value }]
+    ? [{ slug: ELSEWHERE, name: types().elsewhere, count: elsewhereCount.value }]
     : []),
 ])
 
@@ -150,9 +155,10 @@ usePanelTrail(() =>
   !intentMode.value && selected.value ? { steps: [{ label: selected.value.name }] } : null,
 )
 usePageTitle(() => {
+  const page = shell().title.whatToDo
   if (chosenIntent.value)
-    return [chosenIntent.value.name, ...(selected.value ? [selected.value.name] : []), 'Cosa fare']
-  return selected.value ? [selected.value.name, 'Cosa fare'] : null
+    return [localName(chosenIntent.value), ...(selected.value ? [selected.value.name] : []), page]
+  return selected.value ? [selected.value.name, page] : null
 })
 // Until the zones have come, the address is all there is to go on: a page
 // opened on ?zona= is a chosen zone from its first frame, rather than saying
@@ -195,11 +201,13 @@ const toursHere = computed(() =>
     : [],
 )
 
-const genreName = computed(() => new Map(genres.value.map((g) => [g.slug, g.name])))
+const genreName = computed(() => new Map(genres.value.map((g) => [g.slug, localName(g)])))
 const kindOf = (place: MapCardFeature): string => {
-  if (place.type === 'chiese') return 'Chiesa'
-  if (place.type === 'attivita') return KIND_NAME[place.kind ?? ''] ?? 'Attività'
-  return genreName.value.get(place.genre ?? '') ?? 'Luogo'
+  const words = types()
+  if (place.type === 'chiese') return words.byType.chiese.one
+  if (place.type === 'attivita')
+    return (words.kinds as Record<string, string>)[place.kind ?? ''] ?? words.byType.attivita.one
+  return genreName.value.get(place.genre ?? '') ?? words.byType.luoghi.one
 }
 
 // One row of the page, whatever it lists: a place, a tour, a festa, a dish.
@@ -253,7 +261,7 @@ const tourLine = (tour: TourRow): Line => ({
 const dishesBlock = (): Block['dishes'] =>
   ricette.value.length
     ? {
-        note: 'Le ricette non stanno in una zona sola: queste valgono per tutta Gaeta.',
+        note: cosaFare().blocks.dishes,
         rows: ricette.value.map((ricetta) => ({
           id: ricetta.id,
           title: ricetta.title,
@@ -271,7 +279,7 @@ const zoneBlocks = computed<Block[]>(() => {
     if (rows.length)
       list.push({
         key: intent.slug,
-        name: intent.name,
+        name: localName(intent),
         rows: rows.map(placeLine),
         places: true,
         drawn: true,
@@ -285,7 +293,7 @@ const zoneBlocks = computed<Block[]>(() => {
   if (other.length)
     list.push({
       key: OTHER_INTENT,
-      name: OTHER_INTENT_NAME,
+      name: types().otherIntent,
       rows: other.sort(byTitle).map(placeLine),
       places: true,
       drawn: true,
@@ -293,13 +301,13 @@ const zoneBlocks = computed<Block[]>(() => {
   if (toursHere.value.length)
     list.push({
       key: 'itinerari',
-      name: 'Itinerari che passano di qui',
+      name: cosaFare().blocks.toursHere,
       rows: toursHere.value.map(tourLine),
     })
   if (festeHere.value.length)
     list.push({
       key: 'feste',
-      name: 'Le feste di questa zona',
+      name: cosaFare().blocks.festeHere,
       rows: festeHere.value.map((festa) => ({
         id: festa.id,
         title: festa.title,
@@ -313,7 +321,7 @@ const zoneBlocks = computed<Block[]>(() => {
   if (mangiare && (tables.length || ricette.value.length))
     list.push({
       key: 'mangiare',
-      name: mangiare.name,
+      name: localName(mangiare),
       rows: tables.map(placeLine),
       places: true,
       drawn: true,
@@ -344,14 +352,14 @@ const intentBlocks = computed<Block[]>(() => {
   if (itsTours.length)
     list.push({
       key: 'itinerari-intento',
-      name: zone ? 'Itinerari che passano di qui' : 'Itinerari',
+      name: zone ? cosaFare().blocks.toursHere : cosaFare().blocks.tours,
       rows: itsTours.map(tourLine),
     })
   const dishes = intent.slug === 'mangiare' ? dishesBlock() : undefined
   if (itsRows.length || dishes)
     list.push({
       key: intent.slug,
-      name: intent.name,
+      name: localName(intent),
       rows: itsRows.map(placeLine),
       places: true,
       drawn: true,
@@ -365,7 +373,7 @@ const intentBlocks = computed<Block[]>(() => {
     if (block.key !== 'itinerari') return [{ ...block, closed: true }]
     const others = block.rows.filter((row) => !shown.has(row.id))
     if (!others.length) return []
-    const name = shown.size ? 'Altri itinerari che passano di qui' : block.name
+    const name = shown.size ? cosaFare().blocks.otherToursHere : block.name
     return [{ ...block, name, rows: others, closed: true }]
   })
   return [...list, ...rest]
@@ -520,16 +528,16 @@ const chooseZone = async (slug: string) => {
     the question it answers takes the focus, as on every step. -->
     <template v-if="intentMode">
       <WizardChoices
-        :intent="chosenIntent?.name ?? null"
+        :intent="chosenIntent ? localName(chosenIntent) : null"
         :intent-to="{ name: 'benvenuto' }"
-        :where="chosenIntent ? (selected?.name ?? 'Ovunque a Gaeta') : null"
+        :where="chosenIntent ? (selected?.name ?? wizardText().everywhere) : null"
         :where-to="whereTo"
       />
       <MainTitle tabindex="-1" data-panel-focus class="mt-1 focus:outline-none">
-        Cosa si può fare qui
+        {{ cosaFare().title }}
       </MainTitle>
       <p v-if="zoneChosen" class="-mt-4 text-sm text-muted">
-        Zone indicative, non confini ufficiali.
+        {{ cosaFare().indicative }}
       </p>
     </template>
     <template v-else>
@@ -539,17 +547,13 @@ const chooseZone = async (slug: string) => {
         v-if="!zoneChosen"
         class="text-xs font-semibold tracking-[0.12em] text-terracotta uppercase"
       >
-        A Gaeta
+        {{ cosaFare().eyebrow }}
       </p>
-      <MainTitle>Cosa si può fare qui</MainTitle>
+      <MainTitle>{{ cosaFare().title }}</MainTitle>
       <!-- One line on a phone, where the results have to start on the first
       screen (review PR-4, M-07). -->
       <p class="mt-2 max-w-[55ch] text-reading text-muted">
-        {{
-          isDesktop
-            ? 'Scegli una zona: trovi i luoghi da vedere, gli itinerari che ci passano e le feste che la attraversano.'
-            : 'Luoghi, itinerari e feste, zona per zona.'
-        }}
+        {{ isDesktop ? cosaFare().lead.wide : cosaFare().lead.phone }}
       </p>
     </template>
 
@@ -567,7 +571,7 @@ const chooseZone = async (slug: string) => {
       @choose="chooseZone"
     />
 
-    <nav v-if="!intentMode" aria-label="Zone" class="mt-6">
+    <nav v-if="!intentMode" :aria-label="cosaFare().zones" class="mt-6">
       <!-- On a phone the open row runs to the panel's edges, so it reads as a
       row that scrolls, and «Cambia zona» goes under it. A row tall before the
       zones come, so they do not push the page down when they do (TD-53): all
@@ -612,7 +616,7 @@ const chooseZone = async (slug: string) => {
           class="inline-flex h-10 flex-none cursor-pointer items-center gap-1.5 rounded-full px-3 text-sm font-semibold text-sea underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
           @click="choosing = !choosing"
         >
-          Cambia zona
+          {{ cosaFare().changeZone }}
           <svg
             viewBox="0 0 20 20"
             class="h-4 w-4 transition-transform"
@@ -628,36 +632,37 @@ const chooseZone = async (slug: string) => {
           </svg>
         </button>
       </div>
-      <p class="mt-3 text-sm text-muted">Zone indicative, non confini ufficiali.</p>
+      <p class="mt-3 text-sm text-muted">{{ cosaFare().indicative }}</p>
     </nav>
 
     <p v-if="failed" class="mt-6 text-ink" role="status">
-      Una parte dell'archivio non si è caricata: quello che vedi potrebbe essere incompleto.
+      {{ cosaFare().failed }}
     </p>
 
     <template v-if="(selected || intentMode) && ready">
       <!-- The wizard's answer has nothing here: said, with where it is. The
       rest of the zone is still offered, put away, under it. -->
       <p v-if="intentEmpty" class="mt-8 text-ink">
-        Qui l'archivio non ha ancora niente per «{{ chosenIntent?.name }}».
+        {{ cosaFare().intentEmpty(chosenIntent ? localName(chosenIntent) : '') }}
         <template v-if="chosenIntent && intentElsewhere.length">
-          Prova
+          {{ cosaFare().try }}
           <template v-for="zone in intentElsewhere" :key="zone.slug">
             <RouterLink :to="resultOf(chosenIntent.slug, zone.slug)" class="text-sea underline">{{
               zone.name
             }}</RouterLink
             >,
           </template>
-          o
-          <RouterLink :to="resultOf(chosenIntent.slug)" class="text-sea underline"
-            >ovunque a Gaeta</RouterLink
+          {{ cosaFare().or }}
+          <RouterLink :to="resultOf(chosenIntent.slug)" class="text-sea underline">{{
+            cosaFare().anywhere
+          }}</RouterLink
           >.
         </template>
       </p>
       <p v-if="emptyHere" class="mt-8 text-ink">
-        In questa zona l'archivio non ha ancora niente.
+        {{ cosaFare().emptyHere }}
         <template v-if="zonesWithSomething.length">
-          Prova
+          {{ cosaFare().try }}
           <template v-for="(chip, index) in zonesWithSomething" :key="chip.slug">
             <RouterLink :to="{ query: { zona: chip.slug } }" class="text-sea underline">{{
               chip.name
@@ -701,7 +706,9 @@ const chooseZone = async (slug: string) => {
             </button>
             <template v-else>{{ block.name }}</template>
           </h2>
-          <p class="text-sm text-muted"><span aria-hidden="true">·</span> in ordine alfabetico</p>
+          <p class="text-sm text-muted">
+            <span aria-hidden="true">·</span> {{ cosaFare().alphabetical }}
+          </p>
         </div>
         <div v-show="isOpen(block)" :id="`sezione-${block.key}`">
           <ul v-if="block.rows.length" class="divide-y divide-hairline border-y border-hairline">
@@ -710,8 +717,9 @@ const chooseZone = async (slug: string) => {
                 :to="row.to"
                 class="text-ink underline"
                 :class="{ 'font-semibold': block.places }"
+                lang="it"
                 >{{ row.title }}</RouterLink
-              ><span v-if="row.draft" class="text-xs text-muted"> · bozza</span>
+              ><span v-if="row.draft" class="text-xs text-muted"> · {{ cosaFare().draft }}</span>
               <p v-if="row.detail" class="text-sm text-muted">{{ row.detail }}</p>
             </li>
           </ul>
@@ -721,18 +729,19 @@ const chooseZone = async (slug: string) => {
             </p>
             <ul class="divide-y divide-hairline border-y border-hairline">
               <li v-for="row in block.dishes.rows" :key="row.id" class="py-3">
-                <RouterLink :to="row.to" class="text-ink underline">{{ row.title }}</RouterLink>
+                <RouterLink :to="row.to" class="text-ink underline" lang="it">{{
+                  row.title
+                }}</RouterLink>
               </li>
             </ul>
           </template>
         </div>
       </section>
     </template>
-    <p v-else-if="!answering" class="mt-8 text-muted">Scegli una zona per vedere cosa c'è.</p>
+    <p v-else-if="!answering" class="mt-8 text-muted">{{ cosaFare().chooseZone }}</p>
 
     <p v-if="noteShown" class="mt-10 border-t border-hairline pt-4 text-sm text-muted">
-      Questo è quello che c'è in archivio, non tutto quello che succede a Gaeta. Gli orari, quando
-      li conosciamo, sono sulla scheda di ogni luogo, con la data in cui ce li hanno detti.
+      {{ cosaFare().note }}
     </p>
   </article>
 </template>

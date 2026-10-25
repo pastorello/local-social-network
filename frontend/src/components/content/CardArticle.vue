@@ -6,6 +6,8 @@ import RichText from '@/components/content/RichText.vue'
 import LanguageSwitch from '@/components/content/LanguageSwitch.vue'
 import ShareButton from '@/components/content/ShareButton.vue'
 import { useIsDesktop } from '@/composables/useBreakpoint'
+import { intlLocale } from '@/lib/i18n'
+import card from '@/lib/i18n/messages/card'
 import type { CardImage, TranslationRef } from '@/definitions/interfaces/Content'
 import type User from '@/definitions/interfaces/User'
 
@@ -22,8 +24,10 @@ const props = defineProps<{
   // The card's own title when it differs — i.e. the translated name, shown
   // under the Italian one. Absent on an original.
   subtitle?: string | null
-  // The language this card's prose is in; marks the article for WCAG 3.1.2
-  // (Language of Parts), since the document itself is `lang="it"`.
+  // The language this card's prose is in, marked on the prose for WCAG 3.1.2
+  // (Language of Parts). On the prose, not on the article (review PR-19a):
+  // the headings, the byline and the way back around it are the interface's,
+  // in the reader's language, which `<html lang>` already says.
   language?: string
   bodyHtml: string
   author: User
@@ -46,17 +50,20 @@ const cover = computed(() => props.images[0] ?? null)
 const { isDesktop } = useIsDesktop()
 const gallery = computed(() => props.images.slice(1))
 
+// The day it was written, in Gaeta (an instant, so read in Europe/Rome) and
+// in the reader's language.
 const createdAtFormatted = computed(() =>
-  new Date(props.createdAt).toLocaleDateString('it-IT', {
+  new Date(props.createdAt).toLocaleDateString(intlLocale(), {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
+    timeZone: 'Europe/Rome',
   }),
 )
 </script>
 
 <template>
-  <article class="mx-auto w-full max-w-3xl" :lang="language">
+  <article class="mx-auto w-full max-w-3xl">
     <!-- Full-bleed on a phone, contained above it: the cover is the first
     thing a reader who arrived from a pin sees. -->
     <!-- The wrapper carries the bleed, not the image: a negative margin plus
@@ -66,6 +73,7 @@ const createdAtFormatted = computed(() =>
       <img
         :src="cover.imageURL"
         :alt="cover.caption || title"
+        lang="it"
         class="aspect-[3/2] w-full object-cover sm:rounded-lg lg:aspect-[21/9]"
       />
     </div>
@@ -79,7 +87,7 @@ const createdAtFormatted = computed(() =>
         class="mb-3 flex flex-wrap items-center justify-between gap-3"
       >
         <p v-if="!isPublished" class="text-xs font-semibold tracking-[0.12em] text-muted uppercase">
-          Bozza
+          {{ card().draft }}
         </p>
         <LanguageSwitch :translations="translations" :detail-route-name="detailRouteName" />
       </div>
@@ -91,7 +99,11 @@ const createdAtFormatted = computed(() =>
       >
         {{ title }}
       </h1>
-      <p v-if="subtitle" class="mb-4 font-display text-title text-balance text-muted">
+      <p
+        v-if="subtitle"
+        class="mb-4 font-display text-title text-balance text-muted"
+        :lang="language"
+      >
         {{ subtitle }}
       </p>
 
@@ -121,6 +133,7 @@ const createdAtFormatted = computed(() =>
       <img
         :src="cover.imageURL"
         :alt="cover.caption || title"
+        lang="it"
         class="aspect-[3/2] w-full object-cover"
       />
     </div>
@@ -133,19 +146,21 @@ const createdAtFormatted = computed(() =>
     half of what makes a sans read as an article rather than an interface. -->
     <RichText
       :html="bodyHtml"
+      :lang="language"
       class="prose prose-stone mb-10 max-w-[65ch] text-reading text-ink prose-headings:font-display prose-headings:text-ink prose-a:text-sea"
     />
 
     <slot name="fields"></slot>
 
     <section v-if="gallery.length" class="mb-10">
-      <h2 class="mb-3 font-display text-title text-ink">Immagini</h2>
+      <h2 class="mb-3 font-display text-title text-ink">{{ card().images }}</h2>
       <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <img
           v-for="image in gallery"
           :key="image.id"
           :src="image.imageURL"
           :alt="image.caption || title"
+          lang="it"
           class="aspect-square w-full rounded-lg object-cover"
         />
       </div>
@@ -156,7 +171,7 @@ const createdAtFormatted = computed(() =>
     <footer class="mt-10 border-t border-hairline pt-6">
       <slot name="actions"></slot>
       <RouterLink :to="{ name: backTo.name }" class="mt-4 inline-block text-sm text-sea underline">
-        ← Torna a {{ backTo.label }}
+        {{ card().backTo(backTo.label) }}
       </RouterLink>
     </footer>
   </article>

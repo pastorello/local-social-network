@@ -35,6 +35,8 @@ export interface MapCardFeature {
 export interface Zone {
   slug: string
   name: string
+  // Blank for a proper name, which reads the same in English (review PR-19a).
+  name_en?: string
   geometry: { type: 'Polygon' | 'MultiPolygon'; coordinates: unknown }
   count: number
 }

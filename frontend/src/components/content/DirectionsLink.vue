@@ -3,12 +3,14 @@ import { computed } from 'vue'
 
 import type { MapPoint } from '@/definitions/interfaces/Content'
 import { directionsUrl } from '@/lib/directions'
+import card from '@/lib/i18n/messages/card'
 
 // The way to a card's place (review PR-3): the action for the reader already
 // in town, so it is the section's primary button. It leaves the site, and says
 // so in words a reader sees before tapping — not only to a screen reader —
 // because a tourist who lands in Google Maps unannounced has lost the page.
-const { place, label = 'Come arrivarci' } = defineProps<{
+// In the reader's language (review PR-19a).
+const { place, label } = defineProps<{
   place: Pick<MapPoint, 'lat' | 'lng'>
   label?: string
 }>()
@@ -23,6 +25,6 @@ const href = computed(() => directionsUrl(place))
     rel="noopener"
     class="inline-block min-h-11 rounded-full bg-sea px-5 py-3 text-center text-sm leading-5 font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
   >
-    {{ label }} <span class="font-normal">(apre Google Maps)</span>
+    {{ label ?? card().directions }} <span class="font-normal">{{ card().opensMaps }}</span>
   </a>
 </template>

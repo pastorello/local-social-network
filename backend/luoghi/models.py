@@ -19,6 +19,14 @@ class Genre(models.Model):
     # The reader meets genres as headings ("Spiagge", "Musei"), the form as a
     # choice ("Spiaggia"), so both forms are stored rather than derived.
     name_plural = models.CharField('nome al plurale', max_length=100)
+    # The reader's interface speaks English too since 2026-10-25 (review
+    # PR-19a, spec translations.md T9): the same two forms in English. Blank
+    # until the author writes them, and then the Italian is what a reader of
+    # either language sees — never an empty heading.
+    name_en = models.CharField('nome in inglese', max_length=100, blank=True, default='')
+    name_plural_en = models.CharField(
+        'nome al plurale in inglese', max_length=100, blank=True, default=''
+    )
     # What the list filter and the SPA's links carry: stable, readable, and
     # not the UUID a URL would otherwise have to spell.
     slug = models.SlugField(max_length=100, unique=True)

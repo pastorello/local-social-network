@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { Overlay } from '@/definitions/interfaces/MapData'
+import home from '@/lib/i18n/messages/home'
+import { wordsOf } from '@/lib/i18n/messages/types'
 import { CARD_LAYERS, REPORTS_LAYER_KEY, layerColor } from '@/lib/mapLayers'
 import { statusColor } from '@/lib/reportStatus'
 
@@ -23,7 +25,7 @@ const overlayOpacity = defineModel<Record<string, number>>('overlayOpacity', { r
 <template>
   <div class="space-y-6">
     <fieldset class="space-y-2">
-      <legend class="mb-2 text-lg font-semibold">Livelli</legend>
+      <legend class="mb-2 text-lg font-semibold">{{ home().layers }}</legend>
       <div v-for="layer in CARD_LAYERS" :key="layer.key" class="flex items-center gap-2">
         <input
           :id="`layer-${layer.key}`"
@@ -37,11 +39,12 @@ const overlayOpacity = defineModel<Record<string, number>>('overlayOpacity', { r
           aria-hidden="true"
         ></span>
         <label :for="`layer-${layer.key}`" class="text-sm text-ink">
-          {{ layer.label }}
+          {{ wordsOf(layer.key)?.layer ?? layer.label }}
           <span class="text-muted">({{ props.featureCount(layer.key) }})</span>
         </label>
       </div>
-      <div v-if="props.reportCount !== undefined" class="flex items-center gap-2">
+      <!-- A collaborator's layer, named in Italian (review PR-19a). -->
+      <div v-if="props.reportCount !== undefined" class="flex items-center gap-2" lang="it">
         <input
           id="layer-segnalazioni"
           v-model="activeLayers[REPORTS_LAYER_KEY]"
@@ -64,7 +67,7 @@ const overlayOpacity = defineModel<Record<string, number>>('overlayOpacity', { r
     under it would tell someone outside the steering tier that something is
     being kept from them (ADR-0006). -->
     <fieldset v-if="overlays.length" class="space-y-3">
-      <legend class="mb-2 text-lg font-semibold">Sovrapposizioni</legend>
+      <legend class="mb-2 text-lg font-semibold">{{ home().overlays }}</legend>
       <div v-for="overlay in overlays" :key="overlay.id" class="space-y-1">
         <div class="flex items-center gap-2">
           <input
@@ -76,7 +79,9 @@ const overlayOpacity = defineModel<Record<string, number>>('overlayOpacity', { r
           <label :for="`overlay-${overlay.id}`" class="text-sm text-ink">{{ overlay.name }}</label>
         </div>
         <div v-if="activeOverlays[overlay.id]" class="flex items-center gap-2 pl-6">
-          <label :for="`overlay-opacity-${overlay.id}`" class="text-xs text-muted">Opacità</label>
+          <label :for="`overlay-opacity-${overlay.id}`" class="text-xs text-muted">{{
+            home().opacity
+          }}</label>
           <input
             :id="`overlay-opacity-${overlay.id}`"
             v-model.number="overlayOpacity[overlay.id]"

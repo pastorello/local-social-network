@@ -23,6 +23,15 @@ class Attivita(models.Model):
         # with nowhere to sit.
         (COMPRA, 'Dove si compra'),
     )
+    # The same headings in the reader's English (review PR-19a, translations.md
+    # T9), closed in code beside them: what Zona, Genre and Intent keep in a
+    # `name_en` column, a kind keeps here, where a fourth would have to be
+    # written anyway.
+    KIND_NAMES_EN = {
+        BEVE: 'Where to drink',
+        MANGIA: 'Where to eat',
+        COMPRA: 'Where to buy',
+    }
 
     # primary_key=True: an Attivita's id IS its card's id, same pattern as Feste.
     card = models.OneToOneField(

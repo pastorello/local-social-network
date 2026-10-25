@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { useIsDesktop } from '@/composables/useBreakpoint'
 import { providePanelTrail } from '@/composables/usePanelTrail'
+import shell from '@/lib/i18n/messages/shell'
 import { parentOf, tintOf } from '@/lib/navigation'
 import type { PanelShape } from '@/stores/map'
 
@@ -157,7 +158,7 @@ const pill =
     >
       <path d="M11.5 3.5h5v5M8.5 16.5h-5v-5M16.5 3.5l-5 5M3.5 16.5l5-5" />
     </svg>
-    Allarga la mappa
+    {{ shell().panel.expandMap }}
   </button>
   <button
     v-if="expanded"
@@ -167,7 +168,7 @@ const pill =
     @click="collapse"
     @keydown.esc="collapse"
   >
-    Torna alla scheda
+    {{ shell().panel.backToCard }}
   </button>
 
   <section
@@ -202,7 +203,7 @@ const pill =
       field on «Cosa si può fare qui» asks, about Gaeta, not about the site. -->
       <nav
         v-if="parent || steps.length"
-        aria-label="Percorso"
+        :aria-label="shell().panel.trail"
         class="flex min-w-0 flex-1 flex-wrap items-center text-xs font-semibold tracking-[0.12em] uppercase"
         :style="{ color: tint }"
       >
@@ -248,8 +249,8 @@ const pill =
       <button
         type="button"
         class="ml-auto flex h-11 w-11 flex-none cursor-pointer items-center justify-center rounded-full border border-hairline bg-surface text-ink hover:border-field focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
-        aria-label="Chiudi e torna alla mappa"
-        title="Chiudi (Esc)"
+        :aria-label="shell().panel.close"
+        :title="shell().panel.closeTitle"
         aria-keyshortcuts="Escape"
         @click="close"
       >
@@ -266,7 +267,13 @@ const pill =
         </svg>
       </button>
     </div>
-    <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-6 lg:px-8">
+    <!-- A collaborator's page stays Italian in either language (review
+    PR-19a), and says so to a screen reader (WCAG 3.1.2); the panel's own
+    chrome above speaks the reader's. -->
+    <div
+      class="min-h-0 flex-1 overflow-y-auto px-4 pb-6 lg:px-8"
+      :lang="route.meta.italian ? 'it' : undefined"
+    >
       <slot></slot>
     </div>
   </section>

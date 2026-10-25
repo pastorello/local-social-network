@@ -460,6 +460,22 @@ def test_the_seeded_genres_are_googles_taxonomy_in_the_admins_order(api_client):
     assert response.json()[0]['name_plural'] == 'Spiagge'
 
 
+def test_the_seeded_genres_have_their_english_names_and_a_place_reads_its_own(api_client, make_luogo):
+    """The reader's English (review PR-19a): both forms, written by hand in
+    a migration — and a genre the admin adds without them is blank, which the
+    SPA reads as «say the Italian»."""
+    genres = {genre['slug']: genre for genre in api_client.get('/api/luoghi/generi/').json()}
+    assert (genres['spiaggia']['name_en'], genres['spiaggia']['name_plural_en']) == ('Beach', 'Beaches')
+    assert genres['punto-panoramico']['name_plural_en'] == 'Viewpoints'
+    luogo = make_luogo(is_published=True)
+    assert api_client.get(f'/api/luoghi/{luogo.pk}/').json()['genre_label_en'] == 'Beach'
+
+    Genre.objects.create(name='Grotta', name_plural='Grotte', slug='grotta', position=9)
+
+    genres = {genre['slug']: genre for genre in api_client.get('/api/luoghi/generi/').json()}
+    assert (genres['grotta']['name_en'], genres['grotta']['name_plural_en']) == ('', '')
+
+
 def test_there_is_no_genre_for_churches(api_client):
     """Churches stay their own type; luoghi only groups them for the reader."""
     names = [genre['name'].lower() for genre in api_client.get('/api/luoghi/generi/').json()]

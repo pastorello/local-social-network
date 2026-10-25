@@ -5,12 +5,18 @@ import { createPinia, setActivePinia } from 'pinia'
 import { createMemoryHistory, createRouter, type Router } from 'vue-router'
 
 import WelcomeView from '../WelcomeView.vue'
-import { PRESENTATION } from '@/definitions/copy'
+import copy from '@/definitions/copy'
 import type { MapCardFeature } from '@/definitions/interfaces/MapData'
 import { useMapStore } from '@/stores/map'
 import { useWizardStore } from '@/stores/wizard'
 
+// The interface's default language (review PR-19a).
+const PRESENTATION = copy.it.presentation
+
 vi.mock('axios')
+// Asked for once the page has painted (stores/map.ts, stores/wizard.ts,
+// useArchiveLine): at once, here.
+vi.mock('@/lib/firstPaint', () => ({ afterFirstPaint: () => Promise.resolve() }))
 
 const feature = (over: Partial<MapCardFeature>): MapCardFeature => ({
   id: 'x',

@@ -2,6 +2,8 @@ import type { RouteLocationRaw } from 'vue-router'
 
 import type { MapPoint, ZoneRef } from '@/definitions/interfaces/Content'
 import type { Intent } from '@/definitions/interfaces/Itinerario'
+import { localName } from '@/lib/i18n'
+import tours from '@/lib/i18n/messages/tours'
 import type { Coords } from '@/lib/mapFrame'
 
 // A stop being edited (spec itinerari.md I8) — StopsField's model.
@@ -54,7 +56,7 @@ export const afterTour = ({
   intents,
   isPublished,
   intentCounts,
-  tours,
+  tours: published,
   zone,
   ricette,
 }: {
@@ -70,6 +72,7 @@ export const afterTour = ({
   ricette: number
 }): AfterTourLink[] => {
   const others = (count: number) => count - (isPublished ? 1 : 0)
+  const words = tours().after
   const links: AfterTourLink[] = []
   // Another tour for the same wish, else any other tour.
   const sameWish = intents
@@ -77,22 +80,22 @@ export const afterTour = ({
     .find((intent) => intent && others(intent.count) > 0)
   if (sameWish) {
     links.push({
-      label: 'Un altro itinerario',
-      detail: sameWish.name,
+      label: words.anotherTour,
+      detail: localName(sameWish),
       to: { path: '/itinerari', query: { intento: sameWish.slug } },
     })
-  } else if (others(tours) > 0) {
-    links.push({ label: 'Un altro itinerario', detail: 'Tutti gli itinerari', to: '/itinerari' })
+  } else if (others(published) > 0) {
+    links.push({ label: words.anotherTour, detail: words.allTours, to: '/itinerari' })
   }
   if (zone) {
     links.push({
-      label: 'Cosa c’è qui intorno',
-      detail: zone.name,
+      label: words.around,
+      detail: localName(zone),
       to: { path: '/cosa-fare', query: { zona: zone.slug } },
     })
   }
   if (ricette > 0) {
-    links.push({ label: 'Da mangiare', detail: 'Le ricette di Gaeta', to: '/ricette' })
+    links.push({ label: words.eat, detail: words.recipes, to: '/ricette' })
   }
   return links
 }

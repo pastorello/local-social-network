@@ -9,7 +9,7 @@ from .rules import publish_problem, stop_card_problem, stop_point_problem
 
 @admin.register(Intent)
 class IntentAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug', 'position')
+    list_display = ('name', 'name_en', 'slug', 'position')
     list_editable = ('position',)
     prepopulated_fields = {'slug': ('name',)}
 

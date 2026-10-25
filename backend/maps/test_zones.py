@@ -135,7 +135,7 @@ def test_a_church_names_the_zone_its_pin_is_in(api_client, citizen):
     altrove = _chiesa(citizen, 'Altrove', NOWHERE)
 
     assert api_client.get(f'/api/chiese/{duomo.pk}/').json()['zones'] == [
-        {'slug': 'gaeta-medievale', 'name': 'Gaeta Medievale'},
+        {'slug': 'gaeta-medievale', 'name': 'Gaeta Medievale', 'name_en': ''},
     ]
     assert api_client.get(f'/api/chiese/{altrove.pk}/').json()['zones'] == []
 
@@ -145,7 +145,29 @@ def test_a_place_names_the_zone_its_pin_is_in(api_client, citizen):
     Luogo.objects.create(card=card, genre=Genre.objects.get(slug='spiaggia'))
     _pin(card, *INSIDE['serapo'])
 
-    assert api_client.get(f'/api/luoghi/{card.pk}/').json()['zones'] == [{'slug': 'serapo', 'name': 'Serapo'}]
+    assert api_client.get(f'/api/luoghi/{card.pk}/').json()['zones'] == [
+        {'slug': 'serapo', 'name': 'Serapo', 'name_en': ''},
+    ]
+
+
+def test_a_zone_is_named_in_italian_in_both_languages_until_the_author_says_otherwise(api_client, citizen):
+    """A zone is named the way Gaeta names it, and a proper name is not
+    translated (review PR-19a): `name_en` is blank, and the SPA reads the
+    Italian. When the author writes one, every payload that names the zone
+    carries it."""
+    card = _card(citizen, 'Spiaggia')
+    Luogo.objects.create(card=card, genre=Genre.objects.get(slug='spiaggia'))
+    _pin(card, *INSIDE['gaeta-medievale'])
+    assert {zone['name_en'] for zone in api_client.get('/api/map/zone/').json()} == {''}
+
+    Zona.objects.filter(slug='gaeta-medievale').update(name_en='Medieval Gaeta')
+
+    listed = {zone['slug']: zone['name_en'] for zone in api_client.get('/api/map/zone/').json()}
+    assert listed['gaeta-medievale'] == 'Medieval Gaeta'
+    assert listed['serapo'] == ''
+    assert api_client.get(f'/api/luoghi/{card.pk}/').json()['zones'] == [
+        {'slug': 'gaeta-medievale', 'name': 'Gaeta Medievale', 'name_en': 'Medieval Gaeta'},
+    ]
 
 
 def test_a_festa_names_the_zones_its_procession_stops_in(api_client, citizen):
@@ -159,8 +181,8 @@ def test_a_festa_names_the_zones_its_procession_stops_in(api_client, citizen):
     Feste.objects.create(card=english)
 
     assert api_client.get(f'/api/feste/{card.pk}/').json()['zones'] == [
-        {'slug': 'serapo', 'name': 'Serapo'},
-        {'slug': 'porto-salvo', 'name': 'Porto Salvo'},
+        {'slug': 'serapo', 'name': 'Serapo', 'name_en': ''},
+        {'slug': 'porto-salvo', 'name': 'Porto Salvo', 'name_en': ''},
     ]
     # A translation walks its original's route (T5).
     assert [z['slug'] for z in api_client.get(f'/api/feste/{english.pk}/').json()['zones']] == [

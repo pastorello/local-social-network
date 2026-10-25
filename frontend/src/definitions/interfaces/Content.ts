@@ -18,6 +18,9 @@ export interface MapPoint {
 export interface ZoneRef {
   slug: string
   name: string
+  // The English name, blank for a proper name (review PR-19a): read through
+  // lib/i18n::localName.
+  name_en?: string
 }
 
 // GET /api/content/counts/ (review PR-9): the published originals of each

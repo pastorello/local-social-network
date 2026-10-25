@@ -7,6 +7,7 @@ import App from './App.vue'
 import router from './router'
 import axios from 'axios'
 import { setupAuthInterceptor } from './lib/auth'
+import { initLocale } from './lib/i18n'
 import { useUserStore } from './stores/user'
 
 axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000'
@@ -25,6 +26,14 @@ app.use(createPinia())
 setupAuthInterceptor()
 useUserStore().initStore()
 
-app.use(router)
-
-app.mount('#app')
+// The reader's language (review PR-19a), before the first navigation reads
+// it and before the first paint: the page is drawn once, in its language. An
+// English reader waits for the English of the first paint, a chunk of its own
+// (lib/i18n/index.ts); an Italian one waits for nothing.
+const start = () => {
+  app.use(router)
+  app.mount('#app')
+}
+const english = initLocale()
+if (english) english.then(start)
+else start()

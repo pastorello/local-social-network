@@ -1,7 +1,8 @@
-import { describe, it, expect } from 'vitest'
+import { afterEach, describe, it, expect } from 'vitest'
 
 import { afterTour, pointOf, stopsByPlace, type StopDraft } from '../tours'
 import type { Intent } from '@/definitions/interfaces/Itinerario'
+import { setLocale } from '@/lib/i18n'
 
 describe('pointOf', () => {
   const stop = (patch: Partial<StopDraft>): StopDraft => ({
@@ -112,5 +113,38 @@ describe('afterTour — what the last stop offers (review PR-7)', () => {
     })
 
     expect(links[0]?.to).toEqual({ path: '/itinerari', query: { intento: 'mare' } })
+  })
+})
+
+// In the reader's language (review PR-19a), the intent and the zone by their
+// English names where the author wrote them.
+describe('afterTour, in English', () => {
+  afterEach(() => setLocale('it'))
+
+  it('offers the same ways on, in English', async () => {
+    await setLocale('en')
+    const links = afterTour({
+      intents: ['mare'],
+      isPublished: true,
+      intentCounts: [
+        {
+          slug: 'mare',
+          name: 'Andare al mare',
+          name_en: 'Going to the beach',
+          name_plural: '',
+          description: '',
+          count: 2,
+        },
+      ],
+      tours: 2,
+      zone: { slug: 'serapo', name: 'Serapo', name_en: '' },
+      ricette: 1,
+    })
+
+    expect(links.map((link) => [link.label, link.detail])).toEqual([
+      ['Another tour', 'Going to the beach'],
+      ['What is around here', 'Serapo'],
+      ['Something to eat', 'The recipes of Gaeta'],
+    ])
   })
 })

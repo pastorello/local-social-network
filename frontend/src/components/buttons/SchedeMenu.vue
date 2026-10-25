@@ -11,6 +11,8 @@ import LibroIcon from '../icons/LibroIcon.vue'
 import LuogoIcon from '../icons/LuogoIcon.vue'
 import AttivitaIcon from '../icons/AttivitaIcon.vue'
 import type { CardCounts } from '@/definitions/interfaces/Content'
+import shell from '@/lib/i18n/messages/shell'
+import { wordsOf } from '@/lib/i18n/messages/types'
 import { sectionOf } from '@/lib/navigation'
 
 // *Esplora* (review PR-23, N-05 — *Schede* until 2026-10-23, which is what the
@@ -21,15 +23,16 @@ import { sectionOf } from '@/lib/navigation'
 // *Chiese*: churches are a heading under *Luoghi* (content.md, 2026-09-11),
 // reached from its chip on /luoghi — one place, not two. The key is the type's
 // route segment and its key in /api/content/counts/. *Attività* sits under
-// *Luoghi* (2026-10-25, ADR-0010): the other type a guest goes to.
+// *Luoghi* (2026-10-25, ADR-0010): the other type a guest goes to. Each is
+// named in the reader's language (review PR-19a, lib/i18n/messages/types.ts).
 const items = [
-  { key: 'luoghi', label: 'Luoghi', icon: LuogoIcon },
-  { key: 'attivita', label: 'Attività', icon: AttivitaIcon },
-  { key: 'feste', label: 'Feste', icon: FesteIcon },
-  { key: 'ricette', label: 'Ricette', icon: RicettaIcon },
-  { key: 'personaggi', label: 'Personaggi storici', icon: PersonaggioIcon },
-  { key: 'dialetto', label: 'Dialetto', icon: DialettoIcon },
-  { key: 'libri', label: 'Libri consigliati', icon: LibroIcon },
+  { key: 'luoghi', icon: LuogoIcon },
+  { key: 'attivita', icon: AttivitaIcon },
+  { key: 'feste', icon: FesteIcon },
+  { key: 'ricette', icon: RicettaIcon },
+  { key: 'personaggi', icon: PersonaggioIcon },
+  { key: 'dialetto', icon: DialettoIcon },
+  { key: 'libri', icon: LibroIcon },
 ]
 
 const route = useRoute()
@@ -103,7 +106,9 @@ onBeforeUnmount(() => {
       :aria-current="isActive ? 'page' : undefined"
       @click="toggle"
     >
-      <span :class="{ 'underline decoration-2 underline-offset-4': isActive }">Esplora</span>
+      <span :class="{ 'underline decoration-2 underline-offset-4': isActive }">{{
+        shell().nav.explore
+      }}</span>
       <svg
         viewBox="0 0 20 20"
         class="h-4 w-4"
@@ -134,12 +139,12 @@ onBeforeUnmount(() => {
           @click="close"
         >
           <component :is="item.icon" class="w-5 h-5" aria-hidden="true" />
-          <span>{{ item.label }}</span>
+          <span>{{ wordsOf(item.key)?.label }}</span>
           <!-- Heard as «Luoghi, 9 schede»; the noun's space is inside the
           string, since Vue drops a span's leading whitespace. -->
           <span v-if="countOf(item.key) !== undefined" class="ml-auto pl-2 text-muted tabular-nums">
             <span class="sr-only">, </span>{{ countOf(item.key)
-            }}<span class="sr-only">{{ countOf(item.key) === 1 ? ' scheda' : ' schede' }}</span>
+            }}<span class="sr-only">{{ shell().entriesHeard(countOf(item.key) ?? 0) }}</span>
           </span>
         </RouterLink>
       </li>

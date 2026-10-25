@@ -5,10 +5,13 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import axios from 'axios'
 
 import ProjectView from '../ProjectView.vue'
-import { PROJECT_STORY } from '@/definitions/copy'
+import copy from '@/definitions/copy'
 import { useUserStore } from '@/stores/user'
 
 vi.mock('axios')
+// Asked for once the page has painted (stores/map.ts, stores/wizard.ts,
+// useArchiveLine): at once, here.
+vi.mock('@/lib/firstPaint', () => ({ afterFirstPaint: () => Promise.resolve() }))
 
 const answerStats = (data: unknown) =>
   vi
@@ -127,7 +130,7 @@ describe('Il progetto', () => {
   it('reads from the top as a page: the story, then how it is used, the rule, taking part, the index', async () => {
     const wrapper = await mountProject()
 
-    expect(wrapper.findAll('h1 + div > p').map((p) => p.text())).toEqual([...PROJECT_STORY])
+    expect(wrapper.findAll('h1 + div > p').map((p) => p.text())).toEqual([...copy.it.projectStory])
     expect(wrapper.get('h1 + div').classes()).toContain('text-reading')
     expect(wrapper.findAll('h2').map((h2) => h2.text())).toEqual([
       'Come si usa',

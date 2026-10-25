@@ -8,6 +8,7 @@ import AppToast from '@/components/modals/AppToast.vue'
 import RoutePanel from '@/components/layout/RoutePanel.vue'
 import MapStage from '@/components/maps/MapStage.vue'
 import { useOpenPanelShape } from '@/composables/usePanelShape'
+import shell from '@/lib/i18n/messages/shell'
 import HomeView from '@/views/HomeView.vue'
 import AppHeader from './components/AppHeader.vue'
 
@@ -52,7 +53,7 @@ router.afterEach(async (to, from) => {
     href="#contenuto"
     class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-2000 focus:rounded-lg focus:bg-sea focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
   >
-    Salta al contenuto
+    {{ shell().skipLink }}
   </a>
 
   <AppHeader />

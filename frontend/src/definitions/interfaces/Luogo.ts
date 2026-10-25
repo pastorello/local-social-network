@@ -6,6 +6,9 @@ export interface Genre {
   slug: string
   name: string
   name_plural: string
+  // The English forms, blank until the author writes them (review PR-19a).
+  name_en?: string
+  name_plural_en?: string
   // Published places carrying it, so an empty heading can be left out.
   count: number
 }
@@ -15,6 +18,7 @@ export default interface Luogo extends CardBase {
   // original's, as it shows its original's pin.
   genre: string
   genre_label: string
+  genre_label_en?: string
   how_to_get_there: string
   pins: MapPoint[]
   // The zone its pin is in — the original's, for a translation (T5).

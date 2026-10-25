@@ -1,6 +1,8 @@
 import type { RouteLocationNormalizedLoaded } from 'vue-router'
 
 import { itinerarioConfig, typeConfigs } from '@/definitions/typeConfigs'
+import shell from '@/lib/i18n/messages/shell'
+import { wordsOf } from '@/lib/i18n/messages/types'
 import { CARD_LAYERS, layerVar } from '@/lib/mapLayers'
 
 // Close, up, back (review PR-22, spec/design.md "Close, up, back"): three
@@ -8,7 +10,9 @@ import { CARD_LAYERS, layerVar } from '@/lib/mapLayers'
 // level above the page the reader is on, which is all there is: the archive is
 // at most two deep. A card is under its type's list, a stop under its tour, a
 // tour under the tours, a chosen zone under «Cosa fare». A page with nothing
-// above it but the map has no up: its close button already goes there.
+// above it but the map has no up: its close button already goes there. Named
+// in the reader's language (review PR-19a): read where it is drawn, so the
+// label follows the switch.
 export interface Parent {
   to: string
   label: string
@@ -24,9 +28,9 @@ export type Where = Pick<RouteLocationNormalizedLoaded, 'path' | 'query'> & {
 // Every card type's list, and the pages under it: a card, and the form that
 // writes one. Feste keeps views of its own, so it has no config to read.
 const LISTS = [
-  { label: 'Feste', path: '/feste', name: 'festelist', children: ['festedetail', 'festecreate'] },
+  { key: 'feste', path: '/feste', name: 'festelist', children: ['festedetail', 'festecreate'] },
   ...[...typeConfigs, itinerarioConfig].map((config) => ({
-    label: config.label,
+    key: config.key,
     path: `/${config.key}`,
     name: config.routeNames.list,
     children: [config.routeNames.detail, config.routeNames.create],
@@ -34,29 +38,30 @@ const LISTS = [
 ]
 
 export const parentOf = (route: Where): Parent | null => {
+  const up = shell().up
   // A stop of a tour followed one at a time (`?tappa=N`, itinerari.md I7) is
   // under its tour: the same page, without the query.
   const step = Number(route.query.tappa)
   if (route.name === itinerarioConfig.routeNames.detail && Number.isInteger(step) && step >= 1) {
-    return { to: route.path, label: 'Itinerario' }
+    return { to: route.path, label: up.tour }
   }
   // A chosen zone, or the wizard's answer shown there (review PR-21), is under
   // «Cosa fare» itself.
   if (route.name === 'cosafare' && (route.query.zona || route.query.intento)) {
-    return { to: '/cosa-fare', label: 'Cosa fare' }
+    return { to: '/cosa-fare', label: up.whatToDo }
   }
   // A report is a point on the collaborator's map (reports-and-polls.md R1),
   // where the reports are: up is named after them (review PR-23).
-  if (route.name === 'reportdetail') return { to: '/', label: 'Segnalazioni' }
+  if (route.name === 'reportdetail') return { to: '/', label: up.reports }
   // An event is not a card (cosa-fare.md CF25), but it has a list of its
   // own, «Gli eventi che conosciamo», and its form is under its page.
   if (route.name === 'eventodetail' || route.name === 'eventocreate') {
-    return { to: '/eventi', label: 'Eventi' }
+    return { to: '/eventi', label: up.events }
   }
-  if (route.name === 'eventoedit') return { to: `/eventi/${route.params?.id}`, label: 'Evento' }
+  if (route.name === 'eventoedit') return { to: `/eventi/${route.params?.id}`, label: up.event }
 
   const list = LISTS.find((candidate) => candidate.children.includes(String(route.name)))
-  return list ? { to: list.path, label: list.label } : null
+  return list ? { to: list.path, label: wordsOf(list.key)?.label ?? list.key } : null
 }
 
 // The eyebrow wears the colour of its type's map layer (review PR-23,

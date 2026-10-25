@@ -61,7 +61,7 @@ class ZonaAdmin(admin.ModelAdmin):
     still indicative: correct them here. A card joins a zone by where its pin
     is, so moving a boundary moves cards between zones with no other edit."""
 
-    list_display = ('name', 'slug', 'position')
+    list_display = ('name', 'name_en', 'slug', 'position')
     list_editable = ('position',)
     prepopulated_fields = {'slug': ('name',)}
 

@@ -5,12 +5,18 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 import axios from 'axios'
 
 import HomeView from '../HomeView.vue'
-import { PRESENTATION } from '@/definitions/copy'
+import copy from '@/definitions/copy'
 import { CARD_LAYERS } from '@/lib/mapLayers'
 import { useMapStore } from '@/stores/map'
 import { useUserStore } from '@/stores/user'
 
+// The interface's default language (review PR-19a).
+const PRESENTATION = copy.it.presentation
+
 vi.mock('axios')
+// The map's data is asked for once the page has painted (stores/map.ts): at
+// once, here.
+vi.mock('@/lib/firstPaint', () => ({ afterFirstPaint: () => Promise.resolve() }))
 
 // The map itself is the shell's since the layout of 2026-09-18 (design.md
 // D13): HomeView is the chrome over it, and it changes what the map draws

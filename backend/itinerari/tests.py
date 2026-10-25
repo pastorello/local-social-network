@@ -73,6 +73,21 @@ def test_the_seeded_intents_are_the_three_the_author_named_camminare_and_bere(ap
     assert response.json()[4]['name'] == 'Bere'
 
 
+def test_the_seeded_intents_have_their_english_names_and_a_tour_reads_them(auth_client, places):
+    """The reader's English (review PR-19a), written by hand in a migration;
+    a tour's labels come in the same order in both languages."""
+    intents = {i['slug']: i for i in APIClient().get('/api/itinerari/intenti/').json()}
+    assert intents['mare']['name_en'] == 'Going to the beach'
+    assert intents['bere']['name_plural_en'] == 'Having a drink'
+
+    created = auth_client.post(
+        '/api/itinerari/', payload([{'card': str(places['chiesa'].pk)}], is_published='true'),
+    ).json()
+
+    tour = APIClient().get(f"/api/itinerari/{created['id']}/").json()
+    assert tour['intent_labels_en'] == [intents[slug]['name_en'] for slug in tour['intents']]
+
+
 def test_an_intent_counts_only_published_tours(auth_client, places):
     auth_client.post('/api/itinerari/', payload([{'card': str(places['chiesa'].pk)}], is_published='true'))
     auth_client.post('/api/itinerari/', payload([{'card': str(places['chiesa'].pk)}]))
@@ -613,7 +628,7 @@ def test_a_stop_names_the_zone_its_own_point_is_in(auth_client, places):
     from luoghi.models import Genre, Luogo
 
     # On Serapo's beach (maps/migrations/0006), as seed_e2e's luogo is.
-    serapo = [{'slug': 'serapo', 'name': 'Serapo'}]
+    serapo = [{'slug': 'serapo', 'name': 'Serapo', 'name_en': ''}]
     spiaggia = Luogo.objects.create(
         card=_card(places['chiesa'].author, 'Serapo'), genre=Genre.objects.get(slug='spiaggia')
     )

@@ -7,6 +7,9 @@ import { useMapStore } from '../map'
 import { useWizardStore } from '../wizard'
 
 vi.mock('axios')
+// Asked for once the page has painted (stores/map.ts, stores/wizard.ts,
+// useArchiveLine): at once, here.
+vi.mock('@/lib/firstPaint', () => ({ afterFirstPaint: () => Promise.resolve() }))
 
 // The wizard's counts (review PR-21): the home and /benvenuto ask the same
 // question (PR-21b, one front door), and the home is mounted for the life of

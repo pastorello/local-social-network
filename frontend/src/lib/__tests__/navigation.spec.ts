@@ -1,8 +1,9 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { describe, it, expect } from 'vitest'
+import { afterEach, describe, it, expect } from 'vitest'
 
 import router from '@/router'
+import { setLocale } from '@/lib/i18n'
 import { CARD_LAYERS } from '@/lib/mapLayers'
 import { contrastRatio } from '@/lib/tokens'
 import { parentOf, sectionOf, tintOf, type Parent, type Section } from '../navigation'
@@ -165,6 +166,20 @@ const SECTIONS: Record<string, Section | null> = {
   '/profile/edit/password': null,
   '/profile/:id': null,
 }
+
+// The way up is named in the reader's language (review PR-19a).
+describe('parentOf, in English', () => {
+  afterEach(() => setLocale('it'))
+
+  it('names the level above in English', async () => {
+    await setLocale('en')
+
+    expect(parentOf(at(`/chiese/${ID}`))).toEqual({ to: '/chiese', label: 'Churches' })
+    expect(parentOf(at(`/itinerari/${ID}?tappa=2`))?.label).toBe('Tour')
+    expect(parentOf(at('/cosa-fare?zona=serapo'))?.label).toBe('What to do')
+    expect(parentOf(at(`/eventi/${ID}`))?.label).toBe('Events')
+  })
+})
 
 describe('sectionOf', () => {
   it('has an answer for every route, so a new page is placed on purpose', () => {

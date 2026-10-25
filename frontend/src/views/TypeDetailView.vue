@@ -23,6 +23,11 @@ import { useToastStore } from '@/stores/toast'
 import type { TypeConfig } from '@/definitions/typeConfigs'
 import type { Availability, ContentItem, MapPoint, ZoneRef } from '@/definitions/interfaces/Content'
 import { directionsUrl } from '@/lib/directions'
+import { locale, localName } from '@/lib/i18n'
+import card from '@/lib/i18n/messages/card'
+import shell from '@/lib/i18n/messages/shell'
+import { wordsOf } from '@/lib/i18n/messages/types'
+import type { FieldConfig } from '@/definitions/typeConfigs'
 
 const props = defineProps<{ config: TypeConfig }>()
 
@@ -67,7 +72,22 @@ const onlyPin = computed(() => (pins.value.length === 1 ? (pins.value[0] ?? null
 // the line choose one, and they keep their ways there under «Dove si trova».
 const whereLine = computed(() => (props.config.maxPoints === 1 ? onlyPin.value : null))
 const zones = computed(() => (item.value?.zones as ZoneRef[] | undefined) ?? [])
-const zoneNames = computed(() => zones.value.map((zone) => zone.name).join(' · '))
+const zoneNames = computed(() => zones.value.map(localName).join(' · '))
+
+// The reader's words for the type and its fields (review PR-19a); the form
+// keeps the config's Italian ones.
+const typeLabel = computed(() => wordsOf(props.config.key)?.label ?? props.config.label)
+const fieldLabel = (field: FieldConfig) =>
+  (card().fields as Record<string, string>)[field.key] ?? field.label
+// A value shown through its display key — a genre, a kind — is the interface's
+// word, in English where the API has one; any other is the card's own text,
+// in the card's language.
+const fieldValue = (field: FieldConfig): unknown => {
+  const key = field.displayKey ?? field.key
+  const english = field.displayKey && locale.value === 'en' ? item.value?.[`${key}_en`] : null
+  return english || item.value?.[key]
+}
+const fieldLang = (field: FieldConfig) => (field.displayKey ? undefined : item.value?.language)
 
 // The card the URL names — not the one before it, which a card opened from
 // another card's page shows until the new one has loaded.
@@ -79,7 +99,7 @@ usePanelTrail(() =>
   shown.value
     ? {
         steps: zones.value.map((zone) => ({
-          label: zone.name,
+          label: localName(zone),
           to: { name: 'cosafare', query: { zona: zone.slug } },
         })),
       }
@@ -88,7 +108,7 @@ usePanelTrail(() =>
 // «Santissima Annunziata · Chiese · Vivere Gaeta» — by its Italian name, the
 // heading of a translation too (T7).
 usePageTitle(() =>
-  shown.value ? [shown.value.original_title || shown.value.title, props.config.label] : null,
+  shown.value ? [shown.value.original_title || shown.value.title, typeLabel.value] : null,
 )
 
 // D17 by the card, not by its type (review PR-10): a card of a type with a
@@ -138,7 +158,7 @@ const getItem = async () => {
       item.value = response.data
     })
     .catch(() => {
-      toastStore.showToast(5000, 'Scheda non trovata')
+      toastStore.showToast(5000, card().notFound)
       router.push({ name: props.config.routeNames.list })
     })
 }
@@ -203,7 +223,11 @@ watch(
           :images="item.images"
           :translations="item.translations"
           :detail-route-name="config.routeNames.detail"
-          :back-to="{ name: config.routeNames.list, label: config.label.toLowerCase() }"
+          :back-to="{
+            name: config.routeNames.list,
+            label:
+              (card().back as Record<string, string>)[config.key] ?? config.label.toLowerCase(),
+          }"
         >
           <!-- The pin is the original's on a translation, as the map's is
           (translations.md T5); the sentence is the card's own, in the
@@ -213,6 +237,7 @@ watch(
               v-if="whereLine"
               :place="whereLine"
               :how-to-get-there="(item.how_to_get_there as string | undefined) ?? ''"
+              :sentence-lang="item.language"
             />
           </template>
 
@@ -228,25 +253,28 @@ watch(
                 <dt
                   class="text-xs font-semibold tracking-[0.1em] text-muted uppercase sm:w-40 sm:flex-none sm:pt-1"
                 >
-                  {{ field.label }}
+                  {{ fieldLabel(field) }}
                 </dt>
-                <dd class="whitespace-pre-line text-ink">
-                  {{ item![field.displayKey ?? field.key] }}
+                <dd class="whitespace-pre-line text-ink" :lang="fieldLang(field)">
+                  {{ fieldValue(field) }}
                 </dd>
               </div>
             </dl>
 
             <VisitInfo
               :availability="availability"
-              :heading="config.visit?.hoursOnly ? 'Orari' : undefined"
+              :heading="config.visit?.hoursOnly ? card().visit.hours : undefined"
             />
 
             <!-- For the reader already at the door (cosa-fare.md D7): after the
             text, and only when someone wrote it — a reader who got in skips
             nothing. -->
             <section v-if="fromOutside" class="mb-10">
-              <h2 class="mb-3 font-display text-title text-ink">Se la trovi chiusa</h2>
-              <p class="max-w-[65ch] whitespace-pre-line text-reading text-ink">
+              <h2 class="mb-3 font-display text-title text-ink">{{ card().fromOutside }}</h2>
+              <p
+                class="max-w-[65ch] whitespace-pre-line text-reading text-ink"
+                :lang="item.language"
+              >
                 {{ fromOutside }}
               </p>
             </section>
@@ -257,18 +285,23 @@ watch(
             Gaeta, how one gets there in the author's words, and the way there
             from where they stand. -->
             <section v-if="hasPlace" class="mb-10">
-              <h2 class="mb-3 font-display text-title text-ink">Dove si trova</h2>
+              <h2 class="mb-3 font-display text-title text-ink">{{ card().whereIs }}</h2>
               <p v-if="zoneNames" class="font-semibold text-ink">{{ zoneNames }}</p>
               <p
                 v-for="field in placeFields"
                 :key="field.key"
                 class="mt-2 max-w-[65ch] whitespace-pre-line text-reading text-ink"
+                :lang="item.language"
               >
                 {{ item![field.key] }}
               </p>
 
               <template v-if="onlyPin">
-                <ul v-if="labelledPins.length" class="mt-3 list-disc space-y-1 pl-5 text-ink">
+                <ul
+                  v-if="labelledPins.length"
+                  class="mt-3 list-disc space-y-1 pl-5 text-ink"
+                  lang="it"
+                >
                   <li v-for="(pin, index) in labelledPins" :key="index">{{ pin.label }}</li>
                 </ul>
                 <DirectionsLink :place="onlyPin" class="mt-4" />
@@ -281,14 +314,16 @@ watch(
                   :key="pin.id ?? index"
                   class="flex flex-wrap items-center gap-x-3 gap-y-1"
                 >
-                  <span class="text-ink">{{ pin.label || `Punto ${index + 1}` }}</span>
+                  <span v-if="pin.label" class="text-ink" lang="it">{{ pin.label }}</span>
+                  <span v-else class="text-ink">{{ card().point(index + 1) }}</span>
                   <a
                     :href="directionsUrl(pin)"
                     target="_blank"
                     rel="noopener"
                     class="text-sm font-semibold text-sea underline underline-offset-4"
                   >
-                    Come arrivarci <span class="font-normal">(apre Google Maps)</span>
+                    {{ card().directions }}
+                    <span class="font-normal">{{ card().opensMaps }}</span>
                   </a>
                 </li>
               </ul>
@@ -299,20 +334,21 @@ watch(
               phone the strip is small, so the section offers to enlarge it
               too: the same `?mappa=1` step the strip's own button takes. -->
               <p class="mt-4 text-muted">
-                È evidenziato sulla mappa, {{ isDesktop ? 'qui accanto' : 'qui sopra' }}.
+                {{ card().highlighted(isDesktop) }}
                 <RouterLink
                   v-if="!isDesktop"
                   :to="{ query: { ...route.query, mappa: '1' } }"
                   class="font-semibold whitespace-nowrap text-sea underline underline-offset-4"
                 >
-                  Allarga la mappa
+                  {{ shell().panel.expandMap }}
                 </RouterLink>
               </p>
             </section>
           </template>
 
+          <!-- A collaborator's controls: Italian, and marked so (review PR-19a). -->
           <template #actions>
-            <div v-if="canEdit" class="flex flex-wrap items-center gap-2">
+            <div v-if="canEdit" class="flex flex-wrap items-center gap-2" lang="it">
               <ActionButton size="small" @click="editing = true">Modifica</ActionButton>
               <ActionButton size="small" button-type="danger" @click="deleteItem">
                 Elimina
@@ -328,7 +364,7 @@ watch(
         </CardArticle>
       </template>
 
-      <PanelBox v-else-if="item" class="mx-auto w-full max-w-3xl">
+      <PanelBox v-else-if="item" class="mx-auto w-full max-w-3xl" lang="it">
         <TypeForm :config="config" :item="item" @saved="onEdited" @cancel="editing = false" />
       </PanelBox>
     </div>

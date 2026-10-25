@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 
 import type { Intent } from '@/definitions/interfaces/Itinerario'
 import type { Zone, ZoneAlias } from '@/definitions/interfaces/MapData'
+import { afterFirstPaint } from '@/lib/firstPaint'
 import type { EventWindow, WizardArchive, WizardTour } from '@/lib/wizard'
 import { useMapStore } from '@/stores/map'
 
@@ -61,6 +62,10 @@ export const useWizardStore = defineStore('wizard', {
       if (!mapStore.loaded) mapStore.load()
       if (this.asked) return
       this.asked = true
+      // After the first paint, like the map's data (stores/map.ts::load): the
+      // answers land together under words already on screen, and none of them
+      // can come back early enough to sit on the way to those words.
+      await afterFirstPaint()
       const results = await Promise.allSettled([
         axios.get<Intent[]>('/api/itinerari/intenti/'),
         axios.get<Page<WizardTour>>('/api/itinerari/', { params: { page_size: 100 } }),

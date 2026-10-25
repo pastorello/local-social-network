@@ -8,6 +8,13 @@
 // read as calendar days, in UTC, where no time zone can move them to the day
 // before. Gaeta's zone, Europe/Rome, enters once: to know which year it is
 // there, so this year's dates need not say it.
+//
+// In the reader's language since review PR-19a: the locale `Intl` formats the
+// day with (lib/i18n::intlLocale), and the words around it — «ore», «da … a»
+// — from lib/i18n/messages/when.ts. The weekday is there in both.
+
+import { intlLocale } from '@/lib/i18n'
+import words from '@/lib/i18n/messages/when'
 
 export interface When {
   start_date: string
@@ -25,12 +32,12 @@ const thisYearInGaeta = (): number =>
     new Intl.DateTimeFormat('en', { year: 'numeric', timeZone: 'Europe/Rome' }).format(new Date()),
   )
 
-// "2026-09-26" → «sabato 26 settembre», with the year when it is not this
-// year's in Gaeta — or always, where a mistyped year is what is being checked.
+// "2026-09-26" → «sabato 26 settembre» («Saturday 26 September»), with the
+// year when it is not this year's in Gaeta — or always, where a mistyped year is what is being checked.
 export const formatEventDay = (isoDate: string, options: { year?: boolean } = {}): string => {
   const date = asDay(isoDate)
   const withYear = options.year || date.getUTCFullYear() !== thisYearInGaeta()
-  return new Intl.DateTimeFormat('it-IT', {
+  return new Intl.DateTimeFormat(intlLocale(), {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -44,11 +51,12 @@ export const formatEventDay = (isoDate: string, options: { year?: boolean } = {}
 // An hour on a multi-day event is when its first day begins, so it sits
 // beside that day.
 export const formatEventWhen = (when: When, options: { year?: boolean } = {}): string => {
-  const hour = when.start_time ? `ore ${when.start_time.slice(0, 5)}` : ''
+  const say = words()
+  const time = when.start_time ? when.start_time.slice(0, 5) : ''
   const first = formatEventDay(when.start_date, options)
   if (!when.end_date || when.end_date === when.start_date) {
-    return hour ? `${first}, ${hour}` : first
+    return time ? say.at(first, time) : first
   }
   const last = formatEventDay(when.end_date, options)
-  return hour ? `da ${first}, ${hour}, a ${last}` : `da ${first} a ${last}`
+  return time ? say.rangeAt(first, time, last) : say.range(first, last)
 }

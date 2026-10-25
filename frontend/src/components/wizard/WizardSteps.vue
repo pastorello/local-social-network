@@ -11,8 +11,9 @@ import MainTitle from '@/components/typography/MainTitle.vue'
 import AnswerCard from '@/components/wizard/AnswerCard.vue'
 import WizardChoices from '@/components/wizard/WizardChoices.vue'
 import { usePageTitle } from '@/composables/usePageTitle'
-import { PRESENTATION } from '@/definitions/copy'
+import copy from '@/definitions/copy'
 import { zonesWithPlaces } from '@/lib/doors'
+import wizardText from '@/lib/i18n/messages/wizard'
 import {
   afterIntent,
   asksWhere,
@@ -83,7 +84,9 @@ watch(
   { immediate: true },
 )
 
-usePageTitle(() => (step.value === 2 && chosen.value ? ['Dove?', chosen.value.name] : null))
+usePageTitle(() =>
+  step.value === 2 && chosen.value ? [wizardText().where, chosen.value.name] : null,
+)
 
 // Focus goes to the question at every step (ADR-0005): its one h1. A step
 // reached from another page gets it from the panel, which looks for
@@ -125,16 +128,16 @@ const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:si
       <!-- On the home the map's title is the page's h1 and the presentation
       is the page's own, above: the question follows them. -->
       <h2 v-if="home" tabindex="-1" class="font-display text-title text-ink focus:outline-none">
-        Che cosa ti va di fare?
+        {{ wizardText().question }}
       </h2>
       <template v-else>
         <p class="text-xs font-semibold tracking-[0.12em] text-terracotta uppercase">
-          Benvenuti a Gaeta
+          {{ wizardText().welcome }}
         </p>
         <MainTitle ref="title" tabindex="-1" data-panel-focus class="focus:outline-none">
-          Che cosa ti va di fare?
+          {{ wizardText().question }}
         </MainTitle>
-        <p class="mt-2 max-w-[55ch] text-reading text-ink">{{ PRESENTATION }}</p>
+        <p class="mt-2 max-w-[55ch] text-reading text-ink">{{ copy().presentation }}</p>
       </template>
 
       <!-- The answers land together once every count is in, under what is
@@ -142,10 +145,13 @@ const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:si
       <template v-if="known">
         <ul v-if="intents.length" :class="[grid, home ? 'mt-4' : 'mt-6']">
           <li v-for="intent in intents" :key="intent.slug">
+            <!-- The description is the admin's, in Italian until review
+            PR-19b: marked so, where the interface around it is English. -->
             <AnswerCard
               :to="afterIntent(archive, intent.slug, zones)"
               :title="intent.name"
               :description="intent.description"
+              description-lang="it"
               :line="intent.line"
             >
               <template #tile>
@@ -155,17 +161,17 @@ const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:si
           </li>
         </ul>
         <p v-else class="mt-6 text-muted">
-          Le proposte sono in preparazione. Intanto, la mappa racconta la città.
+          {{ wizardText().none }}
         </p>
 
         <!-- «Oggi» and «Questa settimana» (cosa-fare.md Part −1, D9): kept
         apart from the everyday, and each only when something falls in it. -->
         <template v-if="windowsOn.length">
           <h3 v-if="home" class="mt-8 text-xs font-semibold tracking-[0.12em] text-muted uppercase">
-            In calendario
+            {{ wizardText().calendar }}
           </h3>
           <h2 v-else class="mt-8 text-xs font-semibold tracking-[0.12em] text-muted uppercase">
-            In calendario
+            {{ wizardText().calendar }}
           </h2>
           <ul :class="[grid, 'mt-3']">
             <li v-for="window in windowsOn" :key="window.key">
@@ -187,8 +193,8 @@ const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:si
           <li v-if="withPlaces.length">
             <AnswerCard
               :to="{ name: 'cosafare' }"
-              title="Oppure guarda cosa c'è in una zona"
-              description="Serapo, il centro medievale, Monte Orlando…"
+              :title="wizardText().zoneDoor.title"
+              :description="wizardText().zoneDoor.description"
             >
               <template #tile>
                 <span :class="[tile, 'bg-sea/10 text-sea']" aria-hidden="true"><LuogoIcon /></span>
@@ -203,8 +209,8 @@ const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:si
             question already put away. -->
             <AnswerCard
               v-if="home"
-              title="Vai alla mappa"
-              line="I livelli e l’elenco dei luoghi"
+              :title="wizardText().goToMap.title"
+              :line="wizardText().goToMap.line"
               @click="wizard.closeQuestion()"
             >
               <template #tile>
@@ -216,7 +222,7 @@ const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:si
             <AnswerCard
               v-else
               to="/"
-              title="Non lo so: fammi vedere la mappa"
+              :title="wizardText().dontKnow"
               @click="wizard.closeQuestion()"
             >
               <template #tile>
@@ -233,7 +239,7 @@ const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:si
     <template v-else>
       <WizardChoices :intent="chosen?.name ?? null" :intent-to="{ query: {} }" />
       <MainTitle ref="title" tabindex="-1" data-panel-focus class="mt-1 focus:outline-none">
-        Dove?
+        {{ wizardText().where }}
       </MainTitle>
 
       <!-- «Dove sei?» (review PR-20): the guest who does not know the zones'
@@ -250,7 +256,11 @@ const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:si
           </AnswerCard>
         </li>
         <li>
-          <AnswerCard :to="resultOf(chosen.slug)" title="Ovunque a Gaeta" :line="everywhere">
+          <AnswerCard
+            :to="resultOf(chosen.slug)"
+            :title="wizardText().everywhere"
+            :line="everywhere"
+          >
             <template #tile>
               <span :class="[tile, 'bg-sea/10 text-sea']" aria-hidden="true"
                 ><ItinerarioIcon

@@ -25,7 +25,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        fields = ('slug', 'name', 'name_plural', 'count')
+        fields = ('slug', 'name', 'name_plural', 'name_en', 'name_plural_en', 'count')
 
 
 class LuogoReadSerializer(serializers.ModelSerializer):
@@ -40,6 +40,7 @@ class LuogoReadSerializer(serializers.ModelSerializer):
     translation_of = serializers.PrimaryKeyRelatedField(source='card.translation_of', read_only=True)
     genre = serializers.SerializerMethodField()
     genre_label = serializers.SerializerMethodField()
+    genre_label_en = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField()
     pins = serializers.SerializerMethodField()
     translations = serializers.SerializerMethodField()
@@ -62,6 +63,11 @@ class LuogoReadSerializer(serializers.ModelSerializer):
 
     def get_genre_label(self, obj):
         return self._genre(obj).name
+
+    # Blank until the author writes it: the SPA reads the Italian then
+    # (review PR-19a).
+    def get_genre_label_en(self, obj):
+        return self._genre(obj).name_en
 
     def get_images(self, obj):
         return CardImageSerializer(media_source(obj.card).images.all(), many=True).data
@@ -88,7 +94,7 @@ class LuogoReadSerializer(serializers.ModelSerializer):
         model = Luogo
         fields = (
             'id', 'title', 'body_html', 'author', 'is_published',
-            'genre', 'genre_label', 'how_to_get_there', 'availability',
+            'genre', 'genre_label', 'genre_label_en', 'how_to_get_there', 'availability',
             'images', 'pins', 'zones', 'language', 'translation_of', 'original_title', 'translations',
             'created_at', 'updated_at',
         )

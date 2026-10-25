@@ -1,8 +1,12 @@
+import { watch } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import { useToastStore } from '../stores/toast'
 import { fetchCardFirst } from '../lib/cardFirst'
-import { setTitle } from '../lib/pageTitle'
+import { isLocale, locale, setLocale } from '../lib/i18n'
+import shell from '../lib/i18n/messages/shell'
+import { wordsOf } from '../lib/i18n/messages/types'
+import { setTitle, titleParts } from '../lib/pageTitle'
 import {
   chiesaConfig,
   dialettoConfig,
@@ -20,6 +24,12 @@ import {
 import CosaFareView from '../views/CosaFareView.vue'
 import EmptyRoute from '../views/EmptyRoute.vue'
 import WelcomeView from '../views/WelcomeView.vue'
+
+// A reader's page is titled in the reader's language (review PR-19a), so its
+// title is a function, read when the title is set. A collaborator's page —
+// `italian: true` — keeps its Italian strings: those surfaces stay Italian,
+// and RoutePanel marks them so (WCAG 3.1.2).
+const typeTitle = (key: string) => () => [wordsOf(key)?.label ?? key]
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -41,7 +51,7 @@ const router = createRouter({
       path: '/il-progetto',
       name: 'progetto',
       component: () => import('../views/ProjectView.vue'),
-      meta: { requiresAuth: false, title: ['Il progetto'] },
+      meta: { requiresAuth: false, title: () => [shell().title.project] },
     },
     {
       // Behind the login since 2026-10-22, like the API it reads: reports are
@@ -49,43 +59,43 @@ const router = createRouter({
       path: '/reports/:id',
       name: 'reportdetail',
       component: () => import('../views/ReportDetailView.vue'),
-      meta: { requiresAuth: true, panel: 'narrow', title: ['Segnalazioni'] },
+      meta: { requiresAuth: true, panel: 'narrow', title: ['Segnalazioni'], italian: true },
     },
     {
       path: '/collabora',
       name: 'collabora',
       component: () => import('../views/CollaboraView.vue'),
-      meta: { requiresAuth: false, title: ['Collabora con noi'] },
+      meta: { requiresAuth: false, title: ['Collabora con noi'], italian: true },
     },
     {
       path: '/login',
       name: 'login',
       component: () => import('../views/LoginView.vue'),
-      meta: { requiresAuth: false, title: ['Accedi'] },
+      meta: { requiresAuth: false, title: ['Accedi'], italian: true },
     },
     {
       path: '/invito/:token',
       name: 'inviteaccept',
       component: () => import('../views/InviteAcceptView.vue'),
-      meta: { requiresAuth: false, title: ['Attiva il tuo account'] },
+      meta: { requiresAuth: false, title: ['Attiva il tuo account'], italian: true },
     },
     {
       path: '/password-dimenticata',
       name: 'passwordresetrequest',
       component: () => import('../views/PasswordResetRequestView.vue'),
-      meta: { requiresAuth: false, title: ['Password dimenticata'] },
+      meta: { requiresAuth: false, title: ['Password dimenticata'], italian: true },
     },
     {
       path: '/reimposta-password/:token',
       name: 'passwordresetconfirm',
       component: () => import('../views/PasswordResetConfirmView.vue'),
-      meta: { requiresAuth: false, title: ['Reimposta password'] },
+      meta: { requiresAuth: false, title: ['Reimposta password'], italian: true },
     },
     {
       path: '/users',
       name: 'users',
       component: () => import('../views/UsersView.vue'),
-      meta: { requiresAuth: true, title: ['Utenti'] },
+      meta: { requiresAuth: true, title: ['Utenti'], italian: true },
     },
     {
       // Behind the login since 2026-10-24, like the API it reads: the polls
@@ -96,8 +106,9 @@ const router = createRouter({
       component: () => import('../views/PollsView.vue'),
       meta: {
         requiresAuth: true,
-        signInToast: "I sondaggi sono per chi collabora all'archivio",
+        signInToast: () => shell().pollsSignIn,
         title: ['Sondaggi'],
+        italian: true,
       },
     },
     {
@@ -106,7 +117,7 @@ const router = createRouter({
       path: '/feste',
       name: 'festelist',
       component: () => import('../views/FesteListView.vue'),
-      meta: { requiresAuth: false, title: ['Feste'] },
+      meta: { requiresAuth: false, title: typeTitle('feste') },
     },
     {
       // Every form that writes a card opens in the editor's shape, the types
@@ -116,7 +127,7 @@ const router = createRouter({
       path: '/feste/nuova',
       name: 'festecreate',
       component: () => import('../views/FesteCreateView.vue'),
-      meta: { requiresAuth: true, panel: 'editor', title: ['Nuova festa', 'Feste'] },
+      meta: { requiresAuth: true, panel: 'editor', title: ['Nuova festa', 'Feste'], italian: true },
     },
     {
       // 'narrow' is the type's default; the card says whether it has a place,
@@ -127,7 +138,7 @@ const router = createRouter({
       name: 'festedetail',
       component: () => import('../views/FesteDetailView.vue'),
       beforeEnter: fetchCardFirst('/api/feste/'),
-      meta: { requiresAuth: false, panel: 'narrow', title: ['Feste'] },
+      meta: { requiresAuth: false, panel: 'narrow', title: typeTitle('feste') },
     },
     // C3: chiese/ricette/personaggi/dialetto share the same generic
     // Type*View components, parameterized by definitions/typeConfigs.ts —
@@ -137,14 +148,19 @@ const router = createRouter({
       name: chiesaConfig.routeNames.list,
       component: () => import('../views/TypeListView.vue'),
       props: { config: chiesaConfig },
-      meta: { requiresAuth: false, title: [chiesaConfig.label] },
+      meta: { requiresAuth: false, title: typeTitle(chiesaConfig.key) },
     },
     {
       path: '/chiese/nuova',
       name: chiesaConfig.routeNames.create,
       component: () => import('../views/TypeCreateView.vue'),
       props: { config: chiesaConfig },
-      meta: { requiresAuth: true, panel: 'editor', title: ['Nuova scheda', chiesaConfig.label] },
+      meta: {
+        requiresAuth: true,
+        panel: 'editor',
+        title: ['Nuova scheda', chiesaConfig.label],
+        italian: true,
+      },
     },
     {
       path: '/chiese/:id',
@@ -152,21 +168,26 @@ const router = createRouter({
       component: () => import('../views/TypeDetailView.vue'),
       props: { config: chiesaConfig },
       beforeEnter: fetchCardFirst(chiesaConfig.endpoint),
-      meta: { requiresAuth: false, panel: 'narrow', title: [chiesaConfig.label] },
+      meta: { requiresAuth: false, panel: 'narrow', title: typeTitle(chiesaConfig.key) },
     },
     {
       path: '/ricette',
       name: ricettaConfig.routeNames.list,
       component: () => import('../views/TypeListView.vue'),
       props: { config: ricettaConfig },
-      meta: { requiresAuth: false, title: [ricettaConfig.label] },
+      meta: { requiresAuth: false, title: typeTitle(ricettaConfig.key) },
     },
     {
       path: '/ricette/nuova',
       name: ricettaConfig.routeNames.create,
       component: () => import('../views/TypeCreateView.vue'),
       props: { config: ricettaConfig },
-      meta: { requiresAuth: true, panel: 'editor', title: ['Nuova scheda', ricettaConfig.label] },
+      meta: {
+        requiresAuth: true,
+        panel: 'editor',
+        title: ['Nuova scheda', ricettaConfig.label],
+        italian: true,
+      },
     },
     {
       path: '/ricette/:id',
@@ -174,14 +195,14 @@ const router = createRouter({
       component: () => import('../views/TypeDetailView.vue'),
       props: { config: ricettaConfig },
       beforeEnter: fetchCardFirst(ricettaConfig.endpoint),
-      meta: { requiresAuth: false, panel: 'narrow', title: [ricettaConfig.label] },
+      meta: { requiresAuth: false, panel: 'narrow', title: typeTitle(ricettaConfig.key) },
     },
     {
       path: '/personaggi',
       name: personaggioConfig.routeNames.list,
       component: () => import('../views/TypeListView.vue'),
       props: { config: personaggioConfig },
-      meta: { requiresAuth: false, title: [personaggioConfig.label] },
+      meta: { requiresAuth: false, title: typeTitle(personaggioConfig.key) },
     },
     {
       path: '/personaggi/nuovo',
@@ -192,6 +213,7 @@ const router = createRouter({
         requiresAuth: true,
         panel: 'editor',
         title: ['Nuova scheda', personaggioConfig.label],
+        italian: true,
       },
     },
     {
@@ -200,42 +222,52 @@ const router = createRouter({
       component: () => import('../views/TypeDetailView.vue'),
       props: { config: personaggioConfig },
       beforeEnter: fetchCardFirst(personaggioConfig.endpoint),
-      meta: { requiresAuth: false, panel: 'narrow', title: [personaggioConfig.label] },
+      meta: { requiresAuth: false, panel: 'narrow', title: typeTitle(personaggioConfig.key) },
     },
     {
       path: '/dialetto',
       name: dialettoConfig.routeNames.list,
       component: () => import('../views/TypeListView.vue'),
       props: { config: dialettoConfig },
-      meta: { requiresAuth: false, title: [dialettoConfig.label] },
+      meta: { requiresAuth: false, title: typeTitle(dialettoConfig.key) },
     },
     {
       path: '/dialetto/nuovo',
       name: dialettoConfig.routeNames.create,
       component: () => import('../views/TypeCreateView.vue'),
       props: { config: dialettoConfig },
-      meta: { requiresAuth: true, panel: 'editor', title: ['Nuova scheda', dialettoConfig.label] },
+      meta: {
+        requiresAuth: true,
+        panel: 'editor',
+        title: ['Nuova scheda', dialettoConfig.label],
+        italian: true,
+      },
     },
     {
       path: '/dialetto/:id',
       name: dialettoConfig.routeNames.detail,
       component: () => import('../views/TypeDetailView.vue'),
       props: { config: dialettoConfig },
-      meta: { requiresAuth: false, title: [dialettoConfig.label] },
+      meta: { requiresAuth: false, title: typeTitle(dialettoConfig.key) },
     },
     {
       path: '/luoghi',
       name: luogoConfig.routeNames.list,
       component: () => import('../views/TypeListView.vue'),
       props: { config: luogoConfig },
-      meta: { requiresAuth: false, title: [luogoConfig.label] },
+      meta: { requiresAuth: false, title: typeTitle(luogoConfig.key) },
     },
     {
       path: '/luoghi/nuovo',
       name: luogoConfig.routeNames.create,
       component: () => import('../views/TypeCreateView.vue'),
       props: { config: luogoConfig },
-      meta: { requiresAuth: true, panel: 'editor', title: ['Nuova scheda', luogoConfig.label] },
+      meta: {
+        requiresAuth: true,
+        panel: 'editor',
+        title: ['Nuova scheda', luogoConfig.label],
+        italian: true,
+      },
     },
     {
       path: '/luoghi/:id',
@@ -243,21 +275,26 @@ const router = createRouter({
       component: () => import('../views/TypeDetailView.vue'),
       props: { config: luogoConfig },
       beforeEnter: fetchCardFirst(luogoConfig.endpoint),
-      meta: { requiresAuth: false, panel: 'narrow', title: [luogoConfig.label] },
+      meta: { requiresAuth: false, panel: 'narrow', title: typeTitle(luogoConfig.key) },
     },
     {
       path: '/attivita',
       name: attivitaConfig.routeNames.list,
       component: () => import('../views/TypeListView.vue'),
       props: { config: attivitaConfig },
-      meta: { requiresAuth: false, title: [attivitaConfig.label] },
+      meta: { requiresAuth: false, title: typeTitle(attivitaConfig.key) },
     },
     {
       path: '/attivita/nuova',
       name: attivitaConfig.routeNames.create,
       component: () => import('../views/TypeCreateView.vue'),
       props: { config: attivitaConfig },
-      meta: { requiresAuth: true, panel: 'editor', title: ['Nuova scheda', attivitaConfig.label] },
+      meta: {
+        requiresAuth: true,
+        panel: 'editor',
+        title: ['Nuova scheda', attivitaConfig.label],
+        italian: true,
+      },
     },
     {
       path: '/attivita/:id',
@@ -265,7 +302,7 @@ const router = createRouter({
       component: () => import('../views/TypeDetailView.vue'),
       props: { config: attivitaConfig },
       beforeEnter: fetchCardFirst(attivitaConfig.endpoint),
-      meta: { requiresAuth: false, panel: 'narrow', title: [attivitaConfig.label] },
+      meta: { requiresAuth: false, panel: 'narrow', title: typeTitle(attivitaConfig.key) },
     },
     {
       // The one address printed on every B&B's card (spec itinerari.md I6):
@@ -273,7 +310,7 @@ const router = createRouter({
       path: '/benvenuto',
       name: 'benvenuto',
       component: WelcomeView,
-      meta: { requiresAuth: false, title: ['Che cosa ti va di fare?'] },
+      meta: { requiresAuth: false, title: () => [shell().title.welcome] },
     },
     {
       // «Cosa si può fare qui» (spec cosa-fare.md Part −1): a zone and what is
@@ -281,14 +318,14 @@ const router = createRouter({
       path: '/cosa-fare',
       name: 'cosafare',
       component: CosaFareView,
-      meta: { requiresAuth: false, panel: 'narrow', title: ['Cosa fare'] },
+      meta: { requiresAuth: false, panel: 'narrow', title: () => [shell().title.whatToDo] },
     },
     {
       path: '/itinerari',
       name: itinerarioConfig.routeNames.list,
       component: () => import('../views/TypeListView.vue'),
       props: { config: itinerarioConfig },
-      meta: { requiresAuth: false, title: [itinerarioConfig.label] },
+      meta: { requiresAuth: false, title: typeTitle(itinerarioConfig.key) },
     },
     {
       path: '/itinerari/nuovo',
@@ -298,6 +335,7 @@ const router = createRouter({
         requiresAuth: true,
         panel: 'editor',
         title: ['Nuovo itinerario', itinerarioConfig.label],
+        italian: true,
       },
     },
     {
@@ -306,28 +344,33 @@ const router = createRouter({
       path: '/itinerari/:id',
       name: itinerarioConfig.routeNames.detail,
       component: () => import('../views/ItineraryDetailView.vue'),
-      meta: { requiresAuth: false, panel: 'narrow', title: [itinerarioConfig.label] },
+      meta: { requiresAuth: false, panel: 'narrow', title: typeTitle(itinerarioConfig.key) },
     },
     {
       path: '/libri',
       name: libroConfig.routeNames.list,
       component: () => import('../views/TypeListView.vue'),
       props: { config: libroConfig },
-      meta: { requiresAuth: false, title: [libroConfig.label] },
+      meta: { requiresAuth: false, title: typeTitle(libroConfig.key) },
     },
     {
       path: '/libri/nuovo',
       name: libroConfig.routeNames.create,
       component: () => import('../views/TypeCreateView.vue'),
       props: { config: libroConfig },
-      meta: { requiresAuth: true, panel: 'editor', title: ['Nuova scheda', libroConfig.label] },
+      meta: {
+        requiresAuth: true,
+        panel: 'editor',
+        title: ['Nuova scheda', libroConfig.label],
+        italian: true,
+      },
     },
     {
       path: '/libri/:id',
       name: libroConfig.routeNames.detail,
       component: () => import('../views/TypeDetailView.vue'),
       props: { config: libroConfig },
-      meta: { requiresAuth: false, title: [libroConfig.label] },
+      meta: { requiresAuth: false, title: typeTitle(libroConfig.key) },
     },
     {
       // «Gli eventi che conosciamo» (spec cosa-fare.md CF33, Part −1 D9):
@@ -337,7 +380,7 @@ const router = createRouter({
       path: '/eventi',
       name: 'eventilist',
       component: () => import('../views/EventListView.vue'),
-      meta: { requiresAuth: false, title: ['Gli eventi che conosciamo'] },
+      meta: { requiresAuth: false, title: () => [shell().title.events] },
     },
     {
       // An event, filed from a phone (spec cosa-fare.md Part −1 D9) — not a
@@ -347,7 +390,7 @@ const router = createRouter({
       path: '/eventi/nuovo',
       name: 'eventocreate',
       component: () => import('../views/EventFormView.vue'),
-      meta: { requiresAuth: true, panel: 'editor', title: ['Nuovo evento'] },
+      meta: { requiresAuth: true, panel: 'editor', title: ['Nuovo evento'], italian: true },
     },
     {
       // An event's own page: narrow, beside the map showing where it is held
@@ -355,13 +398,13 @@ const router = createRouter({
       path: '/eventi/:id',
       name: 'eventodetail',
       component: () => import('../views/EventDetailView.vue'),
-      meta: { requiresAuth: false, panel: 'narrow', title: ['Eventi'] },
+      meta: { requiresAuth: false, panel: 'narrow', title: () => [shell().title.event] },
     },
     {
       path: '/eventi/:id/modifica',
       name: 'eventoedit',
       component: () => import('../views/EventFormView.vue'),
-      meta: { requiresAuth: true, panel: 'editor', title: ['Modifica l’evento'] },
+      meta: { requiresAuth: true, panel: 'editor', title: ['Modifica l’evento'], italian: true },
     },
     {
       // A collaborator's own cards, every type at once, behind the avatar
@@ -369,34 +412,52 @@ const router = createRouter({
       path: '/le-mie-schede',
       name: 'lemieschede',
       component: () => import('../views/MyCardsView.vue'),
-      meta: { requiresAuth: true, title: ['Le mie schede'] },
+      meta: { requiresAuth: true, title: ['Le mie schede'], italian: true },
     },
     {
       path: '/profile/edit',
       name: 'editprofile',
       component: () => import('../views/EditProfileView.vue'),
-      meta: { requiresAuth: true, title: ['Modifica profilo'] },
+      meta: { requiresAuth: true, title: ['Modifica profilo'], italian: true },
     },
     {
       path: '/profile/edit/password',
       name: 'editpassword',
       component: () => import('../views/EditPasswordView.vue'),
-      meta: { requiresAuth: true, title: ['Cambia password'] },
+      meta: { requiresAuth: true, title: ['Cambia password'], italian: true },
     },
     {
       path: '/profile/:id',
       name: 'profile',
       component: () => import('../views/ProfileView.vue'),
-      meta: { requiresAuth: true, title: ['Profilo'] },
+      meta: { requiresAuth: true, title: ['Profilo'], italian: true },
     },
   ],
+})
+
+// The reader's language lives in the address (review PR-19a): `?lang=en` on
+// every page while English is on, so a link copied from the address bar or
+// shared carries it, and nothing while Italian is — the Italian address stays
+// the canonical one. A link that names a language switches to it. Many
+// links build their query from nothing (a zone's chip, a tour's stop); this
+// is what keeps the language in it, as one redirect of the same navigation.
+router.beforeEach(async (to) => {
+  const asked = to.query.lang
+  if (isLocale(asked) && asked !== locale.value) await setLocale(asked).catch(() => undefined)
+  const wanted = locale.value === 'en' ? 'en' : undefined
+  if (asked === wanted) return
+  const query = { ...to.query }
+  if (wanted) query.lang = wanted
+  else delete query.lang
+  return { path: to.path, query, hash: to.hash }
 })
 
 router.beforeEach((to) => {
   const userStore = useUserStore()
 
   if (to.meta.requiresAuth && !userStore.user.isAuthenticated) {
-    if (to.meta.signInToast) useToastStore().showToast(5000, to.meta.signInToast)
+    const toast = to.meta.signInToast
+    if (toast) useToastStore().showToast(5000, typeof toast === 'function' ? toast() : toast)
     return {
       path: '/login',
       query: { redirect: to.fullPath },
@@ -405,8 +466,10 @@ router.beforeEach((to) => {
 })
 
 // The window's title (review PR-23, N-04): the route's own, after every
-// navigation. A page whose title is its data — a card, a tour, a zone — puts
-// its own on top once it has it (composables/usePageTitle.ts).
-router.afterEach((to) => setTitle(to.meta.title ?? []))
+// navigation — and again when the reader changes language, before the page
+// whose title is its data puts its own back on top (composables/
+// usePageTitle.ts, which runs after the render).
+router.afterEach((to) => setTitle(titleParts(to.meta.title)))
+watch(locale, () => setTitle(titleParts(router.currentRoute.value.meta.title)))
 
 export default router

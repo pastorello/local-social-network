@@ -1,3 +1,10 @@
+import type { ListWords } from '@/lib/i18n/messages/lists'
+
+// What the forms read is Italian, as the collaborator's surfaces stay (review
+// PR-19a). What only a reader's list says — how it counts, its filter's name,
+// its note — is a function of the list's words (lib/i18n/messages/lists.ts),
+// which the list hands over in the reader's language: those words travel with
+// the list's page, not in the first paint, where this file is.
 export interface FieldConfig {
   key: string
   label: string
@@ -21,10 +28,10 @@ export interface ListFilterConfig {
   param: string
   optionsEndpoint: string
   // What the filter is, for its accessible name ("Filtra luoghi per genere").
-  label: string
+  label: (words: ListWords) => string
   // Types that belong under the same heading for the reader without being
   // stored as this type (spec content.md: the churches under "Luoghi").
-  related?: { label: string; to: string }[]
+  related?: { label: (words: ListWords) => string; to: string }[]
 }
 
 export interface TypeConfig {
@@ -46,9 +53,9 @@ export interface TypeConfig {
   listFilter?: ListFilterConfig
   // How the list counts its rows, where "scheda" is the wrong word for them:
   // a guest reading "1 scheda" under *Scoprire la città* is looking at a tour.
-  countNouns?: [singular: string, plural: string]
+  countOf?: (count: number, words: ListWords) => string
   // The grid's one-line summary, where the first extra field is not enough.
-  summaryOf?: (item: Record<string, unknown>) => string
+  summaryOf?: (item: Record<string, unknown>, words: ListWords) => string
   // A type with a door (ADR-0008): its form gets a *Visita* tab — what is
   // known about getting in — and, with `fromOutside`, «Se la trovi chiusa»
   // (cosa-fare.md D7). `noDoor` offers the open-air state, which a church
@@ -57,7 +64,7 @@ export interface TypeConfig {
   visit?: { fromOutside: boolean; noDoor: boolean; hoursOnly?: boolean }
   // A line under the list's title, where the list owes the reader a word on
   // how it is made: the businesses' order is printed (cosa-fare.md CF40).
-  listNote?: string
+  listNote?: (words: ListWords) => string
 }
 
 export const chiesaConfig: TypeConfig = {
@@ -174,8 +181,8 @@ export const luogoConfig: TypeConfig = {
   listFilter: {
     param: 'genere',
     optionsEndpoint: '/api/luoghi/generi/',
-    label: 'Filtra luoghi per genere',
-    related: [{ label: 'Chiese', to: '/chiese' }],
+    label: (words) => words.filter.luoghi,
+    related: [{ label: (words) => words.churches, to: '/chiese' }],
   },
 }
 
@@ -213,10 +220,9 @@ export const attivitaConfig: TypeConfig = {
   listFilter: {
     param: 'kind',
     optionsEndpoint: '/api/attivita/kinds/',
-    label: 'Filtra attività per tipo',
+    label: (words) => words.filter.attivita,
   },
-  listNote:
-    'In ordine alfabetico. Ci sono perché la redazione le ritiene degne di nota: nessuna paga per esserci.',
+  listNote: (words) => words.businessesNote,
 }
 
 // Curated tours (spec itinerari.md). Their list is the generic one, narrowed by
@@ -226,18 +232,11 @@ export const itinerarioConfig: TypeConfig = {
   key: 'itinerari',
   label: 'Itinerari',
   singularLabel: 'itinerario',
-  countNouns: ['itinerario', 'itinerari'],
+  countOf: (count, words) => words.tours(count),
   // "Mezza giornata · 5 tappe", as the itinerari canvas drew the list.
-  summaryOf: (item) => {
+  summaryOf: (item, words) => {
     const stops = Array.isArray(item.stops) ? item.stops.length : 0
-    const count =
-      item.form === 'raccolta'
-        ? stops === 1
-          ? '1 luogo'
-          : `${stops} luoghi`
-        : stops === 1
-          ? '1 tappa'
-          : `${stops} tappe`
+    const count = item.form === 'raccolta' ? words.places(stops) : words.stops(stops)
     return [item.duration, stops ? count : ''].filter(Boolean).join(' · ')
   },
   endpoint: '/api/itinerari/',
@@ -247,7 +246,7 @@ export const itinerarioConfig: TypeConfig = {
   listFilter: {
     param: 'intento',
     optionsEndpoint: '/api/itinerari/intenti/',
-    label: 'Filtra itinerari per intento',
+    label: (words) => words.filter.itinerari,
   },
 }
 

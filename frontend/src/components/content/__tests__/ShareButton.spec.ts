@@ -4,6 +4,7 @@ import { createPinia } from 'pinia'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import ShareButton from '../ShareButton.vue'
+import { setLocale } from '@/lib/i18n'
 import { useToastStore } from '@/stores/toast'
 
 // The browser's two ways, as each test wants them. jsdom has neither.
@@ -54,6 +55,23 @@ describe('ShareButton', () => {
     })
     // The sheet says what happened; a toast on top of it would say it twice.
     expect(toast.isVisible).toBe(false)
+  })
+
+  // Review PR-19a: what is sent carries the sender's language, which the
+  // address carries; Italian, the canonical address, carries nothing.
+  it('sends the address in English, and says so in English, while English is on', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    give('clipboard', { writeText })
+    await setLocale('en')
+    const { wrapper, toast } = await mountAt('/chiese/c1')
+
+    expect(wrapper.get('button').text()).toBe('Share')
+    await wrapper.get('button').trigger('click')
+    await flushPromises()
+    setLocale('it')
+
+    expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/chiese/c1?lang=en`)
+    expect(toast.message).toBe('Link copied')
   })
 
   it('copies the link where there is no sheet, and says so', async () => {

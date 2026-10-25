@@ -2,6 +2,7 @@
 import { computed, nextTick, ref, useId, watch } from 'vue'
 
 import type { Zone, ZoneAlias } from '@/definitions/interfaces/MapData'
+import cosaFare from '@/lib/i18n/messages/cosaFare'
 import {
   displayName,
   matchPlaces,
@@ -20,7 +21,7 @@ import {
 
 const props = defineProps<{
   aliases: ZoneAlias[]
-  zones: Pick<Zone, 'slug' | 'name'>[]
+  zones: Pick<Zone, 'slug' | 'name' | 'name_en'>[]
   // The zone the page shows now: the line under the field speaks only while
   // it is the one chosen here, and a zone chosen some other way clears it.
   current: string | null
@@ -145,20 +146,19 @@ watch(
   },
 )
 
+// What the field says, in the reader's language (review PR-19a).
+const words = computed(() => cosaFare().where)
+
 const outcome = computed(() => {
-  if (unknown.value) return 'Non conosciamo questo posto: scegli una zona qui sotto.'
+  if (unknown.value) return words.value.unknown
   if (chosen.value && props.current === chosen.value.zone) return placeSentence(chosen.value)
   return ''
 })
 
 const announcement = computed(() => {
   const count = matches.value.length
-  if (open.value)
-    return count === 1
-      ? '1 posto: Invio per sceglierlo.'
-      : `${count} posti: le frecce per scorrerli, Invio per sceglierne uno.`
-  if (query.value.trim() && !chosen.value && !unknown.value && !count)
-    return 'Nessun posto con questo nome.'
+  if (open.value) return count === 1 ? words.value.one : words.value.many(count)
+  if (query.value.trim() && !chosen.value && !unknown.value && !count) return words.value.none
   return ''
 })
 </script>
@@ -166,9 +166,11 @@ const announcement = computed(() => {
 <template>
   <div>
     <div v-show="!folded" :id="askId">
-      <label :id="labelId" :for="inputId" class="block font-semibold text-ink">Dove sei?</label>
+      <label :id="labelId" :for="inputId" class="block font-semibold text-ink">{{
+        words.label
+      }}</label>
       <p :id="hintId" class="mt-1 text-sm text-muted">
-        Il nome del posto in cui ti trovi: il castello, Serapo, Piazza XIX Maggio…
+        {{ words.hint }}
       </p>
       <div class="relative mt-2">
         <input
@@ -223,10 +225,13 @@ const announcement = computed(() => {
             @mousedown.prevent
             @click="choose(option)"
           >
-            {{ displayName(option.name) }}<span class="sr-only">, </span
+            <!-- A name as Gaeta writes it: Italian, whatever the interface's
+            language (review PR-19a). -->
+            <span lang="it">{{ displayName(option.name) }}</span
+            ><span class="sr-only">, </span
             ><span class="text-sm" :class="index === active ? 'text-white' : 'text-muted'"
               ><span aria-hidden="true"> · </span
-              >{{ option.isZone ? 'zona' : option.zoneName }}</span
+              >{{ option.isZone ? words.zone : option.zoneName }}</span
             >
           </li>
         </ul>

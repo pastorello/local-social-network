@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useIsDesktop, useIsWide } from '@/composables/useBreakpoint'
 import { useOpenPanelShape } from '@/composables/usePanelShape'
 import { afterFirstPaint } from '@/lib/firstPaint'
+import shell from '@/lib/i18n/messages/shell'
 import { STOP_TYPES, layerRoute } from '@/lib/mapLayers'
 import { useMapStore } from '@/stores/map'
 import { useUserStore } from '@/stores/user'
@@ -215,7 +216,8 @@ watch(
 )
 
 onMounted(async () => {
-  // The map's data does not wait for the map.
+  // The map's data does not wait for the map — only for the page's first
+  // paint, as the map does (stores/map.ts::load).
   const data = mapStore.load()
   // The words first: the page's own component, then a paint, then the map.
   await router.isReady()
@@ -270,6 +272,7 @@ onMounted(async () => {
       v-if="mapStore.editor"
       ref="banner"
       role="status"
+      lang="it"
       class="absolute top-[var(--header-h,0px)] right-3 left-3 z-1000 flex items-center justify-between gap-3 rounded-xl bg-sea py-2 pr-2 pl-4 text-sm font-semibold text-white shadow-md lg:top-[calc(var(--header-h,0px)+1rem)] lg:right-[calc(var(--map-controls-right)+0.25rem)] lg:left-4"
     >
       <span>{{ mapStore.editor.label }}</span>
@@ -297,7 +300,7 @@ onMounted(async () => {
       >
         <path d="M7.5 5.5h9M7.5 10h9M7.5 14.5h9M3.5 5.5h.5M3.5 10h.5M3.5 14.5h.5" />
       </svg>
-      Elenco · {{ mapStore.visibleFeatures.length }} luoghi
+      {{ shell().listOfPlaces(mapStore.visibleFeatures.length) }}
     </RouterLink>
   </div>
 </template>
