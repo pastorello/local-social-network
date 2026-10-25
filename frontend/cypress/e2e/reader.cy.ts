@@ -517,6 +517,14 @@ describe('the reader, on a wide screen', () => {
 describe('the reader, on a phone', () => {
   beforeEach(() => cy.viewport(375, 812))
 
+  // How far down the panel a chosen zone's first result may start. Review
+  // PR-4 (M-07) asked for 420 px; the author moved it to 470 on 2026-10-25
+  // for TD-54, when «Cosa si può fare qui»'s note went above the sections:
+  // on this screen the first result then starts at 417 px cold and at 465 px
+  // after «Dove sei?» (329 and 377 before), and a short zone's LCP went from
+  // 3.26–3.28 s to 1.85 s with a CLS of 0.
+  const FIRST_RESULT_WITHIN = 470
+
   // M-02, and since review PR-21b: the sheet opens on what the site is and
   // the wizard's question — at its first stop, before anyone drags it — with
   // the places after them (D20). «Vai alla mappa» steps it down to the map.
@@ -833,7 +841,8 @@ describe('the reader, on a phone', () => {
       cy.wrap($panel)
         .contains('a', PUBLISHED)
         .should(($link) => {
-          expect($link[0]!.getBoundingClientRect().top - panelTop).to.be.at.most(420)
+          const top = $link[0]!.getBoundingClientRect().top - panelTop
+          expect(top).to.be.at.most(FIRST_RESULT_WITHIN)
         })
     })
 
@@ -871,7 +880,7 @@ describe('the reader, on a phone', () => {
         .contains('a', PUBLISHED)
         .should(($link) => {
           const top = $link[0]!.getBoundingClientRect().top - $panel[0]!.getBoundingClientRect().top
-          expect(top).to.be.at.most(420)
+          expect(top).to.be.at.most(FIRST_RESULT_WITHIN)
         })
     })
 

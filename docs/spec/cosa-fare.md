@@ -229,6 +229,28 @@ panel is the whole screen under a strip of map); and the review's *«within
 measured too — the strip above it is map. The first result now starts at about
 345 px on a 390 px phone.
 
+**The note before the list — 2026-10-25** (TD-54, decided by the author). The
+page's note — *«Questo è quello che c'è in archivio, non tutto quello che
+succede a Gaeta…»* — moved from the foot of the page to above the sections,
+under the zones, in every state of the page. Two reasons. It is CF33's order:
+a list written by hand says what it is not before it lists, not after. And it
+is the largest text on a phone's first screen, so it is what Lighthouse times
+the page by: at the foot it had to wait for the zone's answer, or the rows
+pushed it off the screen (TD-53, CLS 0.204), and on a zone with few rows —
+every zone in production on 2026-10-24 — the page's words came at 3.26–3.28 s
+on Lighthouse's phone, against the 2.5 s budget. Drawn at once above where the
+answer lands, it is in the first frame and nothing the answer brings moves
+it: 1.85 s, CLS 0.000. **The cost is on a phone**: the first result starts
+88 px lower. At 375×812 it is 417 px from the panel's top for a zone opened by
+its address and 465 px after «Dove sei?» (329 and 377 before), past the 420
+of the review's acceptance above; the author moved that limit to 470 px
+(`reader.cy.ts`). On that screen the first result is still on the first
+screen, 667 and 715 px from its top; on a 667 px phone it is now just below
+it. Every other way measured was worse: the note at the foot of the first
+screen, in a reserved space, was pushed by the rows of nearly every zone (CLS
+0.025–0.085), and asking for the map's features with the page's own lists
+brought a short zone only to 3.14 s.
+
 ## D6 — Where it lives, and how a guest finds it
 
 **`/cosa-fare`**, h1 **«Cosa si può fare qui»**. The way in is **`/benvenuto`**:
@@ -339,9 +361,10 @@ welcome page is the wizard's first step"), and its answer is this page:
   Gaeta.» — D5's empty zone, for one section. The field «Dove sei?» can lead
   here: it knows every place, and where a guest stands is not a promise of a
   beach.
-- **Waits like a chosen zone** (TD-53): the answer's rows land with its
-  closing note, and an address with `?intento=` is the third step from its
-  first frame. `/cosa-fare` without it — the menu's *Cosa fare*, and the
+- **Waits like a chosen zone** (TD-53): the answer's rows land together —
+  under the page's note, which since TD-54 is drawn at once above them (D5's
+  note of 2026-10-25) — and an address with `?intento=` is the third step
+  from its first frame. `/cosa-fare` without it — the menu's *Cosa fare*, and the
   Lighthouse gate's two addresses — is unchanged.
 - **Nothing ranks and nothing says open**: alphabetical inside every
   section, said beside each heading (D5); hours on the cards with their date
