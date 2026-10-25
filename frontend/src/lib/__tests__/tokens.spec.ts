@@ -72,3 +72,13 @@ describe('the toast’s colours', () => {
     ).toBeGreaterThanOrEqual(4.5)
   })
 })
+
+// Cosa-fare.md CF28 (review PR-27): a cancelled event is said in this colour
+// at the top of its page and in the list, as text — so 4.5:1 on both grounds.
+describe('the cancelled event’s colour', () => {
+  it.each(['--color-page', '--color-surface'])('clears 4.5:1 on %s', (ground) => {
+    expect(contrastRatio(token('--color-event-cancelled'), token(ground))).toBeGreaterThanOrEqual(
+      4.5,
+    )
+  })
+})

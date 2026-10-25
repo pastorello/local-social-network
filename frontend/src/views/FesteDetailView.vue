@@ -8,6 +8,7 @@ import ViewContainer from '@/components/boxes/ViewContainer.vue'
 import ActionButton from '@/components/buttons/ActionButton.vue'
 import CardArticle from '@/components/content/CardArticle.vue'
 import DirectionsLink from '@/components/content/DirectionsLink.vue'
+import FestaDates from '@/components/content/FestaDates.vue'
 import FesteForm from '@/components/content/FesteForm.vue'
 import { useIsDesktop } from '@/composables/useBreakpoint'
 import { useMapFocus } from '@/composables/useMapFocus'
@@ -160,17 +161,16 @@ watch(
           :back-to="{ name: 'festelist', label: 'le feste' }"
         >
           <template #fields>
-            <dl
-              v-if="feste.recurrence || feste.programme"
-              class="mb-10 divide-y divide-hairline border-y border-hairline"
-            >
-              <div v-if="feste.recurrence" class="py-3 sm:flex sm:gap-6">
+            <dl class="mb-10 divide-y divide-hairline border-y border-hairline">
+              <div class="py-3 sm:flex sm:gap-6">
                 <dt
                   class="text-xs font-semibold tracking-[0.1em] text-muted uppercase sm:w-40 sm:flex-none sm:pt-1"
                 >
                   Quando
                 </dt>
-                <dd class="text-ink">{{ feste.recurrence }}</dd>
+                <dd class="text-ink">
+                  <FestaDates :editions="feste.editions ?? []" :recurrence="feste.recurrence" />
+                </dd>
               </div>
               <div v-if="feste.programme" class="py-3 sm:flex sm:gap-6">
                 <dt

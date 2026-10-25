@@ -18,6 +18,7 @@ export interface Parent {
 // null.
 export type Where = Pick<RouteLocationNormalizedLoaded, 'path' | 'query'> & {
   name?: RouteLocationNormalizedLoaded['name'] | null
+  params?: RouteLocationNormalizedLoaded['params']
 }
 
 // Every card type's list, and the pages under it: a card, and the form that
@@ -45,11 +46,12 @@ export const parentOf = (route: Where): Parent | null => {
   // A report is a point on the collaborator's map (reports-and-polls.md R1),
   // where the reports are: up is named after them (review PR-23).
   if (route.name === 'reportdetail') return { to: '/', label: 'Segnalazioni' }
-  // An event is not a card (cosa-fare.md CF25) and has no type's list above
-  // it: its form is under *Le mie schede*, where a collaborator's events are.
-  if (route.name === 'eventocreate' || route.name === 'eventoedit') {
-    return { to: '/le-mie-schede', label: 'Le mie schede' }
+  // An event is not a card (cosa-fare.md CF25), but it has a list of its
+  // own, «Gli eventi che conosciamo», and its form is under its page.
+  if (route.name === 'eventodetail' || route.name === 'eventocreate') {
+    return { to: '/eventi', label: 'Eventi' }
   }
+  if (route.name === 'eventoedit') return { to: `/eventi/${route.params?.id}`, label: 'Evento' }
 
   const list = LISTS.find((candidate) => candidate.children.includes(String(route.name)))
   return list ? { to: list.path, label: list.label } : null

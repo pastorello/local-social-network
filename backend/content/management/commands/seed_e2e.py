@@ -12,8 +12,11 @@ would be a back door anywhere else.
 """
 
 from datetime import time, timedelta
+from io import BytesIO
 
+from PIL import Image, ImageDraw
 from django.conf import settings
+from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
@@ -286,13 +289,17 @@ class Command(BaseCommand):
 
     def _events(self, collaborator, beach, festa):
         today = tourist_day()
-        Evento.objects.update_or_create(title=WEEK_EVENT, defaults={
+        week, _ = Evento.objects.update_or_create(title=WEEK_EVENT, defaults={
             'start_date': today + timedelta(days=1), 'end_date': today + timedelta(days=1),
             'start_time': time(21), 'description': 'Musica sulla sabbia, porta un telo.',
             'link': 'https://example.com/programma', 'card': beach, 'lat': None, 'lng': None,
             'place_label': '', 'state': Evento.IN_PROGRAMMA, 'author': collaborator,
             'is_published': True,
         })
+        # Its poster, so the a11y gate opens one (review PR-27b): drawn here,
+        # once, rather than kept as a file in the repo.
+        if not week.poster:
+            week.poster.save('locandina-e2e.png', ContentFile(self._poster()), save=True)
         Evento.objects.update_or_create(title=CANCELLED_EVENT, defaults={
             'start_date': today + timedelta(days=2), 'end_date': today + timedelta(days=2),
             'start_time': None, 'description': '', 'link': '', 'card': None,
@@ -304,6 +311,15 @@ class Command(BaseCommand):
         Edizione.objects.create(
             festa=feste, start_date=today + timedelta(days=3), note='Processione alle 18.'
         )
+
+    def _poster(self):
+        image = Image.new('RGB', (600, 900), (15, 95, 115))
+        draw = ImageDraw.Draw(image)
+        draw.rectangle((40, 40, 560, 860), outline=(250, 247, 242), width=8)
+        draw.text((80, 120), 'Evento E2E', fill=(250, 247, 242))
+        buffer = BytesIO()
+        image.save(buffer, format='PNG')
+        return buffer.getvalue()
 
     def _clear_invite_journeys(self):
         """collabora.cy.ts files requests on every run and, since 2026-09-10,

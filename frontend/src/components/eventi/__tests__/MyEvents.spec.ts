@@ -63,7 +63,7 @@ describe('MyEvents', () => {
 
     expect(axios.get).toHaveBeenCalledWith('/api/eventi/mine/?page_size=100')
     const rows = wrapper.findAll('li')
-    expect(rows.map((row) => row.find('span span').text())).toEqual(['Domani', 'Ieri'])
+    expect(rows.map((row) => row.find('span a').text())).toEqual(['Domani', 'Ieri'])
     expect(rows[0]!.text()).toContain('lunedì 26 ottobre, ore 22:00')
     expect(rows[1]!.text()).toContain('Passato')
   })

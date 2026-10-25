@@ -11,6 +11,12 @@ const RICETTA = 'Ricetta E2E pubblicata'
 const PLACE = 'Luogo E2E pubblicato'
 // A bar on the same beach, with its hours (ADR-0010).
 const BUSINESS = 'Attività E2E pubblicata'
+// Events and a feast's edition this week (cosa-fare.md D9): seed_e2e dates
+// them from Gaeta's day on every run.
+const WEEK_EVENT = 'Evento E2E in settimana'
+const CANCELLED_EVENT = 'Evento E2E annullato'
+const FESTA = 'Festa E2E pubblicata'
+const WEEKDAY = /(lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica) \d+ /
 
 // The home's first words and its two other ways in (review of 2026-10-22,
 // P-02/M-02). seed_e2e publishes a tour under «Scoprire la città» and a church
@@ -851,5 +857,54 @@ describe('the reader, on a phone', () => {
 
     cy.focused().click()
     cy.get('main input[role="combobox"]').should('be.visible')
+  })
+
+  // Cosa-fare.md Part −1 D9 (review PR-27b): this week's events and the
+  // feast's edition, the cancelled one left out of the week and struck
+  // through in the whole list (CF28), an event's page with its poster that
+  // opens on the whole screen and closes on Escape, giving focus back.
+  it('reads what is on this week, the cancelled event struck through, and an event’s poster', () => {
+    cy.visit('/eventi?finestra=settimana')
+    cy.contains('h1', 'Gli eventi che conosciamo')
+    cy.contains('In ordine di data e ora.')
+    cy.contains('a[aria-current="page"]', 'Questa settimana')
+    cy.contains('li', WEEK_EVENT).invoke('text').should('match', WEEKDAY)
+    cy.contains('li', FESTA).should('contain', 'Festa').and('contain', 'Processione alle 18.')
+    cy.contains(CANCELLED_EVENT).should('not.exist')
+
+    cy.contains('nav[aria-label="Quando"] a', 'Tutti').click()
+    cy.location('search').should('equal', '')
+    cy.contains('a', CANCELLED_EVENT).should('have.class', 'line-through')
+    cy.contains('li', CANCELLED_EVENT).should('contain', 'Annullato')
+
+    cy.contains('a', WEEK_EVENT).click()
+    cy.contains('h1', WEEK_EVENT)
+    cy.get('article').invoke('text').should('match', WEEKDAY)
+    cy.contains('a', PLACE)
+      .should('have.attr', 'href')
+      .and('match', /^\/luoghi\//)
+    cy.get('button[aria-label="Ingrandisci la locandina di Evento E2E in settimana"]')
+      .as('poster')
+      .click()
+    cy.get('[role="dialog"][aria-modal="true"]').should('be.visible')
+    cy.focused().should('contain.text', 'Chiudi')
+    cy.focused().trigger('keydown', { key: 'Escape', bubbles: true })
+    cy.get('[role="dialog"]').should('not.exist')
+    cy.focused().should(
+      'have.attr',
+      'aria-label',
+      'Ingrandisci la locandina di Evento E2E in settimana',
+    )
+    // Escape was the poster's: the page under it is still open.
+    cy.contains('h1', WEEK_EVENT)
+
+    // The feast's own card says this year's date, with its weekday (K2).
+    cy.visit('/eventi?finestra=settimana')
+    cy.contains('a', FESTA).click()
+    cy.contains('dt', 'Quando')
+      .next()
+      .invoke('text')
+      .should('match', WEEKDAY)
+      .and('contain', 'Processione alle 18.')
   })
 })
