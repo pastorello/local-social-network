@@ -214,6 +214,7 @@ passeggiate* is a category of its own.
 | Castello | `castle` | the Castello angioino-aragonese |
 | Monumento | `monument` | the Mausoleum of Lucius Munatius Plancus |
 | Luogo storico | `historical_place` | |
+| Luogo naturale | `natural_feature` | the Grotta del Turco |
 | Museo | `museum`, `history_museum` | |
 | Punto panoramico | `scenic_spot` | |
 | Area per passeggiate | `hiking_area` | the paths on Monte Orlando |
@@ -223,6 +224,12 @@ The genres are an **admin-managed list, seeded with the table above** — the
 same shape as the reports' categories — so the day a lighthouse or a cave
 needs one, it is an admin edit and not a deploy. A collaborator picks a genre;
 they cannot type a new one.
+
+*Luogo naturale* is the ninth, decided by the author on 2026-10-23 and seeded
+by `luoghi/migrations/0005`: caves, rocks, hills, an oasis — what is worth
+seeing by nature and not by hand. Beaches, parks and viewpoints stay where
+they are, and «Cosa si può fare qui» files it beside the viewpoints, under
+«Scoprire la città».
 
 ### The churches stay a type of their own
 
@@ -551,6 +558,54 @@ What the review left to the build, decided here:
 > that way in the app. The rules on *loading* (drafts signed by *Redazione*,
 > a command, files in git) went with the drafts.
 
+> **Reinstated 2026-10-26, through the API.** The author writes cards from
+> published sources again, with Claude and under the rules below, and asked
+> for a way to load every batch. It is **`scripts/carica-schede`**
+> (`backend/content/drafts.py`), run on the author's machine: it reads a
+> folder of Markdown files kept **outside this repository**,
+> `<folder>/<type>/<slug>.md`, and posts each card to the endpoint the app's
+> own form posts to, signed in as whoever runs it — so the sanitizer, the
+> write serializers and the pin caps are the forms' own. Not the
+> `seed_content` command the author's methodology of 2026-10-23 planned
+> (files in `backend/content/drafts/`, loaded on the server), for two reasons
+> found when it came to building it: the repository is public since
+> 2026-10-21, so a draft in git is read by anyone before someone who knows
+> Gaeta has read it; and the production image is built from the repository,
+> so every batch would have cost a pull request, a deploy and a command over
+> SSH. Through the API a batch costs one command and no deploy.
+>
+> - **The file.** YAML frontmatter — `type` (the folder's name), `title`,
+>   `language` (`it` only: a translation is started in the app), `pins`
+>   (`{lat, lng, label}`) — and the type's own fields under its write
+>   serializer's names: chiese `from_outside`; feste `recurrence`,
+>   `programme`; luoghi `genre` (a slug the site has) and `how_to_get_there`;
+>   personaggi `life_dates`; ricette `ingredients`, `servings`, `procedure`.
+>   Then the body in Markdown, `##` and `###` only, ending with `## Fonti` and
+>   `## Da verificare`. Any other key is refused by name — `availability`
+>   included, since hours found on the web carry no date the server could set
+>   for them (ADR-0008).
+> - **Drafts, never over a card that exists.** Same type and title —
+>   capitals, spacing and the apostrophe typed aside — published or a draft,
+>   is skipped, so a correction made in the app survives every later run. A
+>   broken file is refused with its reason and the others go in. `--dry-run`
+>   signs in nowhere and writes nothing; a real run shows the same plan, then
+>   asks before it writes.
+> - **Signed by the account that loads them**, no longer by *Redazione*: an
+>   account with no usable password cannot sign in to an API, and a draft
+>   signed by another account is one the author cannot find in *Le mie
+>   schede* — a personaggio or a ricetta has no pin to find it by on the map.
+>   Readers see no draft either way; once a card is published, the name on it
+>   is that account's.
+> - **Two rules from the methodology of 2026-10-23.** *One thing in the
+>   world, one card*: two files with one title are both refused, because the
+>   same subject seeded twice is the one mistake a draft cannot carry to
+>   publication (cosa-fare.md CF49). And *a pin on a shop is a claim about a
+>   business*: a recipe is loaded without pins (CF36), as a feast is without a
+>   route (below).
+> - **Not from a file**: dialetto and libri (below), itinerari, whose stops
+>   are cards that must exist first, attivita, which enter on the editors'
+>   merit (ADR-0010), and images.
+
 The archive is empty, and the author asked for it to be seeded from what is
 already published about Gaeta. It was — into the **development database
 only**, eleven drafts on the first day (two feste, five chiese, a ricetta, a
@@ -600,7 +655,8 @@ batch, and whoever publishes these, needs them:
   cards say little on purpose; sources confuse Quaranta Remi with Arenauta,
   and OSM has two beaches named Arenauta; and the genres have nothing for a
   sea cave, so the Grotta del Turco went in as a *punto panoramico* until the
-  author decides whether a genre is missing.
+  author decides whether a genre is missing. *(Decided 2026-10-23: one is,
+  luogo naturale — see the genres' table.)*
 - **Not every type can be seeded.** Dialect words found on the web are not
   reliable, and a recommended book that does not exist is the worst mistake
   this archive could make. Dialetto is written by people who speak it (with

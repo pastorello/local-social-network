@@ -11,6 +11,8 @@ describe('intents (spec cosa-fare.md Part −1, D4)', () => {
     expect(intentOf({ type: 'luoghi', genre: 'castello' })).toBe('citta')
     // The walk is the town's since 2026-10-26: «Camminare» folded into it.
     expect(intentOf({ type: 'luoghi', genre: 'punto-panoramico' })).toBe('citta')
+    // The ninth genre (2026-10-23) is seen like a viewpoint, not «Altro».
+    expect(intentOf({ type: 'luoghi', genre: 'luogo-naturale' })).toBe('citta')
     expect(intentOf({ type: 'chiese', genre: null })).toBe('citta')
   })
 

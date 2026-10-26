@@ -3,14 +3,17 @@ import type { MapCardFeature } from '@/definitions/interfaces/MapData'
 // «Cosa si può fare qui» files every place under an activity (spec
 // cosa-fare.md Part −1, D4) — the same words as /benvenuto's intents, so the
 // page and the front door speak one vocabulary. A frontend constant in v1: it
-// becomes a foreign key from Genre to Intent the day a ninth genre exists or
-// the backend needs the grouping (Part I §4).
+// becomes a foreign key from Genre to Intent the day the backend needs the
+// grouping (Part I §4). The ninth genre, luogo-naturale (2026-10-23), came by
+// a migration and is mapped here like the other eight.
 
 export const GENRE_INTENT: Record<string, string> = {
   spiaggia: 'mare',
   castello: 'citta',
   monumento: 'citta',
   'luogo-storico': 'citta',
+  // A cave, a rock, a hill: seen like a viewpoint (2026-10-23).
+  'luogo-naturale': 'citta',
   museo: 'citta',
   // «Camminare» was an intent of its own until 2026-10-26, when the author
   // folded it into «Scoprire la città»: viewpoints, walks and parks are the
