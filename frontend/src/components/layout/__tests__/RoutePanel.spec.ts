@@ -21,6 +21,7 @@ const mountPanel = async (
     history: createMemoryHistory(),
     routes: [
       { path: '/', name: 'home', component: stub },
+      { path: '/mappa', name: 'mappa', component: stub },
       { path: '/chiese', name: 'chieselist', component: stub },
       { path: '/chiese/:id', name: 'chiesedetail', component: stub },
       { path: '/cosa-fare', name: 'cosafare', component: stub },
@@ -81,12 +82,12 @@ describe('RoutePanel (spec/design.md D15/D17)', () => {
     await wrapper.get('button[aria-label="Chiudi e torna alla mappa"]').trigger('click')
     await flushPromises()
 
-    expect(router.currentRoute.value.path).toBe('/')
+    expect(router.currentRoute.value.path).toBe('/mappa')
   })
 
   // Review PR-22 (N-01): a close button closes. With pages behind it, it is
   // still one press to the map, never a step back through them.
-  it('closes onto the map with pages behind it, by pushing the home — never by going back', async () => {
+  it('closes onto the map with pages behind it, by pushing the map — never by going back', async () => {
     const { wrapper, router } = await mountPanel()
     window.history.replaceState({ back: '/il-progetto' }, '')
     const push = vi.spyOn(router, 'push')
@@ -94,7 +95,7 @@ describe('RoutePanel (spec/design.md D15/D17)', () => {
 
     await wrapper.get('button[aria-label="Chiudi e torna alla mappa"]').trigger('click')
 
-    expect(push).toHaveBeenCalledWith('/')
+    expect(push).toHaveBeenCalledWith('/mappa')
     expect(back).not.toHaveBeenCalled()
   })
 
@@ -105,7 +106,7 @@ describe('RoutePanel (spec/design.md D15/D17)', () => {
     await wrapper.get('div[aria-hidden="true"]').trigger('click')
     await flushPromises()
 
-    expect(router.currentRoute.value.path).toBe('/')
+    expect(router.currentRoute.value.path).toBe('/mappa')
     expect(back).not.toHaveBeenCalled()
   })
 
@@ -119,7 +120,7 @@ describe('RoutePanel (spec/design.md D15/D17)', () => {
 
     await wrapper.get('section').trigger('keydown', { key: 'Escape' })
     await flushPromises()
-    expect(router.currentRoute.value.path).toBe('/')
+    expect(router.currentRoute.value.path).toBe('/mappa')
     expect(back).not.toHaveBeenCalled()
   })
 

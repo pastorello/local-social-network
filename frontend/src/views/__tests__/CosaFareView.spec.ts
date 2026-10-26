@@ -151,7 +151,7 @@ const mountAt = async (
     history: createMemoryHistory(),
     routes: [
       { path: '/cosa-fare', name: 'cosafare', component: CosaFareView },
-      { path: '/benvenuto', name: 'benvenuto', component: stub },
+      { path: '/', name: 'home', component: stub },
       { path: '/:rest(.*)*', name: 'itinerariodetail', component: stub },
     ],
   })
@@ -681,10 +681,7 @@ describe('CosaFareView — the wizard’s third step (review PR-21)', () => {
     expect(chosen.text()).toBe(
       'Hai scelto: Cambia la scelta: Andare al mare · Cambia la scelta: Serapo',
     )
-    expect(chosen.findAll('a').map((a) => a.attributes('href'))).toEqual([
-      '/benvenuto',
-      '/benvenuto?intento=mare',
-    ])
+    expect(chosen.findAll('a').map((a) => a.attributes('href'))).toEqual(['/', '/?intento=mare'])
     // The question it answers is the one h1, and takes the focus (ADR-0005).
     expect(wrapper.findAll('h1')).toHaveLength(1)
     expect(wrapper.get('h1').attributes('data-panel-focus')).toBeDefined()
@@ -777,7 +774,7 @@ describe('CosaFareView — the wizard’s third step (review PR-21)', () => {
 
     const { wrapper: walk } = await mountAt({ intento: 'camminare', zona: 'serapo' })
     const walked = walk.findAll('p').find((p) => p.text().startsWith('Hai scelto:'))!
-    expect(walked.findAll('a').map((a) => a.attributes('href'))).toEqual(['/benvenuto'])
+    expect(walked.findAll('a').map((a) => a.attributes('href'))).toEqual(['/'])
     expect(walked.text()).toContain('Serapo')
   })
 })

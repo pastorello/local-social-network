@@ -46,7 +46,7 @@ const heldView = () => {
 
 // The map, and no page over it.
 const onTheMap = () => {
-  cy.location('pathname').should('eq', '/')
+  cy.location('pathname').should('eq', '/mappa')
   cy.get(PANEL).should('not.exist')
   // The home's chrome is shown again — displayed, not necessarily in view: its
   // column keeps the scroll that brought the opening link into view (D15).
@@ -59,7 +59,7 @@ const onTheMap = () => {
 const menu = (label: string) => cy.get('nav[aria-label="Principale"]').contains('a', label).click()
 
 const openChurchFromTheMap = () => {
-  cy.visit('/')
+  cy.visit('/mappa')
   cy.get('ul[aria-label="Luoghi sulla mappa"]').contains('a', CHIESA).click()
   cy.location('pathname').should('match', CARD_PATH)
   cy.contains('h1', CHIESA)
@@ -163,7 +163,7 @@ describe('close, up, back (review PR-22)', () => {
   // card framed, at its zoom — and the reader's layers as they were. Nothing
   // flies back to Gaeta.
   it('leaves the map where the card put it, and the layers as they were', () => {
-    cy.visit('/')
+    cy.visit('/mappa')
     cy.get('#layer-feste').uncheck()
     cy.get('ul[aria-label="Luoghi sulla mappa"]').contains('a', CHIESA).click()
     cy.contains('h1', CHIESA)
@@ -266,17 +266,24 @@ describe('where the reader is (review PR-23)', () => {
     cy.title().should('eq', 'Porto Salvo · Cosa fare · Vivere Gaeta')
   })
 
-  // Review PR-25 (decided by the author on 2026-10-23): the home and the
-  // welcome page are under no item — not even *Mappa*, nor the wordmark.
-  it('on the home and the welcome page: nothing current', () => {
+  // Review PR-25 (decided by the author on 2026-10-23): the home is under no
+  // item, nor the wordmark — the welcome page since 2026-10-26, which the
+  // printed /benvenuto leads to. The map has an address of its own since,
+  // /mappa, and is *Mappa*'s.
+  it('on the home: nothing current; on the map, Mappa', () => {
     cy.visit('/')
-    cy.contains('h1', 'La mappa di Gaeta')
-    cy.get('nav[aria-label="Principale"]').contains('a', 'Mappa')
+    cy.contains('h1', 'Che cosa ti va di fare?')
     current().should('not.exist')
 
     cy.visit('/benvenuto')
+    cy.location('pathname').should('eq', '/')
     cy.contains('h1', 'Che cosa ti va di fare?')
     current().should('not.exist')
+
+    cy.visit('/mappa')
+    cy.contains('h1', 'La mappa di Gaeta')
+    current().should('have.length', 1).and('contain.text', 'Mappa')
+    cy.title().should('eq', 'Mappa · Vivere Gaeta')
   })
 
   it('on Il progetto: no eyebrow, nothing above it but the map, Il progetto current', () => {

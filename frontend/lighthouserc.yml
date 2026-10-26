@@ -7,8 +7,9 @@ ci:
     # first and vite preview then binds IPv6 only.
     startServerCommand: npx vite preview --host 127.0.0.1 --port 4173 --strictPort
     startServerReadyPattern: Local
-    # The reader's ways in, on a phone: /benvenuto is the address printed on
-    # the B&B cards, / is the map, /cosa-fare is where /benvenuto sends them.
+    # The reader's ways in, on a phone: / is the home, the welcome page — where
+    # /benvenuto, the address printed on the B&B cards, leads since
+    # 2026-10-26 — /mappa is the map, /cosa-fare is where the home sends them.
     # Every route draws the map under it (design.md D13), so these three
     # measure the shell as well. The fourth is /cosa-fare with a zone chosen —
     # where «Dove sei?» and a chip both lead — on the zone `seed_e2e` fills
@@ -21,12 +22,13 @@ ci:
     #
     # The reader's language is on purpose (review PR-19a, translations.md T9):
     # those five in Italian — Chrome is told so below — and the home and «Cosa
-    # si può fare qui» in English, by the address, as a shared link opens them.
+    # si può fare qui» in English (the home is the welcome page since
+    # 2026-10-26; it was the map until then), by the address, as a shared link opens them.
     # English waits for a chunk of its own, which index.html asks for beside
     # the entry (vite.config.ts, preloadEnglish).
     url:
-      - http://127.0.0.1:4173/benvenuto
       - http://127.0.0.1:4173/
+      - http://127.0.0.1:4173/mappa
       - http://127.0.0.1:4173/cosa-fare
       - http://127.0.0.1:4173/cosa-fare?zona=porto-salvo
       - http://127.0.0.1:4173/cosa-fare?zona=monte-orlando

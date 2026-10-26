@@ -10,7 +10,10 @@
 
 - **M1 — The map is the landing view** for everyone, logged in or not, with a
   minimal top menu: layer toggles plus the non-map sections (Ricette; the
-  internal ones).
+  internal ones). *(Amended 2026-10-26, the author's decision: the landing
+  view is the welcome page, «Che cosa ti va di fare?», over the map — which
+  is still under every page — and the map itself is `/mappa`, the menu's
+  first item: design.md D3's note of that day.)*
 - **M2 — Layers.** Each content type with a footprint is a reader-toggleable
   layer: chiese (pins), feste (routes), ricette (sale points), personaggi
   (pins), and the existing reports layer — and luoghi (pins), the seventh type,

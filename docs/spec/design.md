@@ -148,6 +148,19 @@ geolocation is a later phase (see Non-goals) rather than the centre of this one.
   map. See "The wizard «Cosa fare adesso» — 2026-10-25" at the end of "The
   map under every page".
 
+  *Amended 2026-10-26 — the home is the welcome page* (the author's
+  decision, before release 2.0.0: the review's «Decisioni del 26 ottobre
+  2026»). `/` shows what `/benvenuto` showed — «Che cosa ti va di fare?» in
+  its wide panel over the veiled map, the whole screen on a phone — and the
+  map this section describes, with its sheet, its column and the question
+  over the layers, is **`/mappa`**, the menu's *Mappa*, which is marked
+  current there; the home marks nothing, as PR-25 decided. `/benvenuto`,
+  the address printed on the cards, leads to `/` with its query (itinerari.md
+  I6). Closing a panel goes to `/mappa` — closing still means «back to the
+  map» (*Close, up, back*) — and so do «Non lo so: fammi vedere la mappa»,
+  the way up from a report and a collaborator's landing without a draft;
+  the wordmark goes to `/`, the home.
+
 - **D4 — The map chrome lands here.** C5 deliberately did not build M1's
   "minimal top menu" as a chrome redesign — layer toggles live in a side panel
   and the nav kept C3's `SchedeMenu`. The full-bleed map with floating controls
@@ -536,7 +549,7 @@ opening-hours filter is not.
 
 | Was | Becomes |
 |---|---|
-| **D3** — mobile home: full-bleed map + bottom sheet | Kept for the home. A card opened on a phone no longer lives in the sheet (D18). |
+| **D3** — mobile home: full-bleed map + bottom sheet | Kept for the home — the map's page, `/mappa`, since 2026-10-26, when the home became the welcome page. A card opened on a phone no longer lives in the sheet (D18). |
 | **D4** — floating chrome on mobile, side panel on desktop | One menu at the top centre of every page, layer controls floating over the map (D13, D14). |
 | **D11** — credits in a footer on every route but the map | No route is without the map, so there is no footer; the credits move to *Il progetto* (D21). |
 | **Open question 4** — the wide layout keeps a side panel | Panels over the map (D15, D17). |

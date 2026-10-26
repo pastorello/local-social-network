@@ -540,7 +540,7 @@ const chooseZone = async (slug: string) => {
     <template v-if="intentMode">
       <WizardChoices
         :intent="chosenIntent ? localName(chosenIntent) : null"
-        :intent-to="{ name: 'benvenuto' }"
+        :intent-to="{ name: 'home' }"
         :where="chosenIntent ? (selected?.name ?? wizardText().everywhere) : null"
         :where-to="whereTo"
       />

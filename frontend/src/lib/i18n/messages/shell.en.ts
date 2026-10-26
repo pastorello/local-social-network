@@ -17,7 +17,7 @@ export default {
     menu: 'Menu',
   },
   language: 'Language',
-  home: 'Vivere Gaeta — back to the map',
+  home: 'Vivere Gaeta — home page',
   entriesHeard: (count: number) => (count === 1 ? ' entry' : ' entries'),
   panel: {
     trail: 'Path',
@@ -36,7 +36,7 @@ export default {
   title: {
     home: 'Vivere Gaeta — the map of Gaeta',
     project: 'About',
-    welcome: 'What do you feel like doing?',
+    map: 'Map',
     whatToDo: 'What to do',
     events: 'The events we know of',
     event: 'Events',

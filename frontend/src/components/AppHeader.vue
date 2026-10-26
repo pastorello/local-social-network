@@ -89,7 +89,7 @@ const logout = async () => {
 const mapStore = useMapStore()
 const fileReport = async (close: () => void) => {
   close()
-  await router.push('/')
+  await router.push('/mappa')
   mapStore.startPlacing()
 }
 
@@ -114,7 +114,7 @@ const menuActive = 'font-semibold text-sea underline decoration-2 underline-offs
 
     <template v-if="isDesktop">
       <RouterLink
-        to="/"
+        to="/mappa"
         :class="[item, isCurrent('mappa') && active]"
         :aria-current="currentAttr('mappa')"
         >{{ shell().nav.map }}</RouterLink
@@ -222,7 +222,7 @@ const menuActive = 'font-semibold text-sea underline decoration-2 underline-offs
         </template>
         <template #default="{ close }">
           <RouterLink
-            to="/"
+            to="/mappa"
             :class="[menuLink, isCurrent('mappa') && menuActive]"
             :aria-current="currentAttr('mappa')"
             >{{ shell().nav.map }}</RouterLink

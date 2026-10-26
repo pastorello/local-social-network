@@ -94,8 +94,10 @@ const mountAt = async (path: string, features = FEATURES, attached = false) => {
   const router: Router = createRouter({
     history: createMemoryHistory(),
     routes: [
-      { path: '/', component: stub },
-      { path: '/benvenuto', name: 'benvenuto', component: WelcomeView },
+      // The home since 2026-10-26, and the printed address that leads to it.
+      { path: '/', name: 'home', component: WelcomeView },
+      { path: '/benvenuto', redirect: (to) => ({ name: 'home', query: to.query }) },
+      { path: '/mappa', name: 'mappa', component: stub },
       { path: '/cosa-fare', name: 'cosafare', component: stub },
       { path: '/eventi', name: 'eventilist', component: stub },
     ],
@@ -131,12 +133,12 @@ describe('WelcomeView — the wizard’s first step, on the address of a B&B’s
     // «Ovunque a Gaeta» when none does (the dish), to «Dove?» otherwise.
     expect(hrefs(wrapper)).toEqual([
       '/cosa-fare?intento=mare&zona=serapo',
-      '/benvenuto?intento=citta',
+      '/?intento=citta',
       '/cosa-fare?intento=mangiare',
       '/cosa-fare?intento=bere&zona=serapo',
       '/eventi?finestra=settimana',
       '/cosa-fare',
-      '/',
+      '/mappa',
     ])
     expect(wrapper.text()).toContain('Le spiagge')
     expect(wrapper.text()).toContain('2 luoghi · 1 itinerario')
@@ -223,7 +225,7 @@ describe('WelcomeView — the wizard’s first step, on the address of a B&B’s
   it('lets the guest who does not know go to the map, the question put away there', async () => {
     const { wrapper, router } = await mountAt('/benvenuto')
 
-    const out = wrapper.get('a[href="/"]')
+    const out = wrapper.get('a[href="/mappa"]')
     expect(out.text()).toBe('Non lo so: fammi vedere la mappa')
     expect(wrapper.text().toLowerCase()).not.toContain('esplora')
     expect(useWizardStore().questionOpen).toBe(true)
@@ -232,7 +234,7 @@ describe('WelcomeView — the wizard’s first step, on the address of a B&B’s
     await flushPromises()
 
     expect(useWizardStore().questionOpen).toBe(false)
-    expect(router.currentRoute.value.path).toBe('/')
+    expect(router.currentRoute.value.path).toBe('/mappa')
   })
 
   // With one answer, the first step still asks: it is the first impression.
@@ -250,7 +252,7 @@ describe('WelcomeView — the wizard’s first step, on the address of a B&B’s
     })
     const none = await mountAt('/benvenuto', [])
     expect(none.wrapper.text()).toContain('Le proposte sono in preparazione')
-    expect(none.wrapper.find('a[href="/"]').exists()).toBe(true)
+    expect(none.wrapper.find('a[href="/mappa"]').exists()).toBe(true)
   })
 
   // Spec cosa-fare.md Part −1, D8: no door onto an empty room.
@@ -265,9 +267,9 @@ describe('WelcomeView — the wizard’s first step, on the address of a B&B’s
     vi.mocked(axios.get).mockImplementation(() => new Promise(() => {}))
     const router = createRouter({
       history: createMemoryHistory(),
-      routes: [{ path: '/benvenuto', name: 'benvenuto', component: WelcomeView }],
+      routes: [{ path: '/', name: 'home', component: WelcomeView }],
     })
-    router.push('/benvenuto')
+    router.push('/')
     await router.isReady()
     wrapper = mount(WelcomeView, { global: { plugins: [router] } })
     await flushPromises()
@@ -293,13 +295,21 @@ describe('WelcomeView — the wizard’s second step, «Dove?»', () => {
     wrapper = null
   })
 
+  // The address on a B&B's card leads to the home since 2026-10-26, its
+  // query with it: a link to the second step still opens the second step.
+  it('opens at the home from the address a card prints, the step with it', async () => {
+    const { router } = await mountAt('/benvenuto?intento=citta')
+
+    expect(router.currentRoute.value.fullPath).toBe('/?intento=citta')
+  })
+
   it('says what was chosen, asks where, and offers the zones that hold it and «Ovunque»', async () => {
     const { wrapper } = await mountAt('/benvenuto?intento=citta')
 
     expect(wrapper.findAll('h1').map((h) => h.text())).toEqual(['Dove?'])
     const chosen = wrapper.get('p')
     expect(chosen.text()).toContain('Hai scelto:')
-    expect(chosen.get('a').attributes('href')).toBe('/benvenuto')
+    expect(chosen.get('a').attributes('href')).toBe('/')
     expect(chosen.get('a').text()).toBe('Cambia la scelta: Scoprire la città')
     expect(wrapper.find('input[role="combobox"]').exists()).toBe(true)
     expect(hrefs(wrapper)).toEqual([
@@ -331,13 +341,13 @@ describe('WelcomeView — the wizard’s second step, «Dove?»', () => {
     expect(router.currentRoute.value.fullPath).toBe('/cosa-fare?intento=mare&zona=serapo')
     router.back()
     await flushPromises()
-    expect(router.currentRoute.value.fullPath).toBe('/benvenuto')
+    expect(router.currentRoute.value.fullPath).toBe('/')
   })
 
   it('asks the first question again on an intent with nothing behind it', async () => {
     const { router, wrapper } = await mountAt('/benvenuto?intento=camminare')
 
-    expect(router.currentRoute.value.fullPath).toBe('/benvenuto')
+    expect(router.currentRoute.value.fullPath).toBe('/')
     expect(wrapper.get('h1').text()).toBe('Che cosa ti va di fare?')
   })
 

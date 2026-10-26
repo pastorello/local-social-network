@@ -70,7 +70,7 @@ const getReport = async () => {
     .catch((error) => {
       console.log('error', error)
       toastStore.showToast(5000, 'Segnalazione non trovata')
-      router.push('/')
+      router.push('/mappa')
     })
 }
 
@@ -136,7 +136,7 @@ const deleteReport = async () => {
     .delete(`/api/reports/${report.value.id}/`)
     .then(() => {
       toastStore.showToast(5000, 'Segnalazione eliminata')
-      router.push('/')
+      router.push('/mappa')
     })
     .catch((error) => {
       console.log('error', error)
@@ -256,7 +256,7 @@ onMounted(() => {
         </section>
 
         <footer class="mt-10 border-t border-hairline pt-6">
-          <RouterLink to="/" class="inline-block text-sm text-sea underline"
+          <RouterLink to="/mappa" class="inline-block text-sm text-sea underline"
             >← Torna alla mappa</RouterLink
           >
         </footer>

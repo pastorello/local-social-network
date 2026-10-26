@@ -52,7 +52,7 @@ export const parentOf = (route: Where): Parent | null => {
   }
   // A report is a point on the collaborator's map (reports-and-polls.md R1),
   // where the reports are: up is named after them (review PR-23).
-  if (route.name === 'reportdetail') return { to: '/', label: up.reports }
+  if (route.name === 'reportdetail') return { to: '/mappa', label: up.reports }
   // An event is not a card (cosa-fare.md CF25), but it has a list of its
   // own, «Gli eventi che conosciamo», and its form is under its page.
   if (route.name === 'eventodetail' || route.name === 'eventocreate') {
@@ -77,15 +77,16 @@ export const tintOf = (parent: Parent | null): string => {
 
 // Where the reader is, for the menu (review PR-23, N-02): the item above the
 // page they are on, which the pill marks as current. Any card type, its list
-// and its form are under *Esplora*; a tour under *Itinerari*; a report under
-// *Mappa*, as a point on the collaborator's map. Pages under none of them —
-// the home and the welcome page (decided by the author on 2026-10-23, review
-// PR-25), the account's — mark nothing.
+// and its form are under *Esplora*; a tour under *Itinerari*; the map itself
+// (/mappa since 2026-10-26) and a report under *Mappa*, a report as a point
+// on the collaborator's map. Pages under none of them — the home, which is
+// the welcome page (decided by the author on 2026-10-23, review PR-25, and
+// again on 2026-10-26), the account's — mark nothing.
 export type Section = 'mappa' | 'esplora' | 'itinerari' | 'cosa-fare' | 'progetto'
 
 export const sectionOf = (route: Pick<Where, 'name'>): Section | null => {
   const name = String(route.name)
-  if (name === 'reportdetail') return 'mappa'
+  if (name === 'mappa' || name === 'reportdetail') return 'mappa'
   if (name === 'cosafare') return 'cosa-fare'
   if (name === 'progetto') return 'progetto'
   const list = LISTS.find((candidate) => [candidate.name, ...candidate.children].includes(name))

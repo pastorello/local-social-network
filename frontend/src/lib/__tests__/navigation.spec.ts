@@ -14,8 +14,9 @@ const ID = '5f0c6a52-6a0e-4f0a-9d3b-0a9f6e1c2b7d'
 // nothing for a page whose only parent is the map, which its close button is.
 const EXPECTED: Record<string, Parent | null> = {
   '/': null,
+  '/mappa': null,
   '/il-progetto': null,
-  '/reports/:id': { to: '/', label: 'Segnalazioni' },
+  '/reports/:id': { to: '/mappa', label: 'Segnalazioni' },
   '/collabora': null,
   '/login': null,
   '/invito/:token': null,
@@ -115,10 +116,12 @@ describe('parentOf', () => {
 })
 
 // The menu's current item (review PR-23, N-02): the item above the page, for
-// every page the router knows. The home and the welcome page mark nothing
-// (review PR-25).
+// every page the router knows. The home — the welcome page, /benvenuto's
+// since 2026-10-26 — marks nothing (review PR-25); the map, /mappa, is
+// «Mappa»'s.
 const SECTIONS: Record<string, Section | null> = {
   '/': null,
+  '/mappa': 'mappa',
   '/il-progetto': 'progetto',
   '/reports/:id': 'mappa',
   '/collabora': null,

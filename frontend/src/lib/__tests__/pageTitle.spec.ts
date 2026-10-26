@@ -31,10 +31,11 @@ describe('composeTitle', () => {
 })
 
 describe('the router’s titles', () => {
+  // A redirect is not a page: /benvenuto leads to the home (2026-10-26).
   it('names every page but the home, which has a title of its own', () => {
     const untitled = router
       .getRoutes()
-      .filter((record) => !titleParts(record.meta.title).length)
+      .filter((record) => !record.redirect && !titleParts(record.meta.title).length)
       .map((record) => record.path)
 
     expect(untitled).toEqual(['/'])
@@ -48,6 +49,9 @@ describe('the router’s titles', () => {
 
     await router.push('/cosa-fare?zona=serapo')
     expect(document.title).toBe('Cosa fare · Vivere Gaeta')
+
+    await router.push('/mappa')
+    expect(document.title).toBe('Mappa · Vivere Gaeta')
 
     await router.push('/')
     expect(document.title).toBe(homeTitle())

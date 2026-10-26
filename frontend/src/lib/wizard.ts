@@ -143,7 +143,7 @@ export const resultOf = (intent: string, zone?: string | null): RouteLocationRaw
 })
 
 export const zoneStepOf = (intent: string): RouteLocationRaw => ({
-  name: 'benvenuto',
+  name: 'home',
   query: { intento: intent },
 })
 

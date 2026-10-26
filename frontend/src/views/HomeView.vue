@@ -94,7 +94,7 @@ const known = computed(() => wizard.known && archiveKnown.value)
 // the wizard's counts are asked for when the home is first shown, not on a
 // page that only keeps the home behind it.
 watch(
-  () => route.path === '/',
+  () => route.path === '/mappa',
   (home) => {
     if (home) wizard.load()
   },
@@ -114,7 +114,7 @@ watch(questionOpen, async (open) => {
     if (open) sheet.value?.open()
     else sheet.value?.collapse()
   }
-  if (route.path !== '/') return
+  if (route.path !== '/mappa') return
   await nextTick()
   if (open) question.value?.querySelector<HTMLElement>('h2')?.focus({ preventScroll: true })
   else askAgain.value?.focus({ preventScroll: true })

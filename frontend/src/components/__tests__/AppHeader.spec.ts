@@ -17,9 +17,12 @@ const makeRouter = () =>
   createRouter({
     history: createMemoryHistory(),
     routes: [
-      { path: '/', name: 'home', component: page, meta: { fullBleed: true } },
+      // The welcome page is the home since 2026-10-26, /benvenuto leads to
+      // it, and the map is /mappa.
+      { path: '/', name: 'home', component: page },
+      { path: '/mappa', name: 'mappa', component: page, meta: { fullBleed: true } },
       { path: '/profile/:id', name: 'profile', component: page },
-      { path: '/benvenuto', name: 'benvenuto', component: page },
+      { path: '/benvenuto', name: 'benvenuto', redirect: { name: 'home' } },
       { path: '/login', name: 'login', component: page },
       { path: '/luoghi', name: luogoConfig.routeNames.list, component: page },
       { path: '/chiese/:id', name: chiesaConfig.routeNames.detail, component: page },
@@ -208,6 +211,7 @@ describe('the menu’s current item (review PR-23)', () => {
   it.each([
     ['/', []],
     ['/benvenuto', []],
+    ['/mappa', ['Mappa']],
     ['/luoghi', ['Esplora']],
     ['/chiese/c1', ['Esplora']],
     ['/itinerari', ['Itinerari']],
@@ -239,7 +243,7 @@ describe('the menu’s current item (review PR-23)', () => {
       const wrapper = await mountHeader(false, null, path)
       await wrapper.get('button[aria-label="Menu"]').trigger('click')
 
-      expect(wrapper.findAll('a[href="/"]').map((link) => link.text())).toContain('Mappa')
+      expect(wrapper.get('a[href="/mappa"]').text()).toBe('Mappa')
       expect(currentItems(wrapper)).toEqual([])
       expect(wrapper.find('.underline').exists()).toBe(false)
     },
@@ -254,7 +258,7 @@ describe('the menu’s current item (review PR-23)', () => {
     expect(project.attributes('aria-current')).toBe('page')
     expect(project.classes()).toContain('underline')
     expect(wrapper.get('a[href="/cosa-fare"]').attributes('aria-current')).toBeUndefined()
-    expect(wrapper.get('a[href="/"]').attributes('aria-current')).toBeUndefined()
+    expect(wrapper.get('a[href="/mappa"]').attributes('aria-current')).toBeUndefined()
   })
 
   it('on a phone lights Esplora and Itinerari in the pill itself', async () => {

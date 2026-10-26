@@ -29,17 +29,19 @@ import { useWizardStore } from '@/stores/wizard'
 
 // The wizard «Cosa fare adesso», its first two steps (review of 2026-10-22,
 // study 10; PR-21): «Che cosa ti va di fare?», then «Dove?», one question a
-// screen, on the address a B&B's card prints (spec itinerari.md I6) — step 2
-// is the same page with `?intento=`. Choosing an answer is following a link,
+// screen, on the home since 2026-10-26 — `/`, where the address a B&B's card
+// prints (/benvenuto, spec itinerari.md I6) leads — and step 2 is the same
+// page with `?intento=`. Choosing an answer is following a link,
 // so Back is the step before and a shared link opens the same step; the third
 // step is «Cosa si può fare qui» opened on the answers (/cosa-fare?intento=
 // &zona=). The rules — what answers, what is skipped — are lib/wizard.ts.
 //
-// `home` is the same first step over the home's map (review PR-21b, decided
-// on 2026-10-22: one front door). There the page around it says what the site
-// is, the map's title stays the page's h1 and the question is under it, and
-// the way out, «Vai alla mappa», puts the question away rather than leading
-// anywhere. Its answers lead where /benvenuto's do: «Dove?» is /benvenuto's.
+// `home` is the same first step over the map (review PR-21b — the home's
+// map until 2026-10-26, /mappa since). There the page around it says what
+// the site is, the map's title stays the page's h1 and the question is under
+// it, and the way out, «Vai alla mappa», puts the question away rather than
+// leading anywhere. Its answers lead where the home's do: «Dove?» is the
+// home's, `/?intento=`.
 
 const props = defineProps<{ home?: boolean }>()
 
@@ -50,10 +52,11 @@ const { archive, zones, aliases, windows, known } = storeToRefs(wizard)
 
 onMounted(() => wizard.load())
 
-// The answer is read from /benvenuto's own address only: other pages speak
-// `?intento=` too (a list of tours), and the home's step is always the first.
+// The answer is read from the home's own address only (/, which /benvenuto
+// leads to since 2026-10-26): other pages speak `?intento=` too (a list of
+// tours), and the step over the map is always the first.
 const asked = computed(() =>
-  !props.home && route.name === 'benvenuto' && typeof route.query.intento === 'string'
+  !props.home && route.name === 'home' && typeof route.query.intento === 'string'
     ? route.query.intento
     : '',
 )
@@ -222,7 +225,7 @@ const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:si
             </AnswerCard>
             <AnswerCard
               v-else
-              to="/"
+              to="/mappa"
               :title="wizardText().dontKnow"
               @click="wizard.closeQuestion()"
             >

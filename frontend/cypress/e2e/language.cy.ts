@@ -9,7 +9,7 @@ const englishPreload = 'link[rel="modulepreload"][href*="/assets/english-"]'
 describe('the English chunk travels beside the entry, and only for English', () => {
   it('fetches nothing of English for an Italian reader', () => {
     cy.intercept('GET', '**/assets/english-*.js').as('english')
-    cy.visit('/')
+    cy.visit('/mappa')
     cy.contains('h1', 'La mappa di Gaeta')
     cy.document().its('documentElement.lang').should('eq', 'it')
     cy.get(englishPreload).should('not.exist')
@@ -17,7 +17,7 @@ describe('the English chunk travels beside the entry, and only for English', () 
   })
 
   it('preloads it for a link in English, which opens in English', () => {
-    cy.visit('/?lang=en')
+    cy.visit('/mappa?lang=en')
     cy.get(englishPreload).should('exist')
     cy.contains('h1', 'The map of Gaeta')
     cy.document().its('documentElement.lang').should('eq', 'en')
@@ -50,7 +50,7 @@ describe('the reader switches to English, and the cards follow', () => {
 
   it('switches from the pill, then reads a translated card and an untranslated one', () => {
     cy.viewport(1280, 800)
-    cy.visit('/')
+    cy.visit('/mappa')
     cy.contains('h1', 'La mappa di Gaeta')
     htmlLang().should('eq', 'it')
     toggle('it').should('have.attr', 'aria-pressed', 'true')
