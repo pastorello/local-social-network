@@ -17,12 +17,16 @@ const makeRouter = () =>
   createRouter({
     history: createMemoryHistory(),
     routes: [
-      { path: '/', name: 'home', component: page, meta: { fullBleed: true } },
+      // The welcome page is the home since 2026-10-26, /benvenuto leads to
+      // it, and the map is /mappa.
+      { path: '/', name: 'home', component: page },
+      { path: '/mappa', name: 'mappa', component: page, meta: { fullBleed: true } },
       { path: '/profile/:id', name: 'profile', component: page },
-      { path: '/benvenuto', name: 'benvenuto', component: page },
+      { path: '/benvenuto', name: 'benvenuto', redirect: { name: 'home' } },
       { path: '/login', name: 'login', component: page },
       { path: '/luoghi', name: luogoConfig.routeNames.list, component: page },
       { path: '/chiese/:id', name: chiesaConfig.routeNames.detail, component: page },
+      { path: '/feste/:id', name: 'festedetail', component: page },
       { path: '/itinerari', name: itinerarioConfig.routeNames.list, component: page },
       { path: '/itinerari/:id', name: itinerarioConfig.routeNames.detail, component: page },
       { path: '/cosa-fare', name: 'cosafare', component: page },
@@ -71,16 +75,20 @@ describe('the menu (spec/design.md D14)', () => {
     delete window.matchMedia
   })
 
-  it('is Mappa, Esplora, Itinerari, Il progetto and Accedi — not the polls, nor a search', async () => {
+  it('is Mappa, Esplora, Tradizioni, Il progetto and Accedi — not the polls, nor a search', async () => {
     const wrapper = await mountHeader()
     const nav = wrapper.get('nav[aria-label="Principale"]')
 
     expect(nav.text()).toContain('Mappa')
     // «Schede» until 2026-10-23: the name of our model, not a guest's word
-    // (review PR-23, N-05).
-    expect(nav.get('button[aria-haspopup="menu"]').text()).toBe('Esplora')
+    // (review PR-23, N-05). Two menus since 2026-10-26, and the tours inside
+    // Esplora rather than an item of their own.
+    expect(nav.findAll('button[aria-haspopup="menu"]').map((b) => b.text())).toEqual([
+      'Esplora',
+      'Tradizioni',
+    ])
     expect(nav.text()).not.toContain('Schede')
-    expect(nav.find('a[href="/itinerari"]').text()).toBe('Itinerari')
+    expect(nav.find('a[href="/itinerari"]').exists()).toBe(false)
     // «Cosa si può fare qui» (spec cosa-fare.md Part −1, D6): in the pill on a
     // wide screen, behind Menu on a phone.
     expect(nav.find('a[href="/cosa-fare"]').text()).toBe('Cosa fare')
@@ -177,15 +185,24 @@ describe('the menu (spec/design.md D14)', () => {
     expect(document.activeElement).toBe(trigger.element)
   })
 
-  it('on a phone keeps the wordmark, Esplora and Itinerari in the pill and the rest behind Menu', async () => {
+  it('on a phone keeps the wordmark, Esplora and Tradizioni in the pill and the rest behind Menu', async () => {
     stubViewport(false)
     const wrapper = await mountHeader()
 
-    // Itinerari is in the pill itself: a guest from a QR code is on a phone.
-    // (Under 360px CSS hides it there and shows Menu's copy instead.)
-    expect(wrapper.find('a[data-pill-itinerari]').exists()).toBe(true)
+    // Tradizioni is in the pill itself, as the tours were until 2026-10-26.
+    // (Under 360px CSS hides it there and shows its types in Menu instead.)
+    expect(wrapper.find('[data-pill-tradizioni] button').text()).toBe('Tradizioni')
     expect(wrapper.find('a[href="/il-progetto"]').exists()).toBe(false)
     await wrapper.get('button[aria-label="Menu"]').trigger('click')
+
+    const group = wrapper.get('[role="group"][aria-label="Tradizioni"]')
+    expect(group.findAll('a').map((a) => a.attributes('href'))).toEqual([
+      '/feste',
+      '/ricette',
+      '/personaggi',
+      '/dialetto',
+      '/libri',
+    ])
 
     expect(wrapper.find('a[href="/il-progetto"]').exists()).toBe(true)
     expect(wrapper.find('a[href="/login"]').exists()).toBe(true)
@@ -208,10 +225,12 @@ describe('the menu’s current item (review PR-23)', () => {
   it.each([
     ['/', []],
     ['/benvenuto', []],
+    ['/mappa', ['Mappa']],
     ['/luoghi', ['Esplora']],
     ['/chiese/c1', ['Esplora']],
-    ['/itinerari', ['Itinerari']],
-    ['/itinerari/t1?tappa=2', ['Itinerari']],
+    ['/itinerari', ['Esplora']],
+    ['/itinerari/t1?tappa=2', ['Esplora']],
+    ['/feste/f1', ['Tradizioni']],
     ['/cosa-fare?zona=serapo', ['Cosa fare']],
     ['/il-progetto', ['Il progetto']],
     ['/login', ['Accedi']],
@@ -222,11 +241,11 @@ describe('the menu’s current item (review PR-23)', () => {
   })
 
   it('is underlined, not told by its colour alone', async () => {
-    const tour = await mountHeader(false, null, '/itinerari/t1')
-    expect(tour.get('a[href="/itinerari"]').classes()).toEqual(
+    const project = await mountHeader(false, null, '/il-progetto')
+    expect(project.get('a[href="/il-progetto"]').classes()).toEqual(
       expect.arrayContaining(['underline', 'text-sea']),
     )
-    expect(tour.get('a[href="/cosa-fare"]').classes()).not.toContain('underline')
+    expect(project.get('a[href="/cosa-fare"]').classes()).not.toContain('underline')
 
     const card = await mountHeader(false, null, '/chiese/c1')
     expect(card.get('button[aria-haspopup="menu"] span').classes()).toContain('underline')
@@ -239,7 +258,7 @@ describe('the menu’s current item (review PR-23)', () => {
       const wrapper = await mountHeader(false, null, path)
       await wrapper.get('button[aria-label="Menu"]').trigger('click')
 
-      expect(wrapper.findAll('a[href="/"]').map((link) => link.text())).toContain('Mappa')
+      expect(wrapper.get('a[href="/mappa"]').text()).toBe('Mappa')
       expect(currentItems(wrapper)).toEqual([])
       expect(wrapper.find('.underline').exists()).toBe(false)
     },
@@ -254,16 +273,16 @@ describe('the menu’s current item (review PR-23)', () => {
     expect(project.attributes('aria-current')).toBe('page')
     expect(project.classes()).toContain('underline')
     expect(wrapper.get('a[href="/cosa-fare"]').attributes('aria-current')).toBeUndefined()
-    expect(wrapper.get('a[href="/"]').attributes('aria-current')).toBeUndefined()
+    expect(wrapper.get('a[href="/mappa"]').attributes('aria-current')).toBeUndefined()
   })
 
-  it('on a phone lights Esplora and Itinerari in the pill itself', async () => {
+  it('on a phone lights Esplora and Tradizioni in the pill itself', async () => {
     stubViewport(false)
-    const card = await mountHeader(false, null, '/chiese/c1')
-    expect(card.get('button[aria-haspopup="menu"]').attributes('aria-current')).toBe('page')
-
     const tour = await mountHeader(false, null, '/itinerari/t1')
-    expect(tour.get('a[data-pill-itinerari]').attributes('aria-current')).toBe('page')
+    expect(tour.get('button[aria-haspopup="menu"]').attributes('aria-current')).toBe('page')
+
+    const feast = await mountHeader(false, null, '/feste/f1')
+    expect(feast.get('[data-pill-tradizioni] button').attributes('aria-current')).toBe('page')
   })
 })
 

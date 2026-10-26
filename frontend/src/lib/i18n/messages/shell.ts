@@ -10,7 +10,7 @@ const it = {
     label: 'Principale',
     map: 'Mappa',
     explore: 'Esplora',
-    tours: 'Itinerari',
+    traditions: 'Tradizioni',
     whatToDo: 'Cosa fare',
     project: 'Il progetto',
     signIn: 'Accedi',
@@ -19,7 +19,7 @@ const it = {
   // The switch's group: what it is. Each language is named in itself.
   language: 'Lingua',
   // The wordmark's link (review PR-8, A-01).
-  home: 'Vivere Gaeta — torna alla mappa',
+  home: 'Vivere Gaeta — pagina iniziale',
   // The Esplora menu's count, heard after the type: «Luoghi, 9 schede».
   entriesHeard: (count: number) => (count === 1 ? ' scheda' : ' schede'),
   panel: {
@@ -41,7 +41,7 @@ const it = {
   title: {
     home: 'Vivere Gaeta — la mappa di Gaeta',
     project: 'Il progetto',
-    welcome: 'Che cosa ti va di fare?',
+    map: 'Mappa',
     whatToDo: 'Cosa fare',
     events: 'Gli eventi che conosciamo',
     event: 'Eventi',

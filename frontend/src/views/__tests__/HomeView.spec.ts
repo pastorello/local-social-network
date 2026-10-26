@@ -30,11 +30,13 @@ const makeRouter = () =>
   createRouter({
     history: createMemoryHistory(),
     routes: [
+      // The welcome page is the home since 2026-10-26, and the map — this
+      // view's page — is /mappa.
       { path: '/', name: 'home', component: stub },
+      { path: '/mappa', name: 'mappa', component: stub },
       { path: '/login', name: 'login', component: stub },
       { path: '/chiese/:id', name: 'chiesedetail', component: stub },
       { path: '/feste/:id', name: 'festedetail', component: stub },
-      { path: '/benvenuto', name: 'benvenuto', component: stub },
       { path: '/cosa-fare', name: 'cosafare', component: stub },
     ],
   })
@@ -139,8 +141,11 @@ const mountHome = async ({ signedIn = false, attach = false } = {}) => {
   const pinia = createPinia()
   setActivePinia(pinia)
   if (signedIn) useUserStore().user.isAuthenticated = true
+  const router = makeRouter()
+  router.push('/mappa')
+  await router.isReady()
   const wrapper = mount(HomeView, {
-    global: { plugins: [pinia, makeRouter()], stubs: globalStubs },
+    global: { plugins: [pinia, router], stubs: globalStubs },
     ...(attach ? { attachTo: document.body } : {}),
   })
   await flushPromises()
@@ -195,9 +200,10 @@ describe('HomeView (the map, spec map.md M1/M2/M3)', () => {
     // Its answers lead where /benvenuto's do; Mangiare has nothing behind it.
     expect(wrapper.get('a[href="/cosa-fare?intento=citta"]').text()).toContain('Scoprire la città')
     expect(wrapper.text()).not.toContain('Mangiare')
-    expect(wrapper.get('a[href="/cosa-fare"]').text()).toContain('Oppure guarda cosa c')
-    // The two doors of review PR-2 are its answers now.
-    expect(wrapper.find('a[href="/benvenuto"]').exists()).toBe(false)
+    // No door to the zones since 2026-10-26: «Cosa fare» in the menu is it.
+    expect(wrapper.find('a[href="/cosa-fare"]').exists()).toBe(false)
+    // The two doors of review PR-2 were its answers, then the zones' left.
+    expect(wrapper.find('a[href="/"]').exists()).toBe(false)
     // Above the layers.
     const column = wrapper.html()
     expect(column.indexOf('Che cosa ti va di fare?')).toBeLessThan(column.indexOf('layer-chiese'))
@@ -524,7 +530,7 @@ describe('HomeView on a phone (spec/design.md D3/D4/D5)', () => {
 
     expect(wrapper.text()).toContain(PRESENTATION)
     expect(wrapper.find('a[href^="/cosa-fare"]').exists()).toBe(false)
-    expect(wrapper.find('a[href^="/benvenuto"]').exists()).toBe(false)
+    expect(wrapper.find('a[href^="/?"]').exists()).toBe(false)
   })
 
   it('keeps the layer controls behind a floating button instead of beside the map (D4)', async () => {

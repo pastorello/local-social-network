@@ -9,7 +9,8 @@ describe('intents (spec cosa-fare.md Part −1, D4)', () => {
   it('files places under the activities of /benvenuto', () => {
     expect(intentOf({ type: 'luoghi', genre: 'spiaggia' })).toBe('mare')
     expect(intentOf({ type: 'luoghi', genre: 'castello' })).toBe('citta')
-    expect(intentOf({ type: 'luoghi', genre: 'punto-panoramico' })).toBe('camminare')
+    // The walk is the town's since 2026-10-26: «Camminare» folded into it.
+    expect(intentOf({ type: 'luoghi', genre: 'punto-panoramico' })).toBe('citta')
     expect(intentOf({ type: 'chiese', genre: null })).toBe('citta')
   })
 
@@ -90,7 +91,7 @@ const tint = (hex: string, share: number, ground: string) => {
 describe('the intents’ colours on /benvenuto (review PR-14, M-09)', () => {
   it('are tokens, never hexes, and an intent nobody coloured wears the unknown grey', () => {
     expect(intentVar('mare')).toBe('var(--color-intent-mare)')
-    expect(intentVar('camminare')).toBe('var(--color-intent-camminare)')
+    expect(intentVar('citta')).toBe('var(--color-intent-citta)')
     expect(intentVar('bere')).toBe('var(--color-intent-bere)')
     expect(intentVar('sport')).toBe('var(--color-layer-unknown)')
   })

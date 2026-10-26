@@ -46,7 +46,7 @@ describe('the v1 flows', { testIsolation: false }, () => {
     // for beats hard-coding the API's origin in a spec.
     cy.intercept('GET', '**/api/reports/map/**').as('pins')
 
-    cy.visit('/')
+    cy.visit('/mappa')
     cy.wait('@pins')
     cy.contains('button', 'Segnala un problema').click()
 
@@ -81,7 +81,7 @@ describe('the v1 flows', { testIsolation: false }, () => {
     // which is also how the redesigned home links to this screen. (Only a
     // collaborator: a reader has no reports, reports-and-polls.md R1.)
     cy.intercept('GET', '**/api/reports/map/**').as('pins')
-    cy.visit('/')
+    cy.visit('/mappa')
 
     cy.wait('@pins')
       .its('response.body')

@@ -89,6 +89,10 @@ walking directions are handed to the app that already does them.
   and a business's name at the top of our page is the kind of presence D10
   keeps out. **The printed card is the B&Bs' business, not the product's**:
   the product's whole obligation is that the address never moves.
+  *(2026-10-26: the page became the site's home, `/`, by the author's
+  decision; `/benvenuto` leads there with its query, so the printed address
+  keeps working — the obligation, not the page — and the wizard's second
+  step is `/?intento=`. design.md D3's note of that day.)*
 
   *Counter-case, rejected:* a code per B&B, which gives a host a reason to hand
   the card out ("Benvenuti da Casa Rossa") and would show which hosts bring
@@ -385,6 +389,10 @@ cards does not move** (I6):
   and «Questa settimana» when something falls in them ([cosa-fare.md](./cosa-fare.md)
   Part −1 D9); then «Oppure guarda cosa c'è in una zona» (D6 of the same
   file, its D8 rule unchanged); last, «Non lo so: fammi vedere la mappa».
+  *(2026-10-26, the author's decision: the zones' answer is gone — it said
+  what the last one says, and the menu's «Cosa fare» is that door — and
+  «Camminare» folded into «Scoprire la città»: cosa-fare.md D4's and D6's
+  notes of that day.)*
   With one intent the question is still asked — it is the first
   impression.
 - **Step 2 is the same address with `?intento=`**: «Hai scelto: …» with a

@@ -154,7 +154,7 @@ describe('Il progetto', () => {
     expect(rows.map((li) => li.get('a').attributes('href'))).toEqual([
       '/itinerari',
       '/cosa-fare',
-      '/',
+      '/mappa',
     ])
     expect(rows.map((li) => li.get('a').text())).toEqual([
       'Itinerari',

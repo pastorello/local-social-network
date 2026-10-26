@@ -4,7 +4,7 @@ describe('anonymous visitor', () => {
     // where the reader's small-first home takes over (spec/design.md D2) —
     // so the wide layout has to be asked for explicitly.
     cy.viewport(1280, 800)
-    cy.visit('/')
+    cy.visit('/mappa')
     cy.contains('h1', 'La mappa di Gaeta')
     cy.contains('legend', 'Livelli')
     // Reports are for people with an account (decided 2026-10-22, spec
@@ -14,7 +14,7 @@ describe('anonymous visitor', () => {
 
   it('gets the map and a sheet of places on a phone', () => {
     cy.viewport(375, 812)
-    cy.visit('/')
+    cy.visit('/mappa')
 
     // The page keeps exactly one h1 in both layouts (ADR-0005) — on a phone
     // it is visually hidden, because the map is the title.

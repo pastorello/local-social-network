@@ -30,7 +30,7 @@ describe('SiteTitle', () => {
     axe.setup(document)
 
     const name = axe.commons.text.accessibleText(link)
-    expect(name).toBe('Vivere Gaeta — torna alla mappa')
+    expect(name).toBe('Vivere Gaeta — pagina iniziale')
     // WCAG 2.5.3: what is shown is in the name, at its start — a speech-input
     // user says «Vivere Gaeta» and reaches it.
     expect(name.startsWith('Vivere Gaeta')).toBe(true)

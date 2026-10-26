@@ -153,7 +153,9 @@ describe('collabora con noi', () => {
     cy.get('#login-email').type(email)
     cy.get('#login-password').type(chosen)
     cy.contains('button', 'Accedi').click()
-    cy.location('pathname').should('equal', '/')
+    // A collaborator with no draft lands on the map (lib/landing.ts), /mappa
+    // since the home became the welcome page (2026-10-26).
+    cy.location('pathname').should('equal', '/mappa')
     cy.get('button[aria-label^="Il tuo account"]').should('exist')
   })
 

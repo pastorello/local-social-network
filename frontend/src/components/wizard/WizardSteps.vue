@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 
 import IntentTile from '@/components/content/IntentTile.vue'
-import WhereAreYouField from '@/components/forms/WhereAreYouField.vue'
 import ItinerarioIcon from '@/components/icons/ItinerarioIcon.vue'
 import LuogoIcon from '@/components/icons/LuogoIcon.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
@@ -12,7 +11,6 @@ import AnswerCard from '@/components/wizard/AnswerCard.vue'
 import WizardChoices from '@/components/wizard/WizardChoices.vue'
 import { usePageTitle } from '@/composables/usePageTitle'
 import copy from '@/definitions/copy'
-import { zonesWithPlaces } from '@/lib/doors'
 import wizardText from '@/lib/i18n/messages/wizard'
 import {
   afterIntent,
@@ -29,31 +27,34 @@ import { useWizardStore } from '@/stores/wizard'
 
 // The wizard «Cosa fare adesso», its first two steps (review of 2026-10-22,
 // study 10; PR-21): «Che cosa ti va di fare?», then «Dove?», one question a
-// screen, on the address a B&B's card prints (spec itinerari.md I6) — step 2
-// is the same page with `?intento=`. Choosing an answer is following a link,
+// screen, on the home since 2026-10-26 — `/`, where the address a B&B's card
+// prints (/benvenuto, spec itinerari.md I6) leads — and step 2 is the same
+// page with `?intento=`. Choosing an answer is following a link,
 // so Back is the step before and a shared link opens the same step; the third
 // step is «Cosa si può fare qui» opened on the answers (/cosa-fare?intento=
 // &zona=). The rules — what answers, what is skipped — are lib/wizard.ts.
 //
-// `home` is the same first step over the home's map (review PR-21b, decided
-// on 2026-10-22: one front door). There the page around it says what the site
-// is, the map's title stays the page's h1 and the question is under it, and
-// the way out, «Vai alla mappa», puts the question away rather than leading
-// anywhere. Its answers lead where /benvenuto's do: «Dove?» is /benvenuto's.
+// `home` is the same first step over the map (review PR-21b — the home's
+// map until 2026-10-26, /mappa since). There the page around it says what
+// the site is, the map's title stays the page's h1 and the question is under
+// it, and the way out, «Vai alla mappa», puts the question away rather than
+// leading anywhere. Its answers lead where the home's do: «Dove?» is the
+// home's, `/?intento=`.
 
 const props = defineProps<{ home?: boolean }>()
 
 const route = useRoute()
 const router = useRouter()
 const wizard = useWizardStore()
-const { archive, zones, aliases, windows, known } = storeToRefs(wizard)
+const { archive, zones, windows, known } = storeToRefs(wizard)
 
 onMounted(() => wizard.load())
 
-// The answer is read from /benvenuto's own address only: other pages speak
-// `?intento=` too (a list of tours), and the home's step is always the first.
+// The answer is read from the home's own address only (/, which /benvenuto
+// leads to since 2026-10-26): other pages speak `?intento=` too (a list of
+// tours), and the step over the map is always the first.
 const asked = computed(() =>
-  !props.home && route.name === 'benvenuto' && typeof route.query.intento === 'string'
+  !props.home && route.name === 'home' && typeof route.query.intento === 'string'
     ? route.query.intento
     : '',
 )
@@ -99,7 +100,6 @@ watch(step, async () => {
 })
 
 const windowsOn = computed(() => windowAnswers(windows.value))
-const withPlaces = computed(() => zonesWithPlaces(zones.value))
 const where = computed(() =>
   chosen.value ? zoneAnswers(archive.value, chosen.value.slug, zones.value) : [],
 )
@@ -111,10 +111,6 @@ const everywhere = computed(() =>
       )
     : '',
 )
-
-const chooseZone = (zone: string) => {
-  if (chosen.value) router.push(resultOf(chosen.value.slug, zone))
-}
 
 // On the home the answers are one column: the floating column and the sheet
 // are a phone's width at most.
@@ -141,9 +137,13 @@ const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:si
       </template>
 
       <!-- The answers land together once every count is in, under what is
-      already on screen: none of them arrives above another. -->
-      <template v-if="known">
-        <ul v-if="intents.length" :class="[grid, home ? 'mt-4' : 'mt-6']">
+      already on screen: none of them arrives above another. One grid for
+      all of them (2026-10-26, the author's ask): each group stays a list of
+      its own, but `contents` lets their cards flow in the same two columns,
+      so the way out takes the cell beside the last intent rather than a row
+      of its own. «In calendario» is a whole row when there is one. -->
+      <div v-if="known" :class="[grid, home ? 'mt-4' : 'mt-6']">
+        <ul v-if="intents.length" class="contents">
           <li v-for="intent in intents" :key="intent.slug">
             <!-- The description is the admin's, in the reader's language
             where they wrote one (review PR-19b) — the Italian stands in
@@ -161,20 +161,26 @@ const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:si
             </AnswerCard>
           </li>
         </ul>
-        <p v-else class="mt-6 text-muted">
+        <p v-else class="col-span-full text-muted">
           {{ wizardText().none }}
         </p>
 
         <!-- «Oggi» and «Questa settimana» (cosa-fare.md Part −1, D9): kept
         apart from the everyday, and each only when something falls in it. -->
         <template v-if="windowsOn.length">
-          <h3 v-if="home" class="mt-8 text-xs font-semibold tracking-[0.12em] text-muted uppercase">
+          <h3
+            v-if="home"
+            class="col-span-full mt-5 text-xs font-semibold tracking-[0.12em] text-muted uppercase"
+          >
             {{ wizardText().calendar }}
           </h3>
-          <h2 v-else class="mt-8 text-xs font-semibold tracking-[0.12em] text-muted uppercase">
+          <h2
+            v-else
+            class="col-span-full mt-5 text-xs font-semibold tracking-[0.12em] text-muted uppercase"
+          >
             {{ wizardText().calendar }}
           </h2>
-          <ul :class="[grid, 'mt-3']">
+          <ul class="contents">
             <li v-for="window in windowsOn" :key="window.key">
               <AnswerCard
                 :to="{ name: 'eventilist', query: { finestra: window.key } }"
@@ -190,18 +196,7 @@ const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:si
           </ul>
         </template>
 
-        <ul :class="[grid, 'mt-6']">
-          <li v-if="withPlaces.length">
-            <AnswerCard
-              :to="{ name: 'cosafare' }"
-              :title="wizardText().zoneDoor.title"
-              :description="wizardText().zoneDoor.description"
-            >
-              <template #tile>
-                <span :class="[tile, 'bg-sea/10 text-sea']" aria-hidden="true"><LuogoIcon /></span>
-              </template>
-            </AnswerCard>
-          </li>
+        <ul class="contents">
           <li>
             <!-- The way out. On the home it puts the question away and leaves
             the map with its layers and its list (review PR-21b): «Vai alla
@@ -222,7 +217,7 @@ const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:si
             </AnswerCard>
             <AnswerCard
               v-else
-              to="/"
+              to="/mappa"
               :title="wizardText().dontKnow"
               @click="wizard.closeQuestion()"
             >
@@ -234,7 +229,7 @@ const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:si
             </AnswerCard>
           </li>
         </ul>
-      </template>
+      </div>
     </template>
 
     <template v-else>
@@ -243,10 +238,9 @@ const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:si
         {{ wizardText().where }}
       </MainTitle>
 
-      <!-- «Dove sei?» (review PR-20): the guest who does not know the zones'
-      names knows where they stand. Any place it knows leads on — the third
-      step says so when that zone has nothing of what was chosen. -->
-      <WhereAreYouField :aliases="aliases" :zones="zones" :current="null" @choose="chooseZone" />
+      <!-- «Dove sei?» (review PR-20) asked here too until 2026-10-26, when
+      the author hid it for now: its component and its names are kept
+      (components/forms/WhereAreYouField.vue, maps.ZonaAlias). -->
 
       <ul v-if="known && chosen" :class="[grid, 'mt-6']">
         <li v-for="zone in where" :key="zone.slug">

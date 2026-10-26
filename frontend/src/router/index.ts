@@ -35,15 +35,27 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      // The home is the welcome page — «Che cosa ti va di fare?», the wizard's
+      // first step — since the author's decision of 2026-10-26 (design.md
+      // D3's note of that day): what /benvenuto showed, at the site's own
+      // address. The map it opened on before is at /mappa. No title of its
+      // own: the site's (lib/pageTitle.ts::homeTitle), as index.html says it.
       path: '/',
       name: 'home',
-      // The home is the map itself (spec/design.md D13), and its chrome —
-      // HomeView — is mounted by the shell for the life of the app rather than
-      // by this route, so it keeps its state and its elements while a panel is
-      // open over it (D15: closing a panel gives focus back to what opened it).
+      component: WelcomeView,
+      meta: { requiresAuth: false },
+    },
+    {
+      // The map itself (spec/design.md D13), with its chrome — the home's
+      // until 2026-10-26, the menu's «Mappa» since. That chrome, HomeView, is
+      // mounted by the shell for the life of the app rather than by this
+      // route, so it keeps its state and its elements while a panel is open
+      // over it (D15: closing a panel gives focus back to what opened it).
       // The route renders nothing of its own.
+      path: '/mappa',
+      name: 'mappa',
       component: EmptyRoute,
-      meta: { requiresAuth: false, fullBleed: true },
+      meta: { requiresAuth: false, fullBleed: true, title: () => [shell().title.map] },
     },
     {
       // The credits surface (spec/design.md D21) — a footer until the map went
@@ -306,11 +318,12 @@ const router = createRouter({
     },
     {
       // The one address printed on every B&B's card (spec itinerari.md I6):
-      // "Che cosa ti va di fare?". It must never move.
+      // "Che cosa ti va di fare?". It must never stop working: since the page
+      // became the home (2026-10-26) it leads there, with its query — a
+      // card's QR code and a link to the wizard's second step alike.
       path: '/benvenuto',
       name: 'benvenuto',
-      component: WelcomeView,
-      meta: { requiresAuth: false, title: () => [shell().title.welcome] },
+      redirect: (to) => ({ name: 'home', query: to.query, hash: to.hash }),
     },
     {
       // «Cosa si può fare qui» (spec cosa-fare.md Part −1): a zone and what is

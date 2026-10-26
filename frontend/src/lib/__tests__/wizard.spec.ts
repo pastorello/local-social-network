@@ -167,7 +167,7 @@ describe('the wizard’s second step: «Dove?»', () => {
   it('asks where when two zones hold something, and leads there', () => {
     expect(asksWhere(beaches, 'mare', ZONES)).toBe(true)
     expect(afterIntent(beaches, 'mare', ZONES)).toEqual(zoneStepOf('mare'))
-    expect(zoneStepOf('mare')).toEqual({ name: 'benvenuto', query: { intento: 'mare' } })
+    expect(zoneStepOf('mare')).toEqual({ name: 'home', query: { intento: 'mare' } })
   })
 
   it('skips the question when one zone holds all of it, straight to that zone', () => {

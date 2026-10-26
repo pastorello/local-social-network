@@ -286,7 +286,7 @@ onMounted(async () => {
     </div>
     <RouterLink
       v-if="offerList && !mapStore.editor"
-      to="/"
+      to="/mappa"
       class="absolute bottom-4 left-4 z-1000 flex h-10 items-center gap-2 rounded-full bg-ink px-4 text-sm font-semibold text-white shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
     >
       <svg

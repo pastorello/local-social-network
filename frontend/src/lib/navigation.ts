@@ -52,7 +52,7 @@ export const parentOf = (route: Where): Parent | null => {
   }
   // A report is a point on the collaborator's map (reports-and-polls.md R1),
   // where the reports are: up is named after them (review PR-23).
-  if (route.name === 'reportdetail') return { to: '/', label: up.reports }
+  if (route.name === 'reportdetail') return { to: '/mappa', label: up.reports }
   // An event is not a card (cosa-fare.md CF25), but it has a list of its
   // own, «Gli eventi che conosciamo», and its form is under its page.
   if (route.name === 'eventodetail' || route.name === 'eventocreate') {
@@ -76,19 +76,28 @@ export const tintOf = (parent: Parent | null): string => {
 }
 
 // Where the reader is, for the menu (review PR-23, N-02): the item above the
-// page they are on, which the pill marks as current. Any card type, its list
-// and its form are under *Esplora*; a tour under *Itinerari*; a report under
-// *Mappa*, as a point on the collaborator's map. Pages under none of them —
-// the home and the welcome page (decided by the author on 2026-10-23, review
-// PR-25), the account's — mark nothing.
-export type Section = 'mappa' | 'esplora' | 'itinerari' | 'cosa-fare' | 'progetto'
+// page they are on, which the pill marks as current. A card type, its list
+// and its form are under the menu that lists it — *Esplora* for the places,
+// the tours and the businesses, *Tradizioni* for the feasts, the dishes, the
+// people, the dialect and the books (2026-10-26; the tours were a pill item
+// of their own until then); the map itself (/mappa since 2026-10-26) and a
+// report under *Mappa*, a report as a point on the collaborator's map. Pages
+// under none of them — the home, which is the welcome page (decided by the
+// author on 2026-10-23, review PR-25, and again on 2026-10-26), the
+// account's — mark nothing.
+export type MenuSection = 'esplora' | 'tradizioni'
+export type Section = 'mappa' | MenuSection | 'cosa-fare' | 'progetto'
+
+// The types *Tradizioni* lists (components/buttons/SchedeMenu.vue); every
+// other type is *Esplora*'s — churches with the places.
+export const TRADIZIONI = ['feste', 'ricette', 'personaggi', 'dialetto', 'libri']
 
 export const sectionOf = (route: Pick<Where, 'name'>): Section | null => {
   const name = String(route.name)
-  if (name === 'reportdetail') return 'mappa'
+  if (name === 'mappa' || name === 'reportdetail') return 'mappa'
   if (name === 'cosafare') return 'cosa-fare'
   if (name === 'progetto') return 'progetto'
   const list = LISTS.find((candidate) => [candidate.name, ...candidate.children].includes(name))
   if (!list) return null
-  return list.path === `/${itinerarioConfig.key}` ? 'itinerari' : 'esplora'
+  return TRADIZIONI.includes(list.key) ? 'tradizioni' : 'esplora'
 }

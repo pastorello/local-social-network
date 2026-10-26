@@ -80,7 +80,7 @@ watch(expanded, async (isExpanded) => {
 // one press shows the map — never a step back through the pages, never out of
 // the site. Pushed, so the browser's Back reopens what was closed. The map
 // stays as it was; the store keeps its view (stores/map.ts).
-const close = () => router.push('/')
+const close = () => router.push('/mappa')
 
 const parent = computed(() => parentOf(route))
 

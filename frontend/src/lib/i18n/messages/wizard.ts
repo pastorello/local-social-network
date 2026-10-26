@@ -9,10 +9,6 @@ const it = {
   question: 'Che cosa ti va di fare?',
   none: 'Le proposte sono in preparazione. Intanto, la mappa racconta la città.',
   calendar: 'In calendario',
-  zoneDoor: {
-    title: "Oppure guarda cosa c'è in una zona",
-    description: 'Serapo, il centro medievale, Monte Orlando…',
-  },
   goToMap: { title: 'Vai alla mappa', line: 'I livelli e l’elenco dei luoghi' },
   dontKnow: 'Non lo so: fammi vedere la mappa',
   where: 'Dove?',

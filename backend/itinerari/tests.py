@@ -60,17 +60,17 @@ def payload(stops, **overrides):
 # --- the intents (I5) ---
 
 
-def test_the_seeded_intents_are_the_three_the_author_named_camminare_and_bere(api_client):
+def test_the_seeded_intents_are_the_three_the_author_named_and_bere(api_client):
     response = api_client.get('/api/itinerari/intenti/')
 
-    # Camminare joined on 2026-10-13 (spec cosa-fare.md Part −1, D4), Bere on
-    # 2026-10-25 (ADR-0010).
+    # Camminare joined on 2026-10-13 (spec cosa-fare.md Part −1, D4) and
+    # folded into «Scoprire la città» on 2026-10-26 (migration 0013); Bere
+    # joined on 2026-10-25 (ADR-0010).
     assert [intent['slug'] for intent in response.json()] == [
-        'mare', 'mangiare', 'citta', 'camminare', 'bere',
+        'mare', 'mangiare', 'citta', 'bere',
     ]
     assert response.json()[2]['name'] == 'Scoprire la città'
-    assert response.json()[3]['name'] == 'Camminare'
-    assert response.json()[4]['name'] == 'Bere'
+    assert response.json()[3]['name'] == 'Bere'
 
 
 def test_the_seeded_intents_have_their_english_names_and_a_tour_reads_them(auth_client, places):
@@ -94,7 +94,7 @@ def test_an_intent_counts_only_published_tours(auth_client, places):
 
     counts = {i['slug']: i['count'] for i in APIClient().get('/api/itinerari/intenti/').json()}
 
-    assert counts == {'mare': 0, 'mangiare': 0, 'citta': 1, 'camminare': 0, 'bere': 0}
+    assert counts == {'mare': 0, 'mangiare': 0, 'citta': 1, 'bere': 0}
 
 
 # --- writing a tour ---

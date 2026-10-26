@@ -108,7 +108,6 @@ const ANSWERS: Record<string, unknown> = {
     { slug: 'mare', name: 'Andare al mare' },
     { slug: 'mangiare', name: 'Mangiare' },
     { slug: 'citta', name: 'Scoprire la città' },
-    { slug: 'camminare', name: 'Camminare' },
   ],
   '/api/luoghi/generi/': [
     { slug: 'spiaggia', name: 'Spiaggia' },
@@ -151,7 +150,7 @@ const mountAt = async (
     history: createMemoryHistory(),
     routes: [
       { path: '/cosa-fare', name: 'cosafare', component: CosaFareView },
-      { path: '/benvenuto', name: 'benvenuto', component: stub },
+      { path: '/', name: 'home', component: stub },
       { path: '/:rest(.*)*', name: 'itinerariodetail', component: stub },
     ],
   })
@@ -212,7 +211,6 @@ describe('CosaFareView — «Cosa si può fare qui» (spec cosa-fare.md Part −
     expect(headings).toEqual([
       'Andare al mare',
       'Scoprire la città',
-      'Camminare',
       'Itinerari che passano di qui',
       'Le feste di questa zona',
       'Mangiare',
@@ -342,7 +340,6 @@ describe('CosaFareView — the businesses (ADR-0010)', () => {
     expect(wrapper.findAll('h2').map((h) => h.text())).toEqual([
       'Andare al mare',
       'Scoprire la città',
-      'Camminare',
       'Bere',
       'Itinerari che passano di qui',
       'Le feste di questa zona',
@@ -445,44 +442,13 @@ describe('CosaFareView on a phone (review PR-4, M-07)', () => {
     expect(router.currentRoute.value.query.zona).toBe('gaeta-medievale')
   })
 
-  // Review PR-20: «Dove sei?» is a way of choosing, so it steps aside with
-  // the chips — and the line saying what it chose stays.
-  it('puts «Dove sei?» away with the chips, and hands focus to «Cambia zona»', async () => {
-    const { wrapper, router } = await mountAt({}, undefined, true)
-    const field = wrapper.get<HTMLInputElement>('input[role="combobox"]')
-    expect(field.isVisible()).toBe(true)
-
-    field.element.focus()
-    await field.setValue('castello')
-    await field.trigger('keydown', { key: 'Enter' })
-    await flushPromises()
-
-    expect(router.currentRoute.value.query).toEqual({ zona: 'gaeta-medievale' })
-    expect(field.isVisible()).toBe(false)
-    expect(wrapper.text()).toContain('Sei al castello: ti mostriamo Gaeta Medievale.')
-    const toggle = wrapper.get('button[aria-controls~="zone-chips"]')
-    expect(document.activeElement).toBe(toggle.element)
-    expect(toggle.attributes('aria-controls')!.split(' ')).toContain('dove-sei')
-
-    await toggle.trigger('click')
-    expect(field.isVisible()).toBe(true)
-    wrapper.unmount()
-  })
-
-  it('opens a zone’s address with the question already put away, not folding it later', async () => {
-    // The zones never come: what is drawn first is all there is.
-    vi.mocked(axios.get).mockImplementation(() => new Promise(() => {}))
+  // «Dove sei?» asked above the chips (review PR-20) until 2026-10-26, when
+  // the author hid it for now: «Cambia zona» controls the chips alone.
+  it('asks no «Dove sei?», and «Cambia zona» controls the zones alone', async () => {
     const { wrapper } = await mountAt({ zona: 'serapo' }, undefined, true)
 
-    expect(wrapper.get('input[role="combobox"]').isVisible()).toBe(false)
-    wrapper.unmount()
-  })
-
-  it('asks again on the address of a zone the archive does not have', async () => {
-    const { wrapper } = await mountAt({ zona: 'atlantide' }, undefined, true)
-
-    expect(wrapper.get('input[role="combobox"]').isVisible()).toBe(true)
-    expect(wrapper.text()).toContain('A Gaeta')
+    expect(wrapper.find('input[role="combobox"]').exists()).toBe(false)
+    expect(wrapper.get('button[aria-controls]').attributes('aria-controls')).toBe('zone-chips')
     wrapper.unmount()
   })
 
@@ -615,48 +581,22 @@ describe('CosaFareView — eyebrow and title (review PR-23)', () => {
   })
 })
 
-// Review PR-20: «Dove sei?» picks the zone from the name of where the guest
-// stands, as a chip would — the address is the choice.
-describe('CosaFareView — «Dove sei?» (review PR-20)', () => {
+// Review PR-20's «Dove sei?» picked the zone from the name of where the guest
+// stood; hidden for now on 2026-10-26 (the author's decision), its component
+// and its names kept for the day it comes back.
+describe('CosaFareView — «Dove sei?» hidden (2026-10-26)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(axios.get).mockImplementation(async (url: string) => ({ data: ANSWERS[url] }))
   })
 
-  it('asks above the zones, and asks no service but the archive', async () => {
+  it('asks no name of where the guest is, and the archive for none', async () => {
     const { wrapper } = await mountAt()
 
-    const field = wrapper.get('input[role="combobox"]')
-    const chips = wrapper.get('nav[aria-label="Zone"]')
-    expect(
-      field.element.compareDocumentPosition(chips.element) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy()
+    expect(wrapper.find('input[role="combobox"]').exists()).toBe(false)
     const asked = vi.mocked(axios.get).mock.calls.map(([url]) => url)
-    expect(asked).toContain('/api/map/zone/alias/')
+    expect(asked).not.toContain('/api/map/zone/alias/')
     expect(asked.every((url) => url.startsWith('/api/'))).toBe(true)
-  })
-
-  it('shows the zone of the place named, and says so', async () => {
-    const { wrapper, router } = await mountAt()
-
-    await wrapper.get('input[role="combobox"]').setValue('castello')
-    await wrapper.get('input[role="combobox"]').trigger('keydown', { key: 'Enter' })
-    await flushPromises()
-
-    expect(router.currentRoute.value.query).toEqual({ zona: 'gaeta-medievale' })
-    expect(wrapper.text()).toContain('Sei al castello: ti mostriamo Gaeta Medievale.')
-    expect(wrapper.text()).toContain('Duomo')
-  })
-
-  it('leaves the zone alone for a name it does not know', async () => {
-    const { wrapper, router } = await mountAt({ zona: 'serapo' })
-
-    await wrapper.get('input[role="combobox"]').setValue('xyz')
-    await wrapper.get('input[role="combobox"]').trigger('keydown', { key: 'Enter' })
-    await flushPromises()
-
-    expect(router.currentRoute.value.query).toEqual({ zona: 'serapo' })
-    expect(wrapper.text()).toContain('Non conosciamo questo posto: scegli una zona qui sotto.')
   })
 })
 
@@ -681,10 +621,7 @@ describe('CosaFareView — the wizard’s third step (review PR-21)', () => {
     expect(chosen.text()).toBe(
       'Hai scelto: Cambia la scelta: Andare al mare · Cambia la scelta: Serapo',
     )
-    expect(chosen.findAll('a').map((a) => a.attributes('href'))).toEqual([
-      '/benvenuto',
-      '/benvenuto?intento=mare',
-    ])
+    expect(chosen.findAll('a').map((a) => a.attributes('href'))).toEqual(['/', '/?intento=mare'])
     // The question it answers is the one h1, and takes the focus (ADR-0005).
     expect(wrapper.findAll('h1')).toHaveLength(1)
     expect(wrapper.get('h1').attributes('data-panel-focus')).toBeDefined()
@@ -701,7 +638,6 @@ describe('CosaFareView — the wizard’s third step (review PR-21)', () => {
       ['Itinerari che passano di qui', 'true'],
       ['Andare al mare', 'true'],
       ['Scoprire la città', 'false'],
-      ['Camminare', 'false'],
       ['Le feste di questa zona', 'false'],
       ['Mangiare', 'false'],
     ])
@@ -716,10 +652,12 @@ describe('CosaFareView — the wizard’s third step (review PR-21)', () => {
     expect(store.restrictTo).toEqual(['l1'])
     await wrapper.findAll('h2 button')[2]!.trigger('click')
     expect(wrapper.findAll('h2 button')[2]!.attributes('aria-expanded')).toBe('true')
-    expect([...(store.restrictTo ?? [])].sort()).toEqual(['c1', 'l1'])
+    // «Scoprire la città» opened: the church and the viewpoint, which is the
+    // town's since «Camminare» folded into it (2026-10-26).
+    expect([...(store.restrictTo ?? [])].sort()).toEqual(['c1', 'l1', 'l2'])
     expect(store.frame).toEqual([
-      { lat: 41.21, lng: 13.56 },
-      { lat: 41.215, lng: 13.565 },
+      { lat: 41.21, lng: 13.55 },
+      { lat: 41.22, lng: 13.565 },
     ])
   })
 
@@ -750,13 +688,13 @@ describe('CosaFareView — the wizard’s third step (review PR-21)', () => {
   })
 
   it('says when the zone has nothing of it, and where it is instead', async () => {
-    const { wrapper } = await mountAt({ intento: 'camminare', zona: 'gaeta-medievale' })
+    const { wrapper } = await mountAt({ intento: 'mare', zona: 'gaeta-medievale' })
 
-    expect(wrapper.text()).toContain("Qui l'archivio non ha ancora niente per «Camminare».")
+    expect(wrapper.text()).toContain("Qui l'archivio non ha ancora niente per «Andare al mare».")
     const links = wrapper.findAll('p a').filter((a) => !a.text().startsWith('Cambia'))
     expect(links.map((a) => [a.text(), a.attributes('href')])).toEqual([
-      ['Serapo', '/cosa-fare?intento=camminare&zona=serapo'],
-      ['ovunque a Gaeta', '/cosa-fare?intento=camminare'],
+      ['Serapo', '/cosa-fare?intento=mare&zona=serapo'],
+      ['ovunque a Gaeta', '/cosa-fare?intento=mare'],
     ])
     // The rest of the zone is still there, put away.
     expect(headings(wrapper).map(([name]) => name)).toEqual([
@@ -770,14 +708,17 @@ describe('CosaFareView — the wizard’s third step (review PR-21)', () => {
     const { wrapper } = await mountAt({ intento: 'citta', zona: 'gaeta-medievale' })
 
     // Scoprire la città: the Duomo and a tour in Gaeta Medievale, the
-    // Annunziata in Serapo — two zones, so «Dove?» asks. Camminare's one
-    // place is in Serapo alone: it would not.
+    // Annunziata and the Belvedere in Serapo — two zones, so «Dove?» asks.
+    // The beaches without Arenauta, which is in no zone, are Serapo's alone:
+    // it would not.
     const chosen = wrapper.findAll('p').find((p) => p.text().startsWith('Hai scelto:'))!
     expect(chosen.findAll('a')).toHaveLength(2)
 
-    const { wrapper: walk } = await mountAt({ intento: 'camminare', zona: 'serapo' })
+    const { wrapper: walk, store } = await mountAt({ intento: 'mare', zona: 'serapo' })
+    store.features = FEATURES.filter((feature) => feature.id !== 'l3')
+    await flushPromises()
     const walked = walk.findAll('p').find((p) => p.text().startsWith('Hai scelto:'))!
-    expect(walked.findAll('a').map((a) => a.attributes('href'))).toEqual(['/benvenuto'])
+    expect(walked.findAll('a').map((a) => a.attributes('href'))).toEqual(['/'])
     expect(walked.text()).toContain('Serapo')
   })
 })

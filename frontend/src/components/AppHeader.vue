@@ -12,17 +12,19 @@ import SiteTitle from './typography/SiteTitle.vue'
 import UserAvatar from './cards/UserAvatar.vue'
 import { initials } from '@/lib/initials'
 import shell from '@/lib/i18n/messages/shell'
-import { sectionOf, type Section } from '@/lib/navigation'
+import { wordsOf } from '@/lib/i18n/messages/types'
+import { TRADIZIONI, sectionOf, type Section } from '@/lib/navigation'
 
 // The menu (spec/design.md D14): one pill at the top centre of every page,
 // floating over the map rather than a bar above it — the map is the ground of
-// every page (D13). The wordmark, Mappa, Esplora, Itinerari, Cosa fare, Il
+// every page (D13). The wordmark, Mappa, Esplora, Tradizioni, Cosa fare, Il
 // progetto, then Accedi or the collaborator's avatar, behind which are their
 // own cards first (review PR-13), then the polls — for someone with an account
 // since 2026-10-24 (review PR-17, reports-and-polls.md P1), so a reader is
 // never offered them. There is no search in this phase. Itinerari (spec
-// itinerari.md) is its own item rather than an Esplora entry: a tour is how a
-// guest starts, not a card type. *Esplora* was *Schede* until 2026-10-23
+// itinerari.md) was its own item until 2026-10-26, when the author put the
+// tours in Esplora beside the places and the businesses, and the feasts,
+// dishes, people, dialect and books in a menu of their own, Tradizioni. *Esplora* was *Schede* until 2026-10-23
 // (review PR-23, N-05). The reader's items speak the reader's language, and
 // «IT · EN» sits before Accedi (review PR-19a); the account's menu is a
 // collaborator's surface and stays Italian, marked so for a screen reader.
@@ -33,7 +35,7 @@ const route = useRoute()
 const { isDesktop } = useIsDesktop()
 
 // The item above the page the reader is on is current (review PR-23, N-02):
-// a tour's page lights Itinerari, any card Esplora — one rule
+// a tour's page lights Esplora, a feast's Tradizioni — one rule
 // (lib/navigation.ts::sectionOf) for the pill and for the phone's Menu, read
 // by a screen reader as the current page and seen as an underline as well as
 // a tint, so colour is never the only sign of it (WCAG 1.4.1).
@@ -89,7 +91,7 @@ const logout = async () => {
 const mapStore = useMapStore()
 const fileReport = async (close: () => void) => {
   close()
-  await router.push('/')
+  await router.push('/mappa')
   mapStore.startPlacing()
 }
 
@@ -114,18 +116,13 @@ const menuActive = 'font-semibold text-sea underline decoration-2 underline-offs
 
     <template v-if="isDesktop">
       <RouterLink
-        to="/"
+        to="/mappa"
         :class="[item, isCurrent('mappa') && active]"
         :aria-current="currentAttr('mappa')"
         >{{ shell().nav.map }}</RouterLink
       >
-      <SchedeMenu />
-      <RouterLink
-        to="/itinerari"
-        :class="[item, isCurrent('itinerari') && active]"
-        :aria-current="currentAttr('itinerari')"
-        >{{ shell().nav.tours }}</RouterLink
-      >
+      <SchedeMenu section="esplora" />
+      <SchedeMenu section="tradizioni" />
       <RouterLink
         to="/cosa-fare"
         :class="[item, isCurrent('cosa-fare') && active]"
@@ -189,20 +186,15 @@ const menuActive = 'font-semibold text-sea underline decoration-2 underline-offs
     </template>
 
     <!-- On a phone the pill holds what a reader reaches for first — the
-    wordmark home, Esplora and the tours, since a guest arriving from a B&B's
-    QR code is on a phone (decided 2026-09-19) — and the rest sits behind one
-    button. -->
+    wordmark home, Esplora and Tradizioni (the tours until 2026-10-26, which
+    are in Esplora since), since a guest arriving from a B&B's QR code is on
+    a phone (decided 2026-09-19) — and the rest sits behind one button. -->
     <template v-else>
-      <SchedeMenu />
+      <SchedeMenu section="esplora" />
       <!-- Below 360px — the narrowest common phone, and above WCAG's 320px
-      reflow width — the pill has no room for it, and it moves into Menu. -->
-      <RouterLink
-        to="/itinerari"
-        :class="[item, 'max-[359px]:hidden', isCurrent('itinerari') && active]"
-        :aria-current="currentAttr('itinerari')"
-        data-pill-itinerari
-        >{{ shell().nav.tours }}</RouterLink
-      >
+      reflow width — the pill has no room for it, and its types move into
+      Menu, as the tours did before they went into Esplora (2026-10-26). -->
+      <SchedeMenu section="tradizioni" class="max-[359px]:hidden" data-pill-tradizioni />
       <NavDisclosure
         :label="shell().nav.menu"
         trigger-class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-ink hover:bg-page focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
@@ -222,17 +214,20 @@ const menuActive = 'font-semibold text-sea underline decoration-2 underline-offs
         </template>
         <template #default="{ close }">
           <RouterLink
-            to="/"
+            to="/mappa"
             :class="[menuLink, isCurrent('mappa') && menuActive]"
             :aria-current="currentAttr('mappa')"
             >{{ shell().nav.map }}</RouterLink
           >
-          <RouterLink
-            to="/itinerari"
-            :class="[menuLink, 'min-[360px]:hidden', isCurrent('itinerari') && menuActive]"
-            :aria-current="currentAttr('itinerari')"
-            >{{ shell().nav.tours }}</RouterLink
+          <div
+            role="group"
+            :aria-label="shell().nav.traditions"
+            class="border-y border-hairline min-[360px]:hidden"
           >
+            <RouterLink v-for="key in TRADIZIONI" :key="key" :to="`/${key}`" :class="menuLink">{{
+              wordsOf(key)?.label
+            }}</RouterLink>
+          </div>
           <RouterLink
             to="/cosa-fare"
             :class="[menuLink, isCurrent('cosa-fare') && menuActive]"

@@ -187,6 +187,14 @@ it — a tour, or a place or a business this page would file under it, or for
 *Mangiare* a dish. So *Camminare* and *Bere* show once a viewpoint or a bar
 is published, without waiting for a tour. See D6's note of that date.)*
 
+*(2026-10-26, the author's decision before release 2.0.0: **Camminare folds
+into Scoprire la città** — viewpoints, walks and parks are the town's too,
+and two answers that said almost the same thing made the first question
+longer. `lib/intents.ts` files the three genres under `citta`;
+`itinerari/migrations/0013` tags its tours «Scoprire la città», rewrites that
+intent's line to name the walk, and removes the row. The sections are four:
+Andare al mare, Scoprire la città, Bere, Mangiare.)*
+
 ## D5 — Defaults the author did not object to
 
 - **Alphabetical inside each section, and printed** (*«in ordine
@@ -258,10 +266,16 @@ a second invitation beside the intents (*«Oppure guarda cosa c'è in una
 zona»*), so a guest from the QR code chooses between "give me a tour" and "show
 me what is here". On a phone it is also in the pill's **Menu**; on a wide
 screen, in the pill itself. The phone pill is unchanged (the 2026-09-19
-decision stands).
+decision stands). *(2026-10-26, the author's decision: the invitation left
+the wizard's first step — it said what «Non lo so: fammi vedere la mappa»
+says. The way in is the menu's **Cosa fare**, on every page.)*
 
 **«Dove sei?», before geolocation — 2026-10-24** (review of 2026-10-22,
-decision 3; PR-20). Above the chips — on a phone too, over their row — a field
+decision 3; PR-20). *(Hidden on 2026-10-26 by the author's decision, «for
+now»: neither this page nor the wizard's «Dove?» asks it. The field,
+`components/forms/WhereAreYouField.vue`, its matching, `lib/placeNames.ts`,
+and the names, `maps.ZonaAlias` with its endpoint, are kept as they are, so
+bringing it back is putting the field back on the two pages.)* Above the chips — on a phone too, over their row — a field
 asks *«Dove sei?»*: the guest types or picks the name of where they stand
 (*«il castello»*, *«Piazza XIX Maggio»*, *«Serapo»*) and the page shows that
 zone, through `?zona=` as a chip does, with a line saying so: *«Sei al

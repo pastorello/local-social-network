@@ -70,39 +70,40 @@ const EMAIL = 'collaboratore@e2e.test'
 const PASSWORD = 'E2ePassw0rd!'
 
 describe("the reader's surfaces meet WCAG 2.1 AA", () => {
-  it('the map home, wide', () => {
+  it('the map, wide', () => {
     cy.viewport(1280, 800)
-    cy.visit('/')
+    cy.visit('/mappa')
     cy.contains('h1', 'La mappa di Gaeta')
     // The wizard's first question under the presentation (review PR-21b) and
     // its answers come from the API: measured once they are there, not before.
     cy.contains('h2', 'Che cosa ti va di fare?')
     cy.contains('a', 'Scoprire la città')
 
-    check('/ (desktop)')
+    check('/mappa (desktop)')
 
     // And with the question put away: today's home, the layers and the list.
     cy.contains('button', 'Vai alla mappa').click()
     cy.contains('button', 'Che cosa ti va di fare?')
-    check('/ (desktop), the question put away')
+    check('/mappa (desktop), the question put away')
   })
 
-  it('the map home, on a phone — the layout the primary reader gets', () => {
+  it('the map, on a phone — the layout the primary reader gets', () => {
     cy.viewport(375, 812)
-    cy.visit('/')
+    cy.visit('/mappa')
     cy.get('.leaflet-container').should('exist')
     cy.contains('a', 'Scoprire la città')
 
-    check('/ (mobile)')
+    check('/mappa (mobile)')
   })
 
   // WCAG 2.4.1. Seven chrome stops precede the page on every route, and on the
-  // home the map's own container follows them; this is the way past all of it.
+  // map (/mappa) the map's own container follows them; this is the way past
+  // all of it.
   // A skip link nobody can reach or see is the usual way this is got wrong, so
   // the test is about reaching it, seeing it, and where it lands.
   it('the skip link is first, visible when focused, and lands on the content', () => {
     cy.viewport(1280, 800)
-    cy.visit('/')
+    cy.visit('/mappa')
 
     // Cypress cannot press Tab without a plugin, so this asserts the two
     // things a Tab would have shown instead of pretending to press it: the
@@ -129,7 +130,7 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
   // Leaflet makes every marker focusable by default.
   it('the map puts its pins out of the tab order, and names itself', () => {
     cy.viewport(1280, 800)
-    cy.visit('/')
+    cy.visit('/mappa')
 
     cy.get('.leaflet-container').should('have.attr', 'aria-label').and('contain', 'Mappa di Gaeta')
     cy.get('.leaflet-marker-icon[tabindex="0"]').should('not.exist')
@@ -273,7 +274,7 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
   })
 
   // The wizard «Cosa fare adesso» (review PR-21, study 10): each of its three
-  // steps, in both layouts — the second asks «Dove?» with «Dove sei?», the
+  // steps, in both layouts — the second asks «Dove?», the
   // third opens on the answers with the rest of the zone behind disclosures,
   // one of them opened so its rows are measured too.
   it('the wizard’s second and third steps', () => {
@@ -282,10 +283,10 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
       [1280, 800, 'largo'],
     ] as const) {
       cy.viewport(width, height)
-      cy.visit('/benvenuto?intento=citta')
+      cy.visit('/?intento=citta')
       cy.contains('h1', 'Dove?')
       cy.contains('a', 'Porto Salvo')
-      check(`/benvenuto?intento=citta (${layout})`)
+      check(`/?intento=citta (${layout})`)
 
       cy.visit('/cosa-fare?intento=citta&zona=porto-salvo')
       cy.contains('p', 'Hai scelto:')
@@ -340,25 +341,6 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
     cy.contains('a', 'Chiesa E2E pubblicata')
     cy.contains('button', 'Cambia zona')
     check('/cosa-fare?zona=porto-salvo (phone)')
-  })
-
-  // Review PR-20: «Dove sei?» measured with its list open, in both layouts —
-  // a listbox the gate never saw open is one it never measured.
-  it('Cosa si può fare qui, with «Dove sei?» open', () => {
-    cy.viewport(1280, 800)
-    cy.visit('/cosa-fare')
-    cy.get('nav[aria-label="Zone"]').contains('a', 'Porto Salvo')
-    cy.get('main input[role="combobox"]').type('ca')
-    cy.get('main [role="listbox"]').should('be.visible')
-    cy.get('main [role="option"]').should('have.length.at.least', 2)
-    check('/cosa-fare, «Dove sei?» open')
-
-    cy.viewport(390, 844)
-    cy.visit('/cosa-fare')
-    cy.get('nav[aria-label="Zone"]').contains('a', 'Porto Salvo')
-    cy.get('main input[role="combobox"]').type('{downarrow}')
-    cy.get('main [role="listbox"]').should('be.visible')
-    check('/cosa-fare, «Dove sei?» open (phone)')
   })
 
   it('Cosa si può fare qui: the zones are links a keyboard reaches and follows', () => {
@@ -496,8 +478,8 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
 })
 
 // The reader's two languages (review PR-19c, translations.md T9/T10): the
-// home, the welcome page, a card with a published English version — seed_e2e's
-// castle — and one without, each in Italian and in English, opened by the
+// map, the home — the welcome page, since 2026-10-26 — a card with a
+// published English version — seed_e2e's castle — and one without, each in Italian and in English, opened by the
 // address as a shared link opens them. In English the interface's words are
 // English around a card's Italian, which is marked so (WCAG 3.1.2), and the
 // heading stays Italian (T7). The rules are ADR-0005's, the same as above; the
@@ -512,27 +494,27 @@ describe("the reader's surfaces meet WCAG 2.1 AA in both languages", () => {
     const at = (path: string) => (english ? `${path}?lang=en` : path)
     const town = english ? 'Discovering the town' : 'Scoprire la città'
 
-    it(`the map home, wide and on a phone (${lang})`, () => {
+    it(`the map, wide and on a phone (${lang})`, () => {
       cy.viewport(1280, 800)
-      cy.visit(at('/'))
+      cy.visit(at('/mappa'))
       cy.contains('h1', english ? 'The map of Gaeta' : 'La mappa di Gaeta')
       cy.contains('a', town)
-      check(`/ (desktop, ${lang})`)
+      check(`/mappa (desktop, ${lang})`)
 
       cy.viewport(375, 812)
-      cy.visit(at('/'))
+      cy.visit(at('/mappa'))
       cy.get('.leaflet-container').should('exist')
       cy.contains('a', town)
-      check(`/ (mobile, ${lang})`)
+      check(`/mappa (mobile, ${lang})`)
     })
 
-    it(`the welcome page, on a phone (${lang})`, () => {
+    it(`the home, the welcome page, on a phone (${lang})`, () => {
       cy.viewport(390, 844)
-      cy.visit(at('/benvenuto'))
+      cy.visit(at('/'))
       cy.contains('h1', english ? 'What do you feel like doing?' : 'Che cosa ti va di fare?')
       cy.contains('a', town)
       cy.contains('a', english ? 'This week' : 'Questa settimana')
-      check(`/benvenuto (${lang})`)
+      check(`/ (${lang})`)
     })
 
     it(`a card with an English version, on a phone (${lang})`, () => {
@@ -588,12 +570,12 @@ describe("the collaborator's surfaces meet WCAG 2.1 AA", { testIsolation: false 
   // The reports section — its list, filters and legend — left the reader's
   // home on 2026-10-22 (reports-and-polls.md R1). It is measured where it
   // lives now, so the gate does not quietly stop seeing it.
-  it('the map home with its reports, a collaborator’s alone', () => {
-    cy.visit('/')
+  it('the map with its reports, a collaborator’s alone', () => {
+    cy.visit('/mappa')
     cy.contains('h2', 'Segnalazioni')
     cy.contains('button', 'Segnala un problema').should('exist')
 
-    check('/ (desktop, collaboratore)')
+    check('/mappa (desktop, collaboratore)')
   })
 
   // design.md D19: the map tab lends the map to the form — the banner over the

@@ -74,7 +74,7 @@ const heading = 'mb-3 text-xs font-semibold tracking-[0.12em] text-muted upperca
           >{{ project().use.whatToDoLine }}
         </li>
         <li>
-          <RouterLink to="/" :class="inline">{{ project().use.map }}</RouterLink
+          <RouterLink to="/mappa" :class="inline">{{ project().use.map }}</RouterLink
           >{{ project().use.mapLine }}
         </li>
       </ul>
@@ -126,7 +126,7 @@ const heading = 'mb-3 text-xs font-semibold tracking-[0.12em] text-muted upperca
         <h2 :class="heading">{{ project().index.start }}</h2>
         <ul class="space-y-2 text-sm">
           <li>
-            <RouterLink to="/" :class="link">{{ project().index.map }}</RouterLink>
+            <RouterLink to="/mappa" :class="link">{{ project().index.map }}</RouterLink>
           </li>
           <li>
             <RouterLink to="/itinerari" :class="link">{{ project().index.tours }}</RouterLink>

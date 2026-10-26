@@ -2,7 +2,6 @@
 import { computed, type Component } from 'vue'
 
 import BereIcon from '@/components/icons/BereIcon.vue'
-import CamminoIcon from '@/components/icons/CamminoIcon.vue'
 import CittaIcon from '@/components/icons/CittaIcon.vue'
 import FesteIcon from '@/components/icons/FesteIcon.vue'
 import ItinerarioIcon from '@/components/icons/ItinerarioIcon.vue'
@@ -12,7 +11,7 @@ import { intentVar } from '@/lib/intents'
 
 // What an intent's card shows beside its name on /benvenuto (review PR-14,
 // M-09): a tint of the intent's colour with its icon — the sea, the town, the
-// walk, the table, the glass — where a cover will go the day the archive has
+// table, the glass (the walk joined the town on 2026-10-26) — where a cover will go the day the archive has
 // photographs (P-07). The same recipe as CoverPlaceholder: a pale tint over
 // the page ground, the icon in the full colour. An intent the admin adds wears
 // the tours' map icon until it is drawn one here. The size is the caller's;
@@ -22,7 +21,6 @@ const props = defineProps<{ slug: string }>()
 const ICONS: Record<string, Component> = {
   mare: MareIcon,
   citta: CittaIcon,
-  camminare: CamminoIcon,
   mangiare: TavolaIcon,
   bere: BereIcon,
   // The wizard's «Oggi» and «Questa settimana»: the calendar (review PR-21).

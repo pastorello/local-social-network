@@ -9,10 +9,6 @@ export default {
   question: 'What do you feel like doing?',
   none: 'The suggestions are still being written. In the meantime, the map tells the town’s story.',
   calendar: 'On the calendar',
-  zoneDoor: {
-    title: 'Or see what there is in one part of town',
-    description: 'Serapo, the medieval centre, Monte Orlando…',
-  },
   goToMap: { title: 'Go to the map', line: 'The layers and the list of places' },
   dontKnow: 'I don’t know: show me the map',
   where: 'Where?',

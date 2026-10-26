@@ -26,7 +26,7 @@ describe('the wizard «Cosa fare adesso» (review PR-21)', () => {
   beforeEach(() => cy.viewport(1280, 800))
 
   it('walks its three steps from the keyboard, the focus on each question, and back', () => {
-    cy.visit('/benvenuto')
+    cy.visit('/')
     question('Che cosa ti va di fare?')
 
     // The answers land once every count is in; Tab waits for them.
@@ -77,7 +77,7 @@ describe('the wizard «Cosa fare adesso» (review PR-21)', () => {
     cy.location('search').should('eq', '?intento=citta&zona=porto-salvo')
     question('Cosa si può fare qui')
     cy.go('back')
-    cy.location('pathname').should('eq', '/benvenuto')
+    cy.location('pathname').should('eq', '/')
     cy.location('search').should('eq', '?intento=citta')
     question('Dove?')
     cy.go('back')
@@ -86,7 +86,7 @@ describe('the wizard «Cosa fare adesso» (review PR-21)', () => {
   })
 
   it('reopens the third step identical from its address', () => {
-    cy.visit('/benvenuto')
+    cy.visit('/')
     cy.contains('a', 'Scoprire la città').click()
     cy.contains('a', 'Porto Salvo').click()
     cy.location('search').should('eq', '?intento=citta&zona=porto-salvo')
@@ -103,7 +103,7 @@ describe('the wizard «Cosa fare adesso» (review PR-21)', () => {
   it('skips the question of where when one answer is all there is', () => {
     // Mangiare: a dish, in no zone — straight to «Ovunque a Gaeta», and a
     // dish's card in two taps.
-    cy.visit('/benvenuto')
+    cy.visit('/')
     cy.contains('a', 'Mangiare').should('have.attr', 'href', '/cosa-fare?intento=mangiare').click()
     cy.contains('p', 'Hai scelto:').should('contain.text', 'Ovunque a Gaeta')
     cy.contains('a', RICETTA).click()
@@ -111,13 +111,13 @@ describe('the wizard «Cosa fare adesso» (review PR-21)', () => {
 
     // Bere: one bar, in Serapo — straight there, and the zone is said, not
     // linked: there is no question to go back to.
-    cy.visit('/benvenuto')
+    cy.visit('/')
     cy.contains('a', 'Bere').click()
     cy.location('search').should('eq', '?intento=bere&zona=serapo')
     cy.contains('p', 'Hai scelto:').find('a').should('have.length', 1)
 
     // «Questa settimana» leads to the events we know (cosa-fare.md D9).
-    cy.visit('/benvenuto')
+    cy.visit('/')
     cy.contains('a', 'Questa settimana').click()
     cy.location('pathname').should('eq', '/eventi')
     cy.location('search').should('eq', '?finestra=settimana')
@@ -125,13 +125,15 @@ describe('the wizard «Cosa fare adesso» (review PR-21)', () => {
 
   it('answers with whole-width cards on a phone, one column a thumb can take', () => {
     cy.viewport(390, 844)
-    cy.visit('/benvenuto')
+    cy.visit('/')
     cy.contains('a', 'Scoprire la città')
+    // The grid holds every group of answers (the lists are `contents`).
     cy.get('main article ul')
       .first()
-      .then(($list) => {
-        const width = $list[0]!.getBoundingClientRect().width
-        cy.wrap($list)
+      .parent()
+      .then(($grid) => {
+        const width = $grid[0]!.getBoundingClientRect().width
+        cy.wrap($grid)
           .find('li > a')
           .each(($card) => {
             const box = $card[0]!.getBoundingClientRect()
@@ -141,18 +143,41 @@ describe('the wizard «Cosa fare adesso» (review PR-21)', () => {
       })
   })
 
-  // One front door (review PR-21b): the home asks the same first question
-  // over the map, and «Non lo so: fammi vedere la mappa» on /benvenuto lands
-  // on the map with it put away.
-  it('asks the same first question on the home, and leaves it put away from /benvenuto', () => {
+  // Asked by the author on 2026-10-26: on a wide screen the answers are two
+  // columns, every group in the same grid — the way out takes the cell beside
+  // the answer before it rather than a row of its own. seed_e2e: four
+  // intents, then «Questa settimana» alone in its row, then the way out.
+  it('answers in two columns on a wide screen, the way out beside the last answer', () => {
     cy.visit('/')
+    cy.contains('a', 'Questa settimana').then(($week) => {
+      const week = $week[0]!.getBoundingClientRect()
+      cy.contains('a', 'Non lo so: fammi vedere la mappa').should(($out) => {
+        const out = $out[0]!.getBoundingClientRect()
+        expect(out.top).to.be.closeTo(week.top, 1)
+        expect(out.left).to.be.greaterThan(week.right)
+      })
+    })
+    cy.contains('a', 'Andare al mare').then(($sea) => {
+      const sea = $sea[0]!.getBoundingClientRect()
+      cy.contains('a', 'Mangiare').should(($eat) => {
+        expect($eat[0]!.getBoundingClientRect().top).to.be.closeTo(sea.top, 1)
+      })
+    })
+  })
+
+  // The same first question over the map (review PR-21b — the home's map
+  // until 2026-10-26, /mappa since, the home being the welcome page), and
+  // «Non lo so: fammi vedere la mappa» on the home lands on the map with it
+  // put away.
+  it('asks the same first question over the map, and leaves it put away from the home', () => {
+    cy.visit('/mappa')
     cy.contains('h2', 'Che cosa ti va di fare?')
     cy.contains('a', 'Mangiare').should('have.attr', 'href', '/cosa-fare?intento=mangiare')
     cy.contains('a', 'Questa settimana').should('have.attr', 'href', '/eventi?finestra=settimana')
 
-    cy.visit('/benvenuto')
+    cy.visit('/')
     cy.contains('a', 'Non lo so: fammi vedere la mappa').click()
-    cy.location('pathname').should('eq', '/')
+    cy.location('pathname').should('eq', '/mappa')
     cy.contains('h1', 'La mappa di Gaeta')
     cy.contains('h2', 'Che cosa ti va di fare?').should('not.exist')
     cy.contains('button', 'Che cosa ti va di fare?')

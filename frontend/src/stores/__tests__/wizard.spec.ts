@@ -37,7 +37,8 @@ describe('the wizard store', () => {
     wizard.load()
     await flushPromises()
 
-    expect(wizardCalls()).toHaveLength(7)
+    // Six: the names of «Dove sei?» are not asked since it was hidden (2026-10-26).
+    expect(wizardCalls()).toHaveLength(6)
     expect(wizard.dishes).toBe(2)
     expect(wizard.windows).toEqual({ oggi: 1, settimana: 3 })
     expect(wizard.known).toBe(false)

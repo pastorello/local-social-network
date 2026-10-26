@@ -2,7 +2,7 @@ import axios from 'axios'
 import { defineStore } from 'pinia'
 
 import type { Intent } from '@/definitions/interfaces/Itinerario'
-import type { Zone, ZoneAlias } from '@/definitions/interfaces/MapData'
+import type { Zone } from '@/definitions/interfaces/MapData'
 import { afterFirstPaint } from '@/lib/firstPaint'
 import type { EventWindow, WizardArchive, WizardTour } from '@/lib/wizard'
 import { useMapStore } from '@/stores/map'
@@ -14,8 +14,7 @@ interface Page<T> {
 
 // What the wizard «Cosa fare adesso» needs before it offers an answer (review
 // PR-21, lib/wizard.ts): the intents with their tours counted, the tours with
-// their zones, the zones and the names a guest gives them («Dove sei?»), how
-// many dishes and how many events today and this week — all public and
+// their zones, the zones, how many dishes and how many events today and this week — all public and
 // short — and the map's features, which the shell has already asked for.
 // A store, not a page's state, because two pages ask the same question: the
 // home and /benvenuto are one front door (review PR-21b, decided on
@@ -26,7 +25,6 @@ export const useWizardStore = defineStore('wizard', {
     intents: [] as Intent[],
     tours: [] as WizardTour[],
     zones: [] as Zone[],
-    aliases: [] as ZoneAlias[],
     dishes: 0,
     windows: { oggi: 0, settimana: 0 } as Record<EventWindow, number>,
     asked: false,
@@ -70,7 +68,6 @@ export const useWizardStore = defineStore('wizard', {
         axios.get<Intent[]>('/api/itinerari/intenti/'),
         axios.get<Page<WizardTour>>('/api/itinerari/', { params: { page_size: 100 } }),
         axios.get<Zone[]>('/api/map/zone/'),
-        axios.get<ZoneAlias[]>('/api/map/zone/alias/'),
         axios.get<Record<string, number>>('/api/content/counts/'),
         axios.get<Page<unknown>>('/api/eventi/', { params: { finestra: 'oggi', page_size: 1 } }),
         axios.get<Page<unknown>>('/api/eventi/', {
@@ -82,11 +79,10 @@ export const useWizardStore = defineStore('wizard', {
       this.intents = value(results[0]) ?? []
       this.tours = value(results[1])?.results ?? []
       this.zones = value(results[2]) ?? []
-      this.aliases = value(results[3]) ?? []
-      this.dishes = value(results[4])?.ricette ?? 0
+      this.dishes = value(results[3])?.ricette ?? 0
       this.windows = {
-        oggi: value(results[5])?.count ?? 0,
-        settimana: value(results[6])?.count ?? 0,
+        oggi: value(results[4])?.count ?? 0,
+        settimana: value(results[5])?.count ?? 0,
       }
       this.loaded = true
     },

@@ -17,6 +17,7 @@ const makeRouter = () =>
     history: createMemoryHistory(),
     routes: [
       { path: '/', name: 'home', component: stub },
+      { path: '/mappa', name: 'mappa', component: stub },
       { path: '/login', name: 'login', component: stub },
       { path: '/collabora', name: 'collabora', component: stub },
       { path: '/password-dimenticata', name: 'passwordresetrequest', component: stub },
@@ -113,11 +114,11 @@ describe('LoginView', () => {
 
   // Review PR-13 (C-02): with nowhere asked for, a collaborator with a draft
   // lands on their own cards — the work they came back to finish — and
-  // anyone else on the map, as before.
+  // anyone else on the map, /mappa since the home became the welcome page.
   it.each([
     ['a draft', firstCard(false), '/le-mie-schede'],
-    ['only published cards', firstCard(true), '/'],
-    ['no card at all', firstCard(null), '/'],
+    ['only published cards', firstCard(true), '/mappa'],
+    ['no card at all', firstCard(null), '/mappa'],
   ])('after signing in with %s, lands on %s', async (_, mine, to) => {
     vi.mocked(axios.get).mockReset().mockResolvedValueOnce(me).mockResolvedValueOnce(mine)
 
@@ -133,6 +134,6 @@ describe('LoginView', () => {
       .mockResolvedValueOnce(me)
       .mockRejectedValueOnce(new Error('rete'))
 
-    expect(await signIn('/login')).toBe('/')
+    expect(await signIn('/login')).toBe('/mappa')
   })
 })

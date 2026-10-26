@@ -94,7 +94,7 @@ describe('the reader, on a wide screen', () => {
   beforeEach(() => cy.viewport(1280, 800))
 
   it('lands on the map and can turn a layer off', () => {
-    cy.visit('/')
+    cy.visit('/mappa')
 
     cy.contains('h1', 'La mappa di Gaeta')
     cy.get('#layer-chiese').should('be.checked')
@@ -105,12 +105,12 @@ describe('the reader, on a wide screen', () => {
   })
 
   it('is told what the site is and asked the wizard’s first question, over the layers', () => {
-    cy.visit('/')
+    cy.visit('/mappa')
 
     cy.contains('p', PRESENTATION).should('be.visible').and(onScreen)
     cy.contains('h2', QUESTION).should('be.visible').and(onScreen)
     cy.contains('a', 'Andare al mare').should('be.visible').and(onScreen)
-    cy.contains('a', 'Scoprire la città').should('have.attr', 'href', '/benvenuto?intento=citta')
+    cy.contains('a', 'Scoprire la città').should('have.attr', 'href', '/?intento=citta')
     // Above the layers (review PR-21b).
     cy.contains('h2', QUESTION).then(($question) => {
       cy.get('#layer-chiese').should(($layer) => {
@@ -149,7 +149,7 @@ describe('the reader, on a wide screen', () => {
   // href that takes focus is operable by the platform's own guarantee; what is
   // worth testing is that such an anchor exists and points where it should.
   it('reaches everything the map draws without touching the map', () => {
-    cy.visit('/')
+    cy.visit('/mappa')
 
     cy.get('ul[aria-label="Luoghi sulla mappa"]').contains('a', PUBLISHED).as('placeLink')
     cy.get('@placeLink').focus()
@@ -166,7 +166,7 @@ describe('the reader, on a wide screen', () => {
   it('is shown no reports, and a report’s address asks for a login', () => {
     cy.intercept('GET', '**/api/map/features/**').as('features')
     cy.intercept('GET', '**/api/reports/**').as('reports')
-    cy.visit('/')
+    cy.visit('/mappa')
     cy.wait('@features')
 
     cy.get('ul[aria-label="Luoghi sulla mappa"]').contains('a', PUBLISHED).should('exist')
@@ -180,7 +180,7 @@ describe('the reader, on a wide screen', () => {
   })
 
   it('is offered the public overlay and never learns the confidential one exists', () => {
-    cy.visit('/')
+    cy.visit('/mappa')
 
     // ADR-0006: the gate is the queryset, and this is what it looks like from
     // outside — the seggi overlay is not hidden in the DOM, it is absent.
@@ -268,7 +268,7 @@ describe('the reader, on a wide screen', () => {
   // «Cosa si può fare qui» under «Bere». Its hours carry their date, and
   // nothing says it is open.
   it('finds a business from the menu, the map and its zone, never told it is open', () => {
-    cy.visit('/')
+    cy.visit('/mappa')
     cy.get('#layer-attivita').should('be.checked')
     cy.get('label[for="layer-attivita"]').should('contain', 'Attività')
     cy.get('ul[aria-label="Luoghi sulla mappa"]').contains('a', BUSINESS)
@@ -324,7 +324,7 @@ describe('the reader, on a wide screen', () => {
   // reader back the map — still on that place (review PR-22) — and the link
   // that opened it.
   it('opens a card over the map, sees the map show it, and closes back onto the link', () => {
-    cy.visit('/')
+    cy.visit('/mappa')
 
     cy.get('ul[aria-label="Luoghi sulla mappa"]').contains('a', PUBLISHED).as('placeLink')
     cy.get('@placeLink').focus()
@@ -343,7 +343,7 @@ describe('the reader, on a wide screen', () => {
 
     cy.get('main section[tabindex="-1"]').trigger('keydown', { key: 'Escape' })
 
-    cy.location('pathname').should('eq', '/')
+    cy.location('pathname').should('eq', '/mappa')
     cy.focused().should('contain', PUBLISHED)
     cy.get('path.leaflet-interactive[stroke-width="3"]').should('not.exist')
   })
@@ -353,7 +353,7 @@ describe('the reader, on a wide screen', () => {
   // OpenStreetMap's, and nothing before it. Beside a card they are top-left.
   it('finds the zoom by the credit on the home, out of the column’s way, and top-left beside a card', () => {
     cy.viewport(1440, 800)
-    cy.visit('/')
+    cy.visit('/mappa')
 
     cy.get('.leaflet-control-attribution')
       .should('have.text', '© OpenStreetMap')
@@ -420,7 +420,7 @@ describe('the reader, on a wide screen', () => {
     // D17: the veil, and a map that is out of the tab order while veiled.
     cy.get('.leaflet-container').closest('[inert]').should('exist')
     cy.get('button[aria-label="Chiudi e torna alla mappa"]').click()
-    cy.location('pathname').should('eq', '/')
+    cy.location('pathname').should('eq', '/mappa')
   })
 
   // Review PR-4 (P-04): a chosen zone is framed in the part of the map the
@@ -444,61 +444,6 @@ describe('the reader, on a wide screen', () => {
         expect(Math.abs((box.left + box.right) / 2 - panelLeft / 2)).to.be.below(16)
       })
     })
-  })
-
-  // Review PR-20: «Dove sei?» — the guest who does not know the zones' names
-  // names where they stand instead, from the keyboard alone: type, the arrows,
-  // Enter, Escape, focus never leaving the field. The names are the archive's
-  // own (maps/migrations/0008), matched in the browser.
-  it('finds its zone by the name of where it stands, from the keyboard', () => {
-    cy.viewport(1280, 800)
-    cy.visit('/cosa-fare')
-    cy.get('nav[aria-label="Zone"]').contains('a', 'Porto Salvo')
-    cy.get('main input[role="combobox"]').as('field').focus()
-
-    cy.get('@field').type('borgo')
-    cy.get('@field').should('have.attr', 'aria-expanded', 'true')
-    cy.get('main [role="option"][aria-selected="true"]').should('contain', 'Il Borgo')
-    cy.get('@field').type('{enter}')
-    cy.location('search').should('eq', '?zona=porto-salvo')
-    cy.contains('Sei al Borgo: ti mostriamo Porto Salvo.')
-    cy.get('main section[tabindex="-1"]').contains('a', PUBLISHED)
-    cy.focused().should('have.attr', 'role', 'combobox')
-
-    // «ca» is the castle, the cathedral, Corso Cavour: the arrows walk them.
-    cy.get('@field').clear()
-    cy.get('@field').type('ca{downarrow}')
-    cy.get('main [role="option"][aria-selected="true"]').should('contain', 'La Cattedrale')
-    cy.get('@field').type('{enter}')
-    cy.location('search').should('eq', '?zona=gaeta-medievale')
-    cy.contains('Sei alla Cattedrale: ti mostriamo Gaeta Medievale.')
-
-    // A name nobody listed changes nothing, and says where to go instead.
-    cy.get('@field').clear()
-    cy.get('@field').type('xyz{enter}')
-    cy.location('search').should('eq', '?zona=gaeta-medievale')
-    cy.contains('Non conosciamo questo posto: scegli una zona qui sotto.')
-
-    // Gaeta has two harbours, in two zones; the author decided on 2026-10-24
-    // (maps/migrations/0009) that «il porto» is the marina, in Porto Salvo,
-    // and «il molo» the pier of Santa Maria, in Gaeta Medievale.
-    cy.get('@field').clear()
-    cy.get('@field').type('porto{enter}')
-    cy.location('search').should('eq', '?zona=porto-salvo')
-    cy.contains('Sei al porto: ti mostriamo Porto Salvo.')
-    cy.get('@field').clear()
-    cy.get('@field').type('al molo{enter}')
-    cy.location('search').should('eq', '?zona=gaeta-medievale')
-    cy.contains('Sei al molo: ti mostriamo Gaeta Medievale.')
-
-    // Escape closes the list and leaves the page where it is.
-    cy.get('@field').clear()
-    cy.get('@field').type('s')
-    cy.get('@field').should('have.attr', 'aria-expanded', 'true')
-    cy.get('@field').type('{esc}')
-    cy.get('@field').should('have.attr', 'aria-expanded', 'false')
-    cy.get('main [role="listbox"]').should('not.be.visible')
-    cy.location('pathname').should('eq', '/cosa-fare')
   })
 
   it('sees a feste route drawn as a list of stops', () => {
@@ -529,7 +474,7 @@ describe('the reader, on a phone', () => {
   // the wizard's question — at its first stop, before anyone drags it — with
   // the places after them (D20). «Vai alla mappa» steps it down to the map.
   it('opens the sheet on what the site is and the question, and steps down to the map', () => {
-    cy.visit('/')
+    cy.visit('/mappa')
 
     cy.get('section[aria-label="La mappa di Gaeta"]').within(() => {
       cy.contains('p', PRESENTATION).should('be.visible').and(onScreen)
@@ -551,7 +496,7 @@ describe('the reader, on a phone', () => {
   // frames Gaeta — the Flacca's beaches to Monte Orlando — in the band between
   // the menu and the sheet, rather than centring it on the whole screen.
   it('sees all of Gaeta between the menu and the sheet', () => {
-    cy.visit('/')
+    cy.visit('/mappa')
 
     cy.get('section[aria-label="La mappa di Gaeta"]').then(($sheet) => {
       const sheetTop = $sheet[0]!.getBoundingClientRect().top
@@ -571,7 +516,7 @@ describe('the reader, on a phone', () => {
   // credit, short, sits under «Livelli», lined up with it.
   it('reads the map’s credit under «Livelli», clear of the sheet', () => {
     cy.viewport(390, 720)
-    cy.visit('/')
+    cy.visit('/mappa')
 
     cy.contains('button', 'Livelli').then(($layers) => {
       const layers = $layers[0]!.getBoundingClientRect()
@@ -601,7 +546,7 @@ describe('the reader, on a phone', () => {
       clientY,
     })
     cy.viewport(390, 720)
-    cy.visit('/')
+    cy.visit('/mappa')
 
     cy.get('section[aria-label="La mappa di Gaeta"]').as('sheet')
     cy.get('@sheet').find(`button[aria-label="${HINT}"]`).as('handle')
@@ -630,7 +575,7 @@ describe('the reader, on a phone', () => {
   })
 
   it('gets the sheet, and the places in it link to their cards', () => {
-    cy.visit('/')
+    cy.visit('/mappa')
 
     cy.get('section[aria-label="La mappa di Gaeta"]').within(() => {
       // No reports in the reader's sheet (R1, 2026-10-22).
@@ -685,7 +630,7 @@ describe('the reader, on a phone', () => {
   // the veiled map shows around it, which read as a rendering fault.
   it('sees no map around the menu over a page without a place', () => {
     for (const [path, title] of [
-      ['/benvenuto', 'Che cosa ti va di fare?'],
+      ['/', 'Che cosa ti va di fare?'],
       ['/luoghi', 'Luoghi'],
       ['/il-progetto', 'Il progetto'],
     ]) {
@@ -707,7 +652,7 @@ describe('the reader, on a phone', () => {
   // each wear their intent's tint and icon — and, since the wizard (review
   // PR-21), the one who does not know goes to the map by an answer too.
   it('meets the welcome page’s choices as cards with a tint and an icon', () => {
-    cy.visit('/benvenuto')
+    cy.visit('/')
 
     cy.contains('a', 'Scoprire la città')
       .find('span[aria-hidden="true"]')
@@ -716,15 +661,17 @@ describe('the reader, on a phone', () => {
         expect($tile.find('svg')).to.have.length(1)
       })
     cy.contains('main section[tabindex="-1"] p', PRESENTATION)
-    cy.contains('a', 'Non lo so: fammi vedere la mappa').should('have.attr', 'href', '/').click()
-    cy.location('pathname').should('eq', '/')
+    cy.contains('a', 'Non lo so: fammi vedere la mappa')
+      .should('have.attr', 'href', '/mappa')
+      .click()
+    cy.location('pathname').should('eq', '/mappa')
     cy.get('main section[tabindex="-1"]').should('not.exist')
   })
 
   // design.md D18: a card with a place opens under a strip of the map, the
   // same map, already on the place; enlarging it is a step Back undoes.
   it('reads a card under a strip of the map, and enlarges the map and comes back', () => {
-    cy.visit('/')
+    cy.visit('/mappa')
     cy.get('section[aria-label="La mappa di Gaeta"]').within(() => {
       cy.contains('a', PUBLISHED).click()
     })
@@ -853,39 +800,6 @@ describe('the reader, on a phone', () => {
     cy.get('nav[aria-label="Zone"]').contains('a', 'Gaeta Medievale').click()
     cy.location('search').should('eq', '?zona=gaeta-medievale')
     cy.get('nav[aria-label="Zone"] a').should('have.length', 1).and('contain', 'Gaeta Medievale')
-  })
-
-  // Review PR-20: on a phone «Dove sei?» is above the row of zones, and once
-  // it has chosen one it steps aside with them — the line saying what it
-  // chose stays, focus goes to «Cambia zona», and the zone's places still
-  // start within the first screen.
-  it('names where it stands, then sees the question put away with the zones', () => {
-    cy.visit('/cosa-fare')
-    cy.get('nav[aria-label="Zone"]').contains('a', 'Porto Salvo')
-    cy.get('main input[role="combobox"]').then(($field) => {
-      cy.get('#zone-chips').should(($chips) => {
-        expect($field[0]!.getBoundingClientRect().bottom).to.be.at.most(
-          $chips[0]!.getBoundingClientRect().top,
-        )
-      })
-    })
-
-    cy.get('main input[role="combobox"]').type('borgo{enter}')
-    cy.location('search').should('eq', '?zona=porto-salvo')
-    cy.contains('Sei al Borgo: ti mostriamo Porto Salvo.').should('be.visible')
-    cy.get('main input[role="combobox"]').should('not.be.visible')
-    cy.focused().should('contain', 'Cambia zona').and('have.attr', 'aria-expanded', 'false')
-    cy.get('main section[tabindex="-1"]').then(($panel) => {
-      cy.wrap($panel)
-        .contains('a', PUBLISHED)
-        .should(($link) => {
-          const top = $link[0]!.getBoundingClientRect().top - $panel[0]!.getBoundingClientRect().top
-          expect(top).to.be.at.most(FIRST_RESULT_WITHIN)
-        })
-    })
-
-    cy.focused().click()
-    cy.get('main input[role="combobox"]').should('be.visible')
   })
 
   // Cosa-fare.md Part −1 D9 (review PR-27b): this week's events and the
