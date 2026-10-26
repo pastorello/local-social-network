@@ -127,11 +127,13 @@ describe('the wizard «Cosa fare adesso» (review PR-21)', () => {
     cy.viewport(390, 844)
     cy.visit('/')
     cy.contains('a', 'Scoprire la città')
+    // The grid holds every group of answers (the lists are `contents`).
     cy.get('main article ul')
       .first()
-      .then(($list) => {
-        const width = $list[0]!.getBoundingClientRect().width
-        cy.wrap($list)
+      .parent()
+      .then(($grid) => {
+        const width = $grid[0]!.getBoundingClientRect().width
+        cy.wrap($grid)
           .find('li > a')
           .each(($card) => {
             const box = $card[0]!.getBoundingClientRect()
@@ -139,6 +141,28 @@ describe('the wizard «Cosa fare adesso» (review PR-21)', () => {
             expect(box.height).to.be.at.least(44)
           })
       })
+  })
+
+  // Asked by the author on 2026-10-26: on a wide screen the answers are two
+  // columns, every group in the same grid — the way out takes the cell beside
+  // the answer before it rather than a row of its own. seed_e2e: four
+  // intents, then «Questa settimana» alone in its row, then the way out.
+  it('answers in two columns on a wide screen, the way out beside the last answer', () => {
+    cy.visit('/')
+    cy.contains('a', 'Questa settimana').then(($week) => {
+      const week = $week[0]!.getBoundingClientRect()
+      cy.contains('a', 'Non lo so: fammi vedere la mappa').should(($out) => {
+        const out = $out[0]!.getBoundingClientRect()
+        expect(out.top).to.be.closeTo(week.top, 1)
+        expect(out.left).to.be.greaterThan(week.right)
+      })
+    })
+    cy.contains('a', 'Andare al mare').then(($sea) => {
+      const sea = $sea[0]!.getBoundingClientRect()
+      cy.contains('a', 'Mangiare').should(($eat) => {
+        expect($eat[0]!.getBoundingClientRect().top).to.be.closeTo(sea.top, 1)
+      })
+    })
   })
 
   // The same first question over the map (review PR-21b — the home's map

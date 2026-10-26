@@ -1642,7 +1642,11 @@ PR-21b the same day, **the home as the same front door** (D3's note of
   a tile where a cover will go, the name in `text-title`, a line under it,
   the ring the keyboard's alone. Full width on a phone, two columns from
   `sm`, at least a thumb's 44 px tall — `wizard.cy.ts` measures it at
-  390 px. No «Avanti»: choosing is following the link.
+  390 px. No «Avanti»: choosing is following the link. *(2026-10-26, asked
+  by the author: the first step's groups — the intents, «In calendario», the
+  way out — are one grid, each still a list of its own (`display: contents`),
+  so the way out takes the cell beside the last answer instead of opening a
+  row; «In calendario» is a whole row.)*
 - **What sits under each answer says what is behind it**: an intent «2 luoghi
   · 1 itinerario · 3 ricette»; a zone of step 2 the first two things there,
   as a door names them (D3's note of 2026-10-23); «Ovunque a Gaeta» the

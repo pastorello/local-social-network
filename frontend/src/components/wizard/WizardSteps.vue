@@ -142,9 +142,13 @@ const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:si
       </template>
 
       <!-- The answers land together once every count is in, under what is
-      already on screen: none of them arrives above another. -->
-      <template v-if="known">
-        <ul v-if="intents.length" :class="[grid, home ? 'mt-4' : 'mt-6']">
+      already on screen: none of them arrives above another. One grid for
+      all of them (2026-10-26, the author's ask): each group stays a list of
+      its own, but `contents` lets their cards flow in the same two columns,
+      so the way out takes the cell beside the last intent rather than a row
+      of its own. «In calendario» is a whole row when there is one. -->
+      <div v-if="known" :class="[grid, home ? 'mt-4' : 'mt-6']">
+        <ul v-if="intents.length" class="contents">
           <li v-for="intent in intents" :key="intent.slug">
             <!-- The description is the admin's, in the reader's language
             where they wrote one (review PR-19b) — the Italian stands in
@@ -162,20 +166,26 @@ const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:si
             </AnswerCard>
           </li>
         </ul>
-        <p v-else class="mt-6 text-muted">
+        <p v-else class="col-span-full text-muted">
           {{ wizardText().none }}
         </p>
 
         <!-- «Oggi» and «Questa settimana» (cosa-fare.md Part −1, D9): kept
         apart from the everyday, and each only when something falls in it. -->
         <template v-if="windowsOn.length">
-          <h3 v-if="home" class="mt-8 text-xs font-semibold tracking-[0.12em] text-muted uppercase">
+          <h3
+            v-if="home"
+            class="col-span-full mt-5 text-xs font-semibold tracking-[0.12em] text-muted uppercase"
+          >
             {{ wizardText().calendar }}
           </h3>
-          <h2 v-else class="mt-8 text-xs font-semibold tracking-[0.12em] text-muted uppercase">
+          <h2
+            v-else
+            class="col-span-full mt-5 text-xs font-semibold tracking-[0.12em] text-muted uppercase"
+          >
             {{ wizardText().calendar }}
           </h2>
-          <ul :class="[grid, 'mt-3']">
+          <ul class="contents">
             <li v-for="window in windowsOn" :key="window.key">
               <AnswerCard
                 :to="{ name: 'eventilist', query: { finestra: window.key } }"
@@ -191,7 +201,7 @@ const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:si
           </ul>
         </template>
 
-        <ul :class="[grid, 'mt-6']">
+        <ul class="contents">
           <li>
             <!-- The way out. On the home it puts the question away and leaves
             the map with its layers and its list (review PR-21b): «Vai alla
@@ -224,7 +234,7 @@ const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:si
             </AnswerCard>
           </li>
         </ul>
-      </template>
+      </div>
     </template>
 
     <template v-else>
