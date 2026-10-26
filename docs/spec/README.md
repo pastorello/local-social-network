@@ -59,7 +59,7 @@ not mean).
 |---|---|---|
 | Accounts & the "Collabora con noi" flow | [accounts.md](./accounts.md) | delivered (C1, 2026-08-21) |
 | Content core + typed cards | [content.md](./content.md) | delivered (core + feste C2, 2026-08-22; chiese/ricette/personaggi/dialetto C3, 2026-08-22); sixth type libri consigliati 2026-09-09; seventh, luoghi, 2026-09-18 |
-| Translations | [translations.md](./translations.md) | delivered (C4, 2026-08-22) |
+| Translations | [translations.md](./translations.md) | delivered (C4, 2026-08-22); the reader's interface in Italian and English since 2026-10-25 (review PR-19, T9–T11) |
 | The map: layers & overlays | [map.md](./map.md) | delivered (C5, 2026-08-27) |
 | Reports & polls (from v1) | [reports-and-polls.md](./reports-and-polls.md) | delivered; reports change author, and since 2026-10-22 only someone signed in sees them — the polls too, since 2026-10-24 |
 | Steering tier & political tooling | [politics.md](./politics.md) | tier delivered (C1); its first consumer is C5's seggi overlay (2026-08-27); the tooling is future, out of current build |
@@ -87,13 +87,24 @@ not mean).
 
 ## Non-goals of this phase
 
-Confirmed explicitly by the author, 2026-08-21:
+Confirmed explicitly by the author, 2026-08-21 (one of them, the multilingual
+UI, closed by the author on 2026-10-22 — the dated note is on its line):
 
 - mass/public signup — the collaboration gate **is** the product decision
 - reader comments
 - notifications ("per il momento penso siano inutili")
-- machine translation
-- multilingual UI (later phase, after translated content exists)
+- machine translation — **still a non-goal** (2026-10-26): the decision that
+  closed the next line kept this one, so the English is written by hand, the
+  interface's and the cards' alike ([translations.md](./translations.md) T3,
+  T9)
+- ~~multilingual UI (later phase, after translated content exists)~~
+  **Closed — decided 2026-10-22, built 2026-10-25, closed here 2026-10-26.**
+  The author decided not to wait for translated content (decision 5 of
+  [the UX review](../review-2026-10-22.md)): the **reader's** interface speaks
+  Italian and English, with «IT · EN» in the menu, and a card is read in the
+  reader's language at its own address (review PR-19a, PR-19b; translations.md
+  T9, T10, and T11 for the whole picture). The collaborator's surfaces stay
+  Italian, by the same decision.
 - **election-operations tooling** (the real-time exit-poll tool and anything
   like it) — the steering tier and the seggi overlay exist now; the tools
   built on them are future work with their own spec ([politics.md](./politics.md))

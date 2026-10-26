@@ -307,3 +307,53 @@ address.
   English: a version in a language the interface does not speak is not
   offered by the switch.
 
+
+## T11 — The whole picture — 2026-10-26 (review PR-19c)
+
+Review PR-19 is done — 19a (#147), 19b (#149) and 19c — and with it decision
+5 of 2026-10-22 ([review](../review-2026-10-22.md)). What this file now
+describes, in one place:
+
+- **Two languages for the reader, one for the collaborator.** The reader's
+  interface (T9) and cards (T10) are Italian and English; every surface that
+  writes — and the reports and polls, which only a collaborator sees — stays
+  Italian, so T4 still holds for them. [README.md](./README.md)'s non-goal
+  «multilingual UI» is closed by a dated note on its line; «machine
+  translation» stays a non-goal (T3): every English word, the interface's and
+  the cards', is written by a person.
+- **The reader chooses**, with «IT · EN» in the menu (in *Menu* on a phone),
+  and the choice is the address's (`?lang=en`) before it is this browser's
+  (`localStorage`); a first visit with neither follows `navigator.language`.
+  Italian is the address without `?lang`, and the canonical one.
+- **A card has one address**, its original's, and is read there in the
+  reader's language: its published English version where there is one, its
+  Italian under «Not yet translated into English — the Italian text follows»
+  where there is none, the Italian name the heading either way (T7). «EN» in
+  the lists marks what a reader in English can read in English, and only a
+  published translation counts (T10).
+- **What holds it.** The accessibility gate (`a11y.cy.ts`, ADR-0005's four
+  tags, unchanged) measures the home in both layouts, `/benvenuto`, a card
+  with a published English version and one without, each in Italian and in
+  English. `language.cy.ts` follows a reader who switches from the pill, opens
+  a card read in English and one read in Italian, and checks `<html lang>`
+  and the address on each — on `seed_e2e`'s castle, whose English version the
+  command publishes after its original (T8), and its beach, which has none;
+  it also checks that only an English reader fetches the English chunk. The
+  performance gate measures four pages in Italian and two in English (T9).
+  The compiler and `lib/i18n/__tests__/messages.spec.ts` hold the two
+  dictionaries to the same keys and arguments.
+- **What it cost the first paint**, measured for PR-19c on one Mac, the
+  builds side by side: the entry — `index.html` and the JavaScript it loads
+  first, gzip — went from 95.99 kB before 19a to 99.12 kB after 19b
+  (+3.13 kB: 19a +2.69, TD-54 between them −0.02, 19b +0.46), and a reader in
+  English loads a 2.59 kB chunk on top. On Lighthouse's phone, medians of
+  three: LCP 1.84–1.85 s on the gate's five Italian pages, against 1.85–1.86 s
+  before 19a (`?zona=monte-orlando` aside: 3.15 s then, before TD-54), and
+  2.00 s on its two English ones; TBT 5–17 ms. No budget was raised.
+- **Not done, on purpose**: machine translation (T3); captions per language
+  (T5 — no form writes a caption yet); a language other than English
+  (`TRANSLATABLE_LANGUAGES` is English alone, and the switch offers no
+  version in a language the interface does not speak, T10); sending a
+  translation's own address on to its original's (T10: it is where a
+  collaborator writes it); the collaborator's surfaces in English (decision
+  5).

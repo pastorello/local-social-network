@@ -387,7 +387,8 @@ answer is not a redesign.
   `composables/useLeafletMap.ts` and `GaetaMap.vue`, the product name, and an
   Italian-only UI. *(Since 2026-09-18 `useLeafletMap` is gone (D19); the
   frontend's centre is in `GaetaMap.vue` alone, the backend's in settings —
-  see roadmap item 5.)*
+  see roadmap item 5. Since 2026-10-25 the reader's UI is Italian and English
+  and the collaborator's still Italian: translations.md T9–T11.)*
 - **New content features**, deployment, and anything already listed in the v2
   spec's non-goals.
 

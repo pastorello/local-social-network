@@ -495,6 +495,68 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
   })
 })
 
+// The reader's two languages (review PR-19c, translations.md T9/T10): the
+// home, the welcome page, a card with a published English version — seed_e2e's
+// castle — and one without, each in Italian and in English, opened by the
+// address as a shared link opens them. In English the interface's words are
+// English around a card's Italian, which is marked so (WCAG 3.1.2), and the
+// heading stays Italian (T7). The rules are ADR-0005's, the same as above; the
+// Italian half repeats some cases above on purpose, so that each surface is
+// measured here in both.
+describe("the reader's surfaces meet WCAG 2.1 AA in both languages", () => {
+  const CASTLE = 'Castello E2E pubblicato'
+  const CASTLE_EN = 'E2E castle, published'
+
+  for (const lang of ['it', 'en'] as const) {
+    const english = lang === 'en'
+    const at = (path: string) => (english ? `${path}?lang=en` : path)
+    const town = english ? 'Discovering the town' : 'Scoprire la città'
+
+    it(`the map home, wide and on a phone (${lang})`, () => {
+      cy.viewport(1280, 800)
+      cy.visit(at('/'))
+      cy.contains('h1', english ? 'The map of Gaeta' : 'La mappa di Gaeta')
+      cy.contains('a', town)
+      check(`/ (desktop, ${lang})`)
+
+      cy.viewport(375, 812)
+      cy.visit(at('/'))
+      cy.get('.leaflet-container').should('exist')
+      cy.contains('a', town)
+      check(`/ (mobile, ${lang})`)
+    })
+
+    it(`the welcome page, on a phone (${lang})`, () => {
+      cy.viewport(390, 844)
+      cy.visit(at('/benvenuto'))
+      cy.contains('h1', english ? 'What do you feel like doing?' : 'Che cosa ti va di fare?')
+      cy.contains('a', town)
+      cy.contains('a', english ? 'This week' : 'Questa settimana')
+      check(`/benvenuto (${lang})`)
+    })
+
+    it(`a card with an English version, on a phone (${lang})`, () => {
+      cy.viewport(390, 844)
+      cy.visit(at('/luoghi'))
+      cy.contains('a', CASTLE).click()
+      cy.contains('h1', CASTLE)
+      if (english) cy.get('article h1 + p').should('have.text', CASTLE_EN)
+      // In Italian, the card's own switch to its English (C4, T10).
+      else cy.get('nav[aria-label="Cambia lingua"]').contains('a', 'Inglese')
+      check(`/luoghi/:id, translated (${lang})`)
+    })
+
+    it(`a card without one, wide (${lang})`, () => {
+      cy.viewport(1280, 800)
+      cy.visit(at('/chiese'))
+      cy.contains('a', PUBLISHED).click()
+      cy.contains('h1', PUBLISHED)
+      if (english) cy.contains('p', 'Not yet translated into English')
+      check(`/chiese/:id, untranslated (${lang})`)
+    })
+  }
+})
+
 // `testIsolation: false`, so these three checks share one login rather than
 // signing in three times. That is not tidiness: the login endpoint is rate
 // limited to 10/min per IP (TD-18) and the suite as a whole was already close
