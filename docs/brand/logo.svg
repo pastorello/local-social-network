@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Vivere Gaeta">
+  <!-- Vivere Gaeta's logo, proposal C of 2026-10-26 (design.md D7's note):
+  the sea below, half a sun with five rays above, in a ring of sea. The
+  master — frontend/public/apple-touch-icon.png is drawn from it, and
+  frontend/public/favicon.svg is its cut for small sizes. Colours are
+  main.css's page, sea and terracotta tokens (no token names here: a double
+  hyphen ends an XML comment, and the file stops being an image). -->
+  <circle cx="32" cy="32" r="30.5" fill="#faf7f2" stroke="#0f5f73" stroke-width="3" />
+  <path
+    d="M32 15V9M40 17.14L43 11.95M24 17.14L21 11.95M45.86 23L51.05 20M18.14 23L12.95 20"
+    fill="none"
+    stroke="#9c4221"
+    stroke-width="3"
+    stroke-linecap="round"
+  />
+  <path d="M20 31A12 12 0 0 1 44 31Z" fill="#9c4221" />
+  <path d="M0.06 34H63.94A32 32 0 0 1 0.06 34Z" fill="#0f5f73" />
+  <path
+    d="M8 43q3-2.4 6 0t6 0t6 0t6 0t6 0t6 0t6 0t6 0M20 51q3-2.4 6 0t6 0t6 0t6 0"
+    fill="none"
+    stroke="#faf7f2"
+    stroke-width="2"
+    stroke-linecap="round"
+  />
+</svg>

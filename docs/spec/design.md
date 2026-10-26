@@ -271,6 +271,20 @@ geolocation is a later phase (see Non-goals) rather than the centre of this one.
   chosen). The map layer colours stay the one saturated register in the
   product, because there they do work: they distinguish.
 
+  **The logo — 2026-10-26, the author's choice among four drawn that day**
+  (orizzonte, tramonto, raggi, monocromo): a circle, the sea below, half a
+  sun with five rays above, in a ring of sea — the palette's sea, terracotta
+  and paper, nothing new. Until then the site's icon was Vue's own, left by
+  the scaffold. **Sun and sea do not touch**: terracotta and sea are 1.1:1 in
+  luminance, so they would read as one shape in grey or to a reader who does
+  not tell the hues apart; a strip of sky between them is the horizon. The
+  master is `docs/brand/logo.svg`; `frontend/public/favicon.svg` is its cut
+  for 32 px and under (no waves, ring and rays thicker, a wider horizon), and
+  `favicon.ico` (16/32/48) and `apple-touch-icon.png` (180, the master on
+  paper) were rendered from those two by headless Chrome. At 16 px the rays
+  are dots — known when it was chosen. The wordmark (`SiteTitle.vue`) is
+  unchanged, and the logo is not in the pill.
+
 - **D8 — Colour lives in tokens, never in a component.** Every colour is a
   named custom property (`--stone`, `--sea`, …) that components read. Today
   hex values are scattered by hand through `lib/reportStatus.ts`,
