@@ -118,7 +118,8 @@ describe('parentOf', () => {
 // The menu's current item (review PR-23, N-02): the item above the page, for
 // every page the router knows. The home — the welcome page, /benvenuto's
 // since 2026-10-26 — marks nothing (review PR-25); the map, /mappa, is
-// «Mappa»'s.
+// «Mappa»'s; the tours are *Esplora*'s and the feasts, dishes, people,
+// dialect and books *Tradizioni*'s, since the same day.
 const SECTIONS: Record<string, Section | null> = {
   '/': null,
   '/mappa': 'mappa',
@@ -131,21 +132,21 @@ const SECTIONS: Record<string, Section | null> = {
   '/reimposta-password/:token': null,
   '/users': null,
   '/polls': null,
-  '/feste': 'esplora',
-  '/feste/nuova': 'esplora',
-  '/feste/:id': 'esplora',
+  '/feste': 'tradizioni',
+  '/feste/nuova': 'tradizioni',
+  '/feste/:id': 'tradizioni',
   '/chiese': 'esplora',
   '/chiese/nuova': 'esplora',
   '/chiese/:id': 'esplora',
-  '/ricette': 'esplora',
-  '/ricette/nuova': 'esplora',
-  '/ricette/:id': 'esplora',
-  '/personaggi': 'esplora',
-  '/personaggi/nuovo': 'esplora',
-  '/personaggi/:id': 'esplora',
-  '/dialetto': 'esplora',
-  '/dialetto/nuovo': 'esplora',
-  '/dialetto/:id': 'esplora',
+  '/ricette': 'tradizioni',
+  '/ricette/nuova': 'tradizioni',
+  '/ricette/:id': 'tradizioni',
+  '/personaggi': 'tradizioni',
+  '/personaggi/nuovo': 'tradizioni',
+  '/personaggi/:id': 'tradizioni',
+  '/dialetto': 'tradizioni',
+  '/dialetto/nuovo': 'tradizioni',
+  '/dialetto/:id': 'tradizioni',
   '/luoghi': 'esplora',
   '/luoghi/nuovo': 'esplora',
   '/luoghi/:id': 'esplora',
@@ -154,12 +155,12 @@ const SECTIONS: Record<string, Section | null> = {
   '/attivita/:id': 'esplora',
   '/benvenuto': null,
   '/cosa-fare': 'cosa-fare',
-  '/itinerari': 'itinerari',
-  '/itinerari/nuovo': 'itinerari',
-  '/itinerari/:id': 'itinerari',
-  '/libri': 'esplora',
-  '/libri/nuovo': 'esplora',
-  '/libri/:id': 'esplora',
+  '/itinerari': 'esplora',
+  '/itinerari/nuovo': 'esplora',
+  '/itinerari/:id': 'esplora',
+  '/libri': 'tradizioni',
+  '/libri/nuovo': 'tradizioni',
+  '/libri/:id': 'tradizioni',
   '/eventi': null,
   '/eventi/nuovo': null,
   '/eventi/:id': null,
@@ -199,7 +200,7 @@ describe('sectionOf', () => {
   })
 
   it('keeps a stop and a chosen zone in their sections', () => {
-    expect(sectionOf(at(`/itinerari/${ID}?tappa=2`))).toBe('itinerari')
+    expect(sectionOf(at(`/itinerari/${ID}?tappa=2`))).toBe('esplora')
     expect(sectionOf(at('/cosa-fare?zona=serapo'))).toBe('cosa-fare')
   })
 })

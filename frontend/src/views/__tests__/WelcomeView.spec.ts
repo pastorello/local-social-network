@@ -313,7 +313,8 @@ describe('WelcomeView — the wizard’s second step, «Dove?»', () => {
     expect(chosen.text()).toContain('Hai scelto:')
     expect(chosen.get('a').attributes('href')).toBe('/')
     expect(chosen.get('a').text()).toBe('Cambia la scelta: Scoprire la città')
-    expect(wrapper.find('input[role="combobox"]').exists()).toBe(true)
+    // No «Dove sei?» since 2026-10-26 (hidden for now by the author).
+    expect(wrapper.find('input[role="combobox"]').exists()).toBe(false)
     expect(hrefs(wrapper)).toEqual([
       '/cosa-fare?intento=citta&zona=gaeta-medievale',
       '/cosa-fare?intento=citta&zona=porto-salvo',
@@ -321,17 +322,6 @@ describe('WelcomeView — the wizard’s second step, «Dove?»', () => {
     ])
     expect(wrapper.text()).toContain('Annunziata · Giro')
     expect(wrapper.text()).toContain('Ovunque a Gaeta')
-  })
-
-  it('takes a place named in «Dove sei?» to the third step, keeping the answer', async () => {
-    const { wrapper, router } = await mountAt('/benvenuto?intento=citta')
-
-    const field = wrapper.get('input[role="combobox"]')
-    await field.setValue('castello')
-    await field.trigger('keydown', { key: 'Enter' })
-    await flushPromises()
-
-    expect(router.currentRoute.value.fullPath).toBe('/cosa-fare?intento=citta&zona=gaeta-medievale')
   })
 
   it('skips itself when one zone holds all of it, so Back goes to the first step', async () => {

@@ -587,6 +587,16 @@ opening-hours filter is not.
   **2026-09-11:** the reserved item arrives as *Itinerari*, plural — curated
   tours ([itinerari.md](./itinerari.md) I11). The same session put a *Luoghi*
   heading into the reader's grouping of card types (content.md, luoghi).
+  **2026-10-26, the author's decision before release 2.0.0: two menus.**
+  *Esplora* holds where one goes — *Luoghi*, *Itinerari* (no longer a pill
+  item of its own), *Attività* — and a new *Tradizioni* holds what Gaeta
+  keeps — *Feste*, *Ricette*, *Personaggi storici*, *Dialetto*, *Libri
+  consigliati*. The pill reads *Mappa*, *Esplora*, *Tradizioni*, *Cosa
+  fare*, *Il progetto*; on a phone *Esplora* and *Tradizioni* are in it from
+  360px, and below that *Tradizioni*'s types are in *Menu*. A menu, not a
+  type: the `tradizioni` *type* dropped on 2026-09-09 (content.md) stays
+  dropped — every card it named was a festa or a ricetta, and those are
+  what this menu lists.
 
   *Amended 2026-10-23 — the eyebrow, the current item, the window's title,
   and «Esplora».* *Schede* is renamed *Esplora*: it is the name of our data

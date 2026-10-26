@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import axios from 'axios'
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter, type RouteLocationRaw } from 'vue-router'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRoute, type RouteLocationRaw } from 'vue-router'
 
 import EnglishMark from '@/components/content/EnglishMark.vue'
-import WhereAreYouField from '@/components/forms/WhereAreYouField.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
 import WizardChoices from '@/components/wizard/WizardChoices.vue'
 import { useIsDesktop } from '@/composables/useBreakpoint'
@@ -12,7 +11,7 @@ import { usePageTitle } from '@/composables/usePageTitle'
 import { usePanelTrail } from '@/composables/usePanelTrail'
 import type { Genre } from '@/definitions/interfaces/Luogo'
 import type { Intent } from '@/definitions/interfaces/Itinerario'
-import type { MapCardFeature, Zone, ZoneAlias } from '@/definitions/interfaces/MapData'
+import type { MapCardFeature, Zone } from '@/definitions/interfaces/MapData'
 import { STATE_SENTENCE } from '@/lib/availability'
 import { localName } from '@/lib/i18n'
 import cosaFare from '@/lib/i18n/messages/cosaFare'
@@ -68,12 +67,10 @@ interface Page<T> {
 }
 
 const route = useRoute()
-const router = useRouter()
 const mapStore = useMapStore()
 const { isDesktop } = useIsDesktop()
 
 const zones = ref<Zone[]>([])
-const aliases = ref<ZoneAlias[]>([])
 const intents = ref<Intent[]>([])
 const genres = ref<Genre[]>([])
 const tours = ref<TourRow[]>([])
@@ -93,7 +90,6 @@ onMounted(async () => {
     axios.get<Page<TourRow>>('/api/itinerari/', ALL),
     axios.get<Page<FestaRow>>('/api/feste/', ALL),
     axios.get<Page<Row>>('/api/ricette/', ALL),
-    axios.get<ZoneAlias[]>('/api/map/zone/alias/'),
   ])
   const value = <T,>(result: PromiseSettledResult<{ data: T }>, fallback: T): T =>
     result.status === 'fulfilled' ? result.value.data : ((failed.value = true), fallback)
@@ -103,7 +99,6 @@ onMounted(async () => {
   tours.value = value(results[3], { results: [] }).results
   feste.value = value(results[4], { results: [] }).results
   ricette.value = value(results[5], { results: [] }).results.slice().sort(byTitle)
-  aliases.value = value(results[6], [])
   loaded.value = true
 })
 
@@ -509,27 +504,9 @@ const shownChips = computed(() =>
   collapsed.value ? chips.value.filter((chip) => chip.slug === selected.value?.slug) : chips.value,
 )
 
-// «Dove sei?» chooses a zone the way a chip does: the address is the choice
-// (review PR-20). On a phone the question then steps aside with the chips,
-// so the field it was asked in folds away under the reader's focus — which
-// goes to «Cambia zona», the control that brings it back, as the panel's own
-// controls hand focus on when they disappear.
-// Until the zones have come, the address is all there is to go on: a page
-// opened on ?zona= starts with the question put away, rather than drawing it
-// and folding it a moment later under the reader's eyes (a layout shift
-// Lighthouse measured at 0.18 on a phone). A zone the archive does not have
-// unfolds it again, since there is no «Cambia zona» then.
-const asking = computed(() =>
-  loaded.value ? !collapsed.value : isDesktop.value || choosing.value || !route.query.zona,
-)
-const changeZone = ref<HTMLButtonElement | null>(null)
-const chooseZone = async (slug: string) => {
-  choosing.value = false
-  await router.push({ query: { zona: slug } })
-  if (isDesktop.value) return
-  await nextTick()
-  changeZone.value?.focus()
-}
+// «Dove sei?» (review PR-20) asked above the chips until 2026-10-26, when the
+// author hid it for now; its component and its names are kept
+// (components/forms/WhereAreYouField.vue, maps.ZonaAlias).
 </script>
 
 <template>
@@ -567,20 +544,6 @@ const chooseZone = async (slug: string) => {
         {{ isDesktop ? cosaFare().lead.wide : cosaFare().lead.phone }}
       </p>
     </template>
-
-    <!-- Above the chips, and the first thing on a phone too (review PR-20):
-    the guest who does not know the zones' names knows where they stand. The
-    wizard's third step asks nothing: its answers were the steps before. -->
-    <WhereAreYouField
-      v-if="!intentMode"
-      class="mt-6"
-      :aliases="aliases"
-      :zones="zones"
-      :current="selected?.slug ?? null"
-      :folded="!asking"
-      ask-id="dove-sei"
-      @choose="chooseZone"
-    />
 
     <nav v-if="!intentMode" :aria-label="cosaFare().zones" class="mt-6">
       <!-- On a phone the open row runs to the panel's edges, so it reads as a
@@ -620,9 +583,8 @@ const chooseZone = async (slug: string) => {
         </ul>
         <button
           v-if="!isDesktop && selected"
-          ref="changeZone"
           type="button"
-          aria-controls="dove-sei zone-chips"
+          aria-controls="zone-chips"
           :aria-expanded="!collapsed"
           class="inline-flex h-10 flex-none cursor-pointer items-center gap-1.5 rounded-full px-3 text-sm font-semibold text-sea underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sea"
           @click="choosing = !choosing"

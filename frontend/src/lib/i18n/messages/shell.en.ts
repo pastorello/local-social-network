@@ -10,7 +10,7 @@ export default {
     label: 'Main',
     map: 'Map',
     explore: 'Explore',
-    tours: 'Tours',
+    traditions: 'Traditions',
     whatToDo: 'What to do',
     project: 'About',
     signIn: 'Sign in',

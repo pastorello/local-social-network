@@ -154,7 +154,9 @@ describe('a guest following a curated tour', () => {
 
   it('reaches the tours from the menu', () => {
     cy.visit('/')
-    cy.get('nav[aria-label="Principale"]').contains('a', 'Itinerari').click()
+    // In Esplora since 2026-10-26, beside the places and the businesses.
+    cy.get('nav[aria-label="Principale"]').contains('button', 'Esplora').click()
+    cy.get('[role="menu"]').contains('a', 'Itinerari').click()
     cy.contains('h1', 'Itinerari')
     cy.contains('a', TOUR).should('exist')
   })

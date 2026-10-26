@@ -21,7 +21,7 @@ const COUNTS = {
   itinerari: 2,
 }
 
-const mountAt = async (path = '/') => {
+const mountAt = async (path = '/', section: 'esplora' | 'tradizioni' = 'esplora') => {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
@@ -32,16 +32,21 @@ const mountAt = async (path = '/') => {
         name: chiesaConfig.routeNames.detail,
         component: { template: '<div />' },
       },
+      { path: '/feste/:id', name: 'festedetail', component: { template: '<div />' } },
       { path: '/:pathMatch(.*)*', component: { template: '<div />' } },
     ],
   })
   router.push(path)
   await router.isReady()
-  return mount(SchedeMenu, { global: { plugins: [router] }, attachTo: document.body })
+  return mount(SchedeMenu, {
+    props: { section },
+    global: { plugins: [router] },
+    attachTo: document.body,
+  })
 }
 
-const openMenu = async (path = '/') => {
-  const wrapper = await mountAt(path)
+const openMenu = async (path = '/', section: 'esplora' | 'tradizioni' = 'esplora') => {
+  const wrapper = await mountAt(path, section)
   await wrapper.get('button').trigger('click')
   await flushPromises()
   return wrapper
@@ -50,7 +55,10 @@ const openMenu = async (path = '/') => {
 const entries = (wrapper: Awaited<ReturnType<typeof mountAt>>) =>
   wrapper.findAll('[role="menuitem"]')
 
-describe('the Esplora menu (review PR-9)', () => {
+// Two menus since 2026-10-26 (the author's decision): *Esplora* — the places,
+// the tours, the businesses — and *Tradizioni* — the feasts, the dishes, the
+// people, the dialect, the books.
+describe('the Esplora and Tradizioni menus (review PR-9)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(axios.get).mockResolvedValue({ data: COUNTS })
@@ -59,12 +67,18 @@ describe('the Esplora menu (review PR-9)', () => {
     document.body.innerHTML = ''
   })
 
-  it('lists the types in the order a reader looks for them', async () => {
-    const wrapper = await openMenu()
-
-    expect(entries(wrapper).map((entry) => entry.attributes('href'))).toEqual([
+  it('lists the types in the order a reader looks for them, each in its menu', async () => {
+    const explore = await openMenu()
+    expect(entries(explore).map((entry) => entry.attributes('href'))).toEqual([
       '/luoghi',
+      '/itinerari',
       '/attivita',
+    ])
+    explore.unmount()
+
+    const traditions = await openMenu('/', 'tradizioni')
+    expect(traditions.get('button').text()).toBe('Tradizioni')
+    expect(entries(traditions).map((entry) => entry.attributes('href'))).toEqual([
       '/feste',
       '/ricette',
       '/personaggi',
@@ -81,10 +95,15 @@ describe('the Esplora menu (review PR-9)', () => {
     await flushPromises()
 
     expect(axios.get).toHaveBeenCalledWith('/api/content/counts/')
-    const names = entries(wrapper).map((entry) => entry.text())
-    expect(names).toEqual([
+    expect(entries(wrapper).map((entry) => entry.text())).toEqual([
       'Luoghi, 9 schede',
+      'Itinerari, 2 schede',
       'Attività, 4 schede',
+    ])
+    wrapper.unmount()
+
+    const traditions = await openMenu('/', 'tradizioni')
+    expect(entries(traditions).map((entry) => entry.text())).toEqual([
       'Feste, 1 scheda',
       'Ricette, 2 schede',
       'Personaggi storici, 0 schede',
@@ -94,21 +113,21 @@ describe('the Esplora menu (review PR-9)', () => {
   })
 
   it('greys an empty heading but keeps it a link', async () => {
-    const wrapper = await openMenu()
+    const wrapper = await openMenu('/', 'tradizioni')
 
     const dialetto = wrapper.get('a[href="/dialetto"]')
     expect(dialetto.classes()).toContain('text-muted')
     expect(dialetto.attributes('role')).toBe('menuitem')
-    expect(wrapper.get('a[href="/luoghi"]').classes()).toContain('text-ink')
+    expect(wrapper.get('a[href="/feste"]').classes()).toContain('text-ink')
   })
 
   it('is still the menu when the counts cannot be read: no number, nothing greyed', async () => {
     vi.mocked(axios.get).mockRejectedValue(new Error('offline'))
     vi.spyOn(console, 'log').mockImplementation(() => {})
 
-    const wrapper = await openMenu()
+    const wrapper = await openMenu('/', 'tradizioni')
 
-    expect(entries(wrapper)).toHaveLength(7)
+    expect(entries(wrapper)).toHaveLength(5)
     expect(wrapper.get('a[href="/dialetto"]').text()).toBe('Dialetto')
     expect(wrapper.findAll('.text-muted')).toHaveLength(0)
   })
@@ -171,5 +190,21 @@ describe('the Esplora menu’s name and state (review PR-23)', () => {
     const elsewhere = await mountAt('/il-progetto')
     expect(elsewhere.get('button').attributes('aria-current')).toBeUndefined()
     expect(elsewhere.get('button span').classes()).not.toContain('underline')
+  })
+})
+
+describe('the Tradizioni menu’s state (2026-10-26)', () => {
+  afterEach(() => {
+    document.body.innerHTML = ''
+  })
+
+  it('is the current item on a feast, and Esplora is not', async () => {
+    vi.mocked(axios.get).mockResolvedValue({ data: COUNTS })
+    const traditions = await mountAt('/feste/f1', 'tradizioni')
+    expect(traditions.get('button').attributes('aria-current')).toBe('page')
+    traditions.unmount()
+
+    const explore = await mountAt('/feste/f1')
+    expect(explore.get('button').attributes('aria-current')).toBeUndefined()
   })
 })

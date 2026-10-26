@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 
 import IntentTile from '@/components/content/IntentTile.vue'
-import WhereAreYouField from '@/components/forms/WhereAreYouField.vue'
 import ItinerarioIcon from '@/components/icons/ItinerarioIcon.vue'
 import LuogoIcon from '@/components/icons/LuogoIcon.vue'
 import MainTitle from '@/components/typography/MainTitle.vue'
@@ -47,7 +46,7 @@ const props = defineProps<{ home?: boolean }>()
 const route = useRoute()
 const router = useRouter()
 const wizard = useWizardStore()
-const { archive, zones, aliases, windows, known } = storeToRefs(wizard)
+const { archive, zones, windows, known } = storeToRefs(wizard)
 
 onMounted(() => wizard.load())
 
@@ -112,10 +111,6 @@ const everywhere = computed(() =>
       )
     : '',
 )
-
-const chooseZone = (zone: string) => {
-  if (chosen.value) router.push(resultOf(chosen.value.slug, zone))
-}
 
 // On the home the answers are one column: the floating column and the sheet
 // are a phone's width at most.
@@ -243,10 +238,9 @@ const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:si
         {{ wizardText().where }}
       </MainTitle>
 
-      <!-- «Dove sei?» (review PR-20): the guest who does not know the zones'
-      names knows where they stand. Any place it knows leads on — the third
-      step says so when that zone has nothing of what was chosen. -->
-      <WhereAreYouField :aliases="aliases" :zones="zones" :current="null" @choose="chooseZone" />
+      <!-- «Dove sei?» (review PR-20) asked here too until 2026-10-26, when
+      the author hid it for now: its component and its names are kept
+      (components/forms/WhereAreYouField.vue, maps.ZonaAlias). -->
 
       <ul v-if="known && chosen" :class="[grid, 'mt-6']">
         <li v-for="zone in where" :key="zone.slug">

@@ -442,44 +442,13 @@ describe('CosaFareView on a phone (review PR-4, M-07)', () => {
     expect(router.currentRoute.value.query.zona).toBe('gaeta-medievale')
   })
 
-  // Review PR-20: «Dove sei?» is a way of choosing, so it steps aside with
-  // the chips — and the line saying what it chose stays.
-  it('puts «Dove sei?» away with the chips, and hands focus to «Cambia zona»', async () => {
-    const { wrapper, router } = await mountAt({}, undefined, true)
-    const field = wrapper.get<HTMLInputElement>('input[role="combobox"]')
-    expect(field.isVisible()).toBe(true)
-
-    field.element.focus()
-    await field.setValue('castello')
-    await field.trigger('keydown', { key: 'Enter' })
-    await flushPromises()
-
-    expect(router.currentRoute.value.query).toEqual({ zona: 'gaeta-medievale' })
-    expect(field.isVisible()).toBe(false)
-    expect(wrapper.text()).toContain('Sei al castello: ti mostriamo Gaeta Medievale.')
-    const toggle = wrapper.get('button[aria-controls~="zone-chips"]')
-    expect(document.activeElement).toBe(toggle.element)
-    expect(toggle.attributes('aria-controls')!.split(' ')).toContain('dove-sei')
-
-    await toggle.trigger('click')
-    expect(field.isVisible()).toBe(true)
-    wrapper.unmount()
-  })
-
-  it('opens a zone’s address with the question already put away, not folding it later', async () => {
-    // The zones never come: what is drawn first is all there is.
-    vi.mocked(axios.get).mockImplementation(() => new Promise(() => {}))
+  // «Dove sei?» asked above the chips (review PR-20) until 2026-10-26, when
+  // the author hid it for now: «Cambia zona» controls the chips alone.
+  it('asks no «Dove sei?», and «Cambia zona» controls the zones alone', async () => {
     const { wrapper } = await mountAt({ zona: 'serapo' }, undefined, true)
 
-    expect(wrapper.get('input[role="combobox"]').isVisible()).toBe(false)
-    wrapper.unmount()
-  })
-
-  it('asks again on the address of a zone the archive does not have', async () => {
-    const { wrapper } = await mountAt({ zona: 'atlantide' }, undefined, true)
-
-    expect(wrapper.get('input[role="combobox"]').isVisible()).toBe(true)
-    expect(wrapper.text()).toContain('A Gaeta')
+    expect(wrapper.find('input[role="combobox"]').exists()).toBe(false)
+    expect(wrapper.get('button[aria-controls]').attributes('aria-controls')).toBe('zone-chips')
     wrapper.unmount()
   })
 
@@ -612,48 +581,22 @@ describe('CosaFareView — eyebrow and title (review PR-23)', () => {
   })
 })
 
-// Review PR-20: «Dove sei?» picks the zone from the name of where the guest
-// stands, as a chip would — the address is the choice.
-describe('CosaFareView — «Dove sei?» (review PR-20)', () => {
+// Review PR-20's «Dove sei?» picked the zone from the name of where the guest
+// stood; hidden for now on 2026-10-26 (the author's decision), its component
+// and its names kept for the day it comes back.
+describe('CosaFareView — «Dove sei?» hidden (2026-10-26)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(axios.get).mockImplementation(async (url: string) => ({ data: ANSWERS[url] }))
   })
 
-  it('asks above the zones, and asks no service but the archive', async () => {
+  it('asks no name of where the guest is, and the archive for none', async () => {
     const { wrapper } = await mountAt()
 
-    const field = wrapper.get('input[role="combobox"]')
-    const chips = wrapper.get('nav[aria-label="Zone"]')
-    expect(
-      field.element.compareDocumentPosition(chips.element) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy()
+    expect(wrapper.find('input[role="combobox"]').exists()).toBe(false)
     const asked = vi.mocked(axios.get).mock.calls.map(([url]) => url)
-    expect(asked).toContain('/api/map/zone/alias/')
+    expect(asked).not.toContain('/api/map/zone/alias/')
     expect(asked.every((url) => url.startsWith('/api/'))).toBe(true)
-  })
-
-  it('shows the zone of the place named, and says so', async () => {
-    const { wrapper, router } = await mountAt()
-
-    await wrapper.get('input[role="combobox"]').setValue('castello')
-    await wrapper.get('input[role="combobox"]').trigger('keydown', { key: 'Enter' })
-    await flushPromises()
-
-    expect(router.currentRoute.value.query).toEqual({ zona: 'gaeta-medievale' })
-    expect(wrapper.text()).toContain('Sei al castello: ti mostriamo Gaeta Medievale.')
-    expect(wrapper.text()).toContain('Duomo')
-  })
-
-  it('leaves the zone alone for a name it does not know', async () => {
-    const { wrapper, router } = await mountAt({ zona: 'serapo' })
-
-    await wrapper.get('input[role="combobox"]').setValue('xyz')
-    await wrapper.get('input[role="combobox"]').trigger('keydown', { key: 'Enter' })
-    await flushPromises()
-
-    expect(router.currentRoute.value.query).toEqual({ zona: 'serapo' })
-    expect(wrapper.text()).toContain('Non conosciamo questo posto: scegli una zona qui sotto.')
   })
 })
 

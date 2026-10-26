@@ -57,6 +57,11 @@ const onTheMap = () => {
 }
 
 const menu = (label: string) => cy.get('nav[aria-label="Principale"]').contains('a', label).click()
+// The tours are in Esplora since 2026-10-26, not a pill item of their own.
+const explore = (label: string) => {
+  cy.get('nav[aria-label="Principale"]').contains('button', 'Esplora').click()
+  cy.get('[role="menu"]').contains('a', label).click()
+}
 
 const openChurchFromTheMap = () => {
   cy.visit('/mappa')
@@ -73,7 +78,7 @@ describe('close, up, back (review PR-22)', () => {
   it('closes onto the map in one press from four pages deep, and leaves Back the history', () => {
     openChurchFromTheMap()
     cy.location('pathname').then((card) => {
-      menu('Itinerari')
+      explore('Itinerari')
       cy.location('pathname').should('eq', '/itinerari')
       menu('Cosa fare')
       cy.location('pathname').should('eq', '/cosa-fare')
@@ -244,7 +249,7 @@ describe('where the reader is (review PR-23)', () => {
     cy.contains('h1', 'Cosa si può fare qui')
   })
 
-  it('on a tour: «Itinerari» and its intent, Itinerari current', () => {
+  it('on a tour: «Itinerari» and its intent, Esplora current', () => {
     cy.visit('/itinerari')
     cy.contains('a', TOUR).click()
     cy.contains('h1', TOUR)
@@ -253,7 +258,8 @@ describe('where the reader is (review PR-23)', () => {
       ['Itinerari', '/itinerari'],
       ['Scoprire la città', '/itinerari?intento=citta'],
     ])
-    current().should('have.length', 1).and('contain.text', 'Itinerari')
+    // The tours are in Esplora since 2026-10-26.
+    current().should('have.length', 1).and('contain.text', 'Esplora')
   })
 
   it('on a chosen zone: «Cosa fare» and the zone, Cosa fare current', () => {
@@ -293,5 +299,45 @@ describe('where the reader is (review PR-23)', () => {
     cy.get(WHERE).should('not.exist')
     current().should('have.length', 1).and('contain.text', 'Il progetto')
     cy.title().should('eq', 'Il progetto · Vivere Gaeta')
+  })
+})
+
+// Two menus since 2026-10-26 (the author's decision): Esplora — the places,
+// the tours, the businesses — and Tradizioni — the feasts, the dishes, the
+// people, the dialect, the books. On a phone both are in the pill from
+// 360px, the narrowest width it promises, and neither it nor a menu opened
+// from it runs off the screen; below 360px Tradizioni's types are in Menu.
+describe('Esplora and Tradizioni on a phone (2026-10-26)', () => {
+  const pill = 'nav[aria-label="Principale"]'
+
+  it('fits both menus in the pill from 360px, and opens them on the screen', () => {
+    for (const width of [360, 390]) {
+      cy.viewport(width, 720)
+      cy.visit('/il-progetto')
+      cy.contains('h1', 'Il progetto')
+      cy.get(pill).should(($nav) => {
+        const nav = $nav[0]!.getBoundingClientRect()
+        expect(nav.left, `the pill at ${width}px`).to.be.at.least(0)
+        expect(nav.right, `the pill at ${width}px`).to.be.at.most(width)
+      })
+      for (const label of ['Esplora', 'Tradizioni']) {
+        cy.get(pill).contains('button', label).should('be.visible').click()
+        cy.get('[role="menu"]').should(($menu) => {
+          const menu = $menu[0]!.getBoundingClientRect()
+          expect(menu.left, `${label} at ${width}px`).to.be.at.least(0)
+          expect(menu.right, `${label} at ${width}px`).to.be.at.most(width)
+        })
+        cy.get(pill).contains('button', label).click()
+      }
+    }
+  })
+
+  it('moves Tradizioni into Menu below 360px', () => {
+    cy.viewport(340, 720)
+    cy.visit('/il-progetto')
+    cy.contains('h1', 'Il progetto')
+    cy.get(pill).contains('button', 'Tradizioni').should('not.be.visible')
+    cy.get('button[aria-label="Menu"]').click()
+    cy.get('[role="group"][aria-label="Tradizioni"]').contains('a', 'Feste').should('be.visible')
   })
 })

@@ -10,7 +10,7 @@ const it = {
     label: 'Principale',
     map: 'Mappa',
     explore: 'Esplora',
-    tours: 'Itinerari',
+    traditions: 'Tradizioni',
     whatToDo: 'Cosa fare',
     project: 'Il progetto',
     signIn: 'Accedi',

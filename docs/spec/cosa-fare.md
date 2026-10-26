@@ -271,7 +271,11 @@ the wizard's first step — it said what «Non lo so: fammi vedere la mappa»
 says. The way in is the menu's **Cosa fare**, on every page.)*
 
 **«Dove sei?», before geolocation — 2026-10-24** (review of 2026-10-22,
-decision 3; PR-20). Above the chips — on a phone too, over their row — a field
+decision 3; PR-20). *(Hidden on 2026-10-26 by the author's decision, «for
+now»: neither this page nor the wizard's «Dove?» asks it. The field,
+`components/forms/WhereAreYouField.vue`, its matching, `lib/placeNames.ts`,
+and the names, `maps.ZonaAlias` with its endpoint, are kept as they are, so
+bringing it back is putting the field back on the two pages.)* Above the chips — on a phone too, over their row — a field
 asks *«Dove sei?»*: the guest types or picks the name of where they stand
 (*«il castello»*, *«Piazza XIX Maggio»*, *«Serapo»*) and the page shows that
 zone, through `?zona=` as a chip does, with a line saying so: *«Sei al

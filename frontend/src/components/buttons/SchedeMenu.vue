@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import axios from 'axios'
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch, type Component } from 'vue'
 import { useRoute } from 'vue-router'
 
 import FesteIcon from '../icons/FesteIcon.vue'
@@ -10,10 +10,11 @@ import DialettoIcon from '../icons/DialettoIcon.vue'
 import LibroIcon from '../icons/LibroIcon.vue'
 import LuogoIcon from '../icons/LuogoIcon.vue'
 import AttivitaIcon from '../icons/AttivitaIcon.vue'
+import ItinerarioIcon from '../icons/ItinerarioIcon.vue'
 import type { CardCounts } from '@/definitions/interfaces/Content'
 import shell from '@/lib/i18n/messages/shell'
 import { wordsOf } from '@/lib/i18n/messages/types'
-import { sectionOf } from '@/lib/navigation'
+import { sectionOf, type MenuSection } from '@/lib/navigation'
 
 // *Esplora* (review PR-23, N-05 — *Schede* until 2026-10-23, which is what the
 // code calls a card, not a word a guest uses; the file keeps its name). A
@@ -25,15 +26,29 @@ import { sectionOf } from '@/lib/navigation'
 // route segment and its key in /api/content/counts/. *Attività* sits under
 // *Luoghi* (2026-10-25, ADR-0010): the other type a guest goes to. Each is
 // named in the reader's language (review PR-19a, lib/i18n/messages/types.ts).
-const items = [
-  { key: 'luoghi', icon: LuogoIcon },
-  { key: 'attivita', icon: AttivitaIcon },
-  { key: 'feste', icon: FesteIcon },
-  { key: 'ricette', icon: RicettaIcon },
-  { key: 'personaggi', icon: PersonaggioIcon },
-  { key: 'dialetto', icon: DialettoIcon },
-  { key: 'libri', icon: LibroIcon },
-]
+//
+// Two menus since 2026-10-26 (the author's decision before release 2.0.0):
+// *Esplora* is where one goes — the places, the tours (a pill item of their
+// own until then), the businesses — and *Tradizioni* is what Gaeta keeps —
+// its feasts, dishes, people, dialect and books. One component for both.
+const MENUS: Record<MenuSection, { key: string; icon: Component }[]> = {
+  esplora: [
+    { key: 'luoghi', icon: LuogoIcon },
+    { key: 'itinerari', icon: ItinerarioIcon },
+    { key: 'attivita', icon: AttivitaIcon },
+  ],
+  tradizioni: [
+    { key: 'feste', icon: FesteIcon },
+    { key: 'ricette', icon: RicettaIcon },
+    { key: 'personaggi', icon: PersonaggioIcon },
+    { key: 'dialetto', icon: DialettoIcon },
+    { key: 'libri', icon: LibroIcon },
+  ],
+}
+
+const { section = 'esplora' } = defineProps<{ section?: MenuSection }>()
+const items = computed(() => MENUS[section])
+const label = () => (section === 'esplora' ? shell().nav.explore : shell().nav.traditions)
 
 const route = useRoute()
 const open = ref(false)
@@ -42,7 +57,7 @@ const menuRef = ref<HTMLElement | null>(null)
 // The section the reader is in (lib/navigation.ts::sectionOf): every card
 // type, its list and its form — a church's too, though *Chiese* is no longer
 // an entry here.
-const isActive = computed(() => sectionOf(route) === 'esplora')
+const isActive = computed(() => sectionOf(route) === section)
 
 // The published count beside each entry, so a reader sees where the archive is
 // growing; an empty heading stays a link, greyed, and its list says so. Asked
@@ -106,9 +121,7 @@ onBeforeUnmount(() => {
       :aria-current="isActive ? 'page' : undefined"
       @click="toggle"
     >
-      <span :class="{ 'underline decoration-2 underline-offset-4': isActive }">{{
-        shell().nav.explore
-      }}</span>
+      <span :class="{ 'underline decoration-2 underline-offset-4': isActive }">{{ label() }}</span>
       <svg
         viewBox="0 0 20 20"
         class="h-4 w-4"

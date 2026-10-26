@@ -274,7 +274,7 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
   })
 
   // The wizard «Cosa fare adesso» (review PR-21, study 10): each of its three
-  // steps, in both layouts — the second asks «Dove?» with «Dove sei?», the
+  // steps, in both layouts — the second asks «Dove?», the
   // third opens on the answers with the rest of the zone behind disclosures,
   // one of them opened so its rows are measured too.
   it('the wizard’s second and third steps', () => {
@@ -341,25 +341,6 @@ describe("the reader's surfaces meet WCAG 2.1 AA", () => {
     cy.contains('a', 'Chiesa E2E pubblicata')
     cy.contains('button', 'Cambia zona')
     check('/cosa-fare?zona=porto-salvo (phone)')
-  })
-
-  // Review PR-20: «Dove sei?» measured with its list open, in both layouts —
-  // a listbox the gate never saw open is one it never measured.
-  it('Cosa si può fare qui, with «Dove sei?» open', () => {
-    cy.viewport(1280, 800)
-    cy.visit('/cosa-fare')
-    cy.get('nav[aria-label="Zone"]').contains('a', 'Porto Salvo')
-    cy.get('main input[role="combobox"]').type('ca')
-    cy.get('main [role="listbox"]').should('be.visible')
-    cy.get('main [role="option"]').should('have.length.at.least', 2)
-    check('/cosa-fare, «Dove sei?» open')
-
-    cy.viewport(390, 844)
-    cy.visit('/cosa-fare')
-    cy.get('nav[aria-label="Zone"]').contains('a', 'Porto Salvo')
-    cy.get('main input[role="combobox"]').type('{downarrow}')
-    cy.get('main [role="listbox"]').should('be.visible')
-    check('/cosa-fare, «Dove sei?» open (phone)')
   })
 
   it('Cosa si può fare qui: the zones are links a keyboard reaches and follows', () => {
