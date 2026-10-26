@@ -158,10 +158,15 @@ changed.
 ### 6. Then: the content, and the backups
 
 - **The content is written in the app**, by the author and the collaborators,
-  and nothing is loaded by a command. *(Until 2026-10-22 this step loaded
-  public-source drafts with `seed_drafts`; the author judged them a trial and
-  both were removed — see content.md's seeding section. `seed_demo` and
-  `seed_e2e` are DEBUG-only and refuse to run here.)*
+  and nothing is loaded by a command on the server. *(Until 2026-10-22 this
+  step loaded public-source drafts with `seed_drafts`; the author judged them
+  a trial and both were removed — see content.md's seeding section. `seed_demo`
+  and `seed_e2e` are DEBUG-only and refuse to run here.)* Cards written
+  outside the app go in as drafts **from the author's machine**, through the
+  API: `scripts/carica-schede --dry-run <folder>`, then the same without
+  `--dry-run` (since 2026-10-26; content.md, «Reinstated»). No deploy, no
+  SSH — only a migration a batch needs, such as a new genre, has to be
+  deployed first, and the dry run says so.
 - **OVH's included backup is one copy of the last 24 hours**: a net for a dead
   disk, not a history. `deploy/backup.sh` is Part 1's two commands made safe
   to schedule — `pipefail`, so a dump that fails fails the run instead of

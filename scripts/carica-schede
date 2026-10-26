@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+#
+# Load a folder of Markdown cards into the archive as drafts, through the API —
+# backend/content/drafts.py says what a file holds and why it goes this way.
+# Every run shows what it would do and asks before it writes; --dry-run writes
+# nothing and needs no login. The password is asked here, never passed in.
+#
+#   scripts/carica-schede --dry-run ~/percorso/drafts
+#   scripts/carica-schede ~/percorso/drafts                              # viveregaeta.it
+#   scripts/carica-schede --api http://127.0.0.1:8000 ~/percorso/drafts  # the local API
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PYTHON="$ROOT/.venv/bin/python"
+
+fail() { printf '\n\033[31m%s\033[0m\n' "$1" >&2; exit 1; }
+
+[ -x "$PYTHON" ] || fail "No virtualenv at .venv — create it first:
+  python3 -m venv .venv && .venv/bin/python -m pip install -r backend/requirements-dev.txt"
+
+"$PYTHON" -c 'import certifi, markdown, yaml' 2>/dev/null || fail "certifi, Markdown or PyYAML is missing from .venv:
+  .venv/bin/python -m pip install -r backend/requirements-dev.txt"
+
+# -P keeps the current directory off the import path: the folder being read is
+# data, and a stray yaml.py in it must not be imported.
+PYTHONPATH="$ROOT/backend" exec "$PYTHON" -P -m content.drafts "$@"

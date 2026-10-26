@@ -21,7 +21,7 @@
 
 | Gate | Command | Result |
 |---|---|---|
-| Backend tests | `python -m pytest` | **727 passed** in ~20s |
+| Backend tests | `python -m pytest` | **757 passed** in ~20s |
 | Backend lint | `python -m ruff check .` | clean |
 | Frontend tests | `npm run test:unit -- run` | **843 passed**, 97 files |
 | Frontend lint | `npx oxlint` · `npx eslint .` | clean |
@@ -46,7 +46,9 @@ public-source drafts (content.md's seeding section), so the backend count is
 **2026-10-26:** every row re-run for release 2.0.0 — the review of 2026-10-22
 (#116–#151) took the suites from 558 / 282 / 49 to 727 / 843 / 122. The
 counts above are that day's, on `main` at 553a6c8, which is the tag
-`v2.0.0`.
+`v2.0.0`. Later the same day `scripts/carica-schede` (content.md's seeding
+section) added 30 backend tests — 757, ruff clean — and one assertion to an
+existing frontend test.
 
 **Green gates are not covered behaviour.** That sentence opened this register on
 day one, and TD-47 — a whole status nothing exercised under a green suite,

@@ -207,6 +207,11 @@ build questions into input ones:
   **Withdrawn 2026-10-22**: the author judged the drafts a trial rather than
   material to publish, and they were removed with the command that loaded
   them. The first real cards are written in the app, from nothing.
+  **Reinstated 2026-10-26, through the API**: the author's new batches —
+  written from public sources under the same rules, 100 cards on the day —
+  are loaded as drafts by `scripts/carica-schede` from a folder outside the
+  repository, with no deploy, and read and published in the app
+  ([spec/content.md](./spec/content.md#seeding-the-archive-from-public-sources--2026-09-11)).
 - **At least one published itinerary** (added 2026-09-18, with the tours).
   `/benvenuto` is the one address printed on a B&B's card, and it lists only
   the intents that have a published tour — so with none it tells a guest the

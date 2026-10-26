@@ -1,6 +1,10 @@
 -r requirements.txt
 
 django-debug-toolbar==8.0.0
+# scripts/carica-schede, which runs on the author's machine (content/drafts.py)
+certifi==2026.7.22
+Markdown==3.11.2
+PyYAML==6.0.3
 pytest==9.1.1
 pytest-django==4.14.0
 ruff==0.17.0
