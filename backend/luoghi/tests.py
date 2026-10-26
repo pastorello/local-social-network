@@ -453,8 +453,10 @@ def test_the_seeded_genres_are_googles_taxonomy_in_the_admins_order(api_client):
 
     assert response.status_code == 200
     slugs = [genre['slug'] for genre in response.json()]
+    # The ninth, luogo-naturale, is the author's (2026-10-23), filed beside
+    # luogo-storico by luoghi/migrations/0005.
     assert slugs == [
-        'spiaggia', 'castello', 'monumento', 'luogo-storico',
+        'spiaggia', 'castello', 'monumento', 'luogo-storico', 'luogo-naturale',
         'museo', 'punto-panoramico', 'area-per-passeggiate', 'parco',
     ]
     assert response.json()[0]['name_plural'] == 'Spiagge'

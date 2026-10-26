@@ -214,6 +214,7 @@ passeggiate* is a category of its own.
 | Castello | `castle` | the Castello angioino-aragonese |
 | Monumento | `monument` | the Mausoleum of Lucius Munatius Plancus |
 | Luogo storico | `historical_place` | |
+| Luogo naturale | `natural_feature` | the Grotta del Turco |
 | Museo | `museum`, `history_museum` | |
 | Punto panoramico | `scenic_spot` | |
 | Area per passeggiate | `hiking_area` | the paths on Monte Orlando |
@@ -223,6 +224,12 @@ The genres are an **admin-managed list, seeded with the table above** — the
 same shape as the reports' categories — so the day a lighthouse or a cave
 needs one, it is an admin edit and not a deploy. A collaborator picks a genre;
 they cannot type a new one.
+
+*Luogo naturale* is the ninth, decided by the author on 2026-10-23 and seeded
+by `luoghi/migrations/0005`: caves, rocks, hills, an oasis — what is worth
+seeing by nature and not by hand. Beaches, parks and viewpoints stay where
+they are, and «Cosa si può fare qui» files it beside the viewpoints, under
+«Scoprire la città».
 
 ### The churches stay a type of their own
 
@@ -600,7 +607,8 @@ batch, and whoever publishes these, needs them:
   cards say little on purpose; sources confuse Quaranta Remi with Arenauta,
   and OSM has two beaches named Arenauta; and the genres have nothing for a
   sea cave, so the Grotta del Turco went in as a *punto panoramico* until the
-  author decides whether a genre is missing.
+  author decides whether a genre is missing. *(Decided 2026-10-23: one is,
+  luogo naturale — see the genres' table.)*
 - **Not every type can be seeded.** Dialect words found on the web are not
   reliable, and a recommended book that does not exist is the worst mistake
   this archive could make. Dialetto is written by people who speak it (with
