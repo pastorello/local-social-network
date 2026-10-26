@@ -294,11 +294,19 @@ done:
   knows where Gaeta is, and the one a move would most easily miss: the symptom
   would be the new town's boundaries rejected as "non sono da queste parti",
   with a message about coordinate order sending the reader somewhere else
-  entirely), the product name, and an Italian-only UI (which the v2 spec still
-  lists as a non-goal until translated content exists).
+  entirely), the product name, and the UI's languages — Italian only until
+  2026-10-25, when the reader's interface gained English (review PR-19,
+  translations.md T9–T11) while the collaborator's stayed Italian.
 
 ## 8. Explicitly not planned
 
 The spec's non-goals (§10): mass signup, reader comments, notifications,
-machine translation, multilingual UI (until translated content exists),
-election-operations tooling, new work on polls.
+machine translation, election-operations tooling, new work on polls.
+
+*2026-10-26:* «multilingual UI (until translated content exists)» left this
+list. The author decided on 2026-10-22 not to wait for translated content
+(decision 5 of [the UX review](./review-2026-10-22.md)), the reader's interface
+speaks Italian and English since 2026-10-25 (review PR-19a, PR-19b), and
+review PR-19c closed the non-goal with a dated note in
+[spec/README.md](./spec/README.md). Machine translation stays on the list: the
+English is written by hand.

@@ -56,6 +56,12 @@ PUBLISHED_CHIESA = 'Chiesa E2E pubblicata'
 DRAFT_CHIESA = 'Chiesa E2E in bozza'
 PUBLISHED_LUOGO = 'Luogo E2E pubblicato'
 PUBLISHED_CASTELLO = 'Castello E2E pubblicato'
+# The castle's English version, published with it (translations.md T8), so a
+# reader in English has a card to read in English and the others to read in
+# Italian under «Not yet translated» (T10; language.cy.ts, review PR-19c).
+# The castle because no other spec asserts on it: a translation changes what
+# its original's page shows (the language switch) in Italian too.
+CASTELLO_EN = 'E2E castle, published'
 PUBLISHED_ATTIVITA = 'Attività E2E pubblicata'
 PUBLISHED_FESTA = 'Festa E2E pubblicata'
 PUBLISHED_RICETTA = 'Ricetta E2E pubblicata'
@@ -171,6 +177,20 @@ class Command(BaseCommand):
             castello_card, 'Ingresso',
             dlat=CASTELLO_LAT - GAETA_LAT, dlng=CASTELLO_LNG - GAETA_LNG,
         )
+        # After its original, which is published by now: T8 refuses the other
+        # order in the API, and a fixture should not be what breaks the rule.
+        # Its genre is the original's, as luoghi/api.py's translate gives it.
+        castello_en, _ = Card.objects.get_or_create(
+            translation_of=castello_card, language='en',
+            defaults={'title': CASTELLO_EN, 'author': collaborator},
+        )
+        castello_en.title = CASTELLO_EN
+        castello_en.body_html = f'<p>Text of the {CASTELLO_EN}.</p>'
+        castello_en.is_published = True
+        castello_en.save(update_fields=('title', 'body_html', 'is_published'))
+        Luogo.objects.update_or_create(
+            card=castello_en, defaults={'genre': Genre.objects.get(slug='castello')},
+        )
 
         # A draft must stay invisible to a reader — the one fixture that cannot
         # be created through the public API without making it the flow itself.
@@ -264,6 +284,7 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(
             f'Seeded: {collaborator.email}, {admin.email}, 6 published cards, 1 draft, 1 tour, '
+            f'1 published English translation, '
             f'2 events and an edition this week, '
             f'2 overlays, 1 report ({report.upvotes_count} upvotes), 1 open poll; '
             f'cleared {removed} card(s) and every trace of previous v1 runs.'
@@ -287,7 +308,7 @@ class Command(BaseCommand):
         leftovers = Card.objects.filter(author=collaborator).exclude(
             title__in=(
                 PUBLISHED_CHIESA, DRAFT_CHIESA, PUBLISHED_LUOGO, PUBLISHED_CASTELLO,
-                PUBLISHED_ATTIVITA, PUBLISHED_FESTA, PUBLISHED_RICETTA, PUBLISHED_TOUR,
+                CASTELLO_EN, PUBLISHED_ATTIVITA, PUBLISHED_FESTA, PUBLISHED_RICETTA, PUBLISHED_TOUR,
             )
         )
         count = leftovers.count()
