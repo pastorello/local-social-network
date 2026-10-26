@@ -152,7 +152,7 @@ down.
 
 T4 kept the interface Italian until there were translated cards for a foreign
 reader to land on. The author decided on 2026-10-22 not to wait for that
-threshold ([review](../review-2026-10-22.md), decision 5): the **reader's**
+threshold ([review](../archive/review-2026-10-22.md), decision 5): the **reader's**
 interface speaks Italian and English now, with a visible switch. README.md's
 non-goal «multilingual UI» is closed by its own dated note in review PR-19c;
 «machine translation» stays a non-goal — the English is written by hand,
@@ -248,7 +248,7 @@ non-goal and runs the accessibility gate in both languages.
 
 T9 put the interface in the reader's language and left the cards where C4 had
 them: a translation was a page of its own, reached from the original's
-language switch. The author's decision of 2026-10-22 ([review](../review-2026-10-22.md),
+language switch. The author's decision of 2026-10-22 ([review](../archive/review-2026-10-22.md),
 decision 5) asks for the card to follow the reader too, without a second
 address.
 
@@ -311,7 +311,7 @@ address.
 ## T11 — The whole picture — 2026-10-26 (review PR-19c)
 
 Review PR-19 is done — 19a (#147), 19b (#149) and 19c — and with it decision
-5 of 2026-10-22 ([review](../review-2026-10-22.md)). What this file now
+5 of 2026-10-22 ([review](../archive/review-2026-10-22.md)). What this file now
 describes, in one place:
 
 - **Two languages for the reader, one for the collaborator.** The reader's

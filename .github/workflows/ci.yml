@@ -2,7 +2,7 @@
 # push to main and every pull request, plus the Cypress suite and, since
 # 2026-10-15, a Lighthouse performance gate. Register item TD-01.
 #
-# Deliberately NOT here (see docs/tech-debt-archive.md for TD-01):
+# Deliberately NOT here (see docs/archive/tech-debt-archive.md for TD-01):
 #   - no deploy step — deployment is roadmap item 3 and happens on the author's
 #     signal, not as a CI stage. The prerequisites are code-complete; what is
 #     missing is a host, a mail provider and a sender domain.

@@ -30,7 +30,7 @@
 > What changed in the repo while it was untracked, so the text below is read
 > against today's code rather than September's: the four debt items it names as
 > competing work are paid (TD-47, TD-48, and the two it found itself, TD-49 and
-> TD-50 — see `docs/tech-debt-archive.md`), and **TD-50 built the refactor
+> TD-50 — see `docs/archive/tech-debt-archive.md`), and **TD-50 built the refactor
 > §2.1 and §7 call owed**: `replace_points` is a diff by id and `Stop.point` is
 > a foreign key to the pin, no longer a position. The notes inline say where.
 
@@ -416,7 +416,7 @@ designed look (D7 of design.md, a tint of its layer colour).
 ## D9 — Events and the feasts' editions (decided 2026-10-23)
 
 The author's decisions, taken in the interview that followed the UX/UI review
-of 2026-10-22 ([../review-2026-10-22.md](../review-2026-10-22.md), *Decisioni
+of 2026-10-22 ([../archive/review-2026-10-22.md](../archive/review-2026-10-22.md), *Decisioni
 del 23 ottobre 2026*). They are the "first thing that knows what happens on a
 given day" that D1 was waiting for, and Q5's *«after the deploy»* has come:
 the site has been live since 2026-10-22.

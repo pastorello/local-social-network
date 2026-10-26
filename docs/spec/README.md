@@ -1,7 +1,7 @@
 # Vivere Gaeta — Product spec (v2: the cultural map)
 
 > **This is the product authority** (2026-08-21), superseding
-> [../mvp-spec.md](../mvp-spec.md). v1 (map reports + polls) was delivered and
+> [../archive/mvp-spec.md](../archive/mvp-spec.md). v1 (map reports + polls) was delivered and
 > remains in the codebase; nothing here un-builds it. Scope changes start by
 > editing these files.
 >
@@ -100,7 +100,7 @@ UI, closed by the author on 2026-10-22 — the dated note is on its line):
 - ~~multilingual UI (later phase, after translated content exists)~~
   **Closed — decided 2026-10-22, built 2026-10-25, closed here 2026-10-26.**
   The author decided not to wait for translated content (decision 5 of
-  [the UX review](../review-2026-10-22.md)): the **reader's** interface speaks
+  [the UX review](../archive/review-2026-10-22.md)): the **reader's** interface speaks
   Italian and English, with «IT · EN» in the menu, and a card is read in the
   reader's language at its own address (review PR-19a, PR-19b; translations.md
   T9, T10, and T11 for the whole picture). The collaborator's surfaces stay

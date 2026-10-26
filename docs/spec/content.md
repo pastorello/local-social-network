@@ -292,7 +292,7 @@ re-argued:
 ### «Dove si trova» gives the way there — 2026-10-23 (review PR-3)
 
 A place's card now answers the reader already in town, not only the one on
-the sofa ([review](../review-2026-10-22.md) P-03, L-06). On a luogo or a
+the sofa ([review](../archive/review-2026-10-22.md) P-03, L-06). On a luogo or a
 chiesa, *Dove si trova* reads, in order: the editorial zone its pin is in
 (cosa-fare.md Part −1 D2); the luogo's `how_to_get_there`; **Come arrivarci
 (apre Google Maps)** as the section's primary button; and, on a phone, *Allarga
@@ -356,7 +356,7 @@ design.md, "A place's card opens on «Dove»".
 
 The review found *Chiese* in two places a reader chooses from — an entry of
 the *Schede* menu and a chip on `/luoghi` — and seven headings with no sign of
-which have anything under them ([review](../review-2026-10-22.md) P-06, L-04,
+which have anything under them ([review](../archive/review-2026-10-22.md) P-06, L-04,
 L-12). It offered two cures, one of them conditional on this file; **the
 decision of 2026-09-11 above already takes it**: the reader meets one heading,
 *Luoghi*, with the churches under it, and the chip on `/luoghi` is that
@@ -486,7 +486,7 @@ Details the ADR left "to the build", recorded so they are not re-argued:
 
 The archive starts nearly empty and grows, and nothing told a reader it is
 alive. The author approved on 2026-10-22 one line about the archive, never one
-per card ([review](../review-2026-10-22.md), decision 8): **«127 schede,
+per card ([review](../archive/review-2026-10-22.md), decision 8): **«127 schede,
 l'ultima aggiornata il 3 marzo 2026»**. It is on the home, under the
 presentation in both layouts, and on *Il progetto*.
 
