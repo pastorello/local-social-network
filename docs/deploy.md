@@ -276,6 +276,21 @@ and recreated, `db` and its volume were left alone, the second start printed
 `No migrations to apply` and re-collected the static files, and the card and
 photo uploaded before the update were still there after it.
 
+**Back up first, and pull before you do** (2026-10-26, release 2.0.0). The
+order that worked: `git pull` — it changes files, not the running containers
+— then `deploy/backup.sh`, then the `up -d --build` above. Pulling first
+matters on an install older than #114, the commit that added the script: on
+2026-10-26 the VPS still ran the 2026-10-22 install and had no
+`deploy/backup.sh` until it pulled. Safe because the Compose project's name,
+`vivere-gaeta`, has not changed since August, so the rebuilt stack comes back
+on the same `postgres_data` and `media` volumes.
+
+**A release is tagged on the commit production runs.** `v2.0.0` (553a6c8)
+was tagged and published as a GitHub release only once the VPS served it —
+checked from outside, by reading the public API and the JavaScript it sends.
+The release notes say what changed for a reader and a collaborator and how to
+deploy it over the previous install.
+
 ### Backups — the two things that are not in git
 
 ```sh

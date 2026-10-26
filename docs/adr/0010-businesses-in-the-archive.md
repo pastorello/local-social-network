@@ -13,7 +13,7 @@ content.md, *The ninth type: attività*.
 ## Date
 
 2026-10-23 — the author's decisions, taken in the interview that followed the
-UX/UI review of 2026-10-22 ([../review-2026-10-22.md](../review-2026-10-22.md),
+UX/UI review of 2026-10-22 ([../archive/review-2026-10-22.md](../archive/review-2026-10-22.md),
 *Decisioni del 23 ottobre 2026*).
 
 ## Context

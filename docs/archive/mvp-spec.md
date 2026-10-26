@@ -1,6 +1,8 @@
 # Local Social Network — MVP Specification
 
-> **Superseded as product authority on 2026-08-21 by [spec/README.md](./spec/README.md)**
+> **Archived on 2026-10-26** — a closed record in `docs/archive/`, not a live file of the project: read it for *why*, never to plan ([README.md](./README.md)).
+
+> **Superseded as product authority on 2026-08-21 by [spec/README.md](../spec/README.md)**
 > (the v2 pivot: cultural map-archive, collaborator-only accounts). This
 > document remains the record of the delivered v1 — everything in it was
 > built, tested and remains in the codebase. The product was called *Gaeta
@@ -93,7 +95,7 @@ A civic engagement platform for small cities (pilot: Gaeta, LT). Citizens report
 | Auth | **JWT via djangorestframework-simplejwt (existing — keep)** | Decided after audit (A2); hardened in M4: 60-min access, 30-day rotating refresh + blacklist, transparent 401-refresh in the SPA |
 | Media | Django media storage (local in dev; S3-compatible in prod if needed) | |
 | Dev env | Docker Compose (db + backend + frontend) | |
-| Deploy (demo) | Single VPS or PaaS free tier, one public URL | Prep done in M4 (gunicorn + whitenoise + [deploy guide](./deploy.md)); platform still to be chosen |
+| Deploy (demo) | Single VPS or PaaS free tier, one public URL | Prep done in M4 (gunicorn + whitenoise + [deploy guide](../deploy.md)); platform still to be chosen |
 
 ## 7. Data model (draft)
 
@@ -179,14 +181,14 @@ Validated in the M0 audit (2026-07-16, including a runtime smoke test):
 **The feature set specified above is delivered** (2026-07-20). All five
 milestones in §11 are done: F1–F3 implemented and tested, N1–N6 met. A security
 and quality audit followed on 2026-08-19 and its findings are tracked in
-[tech-debt.md](./tech-debt.md).
+[tech-debt.md](../tech-debt.md).
 
 Read "delivered" narrowly: it means *this document* is implemented. It does not
 mean the product is ready for people outside the project to use. Hosting was
 never part of it — `docs/deploy.md` makes the app deployable, but choosing where
 and paying for it is a decision the author takes when the product is worth it.
 When this was written, the design work that would make it worth it had not been
-done; it was item 1 of the [roadmap](./roadmap.md), and it was **completed
+done; it was item 1 of the [roadmap](../roadmap.md), and it was **completed
 2026-08-31** (the record is in
 [roadmap-archive.md](./roadmap-archive.md)). What still stands between the app
 and a public URL is roadmap item 3 — a host, a mail provider, a sender domain —

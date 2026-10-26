@@ -3,7 +3,7 @@
 > **Delivered (C5, 2026-08-27.)** Leaflet, as today (the markercluster
 > default-import gotcha still applies; TD-02's double bundle was paid first, as
 > planned — see TD-02 in
-> [tech-debt-archive.md](../tech-debt-archive.md)). The visibility gate M4
+> [tech-debt-archive.md](../archive/tech-debt-archive.md)). The visibility gate M4
 > asks for is recorded in [ADR-0006](../adr/0006-overlay-visibility-gate.md).
 
 ## Requirements

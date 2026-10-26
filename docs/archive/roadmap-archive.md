@@ -1,7 +1,9 @@
 # Roadmap — the closed half
 
+> **Archived on 2026-10-26** — a closed record in `docs/archive/`, not a live file of the project: read it for *why*, never to plan ([README.md](./README.md)).
+
 > **This is the archive.** What is still ahead is in
-> [roadmap.md](./roadmap.md); this file holds the phases that are **done**,
+> [roadmap.md](../roadmap.md); this file holds the phases that are **done**,
 > with the reasoning that got them there.
 >
 > Split out on **2026-09-22**, when four of the eight items were complete and
@@ -40,7 +42,7 @@ lost, which is why it goes first.
 
 **It started with an interview, not with CSS** — same as v2 did. That interview
 happened on **2026-08-27** and its confirmed output is
-[spec/design.md](./spec/design.md): the two audiences and which one wins, the
+[spec/design.md](../spec/design.md): the two audiences and which one wins, the
 mobile home (full-bleed map + bottom sheet), the register, the palette from
 Gaeta with the purple retired, colour in tokens, and the rule that sponsor
 presence is earned rather than bought. **Read it before touching a stylesheet**;
@@ -55,11 +57,11 @@ one step, not the other way round.
 
 **Constraints the design inherits, already decided:**
 
-- **WCAG 2.1 AA, whole app** ([ADR-0005](./adr/0005-wcag-2.1-aa-accessibility-bar.md)).
+- **WCAG 2.1 AA, whole app** ([ADR-0005](../adr/0005-wcag-2.1-aa-accessibility-bar.md)).
   Contrast ≥4.5:1 checked with the relative-luminance formula rather than
   eyeballed, one `<h1>` per view, every label associated, focus visible. A
   palette that fails contrast is not a candidate, however good it looks.
-- **The map is the landing view** ([map.md](./spec/map.md) M1). C5 deliberately
+- **The map is the landing view** ([map.md](../spec/map.md) M1). C5 deliberately
   did *not* build M1's "minimal top menu" as a chrome redesign — the layer
   toggles live in the panel beside the map and the nav kept C3's `SchedeMenu`.
   **A full-bleed map with floating chrome belongs to this phase**, where it is
@@ -119,7 +121,7 @@ and are unblocked by the same event (they will have stopped):
     **Django admin was answering in English** ("Pending", "Collaboration
     requests") on the one screen where the author decides about a person —
     fixed the same day. The full account is at the foot of
-    [spec/accounts.md](./spec/accounts.md).
+    [spec/accounts.md](../spec/accounts.md).
 - ~~**The three items ADR-0005 deferred**~~ — **all three settled**: two
   built, the third decided. **The focus-order and skip-link pass the ADR lists
   separately is done too (2026-09-08)**, which empties that list entirely: a
@@ -165,16 +167,16 @@ and are unblocked by the same event (they will have stopped):
 > scheduled.* Three of those four are done now; the fourth is the content, and
 > it is the one nobody can build.
 
-The spec's build order ([spec/README.md](./spec/README.md#suggested-build-order)),
+The spec's build order ([spec/README.md](../spec/README.md#suggested-build-order)),
 one phase per PR, each proven before the next:
 
 1. **C1 — accounts — delivered (2026-08-21).** "Collabora con noi" request
    (honeypot + timing anti-spam, not a third-party CAPTCHA — see the
-   [accounts.md](./spec/accounts.md) A1 note), admin approval, invite e-mail
+   [accounts.md](../spec/accounts.md) A1 note), admin approval, invite e-mail
    with single-use setup link, password reset. Reverses v1's open-signup
    decision; brings e-mail back as real configuration (`FRONTEND_URL` +
    `EMAIL_BACKEND` in settings.py). The **steering capability** landed here as
-   an admin-set flag (spec [politics.md](./spec/politics.md)) — its tooling
+   an admin-set flag (spec [politics.md](../spec/politics.md)) — its tooling
    does not.
 2. **C2 — content core + feste end-to-end — delivered (2026-08-22)**:
    sanitized rich text (the ADR-0001 revision landed with it, not after —
@@ -211,7 +213,7 @@ one phase per PR, each proven before the next:
    rasters with a live opacity control. The seggi overlay is confidential **by
    construction**: `Overlay.visibility` defaults to the steering tier,
    `Overlay.objects.visible_to()` is the single gate, and `visibility` is
-   never serialized — [ADR-0006](./adr/0006-overlay-visibility-gate.md).
+   never serialized — [ADR-0006](../adr/0006-overlay-visibility-gate.md).
    Overlays are authored in Django admin (the author supplies the boundaries
    and the scans), so the spec's open questions 1 and 2 (where the
    boundaries and the georeferenced scans come from) are now *input*
@@ -220,7 +222,7 @@ one phase per PR, each proven before the next:
 
 **A sixth card type landed after that order closed.** `libri` — recommended
 books about Gaeta — was proposed on 2026-09-09, specified in
-[spec/content.md](./spec/content.md) the same morning and built the same day,
+[spec/content.md](../spec/content.md) the same morning and built the same day,
 without a phase of its own: no new component, no new view, its backend shape
 copied from `dialetto` (the other type with no map) and its frontend a config
 entry, three routes and an icon. A second type proposed in the same
@@ -235,7 +237,7 @@ before the next. What comes after it is items 1 to 4 above; whatever comes
 after *those* starts by editing the spec, not this file.
 
 The debt register that ran alongside this build order —
-[tech-debt.md](./tech-debt.md), whose closed half is now
+[tech-debt.md](../tech-debt.md), whose closed half is now
 [tech-debt-archive.md](./tech-debt-archive.md) — is down to **TD-04** (item 2)
 and **TD-06** (item 3). *(2026-09-18: both since closed — TD-04 in full on
 2026-09-10, TD-06 with two upgrades held back on purpose; what the register
@@ -247,7 +249,7 @@ clustered pins on screen.
 
 ## 7. Accessibility — decided (2026-08-22): WCAG 2.1 AA, whole app
 
-Recorded in [ADR-0005](./adr/0005-wcag-2.1-aa-accessibility-bar.md), not just
+Recorded in [ADR-0005](../adr/0005-wcag-2.1-aa-accessibility-bar.md), not just
 here: v1 scoped WCAG out (N5); the v2 tourist audience reopened the question at
 C2, and it went unanswered through that phase. Now decided, and a first
 remediation pass landed with the decision — see the ADR's Consequences for

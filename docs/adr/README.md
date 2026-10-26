@@ -3,7 +3,7 @@
 One file per decision that would be **expensive to reverse**: auth strategy,
 storage, security posture, framework choices. Not a changelog — the commit
 history already is one, and `../tech-debt.md` (open) plus
-`../tech-debt-archive.md` (paid) already track known debt.
+`../archive/tech-debt-archive.md` (paid) already track known debt.
 
 Write a new ADR when a decision meets all three: it is architectural, it is not
 obvious from reading the code, and reversing it later would cost more than an

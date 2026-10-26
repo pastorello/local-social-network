@@ -4,7 +4,7 @@ What is planned and in what order. Ordered by what is **active**. The product
 authority is [spec (v2)](./spec/README.md) (v2, 2026-08-21); this file only
 sequences the work.
 
-**The items that are done are in [roadmap-archive.md](./roadmap-archive.md)** —
+**The items that are done are in [roadmap-archive.md](./archive/roadmap-archive.md)** —
 1 (design), 2 (coverage), 6 (the v2 build order) and 7 (the accessibility
 decision), each with the reasoning that got it there. **The numbers here are
 unchanged and always will be**: the spec files, the ADRs and `CLAUDE.md` refer
@@ -12,9 +12,9 @@ to these phases by number, so 3, 4, 5 and 8 keep theirs and the gaps are where
 the finished ones used to sit. A roadmap that renumbers itself is a roadmap
 nothing else can cite.
 
-**Where things stand (2026-10-26).** The review of 2026-10-22 is closed: every prompt is in (#116–#150), and what stays open by decision is the closing row of its table. The author decided the next phase is the content, item 4 — the materials are gathered — after a first release, **v2.0.0**, tagged on the commit production runs once the last fine-tunings he is dictating on the branch `rifiniture-2.0.0` are in. The first of them: the home is the welcome page and the map is `/mappa` (design.md D3's note of 2026-10-26).
+**Where things stand (2026-10-26).** **Release 2.0.0 is out and live.** The UX/UI review of 2026-10-22 is closed — every prompt in (#116–#150), what stays open by decision in the closing row of its table — and the author's last fine-tunings went in the same day (#151, the review's «Decisioni del 26 ottobre 2026»): the home is the welcome page and the map is `/mappa`; the menu is two menus, *Esplora* (places, tours, businesses) and *Tradizioni* (feasts, recipes, people, dialect, books); the wizard's first question lost «Camminare», folded into «Scoprire la città», and its door to the zones; «Dove sei?» is hidden. #151 was deployed on the VPS over the 2026-10-22 install and tagged `v2.0.0` (553a6c8), with a GitHub release. Two things follow: **the content, item 4** — the archive in production has no published card, and the author has gathered the materials — and **TD-55**, the author's decision on what was hidden or taken out, remove for good or bring back reworked ([tech-debt.md](./tech-debt.md)).
 
-**Where things stand (2026-10-23).** The UX/UI review of 2026-10-22 ([review-2026-10-22.md](./review-2026-10-22.md)) is running as a queue of prompts, one PR each, merged by GitHub when the four required checks are green. Since 2026-10-23 `main` requires them and auto-merge is on. All of priority A and two prompts of priority B are in (#116–#126). An interview with the author the same day decided the wizard's flow (study 10, PR-21). It also decided businesses as a type of their own ([ADR-0010](./adr/0010-businesses-in-the-archive.md)) and events and feasts' editions as dated entries, the poster included (cosa-fare.md Part −1 D9). Both are specified and queued as the review's PR-26 and PR-27, before PR-21 and the English interface (PR-19). Item 4, the content, is still what a reader is waiting for.
+**Where things stand (2026-10-23).** The UX/UI review of 2026-10-22 ([review-2026-10-22.md](./archive/review-2026-10-22.md)) is running as a queue of prompts, one PR each, merged by GitHub when the four required checks are green. Since 2026-10-23 `main` requires them and auto-merge is on. All of priority A and two prompts of priority B are in (#116–#126). An interview with the author the same day decided the wizard's flow (study 10, PR-21). It also decided businesses as a type of their own ([ADR-0010](./adr/0010-businesses-in-the-archive.md)) and events and feasts' editions as dated entries, the poster included (cosa-fare.md Part −1 D9). Both are specified and queued as the review's PR-26 and PR-27, before PR-21 and the English interface (PR-19). Item 4, the content, is still what a reader is waiting for.
 
 **Where things stand (2026-10-22).** **The site is live** at
 `https://viveregaeta.it` (item 3, below). The archive on it is empty until
@@ -212,7 +212,11 @@ build questions into input ones:
   the intents that have a published tour — so with none it tells a guest the
   tours are in preparation. That page is the product's first impression for
   exactly the reader the spec is aimed at, and it is one tour away from
-  working.
+  working. *(Since review PR-21, 2026-10-25, an intent is offered with a
+  published tour **or** a place or business filed under it, and since
+  2026-10-26 that page is the home, `/`, where `/benvenuto` leads: the first
+  published place already opens a door. A tour is still what turns an answer
+  into a walk.)*
 
 ## 5. Named but not scheduled
 
@@ -307,7 +311,7 @@ machine translation, election-operations tooling, new work on polls.
 
 *2026-10-26:* «multilingual UI (until translated content exists)» left this
 list. The author decided on 2026-10-22 not to wait for translated content
-(decision 5 of [the UX review](./review-2026-10-22.md)), the reader's interface
+(decision 5 of [the UX review](./archive/review-2026-10-22.md)), the reader's interface
 speaks Italian and English since 2026-10-25 (review PR-19a, PR-19b), and
 review PR-19c closed the non-goal with a dated note in
 [spec/README.md](./spec/README.md). Machine translation stays on the list: the

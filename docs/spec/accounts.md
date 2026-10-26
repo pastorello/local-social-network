@@ -58,7 +58,7 @@ vetting where it belongs — outside the app.
 
 Nobody had ever taken this path, which is the one every collaborator after the
 author uses to get an account. It was the last named gap in roadmap item 2
-([archive](../roadmap-archive.md)) and it is closed now — for the human half;
+([archive](../archive/roadmap-archive.md)) and it is closed now — for the human half;
 the automated half is below.
 
 The walk: file a request at `/collabora` → approve it with the Django admin

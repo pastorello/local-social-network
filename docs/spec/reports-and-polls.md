@@ -7,7 +7,7 @@
 - **R1** — Public **read** stays: the reports layer on the map is visible to
   everyone, as before.
   **Superseded on 2026-10-22** by the author's decision recorded in the UX/UI
-  review of that day ([../review-2026-10-22.md](../review-2026-10-22.md),
+  review of that day ([../archive/review-2026-10-22.md](../archive/review-2026-10-22.md),
   decision 7, built as its PR-1): from the merge of that PR, reports are
   **seen and filed only by someone signed in** — the people working on the
   archive. The anonymous reader does not see them at all: no reports section
@@ -28,7 +28,7 @@
 - **P1** — Polls stay exactly as delivered. The author's framing: an **internal
   tool for the people working on the site**, deliberately set aside.
   **Gated on 2026-10-22** by the author's decision recorded in the UX/UI
-  review of that day ([../review-2026-10-22.md](../review-2026-10-22.md),
+  review of that day ([../archive/review-2026-10-22.md](../archive/review-2026-10-22.md),
   decision 6, built as its PR-17 on 2026-10-24): the framing above is now
   enforced — from the merge of that PR, polls are **seen and voted in only by
   someone signed in** (collaborators, admins, steering). The anonymous reader

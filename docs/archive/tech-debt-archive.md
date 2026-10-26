@@ -1,7 +1,9 @@
 # Technical debt register — the closed half
 
+> **Archived on 2026-10-26** — a closed record in `docs/archive/`, not a live file of the project: read it for *why*, never to plan ([README.md](./README.md)).
+
 > **This is the archive.** The active register is
-> [tech-debt.md](./tech-debt.md): what is still open, and nothing else. This
+> [tech-debt.md](../tech-debt.md): what is still open, and nothing else. This
 > file holds every item that has been **paid**, in the order it was found,
 > with its evidence intact.
 >
@@ -36,7 +38,7 @@
 >
 > Scope note: shipping a public demo was **parked** on 2026-08-19 (no domain, no
 > Python host, no public database — author decision). This register replaces it
-> as the active workstream; see [roadmap.md](./roadmap.md).
+> as the active workstream; see [roadmap.md](../roadmap.md).
 
 ## Baseline at the first pass — 2026-08-19
 
@@ -76,7 +78,7 @@ Do it together with TD-23 (`conftest.py`), which is where the 44 creations come
 from.
 
 **TD-09 is half wrong — the `PollCard.vue` entry is a false positive.** ✔
-[`PollCard.vue:91`](../frontend/src/components/polls/PollCard.vue) is a ternary:
+[`PollCard.vue:91`](../../frontend/src/components/polls/PollCard.vue) is a ternary:
 the pairs that actually render are `bg-gray-200 text-gray-600` and
 `bg-green-100 text-green-700`. The combination the detector reported —
 `text-gray-600` on `bg-green-100` — occurs in neither branch; impeccable
@@ -110,7 +112,7 @@ restructured; restored the same day.)
 
 ### TD-01 · No CI: five green gates that nobody runs automatically — **FIXED 2026-08-19** ✔
 
-> Closed: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs two jobs on
+> Closed: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) runs two jobs on
 > every push to `main` and every pull request — backend (ruff, then pytest on
 > Python 3.14, SQLite fallback) and frontend (oxlint, eslint, vitest, build on
 > Node 22). The linters run **check-only**: `npm run lint` applies `--fix`, which
@@ -936,7 +938,7 @@ in `backend/media/avatars/`. All were gitignored, so none of this appears in a
 diff; it was disk state that made the backend folder lie to a newcomer.
 
 **TD-08 — open.** Moved to the active register on 2026-09-22; it was never
-closed, so it does not belong here. See [tech-debt.md](./tech-debt.md).
+closed, so it does not belong here. See [tech-debt.md](../tech-debt.md).
 
 **TD-09 — not debt.** Reduced to the `SiteTitle.vue` purple gradient, which is
 the M4 brand. Changing it is a product decision, not a fix. (The `PollCard.vue`
@@ -1175,7 +1177,7 @@ build as the note required.)*
 > what is worth keeping.
 >
 > There is no successor to this list. What is open now is short enough to read
-> whole in [tech-debt.md](./tech-debt.md), and a list of four does not need an
+> whole in [tech-debt.md](../tech-debt.md), and a list of four does not need an
 > order.
 
 1. ~~**TD-01 (CI)**~~ — **done 2026-08-19.** TD-16 was the proof of why: a red
@@ -1269,7 +1271,7 @@ before someone re-adds one. The suite no longer emits the warning.
 
 > Original text: **Not urgent** (Django 7.0 is not out) and **not free** (it
 > moves the same configuration the deploy work has to design anyway), so it
-> belongs with the SMTP prerequisite in [roadmap](./roadmap.md) item 3 rather
+> belongs with the SMTP prerequisite in [roadmap](../roadmap.md) item 3 rather
 > than in a dependency bump.
 
 **Found:** 2026-08-30, by the Django 6.1 upgrade — which is the argument for
@@ -1334,7 +1336,7 @@ one met at 7.0 is an outage.
 ### TD-37 · The e2e job spends eight of its nine minutes on setup — open
 
 > Moved to the active register on 2026-09-22; it was never closed, so it does
-> not belong here. See [tech-debt.md](./tech-debt.md).
+> not belong here. See [tech-debt.md](../tech-debt.md).
 
 
 ### TD-38 · Approving a request with mail down left a person who could never get in — **FIXED 2026-09-10** ✔

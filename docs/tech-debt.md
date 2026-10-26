@@ -1,8 +1,8 @@
 # Technical debt register
 
-> **What is open, and nothing else.** Fifty-four items have been recorded
+> **What is open, and nothing else.** Fifty-five items have been recorded
 > since the first audit on 2026-08-19; fifty-two are paid and live, with their
-> evidence, in [tech-debt-archive.md](./tech-debt-archive.md). Read that file
+> evidence, in [tech-debt-archive.md](./archive/tech-debt-archive.md). Read that file
 > for how a defect got in and what proved the fix. Read **this** one before
 > proposing work.
 >
@@ -14,21 +14,21 @@
 > coverage gaps nobody had re-walked, half of which had been paid in passing.
 > All three are corrected in the archive rather than deleted.
 >
-> **Adding an item:** next number is **TD-55**, continuous across both files.
+> **Adding an item:** next number is **TD-56**, continuous across both files.
 > It goes here; it moves to the archive when it is paid, with what proved it.
 
-## The gates — re-run 2026-10-15
+## The gates — re-run 2026-10-26, for release 2.0.0
 
 | Gate | Command | Result |
 |---|---|---|
-| Backend tests | `python -m pytest` | **558 passed** in ~10s (2026-10-22) |
+| Backend tests | `python -m pytest` | **727 passed** in ~20s |
 | Backend lint | `python -m ruff check .` | clean |
-| Frontend tests | `npm run test:unit -- run` | **282 passed**, 58 files |
+| Frontend tests | `npm run test:unit -- run` | **843 passed**, 97 files |
 | Frontend lint | `npx oxlint` · `npx eslint .` | clean |
 | Format | `npx prettier --check .` | clean |
 | Build | `npm run build` | green, ~2s |
-| E2E | `npm run test:e2e` | **8 spec files, 49 tests** — green in CI |
-| Performance | `npx @lhci/cli@0.15.1 autorun` | 7 pages × 3 runs, every budget met — LCP 1.82–1.94 s under `act`, under "good" since TD-52; a chosen zone since TD-53 (2026-10-24, CLS 0.000, LCP 1.85 s on a Mac), the home and «Cosa si può fare qui» in English since review PR-19a, and an empty zone since TD-54 (2026-10-25, CLS 0.000, LCP 1.85 s on a Mac) |
+| E2E | `npm run test:e2e` | **11 spec files, 122 tests** — green in CI on #151; 119 of them run locally on an isolated stack (`collabora.cy.ts` hard-codes the API on `:8000`) |
+| Performance | `npx @lhci/cli@0.15.1 autorun` | 7 pages × 3 runs, every budget met — green in CI on #151, where `/` became the welcome page and `/mappa` the map (2026-10-26); on a Mac before that, LCP 1.84–1.85 s in Italian and 2.00 s in English, TBT 5–17 ms (review PR-19c); LCP 1.82–1.94 s under `act`, under "good" since TD-52; a chosen zone since TD-53 (2026-10-24, CLS 0.000, LCP 1.85 s on a Mac), the home and «Cosa si può fare qui» in English since review PR-19a, and an empty zone since TD-54 (2026-10-25, CLS 0.000, LCP 1.85 s on a Mac) |
 
 Every row above was run again on 2026-10-15, after `seed_drafts` (18 tests),
 the OpenStreetMap credit (#106, 3), drafts on the map (map.md M5, 5 + 3), the
@@ -42,6 +42,11 @@ archive, for the scale of the difference rather than for nostalgia.
 **2026-10-22:** `seed_drafts` and its 18 tests were removed with the
 public-source drafts (content.md's seeding section), so the backend count is
 558 — re-run that day, ruff clean too. Nothing else changed.
+
+**2026-10-26:** every row re-run for release 2.0.0 — the review of 2026-10-22
+(#116–#151) took the suites from 558 / 282 / 49 to 727 / 843 / 122. The
+counts above are that day's, on `main` at 553a6c8, which is the tag
+`v2.0.0`.
 
 **Green gates are not covered behaviour.** That sentence opened this register on
 day one, and TD-47 — a whole status nothing exercised under a green suite,
@@ -78,6 +83,47 @@ work.
 Left alone deliberately: nothing waits on it, and a CI change made for tidiness
 is a change to the one thing that guards every other change. Worth doing if it
 ever becomes the reason somebody skips running the suite.
+
+## TD-55 · What was hidden or taken out before 2.0.0 — remove for good, or bring back reworked — open, the author's decision
+
+On 2026-10-26, dictating the last fine-tunings before release 2.0.0 (#151,
+the review's «Decisioni del 26 ottobre 2026»), the author hid one feature and
+took out two answers of the wizard «for now». Release first, decide later:
+none of them is a defect, but each leaves something in the repository that
+either earns its place again or goes. **The decision is the author's**, one
+per item; the work after it is small either way.
+
+- **«Dove sei?» — hidden, its code kept and still running.** Neither
+  `/cosa-fare` nor the wizard's «Dove?» renders the field, and nothing asks
+  for the names. What remains, tested and maintained for no page:
+  `components/forms/WhereAreYouField.vue` and its spec; `lib/placeNames.ts`
+  and its spec; the field's words, `cosaFare().where`, which sit in the first
+  paint's dictionary (`cosaFare` is an entry area) and so cost every reader a
+  few hundred bytes of Italian before compression, and a reader in English
+  the same again in the English chunk; `maps.ZonaAlias` with its admin, its public endpoint
+  `GET /api/map/zone/alias/`, migrations 0007–0009 (27 names, each placed
+  against a zone) and `maps/test_zone_aliases.py`; the `ZoneAlias` interface.
+  - *Remove for good:* one PR that deletes the field, `placeNames.ts`, the
+    words and the interface, and a migration that drops the table and the
+    endpoint — the 27 names stay in git history, in migrations 0008/0009.
+  - *Bring it back reworked:* the obvious place is roadmap item 5,
+    geolocation — «Dove sei?» as what a guest types when the browser's
+    position is refused or 50 m wrong in the old town — or back on
+    `/cosa-fare` above the chips, as review PR-20 built it. Then the field
+    goes back on the page and the rest is already there.
+- **«Camminare» — taken out**, folded into «Scoprire la città»
+  (`itinerari/migrations/0013`). Nothing of it is left in the code: bringing
+  it back is that migration's reverse (`unfold`, which restores the intent as
+  seeded but cannot know which tours wore it), the three genres back in
+  `lib/intents.ts::GENRE_INTENT`, its colour token and its icon.
+- **«Oppure guarda cosa c'è in una zona» — taken out** of the wizard's first
+  step, and `lib/doors.ts::zonesWithPlaces` with it. Bringing it back is a
+  revert of that part of #151; the menu's «Cosa fare» is the zones' door
+  meanwhile.
+
+**Kept by decision, not debt:** the «Luoghi sulla mappa» list on `/mappa` and
+in the phone's sheet, which the author asked to remove the same day and then
+kept — it is ADR-0005's keyboard path to the map's places.
 
 ## TD-06 (residual) · Two upgrades held back on purpose
 

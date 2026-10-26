@@ -12,28 +12,38 @@ reports as one of the map's layers, now collaborator-authored. The product
 direction is [docs/spec/](./docs/spec/README.md) (v2, 2026-08-21).
 
 > The repository is still named `local-social-network`: the project started as a
-> generic social-network tutorial app and was rebuilt into this. The UI is in
-> Italian; code, comments and docs are in English.
+> generic social-network tutorial app and was rebuilt into this. The reader's UI
+> is in Italian and English, the collaborator's in Italian; code, comments and
+> docs are in English.
 
 ## Features
 
+- **A front door that asks** — the home is «Che cosa ti va di fare?», the
+  first step of a short wizard (the beach, the town, eating, a drink, what is
+  on this week) that ends on «Cosa si può fare qui»: a zone of town and what
+  there is to do in it. The address printed on the B&B cards, `/benvenuto`,
+  leads there; the map is `/mappa`.
 - **A map under every page** — one Leaflet map of Gaeta is the ground of the
   whole app; every page opens as a panel over it, and the map moves to show
   what the page is about. One toggleable layer per card type that has a place,
   plus the reports layer, and overlays (district boundaries, georeferenced
   historical maps) behind a visibility gate.
-- **Cards in eight types** — feste (with their processional routes), luoghi,
-  chiese, ricette, personaggi storici, dialetto, libri consigliati, and
-  **itinerari**: curated tours built from the other cards, followed one stop at
-  a time, with each leg handed to Google Maps. Rich text is sanitized on the
-  server; every card can be translated (English first).
+- **Cards in nine types, in two menus** — *Esplora*: luoghi (churches among
+  them), **itinerari** — curated tours built from the other cards, followed
+  one stop at a time, with each leg handed to Google Maps — and attività, the
+  businesses worth knowing, never ranked; *Tradizioni*: feste (with their
+  processional routes and dated editions), ricette, personaggi storici,
+  dialetto, libri consigliati. Plus **events**, dated and with their posters.
+  Rich text is sanitized on the server; every card can be translated, and the
+  reader's interface speaks Italian and English («IT · EN»).
 - **Collaborators by invitation only** — no public signup. "Collabora con noi"
   files a request, the author approves it in Django admin, and the invite
   arrives by e-mail. Collaborators write and publish; drafts are invisible to
   everyone else.
-- **Issue reports and polls** (from v1) — geolocated reports with a moderated
-  status workflow and upvotes; polls whose results stay hidden until you have
-  voted or the poll closes.
+- **Issue reports and polls** (from v1), for collaborators only since
+  2026-10-22 and 2026-10-24 — geolocated reports with a moderated status
+  workflow and upvotes; polls whose results stay hidden until you have voted
+  or the poll closes.
 - **Accessible and private by default** — WCAG 2.1 AA is the bar
   ([ADR-0005](./docs/adr/0005-wcag-2.1-aa-accessibility-bar.md)), gated in CI;
   uploaded photos are re-encoded and stripped of EXIF (including GPS); e-mail
@@ -123,22 +133,23 @@ in [docs/adr/](./docs/adr/README.md).
 | Document | What it holds |
 |---|---|
 | [docs/spec/](./docs/spec/README.md) | **Product spec (v2)** — the cultural map: content types, roles, non-goals |
-| [docs/mvp-spec.md](./docs/mvp-spec.md) | v1 spec (delivered) — map reports + polls; historical record |
 | [docs/roadmap.md](./docs/roadmap.md) | What is planned and in what order — **what is still ahead** |
-| [docs/roadmap-archive.md](./docs/roadmap-archive.md) | The phases that are done, with the reasoning that got them there |
 | [docs/tech-debt.md](./docs/tech-debt.md) | Measured debt register — **what is still open** |
-| [docs/tech-debt-archive.md](./docs/tech-debt-archive.md) | The debt that has been paid, with the evidence that proved each fix |
 | [docs/adr/](./docs/adr/README.md) | Architecture decision records |
-| [docs/deploy.md](./docs/deploy.md) | Deployment guide — walked end to end on a production-shaped stack (2026-09-10); nothing is deployed yet |
+| [docs/deploy.md](./docs/deploy.md) | Deployment guide — the runbook of viveregaeta.it, live since 2026-10-22 |
+| [docs/overlays-howto.md](./docs/overlays-howto.md) | How to upload the map's overlays — boundaries and historical scans |
 | [CLAUDE.md](./CLAUDE.md) | Architecture, conventions and gotchas for humans and agents |
+| [docs/archive/](./docs/archive/README.md) | **Not live — records only** (2026-10-26): the v1 spec, the roadmap's and the debt register's closed halves, the UX review of 2026-10-22. Read them for *why*, never to plan |
 
 ## Status
 
-Everything the v2 spec asks for is built and tested — the five build phases
-(accounts, the content core, the card types, translations, the map), the
-design pass, the map under every page, luoghi and itinerari (2026-09-18). The
-debt register is closed but for the two items it keeps open on purpose.
-What is missing is **content**: the archive is empty until its collaborators
-write it.
-Nothing is deployed; deployment waits on a host and a mail provider, and on the
-author's signal. See [docs/roadmap.md](./docs/roadmap.md).
+**Release 2.0.0 is live at [viveregaeta.it](https://viveregaeta.it)** (tag
+`v2.0.0`, 2026-10-26). Everything the v2 spec asks for is built and tested —
+the five build phases (accounts, the content core, the card types,
+translations, the map), the design pass, the map under every page, luoghi and
+itinerari, «Cosa si può fare qui», businesses and events, the wizard «Cosa fare
+adesso», and the reader's interface in English — and the UX review of
+2026-10-22 is closed. The debt register keeps three items open: two on
+purpose, and the author's decision on what was hidden before the release
+(TD-55). What is missing is **content**: the archive is empty until its
+collaborators write it. See [docs/roadmap.md](./docs/roadmap.md).

@@ -283,7 +283,7 @@ asked for them on 2026-09-19.
 
 ## The guided mode tells the stop — 2026-10-23 (review PR-7)
 
-The review of 2026-10-22 ([review-2026-10-22.md](../review-2026-10-22.md):
+The review of 2026-10-22 ([review-2026-10-22.md](../archive/review-2026-10-22.md):
 P-05, L-07, L-08, M-08) found the guided mode two-thirds empty, *Inizia il
 tour* under the whole list of stops, three equal ways out of a stop, and
 nothing after the last one. What changed, with the details the prompt left to
@@ -345,7 +345,7 @@ the build:
 
 ## The welcome page says what it is — 2026-10-23 (review PR-14)
 
-The review of 2026-10-22 ([review-2026-10-22.md](../review-2026-10-22.md):
+The review of 2026-10-22 ([review-2026-10-22.md](../archive/review-2026-10-22.md):
 P-07, M-09) found `/benvenuto` asking its question without saying what the
 site is, its intents white panels of text, and its way out a small button.
 The address is untouched — I6's one obligation — and so is what the page
@@ -376,7 +376,7 @@ and the whole screen on a phone — 2026-10-23".
 The review of 2026-10-22 asked, in its study 10, for a guided path that ends
 in a choice — what, then where, then here is what there is — and the author
 confirmed the flow on 2026-10-23 as written, with «Bere» and «Oggi» /
-«Questa settimana» decided the same day ([review-2026-10-22.md](../review-2026-10-22.md),
+«Questa settimana» decided the same day ([review-2026-10-22.md](../archive/review-2026-10-22.md),
 *Decisioni del 23 ottobre 2026*). The wizard is `/benvenuto` and
 `/cosa-fare` in a row, one question a screen, and **the address on the
 cards does not move** (I6):
