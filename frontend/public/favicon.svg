@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Vivere Gaeta's logo, the cut for 32 px and under (design.md D7's note
+  of 2026-10-26): docs/brand/logo.svg without its two waves, the ring and
+  the rays a unit thicker, the sun a unit higher. The strip of sky between
+  sun and sea is the horizon: terracotta and sea are 1.1:1 in luminance, so
+  touching they would read as one shape. Colours are main.css's tokens. -->
+  <circle cx="32" cy="32" r="30" fill="#faf7f2" stroke="#0f5f73" stroke-width="4" />
+  <path
+    d="M32 14V8M40 16.14L43 10.95M24 16.14L21 10.95M45.86 22L51.05 19M18.14 22L12.95 19"
+    fill="none"
+    stroke="#9c4221"
+    stroke-width="4"
+    stroke-linecap="round"
+  />
+  <path d="M20 30A12 12 0 0 1 44 30Z" fill="#9c4221" />
+  <path d="M0.06 34H63.94A32 32 0 0 1 0.06 34Z" fill="#0f5f73" />
+</svg>
