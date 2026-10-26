@@ -389,6 +389,10 @@ cards does not move** (I6):
   and «Questa settimana» when something falls in them ([cosa-fare.md](./cosa-fare.md)
   Part −1 D9); then «Oppure guarda cosa c'è in una zona» (D6 of the same
   file, its D8 rule unchanged); last, «Non lo so: fammi vedere la mappa».
+  *(2026-10-26, the author's decision: the zones' answer is gone — it said
+  what the last one says, and the menu's «Cosa fare» is that door — and
+  «Camminare» folded into «Scoprire la città»: cosa-fare.md D4's and D6's
+  notes of that day.)*
   With one intent the question is still asked — it is the first
   impression.
 - **Step 2 is the same address with `?intento=`**: «Hai scelto: …» with a

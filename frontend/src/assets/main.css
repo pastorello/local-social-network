@@ -142,8 +142,9 @@
      own colour with its icon — a tint, never the colour as a ground (D7 keeps
      the saturated register for the map). Two are Gaeta's: the sea, the roofs
      of the old town. The others wear the layer of what they lead to on «Cosa
-     si può fare qui»: the table its ricette, the walk its luoghi — viewpoints,
-     paths, parks — and the glass its attività (2026-10-25, ADR-0010).
+     si può fare qui»: the table its ricette and the glass its attività
+     (2026-10-25, ADR-0010). The walk, which wore the luoghi's, joined the
+     town on 2026-10-26.
      References, not hexes, so a town that re-themes the palette
      re-themes these with it. An intent the admin adds after these wears the
      unknown grey until it is given one here. Each clears 4.5:1 on the surface
@@ -151,7 +152,6 @@
   --color-intent-mare: var(--color-sea); /* 5.08 on its tint, 7.23 on surface */
   --color-intent-citta: var(--color-terracotta); /* 4.67 on its tint, 6.53 on surface */
   --color-intent-mangiare: var(--color-layer-ricette); /* 3.70 on its tint, 5.02 on surface */
-  --color-intent-camminare: var(--color-layer-luoghi); /* 4.36 on its tint, 6.04 on surface */
   --color-intent-bere: var(--color-layer-attivita); /* 3.99 on its tint, 5.47 on surface */
   /* Not an intent: the wizard's «Oggi» and «Questa settimana» (review PR-21,
      cosa-fare.md Part −1 D9) wear the feste's amber — what falls on a day is

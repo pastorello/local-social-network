@@ -137,7 +137,6 @@ describe('WelcomeView — the wizard’s first step, on the address of a B&B’s
       '/cosa-fare?intento=mangiare',
       '/cosa-fare?intento=bere&zona=serapo',
       '/eventi?finestra=settimana',
-      '/cosa-fare',
       '/mappa',
     ])
     expect(wrapper.text()).toContain('Le spiagge')
@@ -255,11 +254,14 @@ describe('WelcomeView — the wizard’s first step, on the address of a B&B’s
     expect(none.wrapper.find('a[href="/mappa"]').exists()).toBe(true)
   })
 
-  // Spec cosa-fare.md Part −1, D8: no door onto an empty room.
-  it('offers «Cosa si può fare qui» only once a zone has a published place', async () => {
-    answer({ '/api/map/zone/': ZONES.map((zone) => ({ ...zone, count: 0 })) })
+  // «Oppure guarda cosa c'è in una zona» left the first step on 2026-10-26
+  // (the author's decision): it said what «Non lo so: fammi vedere la mappa»
+  // says, and «Cosa fare» in the menu is the zones' door — with places in
+  // every zone, too.
+  it('offers no door to the zones, whatever is in them', async () => {
     const { wrapper } = await mountAt('/benvenuto')
     expect(wrapper.find('a[href="/cosa-fare"]').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('in una zona')
   })
 
   it('draws nothing under the question before every count is in', async () => {

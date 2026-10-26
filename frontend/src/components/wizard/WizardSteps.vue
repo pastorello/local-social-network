@@ -12,7 +12,6 @@ import AnswerCard from '@/components/wizard/AnswerCard.vue'
 import WizardChoices from '@/components/wizard/WizardChoices.vue'
 import { usePageTitle } from '@/composables/usePageTitle'
 import copy from '@/definitions/copy'
-import { zonesWithPlaces } from '@/lib/doors'
 import wizardText from '@/lib/i18n/messages/wizard'
 import {
   afterIntent,
@@ -102,7 +101,6 @@ watch(step, async () => {
 })
 
 const windowsOn = computed(() => windowAnswers(windows.value))
-const withPlaces = computed(() => zonesWithPlaces(zones.value))
 const where = computed(() =>
   chosen.value ? zoneAnswers(archive.value, chosen.value.slug, zones.value) : [],
 )
@@ -194,17 +192,6 @@ const tile = 'flex size-14 flex-none items-center justify-center rounded-xl *:si
         </template>
 
         <ul :class="[grid, 'mt-6']">
-          <li v-if="withPlaces.length">
-            <AnswerCard
-              :to="{ name: 'cosafare' }"
-              :title="wizardText().zoneDoor.title"
-              :description="wizardText().zoneDoor.description"
-            >
-              <template #tile>
-                <span :class="[tile, 'bg-sea/10 text-sea']" aria-hidden="true"><LuogoIcon /></span>
-              </template>
-            </AnswerCard>
-          </li>
           <li>
             <!-- The way out. On the home it puts the question away and leaves
             the map with its layers and its list (review PR-21b): «Vai alla

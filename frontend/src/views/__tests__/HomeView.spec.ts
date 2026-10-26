@@ -200,8 +200,9 @@ describe('HomeView (the map, spec map.md M1/M2/M3)', () => {
     // Its answers lead where /benvenuto's do; Mangiare has nothing behind it.
     expect(wrapper.get('a[href="/cosa-fare?intento=citta"]').text()).toContain('Scoprire la città')
     expect(wrapper.text()).not.toContain('Mangiare')
-    expect(wrapper.get('a[href="/cosa-fare"]').text()).toContain('Oppure guarda cosa c')
-    // The two doors of review PR-2 are its answers now.
+    // No door to the zones since 2026-10-26: «Cosa fare» in the menu is it.
+    expect(wrapper.find('a[href="/cosa-fare"]').exists()).toBe(false)
+    // The two doors of review PR-2 were its answers, then the zones' left.
     expect(wrapper.find('a[href="/"]').exists()).toBe(false)
     // Above the layers.
     const column = wrapper.html()

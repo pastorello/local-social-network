@@ -108,7 +108,6 @@ const ANSWERS: Record<string, unknown> = {
     { slug: 'mare', name: 'Andare al mare' },
     { slug: 'mangiare', name: 'Mangiare' },
     { slug: 'citta', name: 'Scoprire la città' },
-    { slug: 'camminare', name: 'Camminare' },
   ],
   '/api/luoghi/generi/': [
     { slug: 'spiaggia', name: 'Spiaggia' },
@@ -212,7 +211,6 @@ describe('CosaFareView — «Cosa si può fare qui» (spec cosa-fare.md Part −
     expect(headings).toEqual([
       'Andare al mare',
       'Scoprire la città',
-      'Camminare',
       'Itinerari che passano di qui',
       'Le feste di questa zona',
       'Mangiare',
@@ -342,7 +340,6 @@ describe('CosaFareView — the businesses (ADR-0010)', () => {
     expect(wrapper.findAll('h2').map((h) => h.text())).toEqual([
       'Andare al mare',
       'Scoprire la città',
-      'Camminare',
       'Bere',
       'Itinerari che passano di qui',
       'Le feste di questa zona',
@@ -698,7 +695,6 @@ describe('CosaFareView — the wizard’s third step (review PR-21)', () => {
       ['Itinerari che passano di qui', 'true'],
       ['Andare al mare', 'true'],
       ['Scoprire la città', 'false'],
-      ['Camminare', 'false'],
       ['Le feste di questa zona', 'false'],
       ['Mangiare', 'false'],
     ])
@@ -713,10 +709,12 @@ describe('CosaFareView — the wizard’s third step (review PR-21)', () => {
     expect(store.restrictTo).toEqual(['l1'])
     await wrapper.findAll('h2 button')[2]!.trigger('click')
     expect(wrapper.findAll('h2 button')[2]!.attributes('aria-expanded')).toBe('true')
-    expect([...(store.restrictTo ?? [])].sort()).toEqual(['c1', 'l1'])
+    // «Scoprire la città» opened: the church and the viewpoint, which is the
+    // town's since «Camminare» folded into it (2026-10-26).
+    expect([...(store.restrictTo ?? [])].sort()).toEqual(['c1', 'l1', 'l2'])
     expect(store.frame).toEqual([
-      { lat: 41.21, lng: 13.56 },
-      { lat: 41.215, lng: 13.565 },
+      { lat: 41.21, lng: 13.55 },
+      { lat: 41.22, lng: 13.565 },
     ])
   })
 
@@ -747,13 +745,13 @@ describe('CosaFareView — the wizard’s third step (review PR-21)', () => {
   })
 
   it('says when the zone has nothing of it, and where it is instead', async () => {
-    const { wrapper } = await mountAt({ intento: 'camminare', zona: 'gaeta-medievale' })
+    const { wrapper } = await mountAt({ intento: 'mare', zona: 'gaeta-medievale' })
 
-    expect(wrapper.text()).toContain("Qui l'archivio non ha ancora niente per «Camminare».")
+    expect(wrapper.text()).toContain("Qui l'archivio non ha ancora niente per «Andare al mare».")
     const links = wrapper.findAll('p a').filter((a) => !a.text().startsWith('Cambia'))
     expect(links.map((a) => [a.text(), a.attributes('href')])).toEqual([
-      ['Serapo', '/cosa-fare?intento=camminare&zona=serapo'],
-      ['ovunque a Gaeta', '/cosa-fare?intento=camminare'],
+      ['Serapo', '/cosa-fare?intento=mare&zona=serapo'],
+      ['ovunque a Gaeta', '/cosa-fare?intento=mare'],
     ])
     // The rest of the zone is still there, put away.
     expect(headings(wrapper).map(([name]) => name)).toEqual([
@@ -767,12 +765,15 @@ describe('CosaFareView — the wizard’s third step (review PR-21)', () => {
     const { wrapper } = await mountAt({ intento: 'citta', zona: 'gaeta-medievale' })
 
     // Scoprire la città: the Duomo and a tour in Gaeta Medievale, the
-    // Annunziata in Serapo — two zones, so «Dove?» asks. Camminare's one
-    // place is in Serapo alone: it would not.
+    // Annunziata and the Belvedere in Serapo — two zones, so «Dove?» asks.
+    // The beaches without Arenauta, which is in no zone, are Serapo's alone:
+    // it would not.
     const chosen = wrapper.findAll('p').find((p) => p.text().startsWith('Hai scelto:'))!
     expect(chosen.findAll('a')).toHaveLength(2)
 
-    const { wrapper: walk } = await mountAt({ intento: 'camminare', zona: 'serapo' })
+    const { wrapper: walk, store } = await mountAt({ intento: 'mare', zona: 'serapo' })
+    store.features = FEATURES.filter((feature) => feature.id !== 'l3')
+    await flushPromises()
     const walked = walk.findAll('p').find((p) => p.text().startsWith('Hai scelto:'))!
     expect(walked.findAll('a').map((a) => a.attributes('href'))).toEqual(['/'])
     expect(walked.text()).toContain('Serapo')

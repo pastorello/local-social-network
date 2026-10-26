@@ -12,9 +12,12 @@ export const GENRE_INTENT: Record<string, string> = {
   monumento: 'citta',
   'luogo-storico': 'citta',
   museo: 'citta',
-  'punto-panoramico': 'camminare',
-  'area-per-passeggiate': 'camminare',
-  parco: 'camminare',
+  // «Camminare» was an intent of its own until 2026-10-26, when the author
+  // folded it into «Scoprire la città»: viewpoints, walks and parks are the
+  // town's too (the review's «Decisioni del 26 ottobre 2026»).
+  'punto-panoramico': 'citta',
+  'area-per-passeggiate': 'citta',
+  parco: 'citta',
 }
 
 // A business is filed by its kind (ADR-0010): «Bere» for where one drinks, and
@@ -38,7 +41,7 @@ export const KIND_INTENT: Record<string, string> = {
 // card type the SPA does not know yet does on the map. `quando` is not an
 // intent: it is the tile of the wizard's «Oggi» and «Questa settimana»
 // (review PR-21), measured with the others.
-export const TINTED_INTENTS = ['mare', 'citta', 'mangiare', 'camminare', 'bere', 'quando']
+export const TINTED_INTENTS = ['mare', 'citta', 'mangiare', 'bere', 'quando']
 
 export const intentVar = (slug: string): string =>
   `var(${TINTED_INTENTS.includes(slug) ? `--color-intent-${slug}` : '--color-layer-unknown'})`
